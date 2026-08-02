@@ -61,6 +61,39 @@ class FormationSeatsTests(unittest.TestCase):
         self.assertIsNone(party_id)
         self.assertEqual(seats, frozenset())
 
+    def test_prefers_formation_grid_over_benched_seat_holders(self) -> None:
+        """hero_in_seats can list benched champs; F-keys should follow the live grid."""
+        payload = {
+            "details": {
+                "active_game_instance_id": 1,
+                "game_instances": [
+                    {
+                        "game_instance_id": 1,
+                        "hero_in_seats": {
+                            "1": 139,
+                            "2": 91,
+                            "5": 58,
+                            "7": 113,
+                            "12": 59,
+                        },
+                        "formation": [139, 91, 59, -1, -1],
+                    }
+                ],
+                "heroes": [
+                    {"hero_id": 58, "in_seat": 1, "game_instance_id": 0},
+                    {"hero_id": 113, "in_seat": 1, "game_instance_id": 0},
+                    {"hero_id": 139, "in_seat": 1, "game_instance_id": 1},
+                    {"hero_id": 91, "in_seat": 1, "game_instance_id": 1},
+                    {"hero_id": 59, "in_seat": 1, "game_instance_id": 1},
+                ],
+            }
+        }
+        party_id, seats = active_formation_seats(payload)
+        self.assertEqual(party_id, 1)
+        self.assertEqual(seats, frozenset({1, 2, 12}))
+        self.assertNotIn(5, seats)
+        self.assertNotIn(7, seats)
+
 
 if __name__ == "__main__":
     unittest.main()

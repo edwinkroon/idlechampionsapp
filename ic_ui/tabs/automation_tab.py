@@ -77,6 +77,7 @@ class AutomationTab(QWidget):
     def sync_fkeys_from_payload(self, payload: dict | None) -> None:
         if payload is None:
             return
+        self._last_payload = payload
         try:
             from ic_gamedata.familiar_seats import familiar_level_seats
             from ic_gamedata.formation_seats import active_formation_seats
@@ -412,7 +413,13 @@ class AutomationTab(QWidget):
         seat_list = ", ".join(f"F{s}" for s in sorted(seats))
         party_txt = f"party {party_id}" if party_id is not None else "actieve party"
         blocked = sorted(seats & familiar_seats)
-        if blocked:
+        levelable = sorted(seats - familiar_seats)
+        if blocked and not levelable:
+            suffix = (
+                f" — familiar op alle formatie-seats ({', '.join(f'F{s}' for s in blocked)}); "
+                "geen F-toetsen nodig"
+            )
+        elif blocked:
             blocked_txt = ", ".join(f"F{s}" for s in blocked)
             suffix = f" — familiar op {blocked_txt} (groen, geen vinkje)"
         else:

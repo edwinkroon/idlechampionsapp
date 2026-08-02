@@ -64,6 +64,8 @@ class AdvisorTab(QWidget):
         self._last_goal = "bud"
         self._last_context = "campaign"
         self._last_party_id: int | None = None
+        self._target_party_id: int | None = None
+        self._last_formation_empty = False
         self._feat_open: dict[int, bool] = {}
         self._analysing = False
         self._pending_auto_refresh = False
@@ -76,6 +78,14 @@ class AdvisorTab(QWidget):
     @property
     def last_party_id(self) -> int | None:
         return self._last_party_id
+
+    @property
+    def target_party_id(self) -> int | None:
+        return self._target_party_id
+
+    @property
+    def last_formation_empty(self) -> bool:
+        return self._last_formation_empty
 
     @property
     def has_results(self) -> bool:
@@ -139,7 +149,16 @@ class AdvisorTab(QWidget):
         include_formation = self._controls.include_formation()
         self._pending_auto_refresh = auto_refresh
         self._current_party_changed = party_changed
+        self._target_party_id = party_id_from_payload(payload)
         self._analysing = True
+        if party_changed:
+            party_txt = (
+                f"party {self._target_party_id}"
+                if self._target_party_id is not None
+                else "nieuwe party"
+            )
+            self._status.setText(f"Party gewisseld ({party_txt}) — analyseren…")
+            self._btn_analyze.setEnabled(False)
         worker = AdvisorRunnable(goal, context, include_formation, payload, err)
         worker.signals.done.connect(self._on_done)
         worker.signals.error.connect(self._on_error)
@@ -204,6 +223,8 @@ class AdvisorTab(QWidget):
         )
         self._last_payload = payload
         self._last_party_id = party_id
+        self._target_party_id = party_id
+        self._last_formation_empty = not bool(report.formation_heroes)
         self._last_goal = report.goal
         self._last_context = report.context
         self._analysing = False

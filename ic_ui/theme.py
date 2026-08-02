@@ -69,36 +69,6 @@ _FORMATION_ZONE_BG = FORMATION_ZONE_BG
 _FKEY_FAMILIAR_COLOR = FKEY_FAMILIAR_COLOR
 
 
-def input_combobox_stylesheet() -> str:
-    return f"""
-QComboBox {{
-  border: 1px solid {BORDER};
-  border-radius: 6px;
-  padding: 4px 28px 4px 10px;
-  background: {BG_INPUT};
-  color: {TEXT_PRIMARY};
-  min-height: 28px;
-}}
-QComboBox:hover {{
-  border-color: {BORDER_HOVER};
-}}
-QComboBox::drop-down {{
-  subcontrol-origin: padding;
-  subcontrol-position: top right;
-  width: 24px;
-  border-left: 1px solid {BORDER};
-}}
-QComboBox QAbstractItemView {{
-  background: {BG_INPUT};
-  color: {TEXT_PRIMARY};
-  selection-background-color: {BG_HOVER};
-  selection-color: {TEXT_PRIMARY};
-  border: 1px solid {BORDER};
-  outline: none;
-}}
-"""
-
-
 def advisor_card_stylesheet() -> str:
     return f"""
 QFrame#advisorCard {{

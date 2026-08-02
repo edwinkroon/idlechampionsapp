@@ -317,16 +317,19 @@ def _hero_on_field(
     """True when the champion is actively placed in the current party formation."""
     if seat is None:
         return False
-    in_seat = hero.get("in_seat")
-    if in_seat is not None:
-        if in_seat not in (1, "1", True):
-            return False
-    elif active_seats and seat not in active_seats:
-        return False
     game_id = _parse_int(hero.get("game_instance_id"))
     if game_id is not None and game_id > 0 and active_party_id is not None:
         if game_id != active_party_id:
             return False
+
+    # Live formation seats are authoritative. ``in_seat`` stays 0 for non-active
+    # parties in getuserdetails, so trusting it alone empties advisor after a swap.
+    if active_seats:
+        return seat in active_seats
+
+    in_seat = hero.get("in_seat")
+    if in_seat is not None:
+        return in_seat in (1, "1", True)
     return True
 
 

@@ -30,6 +30,9 @@ class SpecializationsTab(QWidget):
         self._last_payload = None
         self._last_goal = "bud"
         self._last_context = "campaign"
+        self._last_party_id: int | None = None
+        self._target_party_id: int | None = None
+        self._last_formation_empty = False
         self._analysing = False
         self._pending_analysis: tuple[dict, str | None, bool] | None = None
         self._pending_auto_refresh = False
@@ -43,6 +46,18 @@ class SpecializationsTab(QWidget):
     @property
     def analysing(self) -> bool:
         return self._analysing
+
+    @property
+    def last_party_id(self) -> int | None:
+        return self._last_party_id
+
+    @property
+    def target_party_id(self) -> int | None:
+        return self._target_party_id
+
+    @property
+    def last_formation_empty(self) -> bool:
+        return self._last_formation_empty
 
     def request_refresh(self, *, auto_refresh: bool = False) -> None:
         if self._analysing:
@@ -70,9 +85,12 @@ class SpecializationsTab(QWidget):
         if self._analysing:
             self._pending_analysis = (payload, err, auto_refresh)
             return
+        from ic_ui.tabs.advisor_tab import party_id_from_payload
+
         goal = self._controls.goal()
         context = self._controls.context()
         self._pending_auto_refresh = auto_refresh
+        self._target_party_id = party_id_from_payload(payload)
         self._analysing = True
         worker = SpecializationsRunnable(goal, context, payload, err)
         worker.signals.done.connect(self._on_done)
@@ -130,7 +148,12 @@ class SpecializationsTab(QWidget):
     def _on_done(self, result) -> None:
         payload, report, pending_items, err = result
         auto_refresh = self._pending_auto_refresh
+        from ic_ui.tabs.advisor_tab import party_id_from_payload
+
         self._last_payload = payload
+        self._last_party_id = party_id_from_payload(payload)
+        self._target_party_id = self._last_party_id
+        self._last_formation_empty = not bool(report.formation_heroes)
         self._last_goal = report.goal
         self._last_context = report.context
         self._analysing = False
@@ -181,11 +204,18 @@ class SpecializationsTab(QWidget):
     def _label_kind(status: str | None) -> str:
         return {
             "match": "spec_match",
+            "matches": "spec_match",
             "pending": "spec_pending",
+            "open_tier": "spec_pending",
             "mismatch": "spec_mismatch",
         }.get(status or "", "spec_pending")
 
-    def _summary_lines(self, seats) -> list[tuple[str, str]]:
+    def _summary_lines(
+        self,
+        seats,
+        *,
+        statuses: set[str] | None = None,
+    ) -> list[tuple[str, str]]:
         try:
             from ic_gamedata.party_advisor_specializations import spec_summary_line
         except ImportError:
@@ -196,6 +226,8 @@ class SpecializationsTab(QWidget):
             if not seat.best_spec:
                 continue
             status = getattr(seat, "spec_status", None) or "pending"
+            if statuses is not None and status not in statuses:
+                continue
             if spec_summary_line is not None:
                 text = spec_summary_line(
                     seat.hero_name,
@@ -215,6 +247,29 @@ class SpecializationsTab(QWidget):
                     text = f"{name}: {seat.best_spec}"
             lines.append((text, self._label_kind(status)))
         return lines
+
+    def _insight_cards(self, insights, *, statuses: set[str]) -> None:
+        seen_heroes: set[int] = set()
+        for insight in insights:
+            if insight.status not in statuses:
+                continue
+            if insight.hero_id in seen_heroes:
+                continue
+            seen_heroes.add(insight.hero_id)
+            highlight = insight.status in {"open_tier", "mismatch"}
+            card = advisor_card(highlight=highlight)
+            lyt = advisor_card_layout(card)
+            seat_str = f"slot {insight.seat}" if insight.seat is not None else "bench"
+            lyt.addWidget(advisor_lbl(f"{insight.headline} ({seat_str})", kind="subtitle"))
+            detail = insight.detail
+            if insight.rule_source_type == "heuristic":
+                detail = f"{detail} (generieke placeholder-regel)"
+            lyt.addWidget(advisor_lbl(detail, kind=self._label_kind(insight.status)))
+            meta_str = f"{insight.status} · {insight.rule_source_type}"
+            if insight.confidence:
+                meta_str += f" · confidence {insight.confidence}/5"
+            lyt.addWidget(advisor_lbl(meta_str, kind="muted"))
+            self._layout.addWidget(card)
 
     def _render_pending(self, pending_items) -> None:
         if not pending_items:
@@ -294,92 +349,36 @@ class SpecializationsTab(QWidget):
         )
         self._layout.addWidget(head)
 
+        # 1) In-game dialogs still open
         self._section("Open keuzes")
         self._render_pending(pending_items)
 
+        insights = tuple(report.specialization_insights or ())
+        actionable = {"mismatch", "open_tier"}
+        extras = {"bench_suggestion", "formation_synergy"}
+
+        # 2) One detailed card per hero that needs a change (no summary/per-champion echo)
+        actionable_insights = [ins for ins in insights if ins.status in actionable]
+        if actionable_insights:
+            self._section("Actie nodig")
+            self._insight_cards(insights, statuses=actionable)
+
+        # 3) Compact green list for specs that already match — no per-hero cards
         if report.seat_report and report.seat_report.seats:
-            summary_lines = self._summary_lines(report.seat_report.seats)
-            if summary_lines:
-                self._section("Aanbevolen specialisaties")
+            ok_lines = self._summary_lines(report.seat_report.seats, statuses={"match"})
+            if ok_lines:
+                self._section("In orde")
                 card = advisor_card()
                 lyt = advisor_card_layout(card)
-                for line, kind in summary_lines:
+                for line, kind in ok_lines:
                     lyt.addWidget(advisor_lbl(f"· {line}", kind=kind))
                 self._layout.addWidget(card)
 
-        if report.formation_heroes and report.specialization_insights:
-            self._section("Per champion")
-            try:
-                from ic_gamedata.party_advisor_specializations import (
-                    current_spec_labels_for_hero,
-                    resolve_spec_display_status,
-                    spec_summary_for_hero,
-                )
-            except ImportError:
-                current_spec_labels_for_hero = None
-                resolve_spec_display_status = None
-                spec_summary_for_hero = None
-            payload = self._last_payload or {}
-            for hero in sorted(
-                report.formation_heroes,
-                key=lambda h: (h.seat is None, h.seat or 0, h.name),
-            ):
-                if spec_summary_for_hero is None:
-                    break
-                spec_line = spec_summary_for_hero(hero.hero_id, report.specialization_insights)
-                if not spec_line:
-                    continue
-                seat_str = f"slot {hero.seat}" if hero.seat is not None else "—"
-                card = advisor_card()
-                lyt = advisor_card_layout(card)
-                lyt.addWidget(advisor_lbl(f"{hero.name} ({seat_str})", kind="subtitle"))
-                spec_kind = "spec_pending"
-                if resolve_spec_display_status is not None and current_spec_labels_for_hero is not None:
-                    seat_match = next(
-                        (
-                            s
-                            for s in (report.seat_report.seats if report.seat_report else [])
-                            if s.hero_id == hero.hero_id
-                        ),
-                        None,
-                    )
-                    recommended = seat_match.best_spec if seat_match and seat_match.best_spec else None
-                    if recommended:
-                        current_labels = current_spec_labels_for_hero(
-                            payload, hero.hero_id, report.specialization_insights
-                        )
-                        status = resolve_spec_display_status(
-                            hero.hero_id,
-                            report.specialization_insights,
-                            recommended=recommended,
-                            current_labels=current_labels,
-                        )
-                        spec_kind = self._label_kind(status)
-                lyt.addWidget(advisor_lbl(spec_line, kind=spec_kind))
-                self._layout.addWidget(card)
-
-        if report.specialization_insights:
-            self._section("Specialization & formatie")
-            for insight in report.specialization_insights:
-                highlight = insight.status in {"open_tier", "mismatch"}
-                card = advisor_card(highlight=highlight)
-                lyt = advisor_card_layout(card)
-                seat_str = f"slot {insight.seat}" if insight.seat is not None else "bench"
-                lyt.addWidget(advisor_lbl(f"{insight.headline} ({seat_str})", kind="subtitle"))
-                detail = insight.detail
-                if insight.rule_source_type == "heuristic":
-                    detail = f"{detail} (generieke placeholder-regel)"
-                detail_kind = {
-                    "open_tier": "spec_pending",
-                    "mismatch": "spec_mismatch",
-                    "matches": "spec_match",
-                }.get(insight.status, "body")
-                lyt.addWidget(advisor_lbl(detail, kind=detail_kind))
-                meta_str = f"{insight.status} · {insight.rule_source_type}"
-                if insight.confidence:
-                    meta_str += f" · confidence {insight.confidence}/5"
-                lyt.addWidget(advisor_lbl(meta_str, kind="muted"))
-                self._layout.addWidget(card)
+        # 4) Bench / formation suggestions (not the same as in-formation mismatches)
+        extra_insights = [ins for ins in insights if ins.status in extras]
+        if extra_insights:
+            self._section("Bench & formatie")
+            self._insight_cards(insights, statuses=extras)
 
         if report.tips:
             self._section("Composition-tips")

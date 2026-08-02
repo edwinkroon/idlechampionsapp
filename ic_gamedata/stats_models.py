@@ -86,11 +86,12 @@ class SessionStats:
 
 
 def is_plausible_goal_run_record(record: GoalRunRecord) -> bool:
-    if record.duration_sec <= 0 or record.duration_sec > MAX_PLAUSIBLE_GOAL_RUN_SEC:
-        return False
-    if record.peak_area is not None and record.area_goal > 0:
-        return _plausible_peak_for_goal(record.peak_area, record.area_goal)
-    return True
+    """Keep stored runs unless the duration itself is clearly corrupt.
+
+    Peak-vs-goal sanity is enforced when *recording* new runs (bad memory spikes).
+    Applying it again on load deleted real history after Briv jumps / offset glitches.
+    """
+    return 0 < record.duration_sec <= MAX_PLAUSIBLE_GOAL_RUN_SEC
 
 
 def _area_drop_values(prev_area: int, cur_area: int) -> bool:

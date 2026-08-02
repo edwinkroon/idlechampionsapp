@@ -12,7 +12,6 @@ class GameStateService(QObject):
 
     state_changed = Signal()
     payload_changed = Signal(object)
-    farm_health_changed = Signal()
 
     def __init__(self, parent: QObject | None = None) -> None:
         super().__init__(parent)
@@ -25,15 +24,6 @@ class GameStateService(QObject):
         self.memory_gems: int | None = None
         self.memory_modron_goal: int | None = None
         self.memory_detail: str = ""
-        self.gem_farm_snapshot = None
-        self._gem_farm_advisor = None
-        self._copilot_controller = None
-
-    @property
-    def farm_health_status(self):
-        if self.gem_farm_snapshot is not None:
-            return self.gem_farm_snapshot.health
-        return None
 
     def load_tracker(self) -> None:
         if self.tracker is not None:
@@ -47,6 +37,13 @@ class GameStateService(QObject):
     def reset_tracker(self) -> None:
         if self.tracker is not None:
             self.tracker.reset()
+
+    def clear_goal_run_history(self, party_index: int | None = None) -> None:
+        self.load_tracker()
+        if self.tracker is None:
+            return
+        self.tracker.clear_goal_run_history(party_index)
+        self.state_changed.emit()
 
     def update_memory_fields(
         self,
@@ -92,6 +89,10 @@ class GameStateService(QObject):
 
         if refreshed_snap is not None:
             snap = refreshed_snap
+        # Prefer refreshed snap for API comparisons too (modron goals, etc.).
+        effective_api = refreshed_snap if refreshed_snap is not None else api_snap
+        if effective_api is not None:
+            self.last_api_snap = effective_api
         if snap is not None:
             self.last_update = time.time()
             if active and self.tracker is not None:
@@ -101,7 +102,7 @@ class GameStateService(QObject):
                         gems=mem_gems,
                         active_party_index=snap.active_party_index,
                     )
-                self.tracker.add_snapshot(snap, api_snapshot=api_snap)
+                self.tracker.add_snapshot(snap, api_snapshot=effective_api)
 
         self.state_changed.emit()
 
@@ -164,50 +165,3 @@ class GameStateService(QObject):
             session_text, session_color = "Sessie: gestopt", STATUS_IDLE
 
         return api_text, api_color, mem_text, mem_color, session_text, session_color
-
-    @property
-    def copilot_controller(self):
-        if self._copilot_controller is None:
-            from ic_automation.copilot_controller import CopilotController
-
-            self._copilot_controller = CopilotController()
-            self._copilot_controller.start()
-        return self._copilot_controller
-
-    @property
-    def gem_farm_advisor(self):
-        if self._gem_farm_advisor is None:
-            from ic_gamedata.gem_farm.advisor import GemFarmAdvisor
-
-            self._gem_farm_advisor = GemFarmAdvisor()
-        return self._gem_farm_advisor
-
-    @property
-    def farm_health_monitor(self):
-        return self.gem_farm_advisor.health_monitor
-
-    def update_gem_farm(
-        self,
-        *,
-        party,
-        ps,
-        is_active: bool,
-        goal_run_history,
-    ):
-        if is_active:
-            snapshot = self.gem_farm_advisor.evaluate(
-                party=party,
-                ps=ps,
-                is_active=True,
-                payload=self.last_payload,
-                memory_modron_goal=self.memory_modron_goal,
-                goal_run_history=goal_run_history,
-            )
-        else:
-            snapshot = self.gem_farm_advisor.evaluate_idle(party.party_index)
-        previous = self.gem_farm_snapshot
-        self.gem_farm_snapshot = snapshot
-        self.copilot_controller.notify_snapshot(snapshot)
-        if snapshot != previous:
-            self.farm_health_changed.emit()
-        return snapshot

@@ -14,6 +14,7 @@ from ic_gamedata.stats_models import (
     PartySessionStats,
     SessionStats,
     _area_drop_values,
+    _plausible_peak_for_goal,
     detect_adventure_reset,
     is_plausible_goal_run_record,
 )
@@ -243,10 +244,23 @@ class StatsTracker:
     def goal_run_history(self, party_index: int) -> tuple[GoalRunRecord, ...]:
         return tuple(self._goal_run_history.get(party_index, ()))
 
-    def _record_goal_run(self, state: _PartyTrackState) -> None:
+    def clear_goal_run_history(self, party_index: int | None = None) -> None:
+        """Clear in-memory and persisted goal-run times for one party, or all."""
+        if party_index is None:
+            self._goal_run_history.clear()
+        else:
+            self._goal_run_history.pop(party_index, None)
+        try:
+            from ic_gamedata.goal_run_history_store import save_goal_run_history
+
+            save_goal_run_history(self._goal_run_history)
+        except ImportError:
+            pass
+
+    def _record_goal_run(self, state: _PartyTrackState, *, on_reset: bool = False) -> None:
         if state.goal_run_recorded_this_segment:
             return
-        if not _goal_run_completed(state):
+        if not _goal_run_completed(state, on_reset=on_reset):
             return
         previous = state.api_latest
         duration, duration_unreliable = _goal_run_duration_sec(state)
@@ -258,6 +272,9 @@ class StatsTracker:
         peak = _segment_peak_for_state(state)
         if peak is None and previous.current_area is not None:
             peak = previous.current_area
+        # Reject absurd memory spikes when recording, but keep a usable peak.
+        if peak is not None and not _plausible_peak_for_goal(peak, goal):
+            peak = goal
         record = GoalRunRecord(
             duration_sec=float(duration),
             area_goal=goal,
@@ -278,7 +295,7 @@ class StatsTracker:
 
     def _maybe_record_goal_run(self, state: _PartyTrackState) -> None:
         """Record as soon as the Modron goal is reached — do not wait for reset."""
-        self._record_goal_run(state)
+        self._record_goal_run(state, on_reset=False)
 
     def _handle_adventure_reset(
         self,
@@ -288,7 +305,7 @@ class StatsTracker:
         api_party: PartySnapshot,
         now: float,
     ) -> None:
-        self._record_goal_run(state)
+        self._record_goal_run(state, on_reset=True)
         self._close_segment(state)
         state.reset_count += 1
         state.baseline = merged_party

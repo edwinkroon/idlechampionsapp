@@ -206,6 +206,12 @@ class PartyAdvisorTests(unittest.TestCase):
         for hero in details.get("heroes") or []:
             if isinstance(hero, dict):
                 hero["in_seat"] = "0"
+        for inst in details.get("game_instances") or []:
+            if not isinstance(inst, dict):
+                continue
+            inst["formation"] = []
+            inst["hero_in_seats"] = {}
+            inst["formation_saves_v2"] = []
 
         formation = _formation_heroes(payload)
         self.assertEqual(formation, ())
@@ -214,6 +220,35 @@ class PartyAdvisorTests(unittest.TestCase):
         self.assertEqual(report.formation_heroes, ())
         if report.seat_report is not None:
             self.assertEqual(report.seat_report.seats, ())
+
+    def test_formation_heroes_uses_grid_when_in_seat_zero_after_party_swap(self) -> None:
+        """Non-active parties keep in_seat=0 in getuserdetails; still show their formation."""
+        from ic_gamedata.party_advisor import _formation_heroes
+
+        payload = {
+            "details": {
+                "active_game_instance_id": 4,
+                "game_instances": [
+                    {
+                        "game_instance_id": 4,
+                        "hero_in_seats": {"1": 12, "2": 128, "6": 26, "12": 1},
+                        "formation": [12, 128, 26, 1, -1],
+                        "stats": {},
+                    }
+                ],
+                "heroes": [
+                    {"hero_id": 12, "in_seat": 0, "game_instance_id": 4, "level": 100},
+                    {"hero_id": 128, "in_seat": 0, "game_instance_id": 4, "level": 100},
+                    {"hero_id": 26, "in_seat": 0, "game_instance_id": 4, "level": 100},
+                    {"hero_id": 1, "in_seat": 0, "game_instance_id": 4, "level": 100},
+                    {"hero_id": 58, "in_seat": 1, "game_instance_id": 1, "level": 200},
+                ],
+            }
+        }
+        formation = _formation_heroes(payload)
+        ids = {hero.hero_id for hero in formation}
+        self.assertEqual(ids, {12, 128, 26, 1})
+        self.assertNotIn(58, ids)
 
     def test_formation_buffer_tip_targets_bud_not_support(self) -> None:
         from ic_gamedata.formation_advisor.context_builder import build_formation_layout_context

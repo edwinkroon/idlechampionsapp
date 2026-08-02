@@ -179,6 +179,29 @@ class GoalRunHistoryTests(_IsolatedGoalRunHistoryTestCase):
         assert stats is not None
         self.assertEqual(len(stats.parties[0].goal_run_history), 1)
 
+    def test_clear_goal_run_history_for_party(self) -> None:
+        tracker = StatsTracker()
+        tracker.add_snapshot(
+            _snap(_party(0, 300, 100, seconds_since_reset=3600, adventure_area_goal=300))
+        )
+        tracker.add_snapshot(_snap(_party(0, 1, 0, seconds_since_reset=60, adventure_area_goal=300)))
+        tracker.add_snapshot(
+            _snap(_party(1, 300, 100, seconds_since_reset=1800, adventure_area_goal=300))
+        )
+        tracker.add_snapshot(_snap(_party(1, 1, 0, seconds_since_reset=60, adventure_area_goal=300)))
+        self.assertEqual(len(tracker.goal_run_history(0)), 1)
+        self.assertEqual(len(tracker.goal_run_history(1)), 1)
+
+        tracker.clear_goal_run_history(0)
+        self.assertEqual(len(tracker.goal_run_history(0)), 0)
+        self.assertEqual(len(tracker.goal_run_history(1)), 1)
+
+        from ic_gamedata.goal_run_history_store import load_goal_run_history
+
+        persisted = load_goal_run_history()
+        self.assertNotIn(0, persisted)
+        self.assertIn(1, persisted)
+
     def test_skips_reset_when_goal_not_reached(self) -> None:
         tracker = StatsTracker()
         tracker.add_snapshot(
@@ -209,6 +232,29 @@ class GoalRunHistoryTests(_IsolatedGoalRunHistoryTestCase):
         self.assertEqual(len(history), 1)
         self.assertAlmostEqual(history[0].duration_sec, 1380.0)
         self.assertEqual(history[0].area_goal, 225)
+
+    def test_records_goal_run_on_reset_when_briv_skipped_past_goal(self) -> None:
+        """API can jump from ~goal-20 straight to Thellora landing — still count the run."""
+        tracker = StatsTracker()
+        tracker.add_snapshot(
+            _snap(
+                _party(
+                    1,
+                    205,
+                    100,
+                    seconds_since_reset=900,
+                    modron_area_goal=225,
+                )
+            )
+        )
+        tracker.add_snapshot(
+            _snap(_party(1, 45, 0, seconds_since_reset=30, modron_area_goal=225))
+        )
+
+        history = tracker.goal_run_history(1)
+        self.assertEqual(len(history), 1)
+        self.assertEqual(history[0].area_goal, 225)
+        self.assertEqual(history[0].peak_area, 205)
 
     def test_records_goal_run_after_thellora_reset_to_area_45(self) -> None:
         tracker = StatsTracker()

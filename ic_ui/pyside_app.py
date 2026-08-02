@@ -9,7 +9,6 @@ from ic_ui.tabs.advisor_tab import AdvisorTab, party_id_from_payload
 from ic_ui.tabs.analytics_tab import AnalyticsTab
 from ic_ui.tabs.automation_tab import AutomationTab
 from ic_ui.tabs.dashboard_tab import DashboardTab
-from ic_ui.tabs.gem_farm_tab import GemFarmTab
 from ic_ui.tabs.sources_tab import SourcesTab
 from ic_ui.tabs.specializations_tab import SpecializationsTab
 from ic_ui.workers.api_fetch import ApiFetchRunnable
@@ -50,12 +49,10 @@ class IdleChampionsMainWindow(QMainWindow):
 
         self._specializations_tab = SpecializationsTab(self._dashboard_tab)
         self._analytics_tab = AnalyticsTab(self._dashboard_tab)
-        self._gem_farm_tab = GemFarmTab(self._dashboard_tab)
 
         tabs.addTab(self._automation_tab, "Automatisering [UIT]")
         tabs.addTab(self._dashboard_tab, "Dashboard")
         tabs.addTab(self._analytics_tab, "Analytics")
-        tabs.addTab(self._gem_farm_tab, "Gem Farm")
         tabs.addTab(self._advisor_tab, "Party Advisor")
         tabs.addTab(self._specializations_tab, "Specialisaties")
         tabs.addTab(self._sources_tab, "Bronnen")
@@ -147,39 +144,43 @@ class IdleChampionsMainWindow(QMainWindow):
     ) -> None:
         payload = result.get("payload")
         err = result.get("err")
-        party_changed = False
-        if payload is not None:
-            new_party_id = party_id_from_payload(payload)
-            party_changed = (
-                self._advisor_tab.last_party_id is not None
-                and new_party_id is not None
-                and new_party_id != self._advisor_tab.last_party_id
-            )
-            self._caption_refresh.emit()
-        self._dashboard_tab.ingest_api_result(result)
-        if (
+        new_party_id = party_id_from_payload(payload) if payload is not None else None
+        displayed_party = self._advisor_tab.last_party_id
+        target_party = self._advisor_tab.target_party_id
+        party_changed = (
+            new_party_id is not None
+            and displayed_party is not None
+            and new_party_id != displayed_party
+        )
+        retarget = (
+            new_party_id is not None
+            and target_party is not None
+            and new_party_id != target_party
+        )
+        empty_retry = (
+            payload is not None
+            and self._advisor_tab.has_results
+            and self._advisor_tab.last_formation_empty
+            and new_party_id is not None
+            and new_party_id == displayed_party
+            and not self._advisor_tab.analysing
+        )
+        first_fill = (
             payload is not None
             and not self._advisor_tab.has_results
             and not self._advisor_tab.analysing
-        ):
+        )
+        if payload is not None:
+            self._caption_refresh.emit()
+        self._dashboard_tab.ingest_api_result(result)
+
+        should_refresh = first_fill or party_changed or retarget or empty_retry
+        if should_refresh and payload is not None:
             self._advisor_tab.start_analysis(
                 payload,
                 err,
                 auto_refresh=True,
-                party_changed=False,
-            )
-            if not self._specializations_tab.has_results and not self._specializations_tab.analysing:
-                self._specializations_tab.start_analysis(
-                    payload,
-                    err,
-                    auto_refresh=True,
-                )
-        elif party_changed and payload is not None:
-            self._advisor_tab.start_analysis(
-                payload,
-                err,
-                auto_refresh=True,
-                party_changed=True,
+                party_changed=party_changed or retarget,
             )
             self._specializations_tab.start_analysis(
                 payload,
@@ -192,7 +193,7 @@ class IdleChampionsMainWindow(QMainWindow):
                     payload,
                     err,
                     auto_refresh=auto_refresh,
-                    party_changed=party_changed,
+                    party_changed=party_changed or retarget,
                 )
                 self._specializations_tab.start_analysis(
                     payload,

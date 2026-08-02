@@ -22,7 +22,6 @@ from ic_gamedata.analytics import (
     goal_run_csv_rows,
     party_indexes_with_history,
 )
-from ic_gamedata.gem_farm.event_log import load_farm_events
 from ic_gamedata.goal_run_history_store import load_goal_run_history
 from ic_gamedata.stats import GoalRunRecord
 from ic_ui.tabs.dashboard_tab import DashboardTab
@@ -41,19 +40,13 @@ class AnalyticsTab(QWidget):
         super().__init__(parent)
         self._dashboard = dashboard_tab
         self._dashboard.game_state.state_changed.connect(self._schedule_refresh)
-        self._dashboard.game_state.farm_health_changed.connect(self._schedule_farm_events_refresh)
         self._selected_party: int | None = None
         self._refresh_timer = QTimer(self)
         self._refresh_timer.setSingleShot(True)
         self._refresh_timer.setInterval(1500)
         self._refresh_timer.timeout.connect(self.refresh)
-        self._farm_events_timer = QTimer(self)
-        self._farm_events_timer.setSingleShot(True)
-        self._farm_events_timer.setInterval(800)
-        self._farm_events_timer.timeout.connect(self._refresh_farm_events)
         self._build_ui()
         QTimer.singleShot(400, self.refresh)
-        QTimer.singleShot(500, self._refresh_farm_events)
 
     def _build_ui(self) -> None:
         root = QVBoxLayout(self)
@@ -69,8 +62,12 @@ class AnalyticsTab(QWidget):
         refresh_btn.clicked.connect(self.refresh)
         export_btn = QPushButton("Export CSV")
         export_btn.clicked.connect(self._export_csv)
+        clear_btn = QPushButton("Wis historie")
+        clear_btn.setToolTip("Wis alle doel-run tijden voor de geselecteerde party")
+        clear_btn.clicked.connect(self._clear_history)
         ctrl.addWidget(refresh_btn)
         ctrl.addWidget(export_btn)
+        ctrl.addWidget(clear_btn)
         ctrl.addStretch(1)
         root.addLayout(ctrl)
 
@@ -100,33 +97,7 @@ class AnalyticsTab(QWidget):
             self._legend.setStyleSheet(f"color: {TEXT_MUTED}; font-size: 11px;")
             root.addWidget(self._legend)
 
-        farm_header = QLabel("Farm health events")
-        farm_header.setStyleSheet(f"color: {TEXT_PRIMARY}; font-weight: 600; margin-top: 8px;")
-        root.addWidget(farm_header)
-        self._farm_events = QLabel("Nog geen farm events.")
-        self._farm_events.setWordWrap(True)
-        self._farm_events.setStyleSheet(f"color: {TEXT_MUTED}; font-size: 11px;")
-        root.addWidget(self._farm_events)
         root.addStretch(1)
-
-    def _schedule_farm_events_refresh(self) -> None:
-        if not self._farm_events_timer.isActive():
-            self._farm_events_timer.start()
-
-    def _refresh_farm_events(self) -> None:
-        events = load_farm_events()
-        if not events:
-            self._farm_events.setText("Nog geen farm events.")
-            return
-        lines = []
-        for event in reversed(events[-20:]):
-            from datetime import datetime
-
-            ts = datetime.fromtimestamp(event.timestamp).strftime("%m-%d %H:%M")
-            lines.append(
-                f"{ts} · P{event.party_index} · [{event.severity}] {event.message}"
-            )
-        self._farm_events.setText("\n".join(lines))
 
     def _schedule_refresh(self) -> None:
         if not self._refresh_timer.isActive():
@@ -292,3 +263,26 @@ class AnalyticsTab(QWidget):
             QMessageBox.critical(self, "Export", f"Kon bestand niet schrijven:\n{exc}")
             return
         QMessageBox.information(self, "Export", f"Opgeslagen: {path}")
+
+    def _clear_history(self) -> None:
+        party_index = self._selected_party
+        if party_index is None:
+            history = self._load_history()
+            parties = party_indexes_with_history(history)
+            if not parties:
+                QMessageBox.information(self, "Wis historie", "Geen doel-runs om te wissen.")
+                return
+            party_index = parties[0]
+        reply = QMessageBox.question(
+            self,
+            "Wis historie",
+            f"Alle opgeslagen doel-run tijden voor party {party_index} wissen?\n"
+            "Dit kan niet ongedaan worden gemaakt.",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No,
+        )
+        if reply != QMessageBox.StandardButton.Yes:
+            return
+        self._dashboard.game_state.clear_goal_run_history(party_index)
+        self._selected_party = None
+        self.refresh()

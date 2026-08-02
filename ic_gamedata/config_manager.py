@@ -62,6 +62,11 @@ class ConfigManager:
     def save_goal_run_history(self, history: dict[int, list[GoalRunRecord]]) -> None:
         save_goal_run_history(history)
 
+    def clear_goal_run_history(self, party_index: int | None = None) -> dict[int, list[GoalRunRecord]]:
+        from ic_gamedata.goal_run_history_store import clear_goal_run_history
+
+        return clear_goal_run_history(party_index)
+
     @staticmethod
     def _invalidate_modron_cache() -> None:
         try:

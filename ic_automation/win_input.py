@@ -48,7 +48,6 @@ FORMATION_SCANCODES = {
     "W": SCANCODE_W,
     "E": SCANCODE_E,
     "R": SCANCODE_R,
-    "G": SCANCODE_G,
 }
 SCANCODES_F = {
     i: (SCANCODE_F1 + (i - 1) if i <= 10 else (SCANCODE_F11 if i == 11 else SCANCODE_F12))
@@ -377,7 +376,7 @@ def do_auto_progress(use_sendinput: bool = True) -> None:
 
 
 def do_formation_hotkey(key: str, use_sendinput: bool = True) -> bool:
-    """Send Q/W/E/R formation, G auto-progress, or R reset hotkey (uppercase)."""
+    """Send Q/W/E/R formation or reset hotkey (uppercase)."""
     letter = key.strip().upper()
     scancode = FORMATION_SCANCODES.get(letter)
     if scancode is None:

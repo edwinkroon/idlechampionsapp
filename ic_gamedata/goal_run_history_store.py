@@ -112,3 +112,14 @@ def save_goal_run_history(history: dict[int, list[GoalRunRecord]]) -> None:
         }
     }
     path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+
+
+def clear_goal_run_history(party_index: int | None = None) -> dict[int, list[GoalRunRecord]]:
+    """Clear persisted history for one party, or all parties when party_index is None."""
+    if party_index is None:
+        history: dict[int, list[GoalRunRecord]] = {}
+    else:
+        history = load_goal_run_history()
+        history.pop(party_index, None)
+    save_goal_run_history(history)
+    return history

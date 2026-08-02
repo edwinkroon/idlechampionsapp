@@ -24,7 +24,6 @@ from PySide6.QtWidgets import (
 from ic_core.game_state import GameStateService
 from ic_ui.tabs.sources_tab import SourcesTab
 from ic_ui.theme import BG_BADGE, BUD_BAR, FEAT_OWNED, TEXT_BADGE
-from ic_ui.widgets.farm_health_badge import apply_farm_health_badge
 
 
 class DashboardTab(QWidget):
@@ -642,9 +641,6 @@ class DashboardTab(QWidget):
         box.setProperty("party_index", party_index)
         box.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
         layout = QVBoxLayout(box)
-        lbl_health = QLabel("")
-        lbl_health.hide()
-        layout.addWidget(lbl_health)
         lbl_area = QLabel("Area: —")
         lbl_modron_progress = QLabel("")
         modron_bar = QProgressBar()
@@ -667,10 +663,14 @@ class DashboardTab(QWidget):
         goal_runs_row_layout = QHBoxLayout(goal_runs_row)
         goal_runs_row_layout.setContentsMargins(0, 0, 0, 0)
         lbl_goal_runs = QLabel("")
+        btn_goal_runs_clear = QPushButton("Wis")
+        btn_goal_runs_clear.setFixedWidth(40)
+        btn_goal_runs_clear.setToolTip("Wis alle doel-run tijden voor deze party")
         btn_goal_runs_expand = QPushButton("▶")
         btn_goal_runs_expand.setFixedWidth(28)
         btn_goal_runs_expand.setToolTip("Toon eerdere doel-runs")
         goal_runs_row_layout.addWidget(lbl_goal_runs, stretch=1)
+        goal_runs_row_layout.addWidget(btn_goal_runs_clear)
         goal_runs_row_layout.addWidget(btn_goal_runs_expand)
         goal_runs_extra = QWidget()
         goal_runs_extra_layout = QVBoxLayout(goal_runs_extra)
@@ -719,9 +719,11 @@ class DashboardTab(QWidget):
         btn_goal_runs_expand.clicked.connect(
             lambda _checked=False, idx=party_index: self._toggle_goal_runs(idx)
         )
+        btn_goal_runs_clear.clicked.connect(
+            lambda _checked=False, idx=party_index: self._clear_goal_runs(idx)
+        )
         widgets: dict[str, QWidget] = {
             "frame": box,
-            "health": lbl_health,
             "area": lbl_area,
             "modron_progress_label": lbl_modron_progress,
             "modron_progress": modron_bar,
@@ -733,6 +735,7 @@ class DashboardTab(QWidget):
             "areas_rate": lbl_areas_rate,
             "goal_runs_row": goal_runs_row,
             "goal_runs": lbl_goal_runs,
+            "goal_runs_clear": btn_goal_runs_clear,
             "goal_runs_expand": btn_goal_runs_expand,
             "goal_runs_extra": goal_runs_extra,
             "goal_runs_extra_layout": goal_runs_extra_layout,
@@ -787,6 +790,21 @@ class DashboardTab(QWidget):
             extra.setVisible(self._dash_goal_runs_expanded[party_index])
         if expand_btn is not None:
             expand_btn.setText("▼" if self._dash_goal_runs_expanded[party_index] else "▶")
+
+    def _clear_goal_runs(self, party_index: int) -> None:
+        reply = QMessageBox.question(
+            self,
+            "Doel-runs wissen",
+            f"Alle opgeslagen doel-run tijden voor party {party_index} wissen?\n"
+            "Dit kan niet ongedaan worden gemaakt.",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No,
+        )
+        if reply != QMessageBox.StandardButton.Yes:
+            return
+        self._state.clear_goal_run_history(party_index)
+        self._dash_goal_runs_expanded[party_index] = False
+        self._update_labels()
 
     def _goal_run_label_style(self, unreliable: bool) -> str:
         color = FEAT_OWNED if unreliable else TEXT_BADGE
@@ -972,22 +990,6 @@ class DashboardTab(QWidget):
                 widgets["area"].setText(
                     f"Area: {party.current_area if party.current_area is not None else '—'}"
                 )
-
-            if is_active:
-                history = tracker.goal_run_history(party.party_index)
-                snapshot = self._state.update_gem_farm(
-                    party=party,
-                    ps=ps,
-                    is_active=True,
-                    goal_run_history=history,
-                )
-                health_label = widgets.get("health")
-                if health_label is not None:
-                    apply_farm_health_badge(health_label, snapshot.health)
-            else:
-                health_label = widgets.get("health")
-                if health_label is not None:
-                    health_label.hide()
 
         for idx in list(self._dash_party_widgets):
             if idx not in seen:

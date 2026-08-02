@@ -112,17 +112,27 @@ def _goal_run_duration_sec(state: PartyTrackState) -> tuple[float, bool]:
     return duration, unreliable
 
 
-def _goal_run_completed(state: PartyTrackState) -> bool:
+def _goal_completion_margin(goal: int, *, on_reset: bool) -> int:
+    """How close peak/area must get to the Modron goal to count as finished."""
+    if not on_reset:
+        # Live near-goal recording (same as previous ``area >= goal - 10``).
+        return 10
+    # Briv (and API poll gaps) often skip the exact goal area before reset lands.
+    return max(10, min(50, max(20, goal // 8)))
+
+
+def _goal_run_completed(state: PartyTrackState, *, on_reset: bool = False) -> bool:
     goal = _segment_goal_for_state(state)
     if goal is None or goal <= 0:
         return False
+    margin = _goal_completion_margin(goal, on_reset=on_reset)
     peak = _segment_peak_for_state(state)
     if peak is not None:
-        if peak + GOAL_COMPLETION_AREA_TOLERANCE >= goal and _plausible_peak_for_goal(peak, goal):
+        if peak + margin >= goal and _plausible_peak_for_goal(peak, goal):
             return True
-    # API polls can skip the exact goal area before Modron reset.
+    # API/memory polls can skip the exact goal area before Modron reset.
     prev_area = state.api_latest.current_area
-    if prev_area is not None and prev_area >= goal - 10:
+    if prev_area is not None and prev_area + margin >= goal:
         return True
     return False
 
