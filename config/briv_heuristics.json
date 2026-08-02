@@ -1,0 +1,26 @@
+{
+  "conservative_margin": 8,
+  "phase_margin": 5,
+  "jump_buffer": 5,
+  "reset_buffer": 15,
+  "stack_above_reset_min": 14,
+  "stack_above_reset_max": 24,
+  "rarity_factor": {
+    "1": 0.98,
+    "2": 1.0,
+    "3": 1.01,
+    "4": 1.03
+  },
+  "gild_factor": {
+    "0": 1.0,
+    "1": 1.02,
+    "2": 1.04
+  },
+  "enchant_buckets": [
+    {"max_enchant": 99, "stack_target": 2500000000},
+    {"max_enchant": 499, "stack_target": 3500000000},
+    {"max_enchant": 999, "stack_target": 4200000000},
+    {"max_enchant": 1999, "stack_target": 5000000000},
+    {"max_enchant": 999999999, "stack_target": 6500000000}
+  ]
+}

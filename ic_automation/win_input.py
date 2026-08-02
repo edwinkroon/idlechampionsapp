@@ -39,6 +39,17 @@ SCANCODE_F1, SCANCODE_F12 = 0x3B, 0x58
 SCANCODE_F11 = 0x57
 SCANCODE_G = 0x22
 SCANCODE_GRAVE = 0x29
+SCANCODE_Q = 0x10
+SCANCODE_W = 0x11
+SCANCODE_E = 0x12
+SCANCODE_R = 0x13
+FORMATION_SCANCODES = {
+    "Q": SCANCODE_Q,
+    "W": SCANCODE_W,
+    "E": SCANCODE_E,
+    "R": SCANCODE_R,
+    "G": SCANCODE_G,
+}
 SCANCODES_F = {
     i: (SCANCODE_F1 + (i - 1) if i <= 10 else (SCANCODE_F11 if i == 11 else SCANCODE_F12))
     for i in range(1, 13)
@@ -363,6 +374,21 @@ def do_auto_progress(use_sendinput: bool = True) -> None:
         return
     if pyautogui:
         pyautogui.press("g")
+
+
+def do_formation_hotkey(key: str, use_sendinput: bool = True) -> bool:
+    """Send Q/W/E/R formation, G auto-progress, or R reset hotkey (uppercase)."""
+    letter = key.strip().upper()
+    scancode = FORMATION_SCANCODES.get(letter)
+    if scancode is None:
+        return False
+    if use_sendinput:
+        send_key_scancode(scancode)
+        return True
+    if pyautogui:
+        pyautogui.press(letter.lower())
+        return True
+    return False
 
 
 def do_abilities_cycle(keys: list[str] | None = None, use_sendinput: bool = True) -> None:

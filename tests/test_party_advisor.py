@@ -198,6 +198,23 @@ class PartyAdvisorTests(unittest.TestCase):
         if report.seat_report is not None and report.seat_report.bud_hero_id is not None:
             self.assertNotEqual(report.seat_report.bud_hero_id, benched_hero_id)
 
+    def test_formation_heroes_excludes_benched_when_seat_mapping_stale(self) -> None:
+        from ic_gamedata.party_advisor import _formation_heroes, analyze_party
+
+        payload = copy.deepcopy(self.payload)
+        details = payload["details"]
+        for hero in details.get("heroes") or []:
+            if isinstance(hero, dict):
+                hero["in_seat"] = "0"
+
+        formation = _formation_heroes(payload)
+        self.assertEqual(formation, ())
+
+        report = analyze_party(payload, goal="bud", context="campaign")
+        self.assertEqual(report.formation_heroes, ())
+        if report.seat_report is not None:
+            self.assertEqual(report.seat_report.seats, ())
+
     def test_formation_buffer_tip_targets_bud_not_support(self) -> None:
         from ic_gamedata.formation_advisor.context_builder import build_formation_layout_context
         from ic_gamedata.formation_advisor.evaluator import evaluate_formation_rules

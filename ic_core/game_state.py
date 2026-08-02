@@ -12,6 +12,7 @@ class GameStateService(QObject):
 
     state_changed = Signal()
     payload_changed = Signal(object)
+    farm_health_changed = Signal()
 
     def __init__(self, parent: QObject | None = None) -> None:
         super().__init__(parent)
@@ -24,6 +25,15 @@ class GameStateService(QObject):
         self.memory_gems: int | None = None
         self.memory_modron_goal: int | None = None
         self.memory_detail: str = ""
+        self.gem_farm_snapshot = None
+        self._gem_farm_advisor = None
+        self._copilot_controller = None
+
+    @property
+    def farm_health_status(self):
+        if self.gem_farm_snapshot is not None:
+            return self.gem_farm_snapshot.health
+        return None
 
     def load_tracker(self) -> None:
         if self.tracker is not None:
@@ -154,3 +164,50 @@ class GameStateService(QObject):
             session_text, session_color = "Sessie: gestopt", STATUS_IDLE
 
         return api_text, api_color, mem_text, mem_color, session_text, session_color
+
+    @property
+    def copilot_controller(self):
+        if self._copilot_controller is None:
+            from ic_automation.copilot_controller import CopilotController
+
+            self._copilot_controller = CopilotController()
+            self._copilot_controller.start()
+        return self._copilot_controller
+
+    @property
+    def gem_farm_advisor(self):
+        if self._gem_farm_advisor is None:
+            from ic_gamedata.gem_farm.advisor import GemFarmAdvisor
+
+            self._gem_farm_advisor = GemFarmAdvisor()
+        return self._gem_farm_advisor
+
+    @property
+    def farm_health_monitor(self):
+        return self.gem_farm_advisor.health_monitor
+
+    def update_gem_farm(
+        self,
+        *,
+        party,
+        ps,
+        is_active: bool,
+        goal_run_history,
+    ):
+        if is_active:
+            snapshot = self.gem_farm_advisor.evaluate(
+                party=party,
+                ps=ps,
+                is_active=True,
+                payload=self.last_payload,
+                memory_modron_goal=self.memory_modron_goal,
+                goal_run_history=goal_run_history,
+            )
+        else:
+            snapshot = self.gem_farm_advisor.evaluate_idle(party.party_index)
+        previous = self.gem_farm_snapshot
+        self.gem_farm_snapshot = snapshot
+        self.copilot_controller.notify_snapshot(snapshot)
+        if snapshot != previous:
+            self.farm_health_changed.emit()
+        return snapshot

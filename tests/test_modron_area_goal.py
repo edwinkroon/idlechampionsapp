@@ -43,6 +43,24 @@ class ModronAreaGoalTests(unittest.TestCase):
                 )
         self.assertIsNone(goal)
 
+    def test_reads_area_goal_from_modron_saves_dict_for_party(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            config_path = Path(tmp) / "gamedata.json"
+            config_path.write_text("{}", encoding="utf-8")
+            payload = {
+                "details": {
+                    "modron_saves": {
+                        "1": {"core_id": "1", "instance_id": "3", "area_goal": "175"},
+                        "3": {"core_id": "3", "instance_id": "1", "area_goal": "320"},
+                        "4": {"core_id": "4", "instance_id": "2", "area_goal": "100"},
+                    }
+                }
+            }
+            with patch("ic_gamedata.modron_area_goal.GAMEDATA_CONFIG_PATH", config_path):
+                _load_gamedata.cache_clear()
+                goal = resolve_modron_area_goal(None, payload, party_index=1)
+        self.assertEqual(goal, 320)
+
     def test_records_run_at_modron_goal_not_milestone(self) -> None:
         party_high = PartySnapshot(
             party_index=1,

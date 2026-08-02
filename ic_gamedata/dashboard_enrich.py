@@ -10,8 +10,22 @@ from ic_gamedata.log_parser import PartySnapshot
 def _merge_optional_briv_stacks(
     api_stacks: int | None,
     tracked_stacks: int | None,
+    *,
+    tracked_area: int | None = None,
+    api_area: int | None = None,
 ) -> int | None:
-    """Briv sprint stacks only increase during a run — keep the highest known value."""
+    """Merge Briv sprint stacks across polls.
+
+    During a run stacks only increase, so we keep the highest known value.
+    After a Modron reset (area drops sharply) trust the API again — even if lower.
+    """
+    area_reset = (
+        tracked_area is not None
+        and api_area is not None
+        and api_area + 20 < tracked_area
+    )
+    if area_reset:
+        return api_stacks
     if api_stacks is None:
         return tracked_stacks
     if tracked_stacks is None:
@@ -74,6 +88,14 @@ def enrich_party_for_dashboard(
             briv_sprint_stacks=_merge_optional_briv_stacks(
                 api_party.briv_sprint_stacks,
                 tracked.briv_sprint_stacks,
+                tracked_area=tracked.current_area,
+                api_area=api_party.current_area,
+            ),
+            briv_steelbones_stacks=_merge_optional_briv_stacks(
+                api_party.briv_steelbones_stacks,
+                tracked.briv_steelbones_stacks,
+                tracked_area=tracked.current_area,
+                api_area=api_party.current_area,
             ),
             briv_in_formation=api_party.briv_in_formation or tracked.briv_in_formation,
             active_buffs_text=api_party.active_buffs_text or tracked.active_buffs_text,

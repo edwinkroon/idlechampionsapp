@@ -9,7 +9,9 @@ from ic_gamedata.log_parser import PartySnapshot
 from ic_gamedata.stats_models import (
     GOAL_COMPLETION_AREA_TOLERANCE,
     GOAL_PEAK_SANITY_MARGIN,
+    GOAL_RUN_DURATION_MISMATCH_SEC,
     MAX_PLAUSIBLE_GOAL_RUN_SEC,
+    PARTY_INACTIVE_DURATION_THRESHOLD_SEC,
     _plausible_peak_for_goal,
 )
 from ic_gamedata.stats_rates import _MetricSample
@@ -65,18 +67,49 @@ def _sync_segment_goal(state: PartyTrackState, party: PartySnapshot) -> None:
         state.segment_area_goal = goal
 
 
-def _goal_run_duration_sec(state: PartyTrackState) -> float:
+def _accumulate_inactive_time(state: PartyTrackState, party: PartySnapshot, now: float) -> None:
+    """Track wall time while this party slot was not the active game instance."""
+    if state.last_poll_at is None:
+        state.last_poll_at = now
+        return
+    delta = max(now - state.last_poll_at, 0.0)
+    if delta > 0 and not party.is_active:
+        state.segment_inactive_sec += delta
+    state.last_poll_at = now
+
+
+def _goal_run_duration_sec(state: PartyTrackState) -> tuple[float, bool]:
+    """
+    Return run duration and whether the value may be inflated by party switches.
+
+    When the dashboard tracked inactive wall time, prefer the in-game timer.
+    """
     segment_duration = max(time.time() - state.segment_started_at, 0.0)
-    api_duration = state.api_latest.seconds_since_reset
-    if api_duration is None:
-        return segment_duration
-    api_duration = float(api_duration)
+    api_raw = state.api_latest.seconds_since_reset
+    had_inactive = state.segment_inactive_sec >= PARTY_INACTIVE_DURATION_THRESHOLD_SEC
+
+    if had_inactive and api_raw is not None:
+        api_duration = float(api_raw)
+        if 0 < api_duration <= MAX_PLAUSIBLE_GOAL_RUN_SEC:
+            return api_duration, False
+
+    if api_raw is None:
+        return segment_duration, had_inactive
+
+    api_duration = float(api_raw)
     if api_duration > MAX_PLAUSIBLE_GOAL_RUN_SEC:
-        return segment_duration if segment_duration > 0 else MAX_PLAUSIBLE_GOAL_RUN_SEC
+        duration = segment_duration if segment_duration > 0 else MAX_PLAUSIBLE_GOAL_RUN_SEC
+        return duration, had_inactive
+
     # Tracker often starts mid-run — trust the in-game timer when it is ahead.
     if api_duration > segment_duration + 30:
-        return api_duration
-    return segment_duration if segment_duration > 0 else api_duration
+        return api_duration, False
+
+    duration = segment_duration if segment_duration > 0 else api_duration
+    unreliable = had_inactive or (
+        segment_duration > api_duration + GOAL_RUN_DURATION_MISMATCH_SEC
+    )
+    return duration, unreliable
 
 
 def _goal_run_completed(state: PartyTrackState) -> bool:
@@ -122,6 +155,8 @@ class PartyTrackState:
     segment_area_goal: int | None = None
     last_memory_area: int | None = None
     goal_run_recorded_this_segment: bool = False
+    segment_inactive_sec: float = 0.0
+    last_poll_at: float | None = None
     samples: list[_MetricSample] = field(default_factory=list)
 
 

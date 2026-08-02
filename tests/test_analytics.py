@@ -30,6 +30,25 @@ class GoalRunAnalyticsTests(unittest.TestCase):
         self.assertEqual(summary.points[-1].run_index, 3)
         self.assertEqual(summary.points[-1].duration_sec, 600.0)
 
+    def test_excludes_unreliable_runs_from_chart(self) -> None:
+        records = (
+            GoalRunRecord(
+                duration_sec=1200.0,
+                area_goal=300,
+                peak_area=301,
+                recorded_at=200.0,
+                duration_unreliable=True,
+            ),
+            GoalRunRecord(duration_sec=600.0, area_goal=300, peak_area=301, recorded_at=100.0),
+            GoalRunRecord(duration_sec=540.0, area_goal=300, peak_area=300, recorded_at=50.0),
+        )
+        summary = build_goal_run_analytics(1, records)
+        self.assertEqual(summary.run_count, 2)
+        self.assertEqual(summary.excluded_unreliable_count, 1)
+        self.assertEqual(summary.latest_sec, 600.0)
+        self.assertEqual(summary.best_sec, 540.0)
+        self.assertAlmostEqual(summary.avg_sec, 570.0)
+
     def test_empty_history(self) -> None:
         summary = build_goal_run_analytics(2, ())
         self.assertEqual(summary.run_count, 0)

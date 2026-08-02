@@ -86,18 +86,49 @@ def format_buffs_block(parts: list[str]) -> str | None:
     return "Buffs:\n" + "\n".join(f"· {part}" for part in parts)
 
 
-def _briv_sprint_stacks_for_instance(
+def _account_briv_stat_matches_other_party(
+    payload: dict[str, Any],
+    *,
+    party_index: int,
+    account_stacks: int,
+    stat_key: str,
+) -> bool:
+    """True when account stacks equal another party's instance value (likely stale)."""
+    details = payload.get("details")
+    if not isinstance(details, dict):
+        return False
+    instances = details.get("game_instances")
+    if not isinstance(instances, list):
+        return False
+    for inst in instances:
+        if not isinstance(inst, dict):
+            continue
+        gid = _parse_int(inst.get("game_instance_id"))
+        if gid is None or gid == party_index:
+            continue
+        other_stats = inst.get("stats")
+        if not isinstance(other_stats, dict):
+            continue
+        other = _parse_int(other_stats.get(stat_key))
+        if other is not None and other == account_stacks:
+            return True
+    return False
+
+
+def _briv_stat_stacks_for_instance(
     instance: dict[str, Any],
     stats: dict[str, Any],
     payload: dict[str, Any] | None,
     *,
     party_index: int | None,
     briv_in: bool,
+    stat_key: str,
 ) -> int | None:
+    """Read Briv sprint or steelbones stacks for one party from instance/account stats."""
     if not briv_in:
         return None
 
-    instance_stacks = _parse_int(stats.get("briv_sprint_stacks"))
+    instance_stacks = _parse_int(stats.get(stat_key))
     account_stacks: int | None = None
     is_active = False
 
@@ -109,10 +140,24 @@ def _briv_sprint_stacks_for_instance(
             if is_active:
                 account_stats = details.get("stats")
                 if isinstance(account_stats, dict):
-                    account_stacks = _parse_int(account_stats.get("briv_sprint_stacks"))
+                    account_stacks = _parse_int(account_stats.get(stat_key))
 
     if is_active:
-        # details.stats tracks the focused window live; per-instance stats often lag.
+        # details.stats tracks the focused window — but after a party switch it can
+        # still hold the previous party's stacks. Ignore that stale fallback.
+        if (
+            instance_stacks is None
+            and account_stacks is not None
+            and payload is not None
+            and party_index is not None
+            and _account_briv_stat_matches_other_party(
+                payload,
+                party_index=party_index,
+                account_stacks=account_stacks,
+                stat_key=stat_key,
+            )
+        ):
+            return None
         if account_stacks is None:
             return instance_stacks
         if instance_stacks is None:
@@ -120,6 +165,42 @@ def _briv_sprint_stacks_for_instance(
         return max(account_stacks, instance_stacks)
 
     return instance_stacks
+
+
+def _briv_sprint_stacks_for_instance(
+    instance: dict[str, Any],
+    stats: dict[str, Any],
+    payload: dict[str, Any] | None,
+    *,
+    party_index: int | None,
+    briv_in: bool,
+) -> int | None:
+    return _briv_stat_stacks_for_instance(
+        instance,
+        stats,
+        payload,
+        party_index=party_index,
+        briv_in=briv_in,
+        stat_key="briv_sprint_stacks",
+    )
+
+
+def _briv_steelbones_stacks_for_instance(
+    instance: dict[str, Any],
+    stats: dict[str, Any],
+    payload: dict[str, Any] | None,
+    *,
+    party_index: int | None,
+    briv_in: bool,
+) -> int | None:
+    return _briv_stat_stacks_for_instance(
+        instance,
+        stats,
+        payload,
+        party_index=party_index,
+        briv_in=briv_in,
+        stat_key="briv_steelbones_stacks",
+    )
 
 
 def summarize_active_buffs(instance: dict[str, Any], payload: dict[str, Any] | None) -> str | None:
@@ -315,6 +396,13 @@ def parse_instance_extras(
         party_index=party_index,
         briv_in=briv_in,
     )
+    steelbones = _briv_steelbones_stacks_for_instance(
+        instance,
+        stats,
+        payload,
+        party_index=party_index,
+        briv_in=briv_in,
+    )
     from ic_gamedata.modron_area_goal import resolve_modron_area_goal
 
     modron_area_goal = resolve_modron_area_goal(
@@ -332,6 +420,7 @@ def parse_instance_extras(
         "patron_tier": _parse_int(instance.get("current_patron_tier")),
         "time_warps_used": _parse_int(stats.get("time_warps_used_this_reset")),
         "briv_sprint_stacks": briv_stacks,
+        "briv_steelbones_stacks": steelbones,
         "briv_in_formation": briv_in,
         "active_buffs_text": summarize_active_buffs(instance, payload),
     }

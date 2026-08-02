@@ -22,6 +22,7 @@ from ic_gamedata.analytics import (
     goal_run_csv_rows,
     party_indexes_with_history,
 )
+from ic_gamedata.gem_farm.event_log import load_farm_events
 from ic_gamedata.goal_run_history_store import load_goal_run_history
 from ic_gamedata.stats import GoalRunRecord
 from ic_ui.tabs.dashboard_tab import DashboardTab
@@ -40,13 +41,19 @@ class AnalyticsTab(QWidget):
         super().__init__(parent)
         self._dashboard = dashboard_tab
         self._dashboard.game_state.state_changed.connect(self._schedule_refresh)
+        self._dashboard.game_state.farm_health_changed.connect(self._schedule_farm_events_refresh)
         self._selected_party: int | None = None
         self._refresh_timer = QTimer(self)
         self._refresh_timer.setSingleShot(True)
         self._refresh_timer.setInterval(1500)
         self._refresh_timer.timeout.connect(self.refresh)
+        self._farm_events_timer = QTimer(self)
+        self._farm_events_timer.setSingleShot(True)
+        self._farm_events_timer.setInterval(800)
+        self._farm_events_timer.timeout.connect(self._refresh_farm_events)
         self._build_ui()
         QTimer.singleShot(400, self.refresh)
+        QTimer.singleShot(500, self._refresh_farm_events)
 
     def _build_ui(self) -> None:
         root = QVBoxLayout(self)
@@ -77,22 +84,49 @@ class AnalyticsTab(QWidget):
             fallback.setWordWrap(True)
             fallback.setStyleSheet(f"color: {TEXT_MUTED};")
             root.addWidget(fallback)
-            root.addStretch(1)
             self._plot = None
+            self._legend = QLabel("")
+        else:
+            pg.setConfigOptions(antialias=True)
+            self._plot = pg.PlotWidget()
+            self._plot.setBackground("#252526")
+            self._plot.showGrid(x=True, y=True, alpha=0.25)
+            self._plot.setLabel("left", "Duur", units="min")
+            self._plot.setLabel("bottom", "Run")
+            self._plot.setMinimumHeight(280)
+            root.addWidget(self._plot, stretch=1)
+
+            self._legend = QLabel("")
+            self._legend.setStyleSheet(f"color: {TEXT_MUTED}; font-size: 11px;")
+            root.addWidget(self._legend)
+
+        farm_header = QLabel("Farm health events")
+        farm_header.setStyleSheet(f"color: {TEXT_PRIMARY}; font-weight: 600; margin-top: 8px;")
+        root.addWidget(farm_header)
+        self._farm_events = QLabel("Nog geen farm events.")
+        self._farm_events.setWordWrap(True)
+        self._farm_events.setStyleSheet(f"color: {TEXT_MUTED}; font-size: 11px;")
+        root.addWidget(self._farm_events)
+        root.addStretch(1)
+
+    def _schedule_farm_events_refresh(self) -> None:
+        if not self._farm_events_timer.isActive():
+            self._farm_events_timer.start()
+
+    def _refresh_farm_events(self) -> None:
+        events = load_farm_events()
+        if not events:
+            self._farm_events.setText("Nog geen farm events.")
             return
+        lines = []
+        for event in reversed(events[-20:]):
+            from datetime import datetime
 
-        pg.setConfigOptions(antialias=True)
-        self._plot = pg.PlotWidget()
-        self._plot.setBackground("#252526")
-        self._plot.showGrid(x=True, y=True, alpha=0.25)
-        self._plot.setLabel("left", "Duur", units="min")
-        self._plot.setLabel("bottom", "Run")
-        self._plot.setMinimumHeight(280)
-        root.addWidget(self._plot, stretch=1)
-
-        self._legend = QLabel("")
-        self._legend.setStyleSheet(f"color: {TEXT_MUTED}; font-size: 11px;")
-        root.addWidget(self._legend)
+            ts = datetime.fromtimestamp(event.timestamp).strftime("%m-%d %H:%M")
+            lines.append(
+                f"{ts} · P{event.party_index} · [{event.severity}] {event.message}"
+            )
+        self._farm_events.setText("\n".join(lines))
 
     def _schedule_refresh(self) -> None:
         if not self._refresh_timer.isActive():
@@ -124,7 +158,8 @@ class AnalyticsTab(QWidget):
             )
             if self._plot is not None:
                 self._plot.clear()
-            self._legend.setText("")
+            if self._legend is not None:
+                self._legend.setText("")
             return
 
         if current not in parties:
@@ -164,18 +199,28 @@ class AnalyticsTab(QWidget):
         records = self._records_for_party(party_index)
         summary = build_goal_run_analytics(party_index, records)
         if summary.run_count == 0:
-            self._summary.setText(f"Party {party_index}: nog geen voltooide Modron-doel runs.")
+            if summary.excluded_unreliable_count:
+                self._summary.setText(
+                    f"Party {party_index}: geen betrouwbare Modron-doel runs "
+                    f"({summary.excluded_unreliable_count} overgeslagen na party-wissel)."
+                )
+            else:
+                self._summary.setText(f"Party {party_index}: nog geen voltooide Modron-doel runs.")
             if self._plot is not None:
                 self._plot.clear()
-            self._legend.setText("")
+            if hasattr(self, "_legend"):
+                self._legend.setText("")
             return
 
         goal_txt = f"doel {summary.area_goal}" if summary.area_goal is not None else "doel —"
+        excluded_txt = ""
+        if summary.excluded_unreliable_count:
+            excluded_txt = f" · {summary.excluded_unreliable_count} overgeslagen (party gewisseld)"
         self._summary.setText(
             f"Party {party_index} · {summary.run_count} runs · {goal_txt} · "
             f"beste {format_duration_minutes(summary.best_sec)} · "
             f"gemiddeld {format_duration_minutes(summary.avg_sec)} · "
-            f"laatste {format_duration_minutes(summary.latest_sec)}"
+            f"laatste {format_duration_minutes(summary.latest_sec)}{excluded_txt}"
         )
 
         if self._plot is None:

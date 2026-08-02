@@ -32,6 +32,8 @@ Desktop.ini
 # Runtime / local config (per machine)
 config/goal_run_history.json
 config/gamedata.json
+config/gem_farm.json
+config/farm_health_events.json
 
 # Runtime logs (keep .gitkeep)
 logs/*

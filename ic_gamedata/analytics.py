@@ -17,6 +17,7 @@ class GoalRunChartPoint:
     area_goal: int
     peak_area: int | None
     recorded_at: float
+    duration_unreliable: bool = False
 
 
 @dataclass(frozen=True)
@@ -28,6 +29,12 @@ class GoalRunAnalyticsSummary:
     avg_sec: float | None
     latest_sec: float | None
     points: tuple[GoalRunChartPoint, ...]
+    excluded_unreliable_count: int = 0
+
+
+def reliable_goal_run_records(records: Sequence[GoalRunRecord]) -> tuple[GoalRunRecord, ...]:
+    """Drop runs whose duration was inflated by party switches."""
+    return tuple(record for record in records if not record.duration_unreliable)
 
 
 def build_goal_run_analytics(
@@ -35,18 +42,21 @@ def build_goal_run_analytics(
     records: Sequence[GoalRunRecord],
 ) -> GoalRunAnalyticsSummary:
     """Build chart points and summary stats from newest-first history records."""
-    if not records:
+    excluded = sum(1 for record in records if record.duration_unreliable)
+    reliable = reliable_goal_run_records(records)
+    if not reliable:
         return GoalRunAnalyticsSummary(
             party_index=party_index,
             run_count=0,
-            area_goal=None,
+            area_goal=records[0].area_goal if records else None,
             best_sec=None,
             avg_sec=None,
             latest_sec=None,
             points=(),
+            excluded_unreliable_count=excluded,
         )
 
-    chronological = tuple(reversed(records))
+    chronological = tuple(reversed(reliable))
     points: list[GoalRunChartPoint] = []
     for index, record in enumerate(chronological, start=1):
         points.append(
@@ -56,12 +66,13 @@ def build_goal_run_analytics(
                 area_goal=record.area_goal,
                 peak_area=record.peak_area,
                 recorded_at=record.recorded_at,
+                duration_unreliable=False,
             )
         )
 
     durations = [point.duration_sec for point in points]
-    latest = records[0].duration_sec
-    area_goal = records[0].area_goal
+    latest = reliable[0].duration_sec
+    area_goal = reliable[0].area_goal
     return GoalRunAnalyticsSummary(
         party_index=party_index,
         run_count=len(points),
@@ -70,6 +81,7 @@ def build_goal_run_analytics(
         avg_sec=sum(durations) / len(durations),
         latest_sec=latest,
         points=tuple(points),
+        excluded_unreliable_count=excluded,
     )
 
 
@@ -113,7 +125,7 @@ def format_duration_minutes(seconds: float | None) -> str:
 
 
 def goal_run_csv_rows(records: Sequence[GoalRunRecord]) -> list[list[str]]:
-    rows = [["run", "duration_sec", "duration", "area_goal", "peak_area", "recorded_at"]]
+    rows = [["run", "duration_sec", "duration", "area_goal", "peak_area", "recorded_at", "duration_unreliable"]]
     chronological = reversed(records)
     for index, record in enumerate(chronological, start=1):
         rows.append(
@@ -124,6 +136,7 @@ def goal_run_csv_rows(records: Sequence[GoalRunRecord]) -> list[list[str]]:
                 str(record.area_goal),
                 "" if record.peak_area is None else str(record.peak_area),
                 f"{record.recorded_at:.0f}",
+                "yes" if record.duration_unreliable else "",
             ]
         )
     return rows

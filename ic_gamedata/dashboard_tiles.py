@@ -12,6 +12,13 @@ from ic_gamedata.stats import MAX_GOAL_RUN_HISTORY, GoalRunRecord, PartySessionS
 
 
 @dataclass(frozen=True)
+class GoalRunHistoryDisplay:
+    summary: str | None
+    summary_unreliable: bool
+    extra: tuple[tuple[str, bool], ...]
+
+
+@dataclass(frozen=True)
 class PartyTileView:
     title: str
     area: str
@@ -26,7 +33,8 @@ class PartyTileView:
     warps: str | None
     buffs: str | None
     goal_runs_summary: str | None = None
-    goal_runs_extra: tuple[str, ...] = ()
+    goal_runs_summary_unreliable: bool = False
+    goal_runs_extra: tuple[tuple[str, bool], ...] = ()
     modron_progress_pct: int | None = None
     modron_progress_text: str | None = None
 
@@ -46,20 +54,32 @@ def format_goal_run_history(
     *,
     area_goal: int | None,
     format_duration: Callable[[float | None], str],
-) -> tuple[str | None, tuple[str, ...]]:
+) -> GoalRunHistoryDisplay:
     if not history:
         if area_goal is not None and area_goal > 0:
-            return f"Doel-run: — (nog geen voltooide run, Modron-doel {area_goal})", ()
-        return None, ()
+            return GoalRunHistoryDisplay(
+                summary=f"Doel-run: — (nog geen voltooide run, Modron-doel {area_goal})",
+                summary_unreliable=False,
+                extra=(),
+            )
+        return GoalRunHistoryDisplay(summary=None, summary_unreliable=False, extra=())
     goal = area_goal if area_goal is not None and area_goal > 0 else history[0].area_goal
+    latest = history[0]
     summary = (
-        f"Laatste doel-run: {format_duration(history[0].duration_sec)} (Modron-doel {goal})"
+        f"Laatste doel-run: {format_duration(latest.duration_sec)} (Modron-doel {goal})"
     )
     extra = tuple(
-        f"{index + 2}. {format_duration(record.duration_sec)}"
+        (
+            f"{index + 2}. {format_duration(record.duration_sec)}",
+            record.duration_unreliable,
+        )
         for index, record in enumerate(history[1:MAX_GOAL_RUN_HISTORY])
     )
-    return summary, extra
+    return GoalRunHistoryDisplay(
+        summary=summary,
+        summary_unreliable=latest.duration_unreliable,
+        extra=extra,
+    )
 
 
 def build_party_tile_view(
@@ -75,6 +95,7 @@ def build_party_tile_view(
     format_number: Callable[[Any], str],
     format_duration: Callable[[float | None], str],
     format_rate_window: Callable[[float | None], str],
+    goal_run_history: tuple[GoalRunRecord, ...] | None = None,
 ) -> PartyTileView:
     reset_note = f" · {ps.reset_count}× Modron" if ps is not None and ps.reset_count else ""
     window_note = format_rate_window(ps.rate_window_sec if ps is not None else None)
@@ -100,7 +121,9 @@ def build_party_tile_view(
     if party.briv_in_formation:
         stacks = party.briv_sprint_stacks
         stacks_txt = format_number(stacks) if stacks is not None else "—"
-        briv = f"Briv sprint: {stacks_txt}"
+        steel = party.briv_steelbones_stacks
+        steel_txt = format_number(steel) if steel is not None else "—"
+        briv = f"Briv sprint: {stacks_txt} · steelbones: {steel_txt}"
     warps = None
     if party.time_warps_used is not None:
         warps = f"Time warps: {party.time_warps_used}"
@@ -112,8 +135,13 @@ def build_party_tile_view(
     milestone = party.adventure_area_goal
     if ps is not None and ps.adventure_area_goal is not None:
         milestone = ps.adventure_area_goal
-    goal_runs_summary, goal_runs_extra = format_goal_run_history(
-        ps.goal_run_history if ps is not None else (),
+    history = (
+        goal_run_history
+        if goal_run_history is not None
+        else (ps.goal_run_history if ps is not None else ())
+    )
+    goal_display = format_goal_run_history(
+        history,
         area_goal=modron_goal,
         format_duration=format_duration,
     )
@@ -142,8 +170,9 @@ def build_party_tile_view(
         briv=briv,
         warps=warps,
         buffs=buffs,
-        goal_runs_summary=goal_runs_summary,
-        goal_runs_extra=goal_runs_extra,
+        goal_runs_summary=goal_display.summary,
+        goal_runs_summary_unreliable=goal_display.summary_unreliable,
+        goal_runs_extra=goal_display.extra,
         modron_progress_pct=progress_pct,
         modron_progress_text=progress_text,
     )

@@ -24,6 +24,9 @@ else:
 
 GAMEDATA_CONFIG_PATH = _CONFIG_BASE / "config" / "gamedata.json"
 GOAL_RUN_HISTORY_PATH = _CONFIG_BASE / "config" / "goal_run_history.json"
+GEM_FARM_CONFIG_PATH = _CONFIG_BASE / "config" / "gem_farm.json"
+FARM_HEALTH_EVENTS_PATH = _CONFIG_BASE / "config" / "farm_health_events.json"
+BRIV_HEURISTICS_PATH = _CONFIG_BASE / "config" / "briv_heuristics.json"
 
 
 class InstallSource(str, Enum):

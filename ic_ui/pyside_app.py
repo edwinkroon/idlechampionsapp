@@ -9,6 +9,7 @@ from ic_ui.tabs.advisor_tab import AdvisorTab, party_id_from_payload
 from ic_ui.tabs.analytics_tab import AnalyticsTab
 from ic_ui.tabs.automation_tab import AutomationTab
 from ic_ui.tabs.dashboard_tab import DashboardTab
+from ic_ui.tabs.gem_farm_tab import GemFarmTab
 from ic_ui.tabs.sources_tab import SourcesTab
 from ic_ui.tabs.specializations_tab import SpecializationsTab
 from ic_ui.workers.api_fetch import ApiFetchRunnable
@@ -49,10 +50,12 @@ class IdleChampionsMainWindow(QMainWindow):
 
         self._specializations_tab = SpecializationsTab(self._dashboard_tab)
         self._analytics_tab = AnalyticsTab(self._dashboard_tab)
+        self._gem_farm_tab = GemFarmTab(self._dashboard_tab)
 
         tabs.addTab(self._automation_tab, "Automatisering [UIT]")
         tabs.addTab(self._dashboard_tab, "Dashboard")
         tabs.addTab(self._analytics_tab, "Analytics")
+        tabs.addTab(self._gem_farm_tab, "Gem Farm")
         tabs.addTab(self._advisor_tab, "Party Advisor")
         tabs.addTab(self._specializations_tab, "Specialisaties")
         tabs.addTab(self._sources_tab, "Bronnen")

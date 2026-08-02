@@ -36,6 +36,7 @@ from ic_gamedata.stats_run_history import (
     PartyTrackState as _PartyTrackState,
 )
 from ic_gamedata.stats_run_history import (
+    _accumulate_inactive_time,
     _goal_run_completed,
     _goal_run_duration_sec,
     _party_modron_goal,
@@ -248,7 +249,7 @@ class StatsTracker:
         if not _goal_run_completed(state):
             return
         previous = state.api_latest
-        duration = _goal_run_duration_sec(state)
+        duration, duration_unreliable = _goal_run_duration_sec(state)
         if duration <= 0 or duration > MAX_PLAUSIBLE_GOAL_RUN_SEC:
             return
         goal = _segment_goal_for_state(state)
@@ -262,6 +263,7 @@ class StatsTracker:
             area_goal=goal,
             peak_area=peak,
             recorded_at=time.time(),
+            duration_unreliable=duration_unreliable,
         )
         history = self._goal_run_history.setdefault(previous.party_index, [])
         history.insert(0, record)
@@ -302,6 +304,8 @@ class StatsTracker:
         state.segment_area_goal = merged_party.modron_area_goal or state.segment_area_goal
         state.last_memory_area = merged_party.current_area
         state.goal_run_recorded_this_segment = False
+        state.segment_inactive_sec = 0.0
+        state.last_poll_at = now
 
     def reset(self) -> None:
         self._started_at = None
@@ -361,11 +365,13 @@ class StatsTracker:
                     gem_anchor_area=party.current_area,
                     segment_peak_area=_peak_area(party),
                     segment_area_goal=_party_modron_goal(party),
+                    last_poll_at=now,
                 )
                 self._party_state[idx] = state
                 _append_sample(state, party, timestamp=now)
                 continue
 
+            _accumulate_inactive_time(state, party, now)
             _sync_segment_goal(state, party)
 
             # Compare raw API readings only — estimated gems must not trigger resets.

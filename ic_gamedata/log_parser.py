@@ -38,6 +38,7 @@ class PartySnapshot:
     patron_tier: int | None = None
     time_warps_used: int | None = None
     briv_sprint_stacks: int | None = None
+    briv_steelbones_stacks: int | None = None
     briv_in_formation: bool = False
     active_buffs_text: str | None = None
 
@@ -119,6 +120,7 @@ def _party_from_instance(
         patron_tier=extras["patron_tier"],
         time_warps_used=extras["time_warps_used"],
         briv_sprint_stacks=extras["briv_sprint_stacks"],
+        briv_steelbones_stacks=extras["briv_steelbones_stacks"],
         briv_in_formation=extras["briv_in_formation"],
         active_buffs_text=extras["active_buffs_text"],
     )
@@ -216,6 +218,14 @@ def merge_party_snapshots(primary: PartySnapshot, secondary: PartySnapshot) -> P
         merged_briv = _merge_optional_max(primary.briv_sprint_stacks, secondary.briv_sprint_stacks)
         briv_stacks = int(merged_briv) if merged_briv is not None else None
 
+    steelbones = primary.briv_steelbones_stacks
+    if not api_reset_ahead:
+        merged_steel = _merge_optional_max(
+            primary.briv_steelbones_stacks,
+            secondary.briv_steelbones_stacks,
+        )
+        steelbones = int(merged_steel) if merged_steel is not None else None
+
     adventure_area_goal = (
         primary.adventure_area_goal
         if primary.adventure_area_goal is not None
@@ -248,6 +258,7 @@ def merge_party_snapshots(primary: PartySnapshot, secondary: PartySnapshot) -> P
         patron_tier=primary.patron_tier if primary.patron_tier is not None else secondary.patron_tier,
         time_warps_used=time_warps,
         briv_sprint_stacks=briv_stacks,
+        briv_steelbones_stacks=steelbones,
         briv_in_formation=primary.briv_in_formation or secondary.briv_in_formation,
         active_buffs_text=primary.active_buffs_text or secondary.active_buffs_text,
     )

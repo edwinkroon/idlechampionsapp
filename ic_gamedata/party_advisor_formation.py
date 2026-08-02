@@ -307,6 +307,29 @@ def _human_buff_note(multiplier: float | None) -> str | None:
     return f"Adventure damage-buff: ongeveer {multiplier:.1f}×."
 
 
+def _hero_on_field(
+    hero: dict[str, Any],
+    *,
+    active_party_id: int | None,
+    seat: int | None,
+    active_seats: frozenset[int],
+) -> bool:
+    """True when the champion is actively placed in the current party formation."""
+    if seat is None:
+        return False
+    in_seat = hero.get("in_seat")
+    if in_seat is not None:
+        if in_seat not in (1, "1", True):
+            return False
+    elif active_seats and seat not in active_seats:
+        return False
+    game_id = _parse_int(hero.get("game_instance_id"))
+    if game_id is not None and game_id > 0 and active_party_id is not None:
+        if game_id != active_party_id:
+            return False
+    return True
+
+
 def _formation_heroes(payload: dict[str, Any]) -> tuple[FormationHero, ...]:
     details = payload.get("details")
     if not isinstance(details, dict):
@@ -355,9 +378,12 @@ def _formation_heroes(payload: dict[str, Any]) -> tuple[FormationHero, ...]:
         if hero_id is None:
             continue
         seat = seat_by_hero.get(hero_id)
-        if seat is None:
-            continue
-        if active_seats and seat not in active_seats:
+        if not _hero_on_field(
+            hero,
+            active_party_id=active_party_id,
+            seat=seat,
+            active_seats=active_seats,
+        ):
             continue
 
         name, roles, tags = _hero_meta(hero_id, db, name_lookup=name_lookup)

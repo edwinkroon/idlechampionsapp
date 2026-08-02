@@ -282,24 +282,31 @@ class GoalRunHistoryTests(_IsolatedGoalRunHistoryTestCase):
 
         history = (
             GoalRunRecord(duration_sec=754.0, area_goal=300, peak_area=305, recorded_at=0.0),
-            GoalRunRecord(duration_sec=812.0, area_goal=300, peak_area=301, recorded_at=0.0),
+            GoalRunRecord(
+                duration_sec=812.0,
+                area_goal=300,
+                peak_area=301,
+                recorded_at=0.0,
+                duration_unreliable=True,
+            ),
         )
-        summary, extra = format_goal_run_history(
+        display = format_goal_run_history(
             history,
             area_goal=300,
             format_duration=lambda sec: f"{int(sec // 60)}:{int(sec % 60):02d}",
         )
-        self.assertEqual(summary, "Laatste doel-run: 12:34 (Modron-doel 300)")
-        self.assertEqual(extra, ("2. 13:32",))
+        self.assertEqual(display.summary, "Laatste doel-run: 12:34 (Modron-doel 300)")
+        self.assertFalse(display.summary_unreliable)
+        self.assertEqual(display.extra, (("2. 13:32", True),))
 
     def test_format_goal_run_history_placeholder_when_empty(self) -> None:
-        summary, extra = format_goal_run_history(
+        display = format_goal_run_history(
             (),
             area_goal=275,
             format_duration=lambda sec: str(sec),
         )
-        self.assertIn("275", summary or "")
-        self.assertEqual(extra, ())
+        self.assertIn("275", display.summary or "")
+        self.assertEqual(display.extra, ())
 
 
 class GoalRunPersistenceTests(_IsolatedGoalRunHistoryTestCase):
@@ -436,6 +443,166 @@ class GoalRunMemoryResetTests(_IsolatedGoalRunHistoryTestCase):
 
         self.assertEqual(len(tracker.goal_run_history(1)), 0)
         self.assertLessEqual(tracker._party_state[1].segment_peak_area or 0, 275)
+
+    def test_marks_goal_run_unreliable_after_party_switch(self) -> None:
+        from dataclasses import replace
+
+        tracker = StatsTracker()
+        base = 1_700_000_000.0
+        clock = {"t": base}
+
+        def fake_time() -> float:
+            return clock["t"]
+
+        p0 = _party(0, 200, 100, seconds_since_reset=600, modron_area_goal=300)
+        p1 = replace(_party(1, 100, 50, seconds_since_reset=200, modron_area_goal=225), is_active=True)
+        p0_inactive = replace(p0, is_active=False)
+
+        with patch("ic_gamedata.stats.time.time", fake_time):
+            tracker.add_snapshot(_snap(p0, p1))
+            clock["t"] = base + 120
+            tracker.add_snapshot(
+                GameSnapshot(
+                    api_call="getuserdetails",
+                    active_party_index=1,
+                    parties=(p0_inactive, p1),
+                    current_area=p1.current_area,
+                    gold=p1.gold,
+                    gold_gained=p1.gold_gained,
+                    gems_this_reset=p1.gems_this_reset,
+                    monster_kills=p1.monster_kills,
+                    boss_kills=p1.boss_kills,
+                )
+            )
+            clock["t"] = base + 125
+            p0_done = replace(
+                p0_inactive,
+                current_area=300,
+                highest_area=300,
+                seconds_since_reset=650,
+            )
+            tracker.add_snapshot(
+                GameSnapshot(
+                    api_call="getuserdetails",
+                    active_party_index=1,
+                    parties=(p0_done, p1),
+                    current_area=p1.current_area,
+                    gold=p1.gold,
+                    gold_gained=p1.gold_gained,
+                    gems_this_reset=p1.gems_this_reset,
+                    monster_kills=p1.monster_kills,
+                    boss_kills=p1.boss_kills,
+                )
+            )
+            clock["t"] = base + 126
+            tracker.add_snapshot(
+                GameSnapshot(
+                    api_call="getuserdetails",
+                    active_party_index=1,
+                    parties=(
+                        replace(
+                            p0_done,
+                            current_area=1,
+                            highest_area=1,
+                            gems_this_reset=0,
+                            seconds_since_reset=60,
+                        ),
+                        p1,
+                    ),
+                    current_area=p1.current_area,
+                    gold=p1.gold,
+                    gold_gained=p1.gold_gained,
+                    gems_this_reset=p1.gems_this_reset,
+                    monster_kills=p1.monster_kills,
+                    boss_kills=p1.boss_kills,
+                )
+            )
+
+        history = tracker.goal_run_history(0)
+        self.assertEqual(len(history), 1)
+        self.assertAlmostEqual(history[0].duration_sec, 650.0)
+        self.assertFalse(history[0].duration_unreliable)
+
+    def test_marks_goal_run_unreliable_when_wall_clock_inflates_duration(self) -> None:
+        from dataclasses import replace
+
+        tracker = StatsTracker()
+        base = 1_700_000_000.0
+        clock = {"t": base}
+
+        def fake_time() -> float:
+            return clock["t"]
+
+        p0 = replace(
+            _party(0, 280, 100, modron_area_goal=300),
+            seconds_since_reset=None,
+        )
+        p1 = replace(_party(1, 100, 50, seconds_since_reset=200, modron_area_goal=225), is_active=True)
+        p0_inactive = replace(p0, is_active=False)
+
+        with patch("ic_gamedata.stats_run_history.time.time", fake_time):
+            tracker.add_snapshot(_snap(p0, p1))
+            clock["t"] = base + 200
+            tracker.add_snapshot(
+                GameSnapshot(
+                    api_call="getuserdetails",
+                    active_party_index=1,
+                    parties=(p0_inactive, p1),
+                    current_area=p1.current_area,
+                    gold=p1.gold,
+                    gold_gained=p1.gold_gained,
+                    gems_this_reset=p1.gems_this_reset,
+                    monster_kills=p1.monster_kills,
+                    boss_kills=p1.boss_kills,
+                )
+            )
+            clock["t"] = base + 205
+            p0_done = replace(
+                p0_inactive,
+                current_area=300,
+                highest_area=300,
+            )
+            tracker.add_snapshot(
+                GameSnapshot(
+                    api_call="getuserdetails",
+                    active_party_index=1,
+                    parties=(p0_done, p1),
+                    current_area=p1.current_area,
+                    gold=p1.gold,
+                    gold_gained=p1.gold_gained,
+                    gems_this_reset=p1.gems_this_reset,
+                    monster_kills=p1.monster_kills,
+                    boss_kills=p1.boss_kills,
+                )
+            )
+            clock["t"] = base + 206
+            tracker.add_snapshot(
+                GameSnapshot(
+                    api_call="getuserdetails",
+                    active_party_index=1,
+                    parties=(
+                        replace(
+                            p0_done,
+                            current_area=1,
+                            highest_area=1,
+                            gems_this_reset=0,
+                            seconds_since_reset=60,
+                        ),
+                        p1,
+                    ),
+                    current_area=p1.current_area,
+                    gold=p1.gold,
+                    gold_gained=p1.gold_gained,
+                    gems_this_reset=p1.gems_this_reset,
+                    monster_kills=p1.monster_kills,
+                    boss_kills=p1.boss_kills,
+                )
+            )
+
+        history = tracker.goal_run_history(0)
+        self.assertEqual(len(history), 1)
+        self.assertAlmostEqual(history[0].duration_sec, 205.0)
+        self.assertTrue(history[0].duration_unreliable)
 
 
 class GoalRunSanityTests(_IsolatedGoalRunHistoryTestCase):

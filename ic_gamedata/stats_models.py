@@ -20,6 +20,12 @@ def _plausible_peak_for_goal(peak: int, goal: int) -> bool:
     return peak <= goal + GOAL_PEAK_SANITY_MARGIN
 
 
+# Party was inactive this long during a segment — likely inflated wall-clock timing.
+PARTY_INACTIVE_DURATION_THRESHOLD_SEC = 30.0
+# Wall-clock duration this far above the in-game timer is treated as unreliable.
+GOAL_RUN_DURATION_MISMATCH_SEC = 60.0
+
+
 @dataclass(frozen=True)
 class GoalRunRecord:
     """One completed run to an adventure area goal (recorded on Modron reset)."""
@@ -28,6 +34,7 @@ class GoalRunRecord:
     area_goal: int
     peak_area: int | None
     recorded_at: float
+    duration_unreliable: bool = False
 
 
 @dataclass(frozen=True)

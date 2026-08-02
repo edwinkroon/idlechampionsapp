@@ -68,10 +68,52 @@ class BrivDisplayTests(unittest.TestCase):
             "details": {
                 "active_game_instance_id": 2,
                 "stats": {"briv_sprint_stacks": "512"},
+                "game_instances": [instance],
             }
         }
         extras = parse_instance_extras(instance, payload, party_index=2)
         self.assertEqual(extras["briv_sprint_stacks"], 512)
+
+    def test_briv_steelbones_from_api(self) -> None:
+        instance = {
+            "game_instance_id": 2,
+            "formation": [58],
+            "hero_in_seats": {"1": 58},
+            "stats": {"briv_steelbones_stacks": "125000"},
+        }
+        payload = {
+            "details": {
+                "active_game_instance_id": 2,
+                "stats": {"briv_steelbones_stacks": "125000"},
+                "game_instances": [instance],
+            }
+        }
+        extras = parse_instance_extras(instance, payload, party_index=2)
+        self.assertEqual(extras["briv_steelbones_stacks"], 125000)
+
+    def test_briv_stacks_ignores_stale_account_from_other_party(self) -> None:
+        instance = {
+            "game_instance_id": 2,
+            "formation": [58],
+            "hero_in_seats": {"1": 58},
+            "stats": {},
+        }
+        payload = {
+            "details": {
+                "active_game_instance_id": 2,
+                "stats": {"briv_sprint_stacks": "48"},
+                "game_instances": [
+                    {
+                        "game_instance_id": 1,
+                        "stats": {"briv_sprint_stacks": "48"},
+                    },
+                    instance,
+                ],
+                "heroes": [{"hero_id": 58, "game_instance_id": 2, "in_seat": 1}],
+            }
+        }
+        extras = parse_instance_extras(instance, payload, party_index=2)
+        self.assertIsNone(extras["briv_sprint_stacks"])
 
 
 if __name__ == "__main__":

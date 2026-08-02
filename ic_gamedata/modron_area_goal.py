@@ -51,26 +51,55 @@ def _scan_mapping_for_modron_area(mapping: dict[str, Any]) -> int | None:
     return None
 
 
-def modron_area_goal_from_modron_saves(payload: dict[str, Any] | None) -> int | None:
+def _iter_modron_saves(saves: Any) -> list[dict[str, Any]]:
+    """API returns either a list or a dict keyed by core_id."""
+    if isinstance(saves, list):
+        return [s for s in saves if isinstance(s, dict)]
+    if isinstance(saves, dict):
+        return [s for s in saves.values() if isinstance(s, dict)]
+    return []
+
+
+def _area_goal_from_save(save: dict[str, Any]) -> int | None:
+    parsed = _parse_int(save.get("area_goal"))
+    if parsed is not None and parsed > 0:
+        return parsed
+    goal = _scan_mapping_for_modron_area(save)
+    if goal is not None:
+        return goal
+    automation = save.get("automation")
+    if isinstance(automation, dict):
+        return _scan_mapping_for_modron_area(automation)
+    return None
+
+
+def modron_area_goal_from_modron_saves(
+    payload: dict[str, Any] | None,
+    *,
+    party_index: int | None = None,
+) -> int | None:
     if not isinstance(payload, dict):
         return None
     details = payload.get("details")
     if not isinstance(details, dict):
         return None
-    saves = details.get("modron_saves")
-    if not isinstance(saves, list):
+    saves = _iter_modron_saves(details.get("modron_saves"))
+    if not saves:
         return None
+
+    # Prefer the core assigned to this party (instance_id == game_instance_id).
+    if party_index is not None:
+        for save in saves:
+            instance_id = _parse_int(save.get("instance_id"))
+            if instance_id == party_index:
+                goal = _area_goal_from_save(save)
+                if goal is not None:
+                    return goal
+
     for save in saves:
-        if not isinstance(save, dict):
-            continue
-        goal = _scan_mapping_for_modron_area(save)
+        goal = _area_goal_from_save(save)
         if goal is not None:
             return goal
-        automation = save.get("automation")
-        if isinstance(automation, dict):
-            goal = _scan_mapping_for_modron_area(automation)
-            if goal is not None:
-                return goal
     return None
 
 
@@ -121,7 +150,7 @@ def resolve_modron_area_goal(
         goal = modron_area_goal_from_instance(instance)
         if goal is not None:
             return goal
-    goal = modron_area_goal_from_modron_saves(payload)
+    goal = modron_area_goal_from_modron_saves(payload, party_index=party_index)
     if goal is not None:
         return goal
     return None

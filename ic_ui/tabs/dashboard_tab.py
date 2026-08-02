@@ -23,7 +23,8 @@ from PySide6.QtWidgets import (
 
 from ic_core.game_state import GameStateService
 from ic_ui.tabs.sources_tab import SourcesTab
-from ic_ui.theme import BG_BADGE, BUD_BAR, TEXT_BADGE
+from ic_ui.theme import BG_BADGE, BUD_BAR, FEAT_OWNED, TEXT_BADGE
+from ic_ui.widgets.farm_health_badge import apply_farm_health_badge
 
 
 class DashboardTab(QWidget):
@@ -641,6 +642,9 @@ class DashboardTab(QWidget):
         box.setProperty("party_index", party_index)
         box.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
         layout = QVBoxLayout(box)
+        lbl_health = QLabel("")
+        lbl_health.hide()
+        layout.addWidget(lbl_health)
         lbl_area = QLabel("Area: —")
         lbl_modron_progress = QLabel("")
         modron_bar = QProgressBar()
@@ -717,6 +721,7 @@ class DashboardTab(QWidget):
         )
         widgets: dict[str, QWidget] = {
             "frame": box,
+            "health": lbl_health,
             "area": lbl_area,
             "modron_progress_label": lbl_modron_progress,
             "modron_progress": modron_bar,
@@ -783,8 +788,13 @@ class DashboardTab(QWidget):
         if expand_btn is not None:
             expand_btn.setText("▼" if self._dash_goal_runs_expanded[party_index] else "▶")
 
+    def _goal_run_label_style(self, unreliable: bool) -> str:
+        color = FEAT_OWNED if unreliable else TEXT_BADGE
+        return f"color: {color};"
+
     def _apply_goal_runs(self, widgets: dict[str, QWidget], view) -> None:
         summary = view.goal_runs_summary
+        summary_unreliable = getattr(view, "goal_runs_summary_unreliable", False)
         row = widgets.get("goal_runs_row")
         label = widgets.get("goal_runs")
         expand_btn = widgets.get("goal_runs_expand")
@@ -805,6 +815,7 @@ class DashboardTab(QWidget):
             return
 
         label.setText(summary)
+        label.setStyleSheet(self._goal_run_label_style(summary_unreliable))
         row.show()
 
         while extra_layout.count():
@@ -813,9 +824,10 @@ class DashboardTab(QWidget):
             if widget is not None:
                 widget.deleteLater()
 
-        for line in view.goal_runs_extra:
+        for line, unreliable in view.goal_runs_extra:
             line_label = QLabel(line)
             line_label.setWordWrap(True)
+            line_label.setStyleSheet(self._goal_run_label_style(unreliable))
             extra_layout.addWidget(line_label)
 
         has_extra = bool(view.goal_runs_extra)
@@ -952,6 +964,7 @@ class DashboardTab(QWidget):
                     format_number=self._format_number,
                     format_duration=self._format_duration,
                     format_rate_window=self._format_rate_window,
+                    goal_run_history=tracker.goal_run_history(party.party_index),
                 )
                 self._apply_party_tile(widgets, view)
             else:
@@ -959,6 +972,22 @@ class DashboardTab(QWidget):
                 widgets["area"].setText(
                     f"Area: {party.current_area if party.current_area is not None else '—'}"
                 )
+
+            if is_active:
+                history = tracker.goal_run_history(party.party_index)
+                snapshot = self._state.update_gem_farm(
+                    party=party,
+                    ps=ps,
+                    is_active=True,
+                    goal_run_history=history,
+                )
+                health_label = widgets.get("health")
+                if health_label is not None:
+                    apply_farm_health_badge(health_label, snapshot.health)
+            else:
+                health_label = widgets.get("health")
+                if health_label is not None:
+                    health_label.hide()
 
         for idx in list(self._dash_party_widgets):
             if idx not in seen:
