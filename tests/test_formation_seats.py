@@ -12,7 +12,7 @@ from ic_gamedata.formation_seats import active_formation_seats, formation_layout
 class FormationSeatsTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
-        path = Path(__file__).resolve().parent.parent / "webRequestLog_example.json"
+        path = Path(__file__).resolve().parent / "fixtures" / "webRequestLog_example.json"
         cls.payload = json.loads(path.read_text(encoding="utf-8"))
 
     def test_example_payload_uses_live_in_seat(self) -> None:

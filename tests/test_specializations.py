@@ -20,7 +20,7 @@ from ic_gamedata.specializations import (
 class SpecializationsTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
-        base = Path(__file__).resolve().parent.parent
+        base = Path(__file__).resolve().parent / "fixtures"
         cls.payload = json.loads((base / "webRequestLog_example.json").read_text(encoding="utf-8"))
         cls.rules = load_specialization_rules()
 

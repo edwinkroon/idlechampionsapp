@@ -6,7 +6,7 @@ import json
 import re
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[1] / "data" / "gaarawarr_guides"
+ROOT = Path(__file__).resolve().parents[2] / "data" / "gaarawarr_guides"
 index = json.loads((ROOT / "index.json").read_text(encoding="utf-8"))
 print("guides", len(index))
 print("sample titles:")

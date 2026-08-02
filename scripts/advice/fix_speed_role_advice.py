@@ -7,7 +7,7 @@ from pathlib import Path
 
 from ic_gamedata.champion_role_advice import clear_role_advice_cache, get_role_advice
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
 ADVICE_PATH = ROOT / "config" / "champion_role_advice.json"
 
 

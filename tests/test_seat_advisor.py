@@ -54,7 +54,7 @@ def _hero(
 class SeatAdvisorTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
-        path = Path(__file__).resolve().parent.parent / "webRequestLog_example.json"
+        path = Path(__file__).resolve().parent / "fixtures" / "webRequestLog_example.json"
         cls.payload = json.loads(path.read_text(encoding="utf-8"))
 
     def test_infer_bud_role_for_top_damage(self) -> None:
@@ -96,7 +96,7 @@ class SeatAdvisorTests(unittest.TestCase):
 
     def test_disallowed_hero_gets_replace_priority(self) -> None:
         payload = json.loads(
-            (Path(__file__).resolve().parent.parent / "webRequestLog_example.json").read_text(encoding="utf-8")
+            (Path(__file__).resolve().parent / "fixtures" / "webRequestLog_example.json").read_text(encoding="utf-8")
         )
         payload["details"]["active_game_instance_id"] = "1"
         payload["details"]["game_instances"] = [
@@ -142,7 +142,7 @@ class SeatAdvisorTests(unittest.TestCase):
 
         """hero_in_seats alone must still populate the formation board."""
         payload = json.loads(
-            (Path(__file__).resolve().parent.parent / "webRequestLog_example.json").read_text(encoding="utf-8")
+            (Path(__file__).resolve().parent / "fixtures" / "webRequestLog_example.json").read_text(encoding="utf-8")
         )
         aid = int(payload["details"]["active_game_instance_id"])
         for inst in payload["details"]["game_instances"]:
@@ -163,7 +163,7 @@ class SeatAdvisorTests(unittest.TestCase):
 
     def test_formation_visual_uses_formation_seats_when_api_grid_missing(self) -> None:
         payload = json.loads(
-            (Path(__file__).resolve().parent.parent / "webRequestLog_example.json").read_text(encoding="utf-8")
+            (Path(__file__).resolve().parent / "fixtures" / "webRequestLog_example.json").read_text(encoding="utf-8")
         )
         aid = int(payload["details"]["active_game_instance_id"])
         for inst in payload["details"]["game_instances"]:

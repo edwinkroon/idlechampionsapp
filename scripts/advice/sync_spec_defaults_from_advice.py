@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
 advice = json.loads((ROOT / "config" / "champion_role_advice.json").read_text(encoding="utf-8"))
 specs_path = ROOT / "config" / "specializations.json"
 specs = json.loads(specs_path.read_text(encoding="utf-8"))

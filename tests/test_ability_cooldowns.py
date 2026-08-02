@@ -17,7 +17,7 @@ class AbilityCooldownTests(unittest.TestCase):
 
     def setUpClass(cls) -> None:
 
-        path = Path(__file__).resolve().parent.parent / "webRequestLog_example.json"
+        path = Path(__file__).resolve().parent / "fixtures" / "webRequestLog_example.json"
 
         cls.payload = json.loads(path.read_text(encoding="utf-8"))
 

@@ -7,7 +7,7 @@ import time
 import urllib.request
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / "data" / "gaarawarr_guides"
 ALT = ROOT / "data" / "alt_guides"
 ALT.mkdir(parents=True, exist_ok=True)

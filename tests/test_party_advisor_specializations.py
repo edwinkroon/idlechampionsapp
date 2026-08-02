@@ -22,7 +22,7 @@ from ic_gamedata.specialization_models import PendingSpecialization, Specializat
 class PartyAdvisorSpecializationTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
-        path = Path(__file__).resolve().parent.parent / "webRequestLog_example.json"
+        path = Path(__file__).resolve().parent / "fixtures" / "webRequestLog_example.json"
         cls.payload = json.loads(path.read_text(encoding="utf-8"))
 
     def test_advisor_run_goal_mapping(self) -> None:

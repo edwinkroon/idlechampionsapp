@@ -12,7 +12,7 @@ from pathlib import Path
 UA = {"User-Agent": "IdleChampionsAdvisor/1.0 (local research)"}
 BASE = "https://arctic-shift.photon-reddit.com/api/posts/search"
 IDS_BASE = "https://arctic-shift.photon-reddit.com/api/posts/ids"
-OUT = Path(__file__).resolve().parents[1] / "data" / "gaarawarr_guides"
+OUT = Path(__file__).resolve().parents[2] / "data" / "gaarawarr_guides"
 
 
 def _get(url: str) -> dict:

@@ -6,7 +6,7 @@ import json
 from datetime import datetime, timezone
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
 advice_path = ROOT / "config" / "champion_role_advice.json"
 champs = json.loads((ROOT / "config" / "champions.json").read_text(encoding="utf-8"))
 specs = json.loads((ROOT / "config" / "specializations.json").read_text(encoding="utf-8"))

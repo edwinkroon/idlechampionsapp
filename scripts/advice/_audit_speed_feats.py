@@ -6,7 +6,7 @@ from pathlib import Path
 
 from ic_gamedata.champion_role_advice import clear_role_advice_cache, get_role_advice
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
 advice = json.loads((ROOT / "config" / "champion_role_advice.json").read_text(encoding="utf-8"))
 champs = json.loads((ROOT / "config" / "champions.json").read_text(encoding="utf-8"))
 clear_role_advice_cache()

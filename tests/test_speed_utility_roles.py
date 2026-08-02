@@ -48,7 +48,7 @@ def _hero(
 class SpeedUtilityRoleTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
-        path = Path(__file__).resolve().parent.parent / "webRequestLog_example.json"
+        path = Path(__file__).resolve().parent / "fixtures" / "webRequestLog_example.json"
         cls.payload = json.loads(path.read_text(encoding="utf-8"))
 
     def test_ellywick_in_speed_team_is_gold_utility(self) -> None:

@@ -8,7 +8,7 @@ import urllib.parse
 import urllib.request
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / "data" / "gaarawarr_guides"
 UA = {"User-Agent": "IdleChampionsAdvisor/1.0"}
 BASE = "https://arctic-shift.photon-reddit.com/api/posts/search"

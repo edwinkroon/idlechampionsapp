@@ -12,7 +12,7 @@ from ic_gamedata.familiar_seats import familiar_level_seats, familiar_party_coun
 class FamiliarSeatsTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
-        path = Path(__file__).resolve().parent.parent / "webRequestLog_example.json"
+        path = Path(__file__).resolve().parent / "fixtures" / "webRequestLog_example.json"
         cls.payload = json.loads(path.read_text(encoding="utf-8"))
 
     def test_example_payload_has_no_familiar_seats(self) -> None:

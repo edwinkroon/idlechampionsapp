@@ -8,7 +8,7 @@ from collections import defaultdict
 from datetime import datetime, timezone
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
 GUIDES = ROOT / "data" / "gaarawarr_guides"
 CHAMPIONS = ROOT / "config" / "champions.json"
 SPECS = ROOT / "config" / "specializations.json"
