@@ -26,6 +26,18 @@ class PartyTileView:
     buffs: str | None
     goal_runs_summary: str | None = None
     goal_runs_extra: tuple[str, ...] = ()
+    modron_progress_pct: int | None = None
+    modron_progress_text: str | None = None
+
+
+def modron_area_progress(
+    current_area: int | None,
+    modron_goal: int | None,
+) -> tuple[int | None, str | None]:
+    if current_area is None or modron_goal is None or modron_goal <= 0:
+        return None, None
+    pct = min(100, max(0, int(100 * current_area / modron_goal)))
+    return pct, f"Modron: {current_area} / {modron_goal}"
 
 
 def format_goal_run_history(
@@ -104,6 +116,7 @@ def build_party_tile_view(
         area_goal=modron_goal,
         format_duration=format_duration,
     )
+    progress_pct, progress_text = modron_area_progress(party.current_area, modron_goal)
 
     return PartyTileView(
         title=party_tile_title(
@@ -130,4 +143,6 @@ def build_party_tile_view(
         buffs=buffs,
         goal_runs_summary=goal_runs_summary,
         goal_runs_extra=goal_runs_extra,
+        modron_progress_pct=progress_pct,
+        modron_progress_text=progress_text,
     )

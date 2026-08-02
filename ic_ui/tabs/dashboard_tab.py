@@ -15,13 +15,16 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QMessageBox,
+    QProgressBar,
     QPushButton,
     QSizePolicy,
     QVBoxLayout,
     QWidget,
 )
 
+from ic_core.game_state import GameStateService
 from ic_ui.tabs.sources_tab import SourcesTab
+from ic_ui.theme import BG_BADGE, BUD_BAR, TEXT_BADGE
 
 
 class DashboardTab(QWidget):
@@ -34,10 +37,17 @@ class DashboardTab(QWidget):
     def __init__(self, sources_tab: SourcesTab, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self._sources_tab = sources_tab
+        self._state = GameStateService(self)
+        self._state.state_changed.connect(self._schedule_label_refresh)
+        self._state.payload_changed.connect(self.payload_updated.emit)
         self._init_state()
         self._poll_timer = QTimer(self)
         self._poll_timer.setInterval(1000)
         self._poll_timer.timeout.connect(self._poll_once)
+        self._label_refresh_timer = QTimer(self)
+        self._label_refresh_timer.setSingleShot(True)
+        self._label_refresh_timer.setInterval(1000)
+        self._label_refresh_timer.timeout.connect(self._update_labels)
         self._build_ui()
 
     @property
@@ -58,23 +68,27 @@ class DashboardTab(QWidget):
 
     @property
     def last_payload(self):
-        return self._dash_last_payload
+        return self._state.last_payload
 
     @property
     def last_api_snap(self):
-        return self._dash_last_api_snap
+        return self._state.last_api_snap
 
     @property
     def api_detail(self) -> str:
-        return self._dash_api_detail
+        return self._state.api_detail
 
     @api_detail.setter
     def api_detail(self, value: str) -> None:
-        self._dash_api_detail = value
+        self._state.api_detail = value
 
     @property
     def tracker(self):
-        return self._dash_tracker
+        return self._state.tracker
+
+    @property
+    def game_state(self) -> GameStateService:
+        return self._state
 
     def api_log_path(self) -> Path | None:
         if self._dash_install and self._dash_install.web_request_log:
@@ -96,33 +110,30 @@ class DashboardTab(QWidget):
 
     def ingest_api_result(self, result: dict) -> None:
         payload = result.get("payload")
-        api_snap = result.get("api_snap")
         snap = result.get("snap")
-        api_detail = result.get("api_detail")
-        if api_detail:
-            self._dash_api_detail = api_detail
-        if payload is not None:
-            self._dash_last_payload = payload
-            self.payload_updated.emit(payload)
-        if api_snap is not None:
-            self._dash_last_api_snap = api_snap
+        refreshed_snap = None
         if snap is not None:
-            self._dash_last_update = time.time()
             if payload is not None:
-                snap = self._refresh_snapshot(snap, payload)
-            if self._dash_active and self._dash_tracker is not None:
-                mem_area, mem_gems = self._read_memory()
-                if mem_area is not None or mem_gems is not None:
-                    self._dash_tracker.add_memory_area(
-                        mem_area,
-                        gems=mem_gems,
-                        active_party_index=snap.active_party_index,
-                    )
-                self._dash_tracker.add_snapshot(snap, api_snapshot=api_snap)
-                self._update_labels()
+                refreshed_snap = self._refresh_snapshot(snap, payload)
+            else:
+                refreshed_snap = snap
+        mem_area, mem_gems = None, None
+        if self._dash_active and refreshed_snap is not None:
+            mem_area, mem_gems = self._read_memory()
+        self._state.ingest_api_result(
+            result,
+            active=self._dash_active,
+            refreshed_snap=refreshed_snap,
+            mem_area=mem_area,
+            mem_gems=mem_gems,
+        )
+
+    def _schedule_label_refresh(self) -> None:
+        if not self._label_refresh_timer.isActive():
+            self._label_refresh_timer.start()
 
     def caption_party(self):
-        latest = self._dash_tracker.latest if self._dash_tracker is not None else None
+        latest = self._state.tracker.latest if self._state.tracker is not None else None
         return self._caption_party(latest)
 
     def auto_start(self) -> None:
@@ -164,6 +175,19 @@ class DashboardTab(QWidget):
         controls.addStretch(1)
         root.addLayout(controls)
 
+        status_row = QHBoxLayout()
+        self._status_api = QLabel("API: —")
+        self._status_memory = QLabel("Memory: —")
+        self._status_session = QLabel("Sessie: —")
+        for pill in (self._status_api, self._status_memory, self._status_session):
+            pill.setStyleSheet(
+                f"font-size: 11px; color: {TEXT_BADGE}; background: {BG_BADGE}; "
+                f"border: none; border-radius: 10px; padding: 4px 10px;"
+            )
+            status_row.addWidget(pill)
+        status_row.addStretch(1)
+        root.addLayout(status_row)
+
         self._dash_status = QLabel("Dashboard gebruikt gecentraliseerde API-poll (elke 5 s). Start voor memory-updates.")
         self._dash_status.setWordWrap(True)
         root.addWidget(self._dash_status)
@@ -173,22 +197,13 @@ class DashboardTab(QWidget):
     def _init_state(self) -> None:
         self._dash_install = None
         self._dash_tailer = None
-        self._dash_tracker = None
         self._dash_credentials = None
         self._dash_active = False
         self._dash_poll_tick = 0
         self._dash_resolver = None
-        self._dash_memory_detail = ""
-        self._dash_api_detail = ""
-        self._dash_last_update = None
-        self._dash_last_api_snap = None
-        self._dash_last_memory_area = None
-        self._dash_last_memory_gems = None
-        self._dash_last_memory_modron_goal = None
         self._dash_result_queue: queue.Queue[dict] = queue.Queue(maxsize=2)
         self._dash_fetch_inflight = False
         self._dash_fetch_thread: threading.Thread | None = None
-        self._dash_last_payload = None
         self._dash_goal_runs_expanded: dict[int, bool] = {}
 
     def _get_ui_hint(self) -> int | None:
@@ -204,7 +219,7 @@ class DashboardTab(QWidget):
         try:
             from ic_reader.resolver import create_resolver
         except ImportError:
-            self._dash_memory_detail = "ic_reader niet beschikbaar (pip install psutil)"
+            self._state.update_memory_fields(detail="ic_reader niet beschikbaar (pip install psutil)")
             return None, None
         try:
             if self._dash_resolver is None:
@@ -215,21 +230,18 @@ class DashboardTab(QWidget):
             )
             resolved_gems = self._dash_resolver.resolve_gems_this_reset()
         except Exception as exc:
-            self._dash_memory_detail = str(exc)
+            self._state.update_memory_fields(detail=str(exc))
             return None, None
 
         area = int(resolved_area.value) if resolved_area.value is not None else None
         gems = int(resolved_gems.value) if resolved_gems.value is not None else None
-        if area is not None:
-            self._dash_last_memory_area = area
-        if gems is not None:
-            self._dash_last_memory_gems = gems
         parts: list[str] = []
         if area is not None:
             parts.append(f"area={area} ({resolved_area.candidate_id or '?'}, {resolved_area.confidence:.1f})")
         if gems is not None:
             parts.append(f"gems={gems} ({resolved_gems.candidate_id or '?'}, {resolved_gems.confidence:.1f})")
-        self._dash_memory_detail = "memory: " + " · ".join(parts) if parts else "memory: geen offsets/data"
+        detail = "memory: " + " · ".join(parts) if parts else "memory: geen offsets/data"
+        self._state.update_memory_fields(area=area, gems=gems, detail=detail)
         return area, gems
 
     def _read_modron_reset_area(self) -> int | None:
@@ -251,7 +263,7 @@ class DashboardTab(QWidget):
     def _refresh_snapshot(self, snap, payload):
         mem_modron = self._read_modron_reset_area()
         if mem_modron is not None:
-            self._dash_last_memory_modron_goal = mem_modron
+            self._state.memory_modron_goal = mem_modron
         try:
             from ic_gamedata.party_display import refresh_snapshot_from_payload
         except ImportError:
@@ -313,12 +325,7 @@ class DashboardTab(QWidget):
         return f"{minutes} min venster"
 
     def _load_tracker(self) -> None:
-        if self._dash_tracker is None:
-            try:
-                from ic_gamedata.stats import StatsTracker
-            except ImportError:
-                from ic_gamedata import StatsTracker
-            self._dash_tracker = StatsTracker()
+        self._state.load_tracker()
 
     def refresh_install(self) -> None:
         try:
@@ -404,13 +411,13 @@ class DashboardTab(QWidget):
         if credentials is not None:
             self._dash_credentials = credentials
         if api_detail:
-            self._dash_api_detail = api_detail
+            self._state.api_detail = api_detail
         if payload is not None:
-            self._dash_last_payload = payload
+            self._state.last_payload = payload
         if api_snap is not None:
-            self._dash_last_api_snap = api_snap
+            self._state.last_api_snap = api_snap
         if snap is not None:
-            self._dash_last_update = time.time()
+            self._state.last_update = time.time()
         return snap
 
     def _start(self) -> None:
@@ -419,19 +426,20 @@ class DashboardTab(QWidget):
         if self._dash_credentials is None and self._dash_tailer is None:
             self.refresh_install()
         self._load_tracker()
-        if self._dash_tracker is None:
+        if self._state.tracker is None:
             return
-        self._dash_tracker.reset()
+        self._state.reset_tracker()
         snap = self._fetch_snapshot()
-        if snap is not None and self._dash_last_payload is not None:
-            snap = self._refresh_snapshot(snap, self._dash_last_payload)
+        if snap is not None and self._state.last_payload is not None:
+            snap = self._refresh_snapshot(snap, self._state.last_payload)
         if snap is not None:
-            self._dash_tracker.add_snapshot(snap, api_snapshot=self._dash_last_api_snap)
+            self._state.add_snapshot(snap, api_snapshot=self._state.last_api_snap)
         mem_area, mem_gems = self._read_memory()
-        if (mem_area is not None or mem_gems is not None) and self._dash_tracker is not None:
-            self._dash_tracker.add_memory_area(
+        if mem_area is not None or mem_gems is not None:
+            self._state.apply_memory_reading(
                 mem_area,
-                gems=mem_gems,
+                mem_gems,
+                active=True,
                 active_party_index=snap.active_party_index if snap is not None else None,
             )
         self._dash_active = True
@@ -453,7 +461,7 @@ class DashboardTab(QWidget):
             )
             QTimer.singleShot(15000, self._auto_start)
             return
-        if self._dash_last_update is None and self._dash_last_memory_area is None:
+        if self._state.last_update is None and self._state.memory_area is None:
             self._dash_status.setText(
                 "Dashboard actief — wachten op speldata. Start Idle Champions voor live rates."
             )
@@ -479,7 +487,7 @@ class DashboardTab(QWidget):
         self._request_async_poll()
 
     def _request_async_poll(self) -> None:
-        if self._dash_fetch_inflight or self._dash_tracker is None:
+        if self._dash_fetch_inflight or self._state.tracker is None:
             return
         self._dash_fetch_inflight = True
         ui_hint = self._get_ui_hint()
@@ -506,30 +514,33 @@ class DashboardTab(QWidget):
         self._dash_fetch_thread.start()
 
     def _apply_pending_results(self) -> None:
-        applied = False
+        needs_refresh = False
         while True:
             try:
                 result = self._dash_result_queue.get_nowait()
             except queue.Empty:
                 break
             self._dash_fetch_inflight = False
-            applied = True
             if result.get("error"):
-                self._dash_api_detail = str(result["error"])
+                self._state.api_detail = str(result["error"])
+                needs_refresh = True
                 continue
-            if self._dash_tracker is not None:
-                mem_area = result.get("mem_area")
-                mem_gems = result.get("mem_gems")
-                if mem_area is not None or mem_gems is not None:
-                    self._dash_tracker.add_memory_area(
-                        mem_area,
-                        gems=mem_gems,
-                        active_party_index=self._dash_tracker.latest.active_party_index
-                        if self._dash_tracker.latest is not None
-                        else None,
-                    )
-        if applied:
-            self._update_labels()
+            mem_area = result.get("mem_area")
+            mem_gems = result.get("mem_gems")
+            active_party_index = (
+                self._state.tracker.latest.active_party_index
+                if self._state.tracker is not None and self._state.tracker.latest is not None
+                else None
+            )
+            if self._state.apply_memory_reading(
+                mem_area,
+                mem_gems,
+                active=self._dash_active,
+                active_party_index=active_party_index,
+            ):
+                needs_refresh = True
+        if needs_refresh:
+            self._schedule_label_refresh()
 
 
 
@@ -542,10 +553,10 @@ class DashboardTab(QWidget):
         return None
 
     def _caption_party(self, latest):
-        if self._dash_last_api_snap is not None and self._dash_last_api_snap.active_party_index is not None:
+        if self._state.last_api_snap is not None and self._state.last_api_snap.active_party_index is not None:
             api_party = self._party_from_snapshot(
-                self._dash_last_api_snap,
-                self._dash_last_api_snap.active_party_index,
+                self._state.last_api_snap,
+                self._state.last_api_snap.active_party_index,
             )
             if api_party is not None:
                 return api_party
@@ -553,7 +564,7 @@ class DashboardTab(QWidget):
 
 
     def _running_parties(self, latest):
-        snap = self._dash_last_api_snap if self._dash_last_api_snap is not None else latest
+        snap = self._state.last_api_snap if self._state.last_api_snap is not None else latest
         if snap is None:
             return ()
         running = tuple(sorted(snap.running_parties, key=lambda p: p.party_index))
@@ -562,9 +573,9 @@ class DashboardTab(QWidget):
         return tuple(sorted(snap.parties, key=lambda p: p.party_index))
 
     def _is_active_party(self, party_index: int) -> bool:
-        if self._dash_last_api_snap is not None and self._dash_last_api_snap.active_party_index is not None:
-            return party_index == self._dash_last_api_snap.active_party_index
-        latest = self._dash_tracker.latest if self._dash_tracker is not None else None
+        if self._state.last_api_snap is not None and self._state.last_api_snap.active_party_index is not None:
+            return party_index == self._state.last_api_snap.active_party_index
+        latest = self._state.tracker.latest if self._state.tracker is not None else None
         if latest is not None and latest.active_party_index is not None:
             return party_index == latest.active_party_index
         return False
@@ -576,7 +587,7 @@ class DashboardTab(QWidget):
             except ImportError:
                 adventure_display_name = None  # type: ignore[assignment,misc]
             name = (
-                adventure_display_name(self._dash_last_payload, adventure_id)
+                adventure_display_name(self._state.last_payload, adventure_id)
                 if adventure_display_name is not None
                 else None
             )
@@ -588,9 +599,9 @@ class DashboardTab(QWidget):
 
     def _enriched_party(self, tracked):
         api_party = None
-        if self._dash_last_api_snap is not None:
+        if self._state.last_api_snap is not None:
             api_party = self._party_from_snapshot(
-                self._dash_last_api_snap,
+                self._state.last_api_snap,
                 tracked.party_index,
             )
         is_active = self._is_active_party(tracked.party_index)
@@ -602,28 +613,28 @@ class DashboardTab(QWidget):
             tracked,
             api_party,
             is_active=is_active,
-            memory_area=self._dash_last_memory_area if is_active else None,
-            memory_gems=self._dash_last_memory_gems if is_active else None,
+            memory_area=self._state.memory_area if is_active else None,
+            memory_gems=self._state.memory_gems if is_active else None,
             clear_stale_memory_gems=True,
         )
         if cleared:
-            self._dash_last_memory_gems = None
+            self._state.clear_stale_memory_gems()
         try:
             from ic_gamedata.party_display import refresh_party_from_payload
         except ImportError:
             return party
         return refresh_party_from_payload(
             party,
-            self._dash_last_payload,
-            memory_modron_area=self._dash_last_memory_modron_goal if is_active else None,
+            self._state.last_payload,
+            memory_modron_area=self._state.memory_modron_goal if is_active else None,
         )
 
     def _run_duration_sec(self, party) -> float | None:
         if party.seconds_since_reset is None:
             return None
         elapsed = float(party.seconds_since_reset)
-        if self._dash_last_update is not None:
-            elapsed += max(0.0, time.time() - self._dash_last_update)
+        if self._state.last_update is not None:
+            elapsed += max(0.0, time.time() - self._state.last_update)
         return elapsed
 
     def _ensure_party_tile(self, party_index: int) -> dict[str, QWidget]:
@@ -635,6 +646,17 @@ class DashboardTab(QWidget):
         box.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
         layout = QVBoxLayout(box)
         lbl_area = QLabel("Area: —")
+        lbl_modron_progress = QLabel("")
+        modron_bar = QProgressBar()
+        modron_bar.setRange(0, 100)
+        modron_bar.setTextVisible(False)
+        modron_bar.setFixedHeight(8)
+        modron_bar.setStyleSheet(
+            f"QProgressBar {{ background: #3f3f46; border: none; border-radius: 4px; }}"
+            f"QProgressBar::chunk {{ background: {BUD_BAR}; border-radius: 4px; }}"
+        )
+        modron_bar.hide()
+        lbl_modron_progress.hide()
         lbl_run = QLabel("Run: —")
         lbl_gold = QLabel("Gold: —")
         lbl_gold_gained = QLabel("Gold verdiend: —")
@@ -676,6 +698,8 @@ class DashboardTab(QWidget):
             widget.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
         for widget in (
             lbl_area,
+            lbl_modron_progress,
+            modron_bar,
             lbl_run,
             lbl_gold,
             lbl_gold_gained,
@@ -698,6 +722,8 @@ class DashboardTab(QWidget):
         widgets: dict[str, QWidget] = {
             "frame": box,
             "area": lbl_area,
+            "modron_progress_label": lbl_modron_progress,
+            "modron_progress": modron_bar,
             "run": lbl_run,
             "gold": lbl_gold,
             "gold_gained": lbl_gold_gained,
@@ -738,7 +764,7 @@ class DashboardTab(QWidget):
             from ic_gamedata.adventure_names import adventure_display_name
         except ImportError:
             return None
-        return adventure_display_name(self._dash_last_payload, adventure_id)
+        return adventure_display_name(self._state.last_payload, adventure_id)
 
     @staticmethod
     def _apply_optional_label(label: QLabel, text: str | None) -> None:
@@ -821,26 +847,59 @@ class DashboardTab(QWidget):
         widgets["gold_rate"].setText(view.gold_rate)
         widgets["gems"].setText(view.gems)
         widgets["areas_rate"].setText(view.areas_rate)
+        progress_bar = widgets.get("modron_progress")
+        progress_label = widgets.get("modron_progress_label")
+        if progress_bar is not None and progress_label is not None:
+            if view.modron_progress_pct is not None:
+                progress_bar.setValue(view.modron_progress_pct)
+                progress_bar.show()
+                if view.modron_progress_text:
+                    progress_label.setText(view.modron_progress_text)
+                    progress_label.show()
+                else:
+                    progress_label.hide()
+            else:
+                progress_bar.hide()
+                progress_label.hide()
         self._apply_goal_runs(widgets, view)
         self._apply_optional_label(widgets["patron"], view.patron)
         self._apply_optional_label(widgets["briv"], view.briv)
         self._apply_optional_label(widgets["warps"], view.warps)
         self._apply_optional_label(widgets["buffs"], view.buffs)
 
+    def _update_status_pills(self) -> None:
+        api_text, api_color, mem_text, mem_color, session_text, session_color = (
+            self._state.connection_status(
+                active=self._dash_active,
+                credentials_ok=self._dash_credentials is not None,
+            )
+        )
+        for pill, text, color in (
+            (self._status_api, api_text, api_color),
+            (self._status_memory, mem_text, mem_color),
+            (self._status_session, session_text, session_color),
+        ):
+            pill.setText(text)
+            pill.setStyleSheet(
+                f"font-size: 11px; color: {TEXT_BADGE}; background: {BG_BADGE}; "
+                f"border-left: 4px solid {color}; border-radius: 10px; padding: 4px 10px;"
+            )
+
     def _update_labels(self) -> None:
-        tracker = self._dash_tracker
+        tracker = self._state.tracker
         if tracker is None:
             return
         stats = tracker.compute()
         latest = tracker.latest
         detail_parts = []
-        if self._dash_memory_detail:
-            detail_parts.append(self._dash_memory_detail)
-        if self._dash_api_detail:
-            detail_parts.append(self._dash_api_detail)
-        if self._dash_last_update:
-            detail_parts.append(f"laatste update: {time.strftime('%H:%M:%S', time.localtime(self._dash_last_update))}")
+        if self._state.memory_detail:
+            detail_parts.append(self._state.memory_detail)
+        if self._state.api_detail:
+            detail_parts.append(self._state.api_detail)
+        if self._state.last_update:
+            detail_parts.append(f"laatste update: {time.strftime('%H:%M:%S', time.localtime(self._state.last_update))}")
         self._dash_detail.setText(" · ".join(detail_parts))
+        self._update_status_pills()
 
         self.caption_refresh.emit()
 
@@ -866,14 +925,14 @@ class DashboardTab(QWidget):
             self._dash_parties_layout.addWidget(tile, tile_index // 2, tile_index % 2)
 
             ps = party_stats_map.get(party.party_index)
-            use_memory_gems = is_active and self._dash_last_memory_gems is not None
+            use_memory_gems = is_active and self._state.memory_gems is not None
             if use_memory_gems and not (
                 party.gems_this_reset is not None
                 and party.current_area is not None
                 and party.current_area < 40
-                and self._dash_last_memory_gems > party.gems_this_reset + 50
+                and self._state.memory_gems > party.gems_this_reset + 50
             ):
-                gems = self._dash_last_memory_gems
+                gems = self._state.memory_gems
                 gem_prefix = ""
             else:
                 gems = ps.gems_this_reset if ps is not None else party.gems_this_reset
@@ -914,18 +973,18 @@ class DashboardTab(QWidget):
 
     def reset_session(self) -> None:
         self._load_tracker()
-        if self._dash_tracker is not None:
-            self._dash_tracker.reset()
+        self._state.reset_tracker()
         snap = self._fetch_snapshot()
-        if snap is not None and self._dash_last_payload is not None:
-            snap = self._refresh_snapshot(snap, self._dash_last_payload)
-        if snap is not None and self._dash_tracker is not None:
-            self._dash_tracker.add_snapshot(snap, api_snapshot=self._dash_last_api_snap)
+        if snap is not None and self._state.last_payload is not None:
+            snap = self._refresh_snapshot(snap, self._state.last_payload)
+        if snap is not None:
+            self._state.add_snapshot(snap, api_snapshot=self._state.last_api_snap)
         mem_area, mem_gems = self._read_memory()
-        if (mem_area is not None or mem_gems is not None) and self._dash_tracker is not None:
-            self._dash_tracker.add_memory_area(
+        if mem_area is not None or mem_gems is not None:
+            self._state.apply_memory_reading(
                 mem_area,
-                gems=mem_gems,
+                mem_gems,
+                active=self._dash_active,
                 active_party_index=snap.active_party_index if snap is not None else None,
             )
         self._update_labels()
