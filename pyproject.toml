@@ -43,6 +43,7 @@ ignore = ["E501"]
     "SIM112",
     "UP042",
 ]
+"ic_gamedata/party_advisor.py" = ["F401"]
 "ic_automation/**" = ["BLE001"]
 "ic_reader/**" = ["BLE001"]
 "legacy/**" = ["BLE001", "E402"]

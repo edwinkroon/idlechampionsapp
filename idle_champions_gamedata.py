@@ -2,7 +2,6 @@
 
 from ic_gamedata import (
     GameInstallInfo,
-    GameSnapshot,
     SessionStats,
     StatsTracker,
     WebRequestLogTailer,
@@ -12,6 +11,7 @@ from ic_gamedata import (
     parse_web_request_log,
     read_latest_snapshot,
 )
+from ic_gamedata.log_parser import GameSnapshot
 
 __all__ = [
     "GameInstallInfo",

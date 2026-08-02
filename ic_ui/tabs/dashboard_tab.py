@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 import queue
 import threading
 import time
@@ -372,16 +371,13 @@ class DashboardTab(QWidget):
 
     def save_manual_path(self) -> None:
         try:
-            from ic_gamedata.paths import GAMEDATA_CONFIG_PATH
+            from ic_gamedata.config_manager import ConfigManager
         except ImportError:
             QMessageBox.critical(self, "Dashboard", "ic_gamedata module ontbreekt.")
             return
         raw = (self._sources_tab.manual_path.text() or "").strip()
-        config_path = Path(GAMEDATA_CONFIG_PATH)
-        config_path.parent.mkdir(parents=True, exist_ok=True)
-        payload = {"install_path": raw}
         try:
-            config_path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+            ConfigManager().set_install_path(raw)
         except OSError as exc:
             QMessageBox.critical(self, "Dashboard", f"Kon config niet opslaan:\n{exc}")
             return

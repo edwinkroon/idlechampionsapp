@@ -6,7 +6,11 @@ import json
 from typing import Any
 
 from ic_gamedata.paths import GOAL_RUN_HISTORY_PATH
-from ic_gamedata.stats import MAX_GOAL_RUN_HISTORY, GoalRunRecord, is_plausible_goal_run_record
+from ic_gamedata.stats_models import (
+    MAX_GOAL_RUN_HISTORY,
+    GoalRunRecord,
+    is_plausible_goal_run_record,
+)
 
 
 def _record_to_dict(record: GoalRunRecord) -> dict[str, Any]:

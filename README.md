@@ -1,6 +1,23 @@
-# Idle Champions of the Forgotten Realms – Automatisering
+# Idle Champions of the Forgotten Realms – Companion App
 
-Automatisch levelen en auto progress weer aanzetten voor Idle Champions op Windows.
+Dashboard, analytics, party advisor en automatisering voor Idle Champions op Windows.
+
+## Applicatie starten
+
+**Aanbevolen (PySide6-app):**
+
+```bash
+pip install -r requirements.txt
+python app_launcher.py
+```
+
+Of dubbelklik op `Start Idle Champions App.bat` (Windows).
+
+**Zonder Python:** bouw eerst een exe met `build_exe.bat`, start daarna `dist\IdleChampionsApp.exe`.
+
+Versie bekijken: **Help → Over Idle Champions App…** in het menu.
+
+---
 
 ## Wat het doet
 
@@ -26,9 +43,8 @@ Eigen programma met duidelijke stappen en een **Test**-knop.
 ### Gebruik in de app
 
 1. Start **Idle Champions** en laat het venster open (niet minimaliseren).
-2. Vul de **venstertitel** in (deel van de titel is genoeg, bijv. `Idle Champions`).
-3. Klik op **Test (vind venster + stuur 1× F1)** – als het venster wordt gevonden en je ziet in het spel dat er geleveld wordt, werkt het.
-4. Klik op **Start** om automatisch te levelen. **Stop** om te stoppen.
+2. Klik op **Test (vind venster + stuur 1× F1)** – als het venster wordt gevonden en je ziet in het spel dat er geleveld wordt, werkt het.
+3. Klik op **Start** om automatisch te levelen. **Stop** om te stoppen.
 
 De app gebruikt **pywin32** (indien geïnstalleerd) voor betere venster-activatie. Installeer met: `pip install -r requirements.txt`.
 
@@ -115,6 +131,6 @@ Tip: zet het interval tijdelijk op **5** seconden om te controleren of de toetse
 
 ## Problemen
 
-- **Venster wordt niet gevonden**: gebruik **Ctrl+Alt+T** (AHK) om te zien welke titel het script zoekt. Controleer de venstertitel (taakbalk of Alt+Tab). Pas `WindowTitle` (AHK) of “Venstertitel” (Python) aan zodat het een deel van die titel is (bijv. `Idle Champions of the Forgotten Realms`).
+- **Venster wordt niet gevonden**: gebruik **Ctrl+Alt+T** (AHK) om te zien welke titel het script zoekt. Controleer de venstertitel (taakbalk of Alt+Tab). Pas `WindowTitle` in het AHK-script aan zodat het een deel van die titel is (bijv. `Idle Champions of the Forgotten Realms`). De PySide6-app zoekt standaard op `Idle Champions`.
 - **Toetsen komen niet aan (script draait wel)**: (1) Zorg dat het spelvenster **niet geminimaliseerd** is. (2) Als het spel **als administrator** draait, start dan ook AutoHotkey als administrator (rechtsklik het .ahk-bestand → *Als administrator uitvoeren*). (3) Sluit overlays (Discord, Steam) of zet het spel in **venstermodus** i.p.v. fullscreen.
 - **Python: “pygetwindow” of “pyautogui” niet gevonden**: voer uit: `pip install -r requirements.txt`

@@ -27,7 +27,6 @@ from ic_ui.widgets.option_visibility import bind_option_visibility
 
 @dataclass
 class AutomationWidgets:
-    window_title: QLineEdit
     level_enabled: QCheckBox
     level_interval_sec: QLineEdit
     auto_progress_enabled: QCheckBox
@@ -133,11 +132,6 @@ class AutomationTab(QWidget):
         group = QGroupBox("Instellingen")
         outer = QVBoxLayout(group)
 
-        form = QFormLayout()
-        entry_window = QLineEdit(DEFAULT_WINDOW_TITLE)
-        form.addRow("Venstertitel (deel van):", entry_window)
-        outer.addLayout(form)
-
         level_enabled = QCheckBox("Auto levelen (F12 aflopend naar F1)")
         level_enabled.setChecked(True)
         outer.addWidget(level_enabled)
@@ -241,7 +235,6 @@ class AutomationTab(QWidget):
         outer.addWidget(prefer_game_focus)
 
         self._widgets = AutomationWidgets(
-            window_title=entry_window,
             level_enabled=level_enabled,
             level_interval_sec=level_interval_sec,
             auto_progress_enabled=auto_progress_enabled,
@@ -282,10 +275,9 @@ class AutomationTab(QWidget):
         window = self.window()
         hwnd = int(window.winId()) if window is not None else 0
         exclude_hwnd = win_input.toplevel_hwnd(hwnd)
-        window_title = (w.window_title.text() or "").strip() or DEFAULT_WINDOW_TITLE
         pause_app = w.pause_over_app.isChecked()
         return AutomationSettings(
-            window_title=window_title,
+            window_title=DEFAULT_WINDOW_TITLE,
             exclude_hwnd=exclude_hwnd,
             exclude_title="",
             enable_level=w.level_enabled.isChecked(),

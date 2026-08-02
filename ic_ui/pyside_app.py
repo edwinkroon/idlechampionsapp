@@ -3,7 +3,7 @@ from __future__ import annotations
 import sys
 
 from PySide6.QtCore import QThreadPool, QTimer, Signal
-from PySide6.QtWidgets import QApplication, QMainWindow, QTabWidget
+from PySide6.QtWidgets import QApplication, QMainWindow, QMenu, QMenuBar, QMessageBox, QTabWidget
 
 from ic_ui.tabs.advisor_tab import AdvisorTab, party_id_from_payload
 from ic_ui.tabs.analytics_tab import AnalyticsTab
@@ -58,6 +58,7 @@ class IdleChampionsMainWindow(QMainWindow):
         tabs.addTab(self._sources_tab, "Bronnen")
         self._tabs = tabs
         self.setCentralWidget(tabs)
+        self._build_menu_bar()
 
         self._api_poll_timer.start()
         QTimer.singleShot(300, self._dashboard_tab.auto_start)
@@ -206,8 +207,35 @@ class IdleChampionsMainWindow(QMainWindow):
         adventure_id = party.adventure_id if party.adventure_id is not None and party.adventure_id >= 0 else None
         self._update_app_caption(party.party_index, adventure_id)
 
+    def _build_menu_bar(self) -> None:
+        menu_bar = QMenuBar(self)
+        help_menu = QMenu("Help", self)
+        about_action = help_menu.addAction("Over Idle Champions App…")
+        about_action.triggered.connect(self._show_about_dialog)
+        menu_bar.addMenu(help_menu)
+        self.setMenuBar(menu_bar)
+
+    def _show_about_dialog(self) -> None:
+        try:
+            from ic_gamedata.app_version import version_label
+
+            version = version_label()
+        except ImportError:
+            version = "onbekende versie"
+        QMessageBox.about(
+            self,
+            "Idle Champions App",
+            f"Idle Champions companion voor Windows.\n\nVersie {version}\n\n"
+            "Start: python app_launcher.py",
+        )
+
     def _app_title_base(self) -> str:
-        return "Idle Champions"
+        try:
+            from ic_gamedata.app_version import app_version
+
+            return f"Idle Champions v{app_version()}"
+        except ImportError:
+            return "Idle Champions"
 
     def _update_app_caption(
         self,
