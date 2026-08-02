@@ -1,0 +1,1689 @@
+{
+  "1": {
+    "name": "Bruenor",
+    "roles": [
+      "support"
+    ],
+    "tags": [
+      "buffer"
+    ]
+  },
+  "2": {
+    "name": "Celeste",
+    "roles": [
+      "healer",
+      "support"
+    ],
+    "tags": [
+      "buffer"
+    ]
+  },
+  "3": {
+    "name": "Nayeli",
+    "roles": [
+      "tank",
+      "support"
+    ],
+    "tags": [
+      "buffer"
+    ]
+  },
+  "4": {
+    "name": "Jarlaxle",
+    "roles": [
+      "dps",
+      "gold"
+    ],
+    "tags": [
+      "gold"
+    ]
+  },
+  "5": {
+    "name": "Calliope",
+    "roles": [
+      "healer",
+      "support"
+    ],
+    "tags": [
+      "buffer"
+    ]
+  },
+  "6": {
+    "name": "Asharra",
+    "roles": [
+      "dps",
+      "support"
+    ],
+    "tags": [
+      "buffer"
+    ]
+  },
+  "7": {
+    "name": "Minsc",
+    "roles": [
+      "dps",
+      "support"
+    ],
+    "tags": [
+      "speed",
+      "buffer"
+    ]
+  },
+  "8": {
+    "name": "Delina",
+    "roles": [
+      "dps"
+    ]
+  },
+  "9": {
+    "name": "Makos",
+    "roles": [
+      "dps",
+      "support",
+      "gold"
+    ],
+    "tags": [
+      "gold",
+      "buffer"
+    ]
+  },
+  "10": {
+    "name": "Tyril",
+    "roles": [
+      "tank",
+      "healer",
+      "support"
+    ],
+    "tags": [
+      "buffer"
+    ]
+  },
+  "11": {
+    "name": "Jamilah",
+    "roles": [
+      "dps"
+    ]
+  },
+  "12": {
+    "name": "Arkhan",
+    "roles": [
+      "dps",
+      "tank"
+    ]
+  },
+  "13": {
+    "name": "Hitch",
+    "roles": [
+      "support"
+    ],
+    "tags": [
+      "buffer"
+    ]
+  },
+  "14": {
+    "name": "Stoki",
+    "roles": [
+      "support",
+      "gold"
+    ],
+    "tags": [
+      "gold",
+      "buffer"
+    ]
+  },
+  "15": {
+    "name": "Krond",
+    "roles": [
+      "dps",
+      "support"
+    ],
+    "tags": [
+      "buffer"
+    ]
+  },
+  "16": {
+    "name": "Gromma",
+    "roles": [
+      "dps",
+      "tank",
+      "support"
+    ],
+    "tags": [
+      "debuffer",
+      "bud",
+      "buffer"
+    ]
+  },
+  "17": {
+    "name": "Dhadius",
+    "roles": [
+      "dps",
+      "support"
+    ],
+    "tags": [
+      "debuffer",
+      "bud"
+    ]
+  },
+  "18": {
+    "name": "Drizzt",
+    "roles": [
+      "dps"
+    ]
+  },
+  "19": {
+    "name": "Barrowin",
+    "roles": [
+      "tank",
+      "healer",
+      "support"
+    ],
+    "tags": [
+      "buffer"
+    ]
+  },
+  "20": {
+    "name": "Regis",
+    "roles": [
+      "healer",
+      "support",
+      "gold"
+    ],
+    "tags": [
+      "gold",
+      "buffer"
+    ]
+  },
+  "21": {
+    "name": "Birdsong",
+    "roles": [
+      "dps",
+      "support"
+    ],
+    "tags": [
+      "buffer"
+    ]
+  },
+  "22": {
+    "name": "Zorbu",
+    "roles": [
+      "dps",
+      "support"
+    ],
+    "tags": [
+      "buffer"
+    ]
+  },
+  "23": {
+    "name": "Strix",
+    "roles": [
+      "dps",
+      "support"
+    ],
+    "tags": [
+      "debuffer",
+      "bud"
+    ]
+  },
+  "24": {
+    "name": "Nrakk",
+    "roles": [
+      "support"
+    ],
+    "tags": [
+      "debuffer",
+      "bud"
+    ]
+  },
+  "25": {
+    "name": "Catti-brie",
+    "roles": [
+      "dps",
+      "support"
+    ],
+    "tags": [
+      "debuffer",
+      "bud"
+    ]
+  },
+  "26": {
+    "name": "Evelyn",
+    "roles": [
+      "tank",
+      "support"
+    ],
+    "tags": [
+      "buffer"
+    ]
+  },
+  "27": {
+    "name": "Binwin",
+    "roles": [
+      "dps"
+    ],
+    "tags": [
+      "breaker"
+    ]
+  },
+  "28": {
+    "name": "Deekin",
+    "roles": [
+      "support"
+    ],
+    "tags": [
+      "speed",
+      "buffer"
+    ]
+  },
+  "29": {
+    "name": "Xander",
+    "roles": [
+      "support"
+    ],
+    "tags": [
+      "speed",
+      "buffer"
+    ]
+  },
+  "30": {
+    "name": "Azaka",
+    "roles": [
+      "dps",
+      "support",
+      "gold"
+    ],
+    "tags": [
+      "gold",
+      "buffer"
+    ]
+  },
+  "31": {
+    "name": "Ishi",
+    "roles": [
+      "dps",
+      "gold"
+    ],
+    "tags": [
+      "gold"
+    ]
+  },
+  "32": {
+    "name": "Wulfgar",
+    "roles": [
+      "tank",
+      "support"
+    ],
+    "tags": [
+      "buffer"
+    ]
+  },
+  "33": {
+    "name": "Farideh",
+    "roles": [
+      "dps"
+    ]
+  },
+  "34": {
+    "name": "Donaar",
+    "roles": [
+      "healer",
+      "support",
+      "gold"
+    ],
+    "tags": [
+      "gold",
+      "debuffer",
+      "bud"
+    ]
+  },
+  "35": {
+    "name": "Vlahnya",
+    "roles": [
+      "support"
+    ],
+    "tags": [
+      "buffer"
+    ]
+  },
+  "36": {
+    "name": "Warden",
+    "roles": [
+      "dps",
+      "support"
+    ],
+    "tags": [
+      "debuffer",
+      "bud"
+    ]
+  },
+  "37": {
+    "name": "Nerys",
+    "roles": [
+      "healer",
+      "support"
+    ],
+    "tags": [
+      "buffer"
+    ]
+  },
+  "38": {
+    "name": "K'thriss",
+    "roles": [
+      "support",
+      "gold"
+    ],
+    "tags": [
+      "control",
+      "gold",
+      "buffer"
+    ]
+  },
+  "39": {
+    "name": "Paultin",
+    "roles": [
+      "support",
+      "gold"
+    ],
+    "tags": [
+      "gold",
+      "buffer"
+    ]
+  },
+  "40": {
+    "name": "Black Viper",
+    "roles": [
+      "dps"
+    ]
+  },
+  "41": {
+    "name": "Rosie",
+    "roles": [
+      "dps"
+    ]
+  },
+  "42": {
+    "name": "Aila",
+    "roles": [
+      "tank",
+      "support"
+    ],
+    "tags": [
+      "debuffer",
+      "bud"
+    ]
+  },
+  "43": {
+    "name": "Spurt",
+    "roles": [
+      "support"
+    ],
+    "tags": [
+      "debuffer",
+      "bud"
+    ]
+  },
+  "44": {
+    "name": "Qillek",
+    "roles": [
+      "healer",
+      "support"
+    ],
+    "tags": [
+      "buffer"
+    ]
+  },
+  "45": {
+    "name": "Korth",
+    "roles": [
+      "healer",
+      "support"
+    ],
+    "tags": [
+      "debuffer",
+      "bud"
+    ]
+  },
+  "46": {
+    "name": "Walnut",
+    "roles": [
+      "tank",
+      "support"
+    ],
+    "tags": [
+      "buffer"
+    ]
+  },
+  "47": {
+    "name": "Shandie",
+    "roles": [
+      "support"
+    ],
+    "tags": [
+      "speed",
+      "buffer"
+    ]
+  },
+  "48": {
+    "name": "Jim",
+    "roles": [
+      "dps",
+      "support",
+      "gold"
+    ],
+    "tags": [
+      "gold",
+      "buffer"
+    ]
+  },
+  "49": {
+    "name": "Turiel",
+    "roles": [
+      "support"
+    ],
+    "tags": [
+      "buffer"
+    ]
+  },
+  "50": {
+    "name": "Pwent",
+    "roles": [
+      "support"
+    ],
+    "tags": [
+      "debuffer",
+      "bud"
+    ]
+  },
+  "51": {
+    "name": "Avren",
+    "roles": [
+      "support"
+    ],
+    "tags": [
+      "buffer",
+      "bud"
+    ]
+  },
+  "52": {
+    "name": "Sentry",
+    "roles": [
+      "tank",
+      "support"
+    ],
+    "tags": [
+      "speed",
+      "buffer"
+    ]
+  },
+  "53": {
+    "name": "Krull",
+    "roles": [
+      "support",
+      "gold"
+    ],
+    "tags": [
+      "gold",
+      "debuffer",
+      "bud"
+    ]
+  },
+  "54": {
+    "name": "Artemis",
+    "roles": [
+      "dps"
+    ]
+  },
+  "55": {
+    "name": "Morgaen",
+    "roles": [
+      "support",
+      "gold"
+    ],
+    "tags": [
+      "gold",
+      "buffer"
+    ]
+  },
+  "56": {
+    "name": "Havilar",
+    "roles": [
+      "tank",
+      "support"
+    ],
+    "tags": [
+      "speed",
+      "buffer"
+    ]
+  },
+  "57": {
+    "name": "Sisaspia",
+    "roles": [
+      "healer",
+      "support"
+    ],
+    "tags": [
+      "debuffer",
+      "bud"
+    ]
+  },
+  "58": {
+    "name": "Briv",
+    "roles": [
+      "tank",
+      "healer",
+      "support"
+    ],
+    "tags": [
+      "speed",
+      "modron",
+      "buffer"
+    ]
+  },
+  "59": {
+    "name": "Melf",
+    "roles": [
+      "support"
+    ],
+    "tags": [
+      "speed",
+      "buffer"
+    ]
+  },
+  "60": {
+    "name": "Krydle",
+    "roles": [
+      "tank",
+      "support"
+    ],
+    "tags": [
+      "buffer"
+    ]
+  },
+  "61": {
+    "name": "Jaheira",
+    "roles": [
+      "dps",
+      "support"
+    ],
+    "tags": [
+      "buffer"
+    ]
+  },
+  "62": {
+    "name": "Nova",
+    "roles": [
+      "tank",
+      "support"
+    ],
+    "tags": [
+      "debuffer",
+      "bud"
+    ]
+  },
+  "63": {
+    "name": "Freely",
+    "roles": [
+      "support",
+      "gold"
+    ],
+    "tags": [
+      "gold",
+      "debuffer",
+      "bud"
+    ]
+  },
+  "64": {
+    "name": "Beadle",
+    "roles": [
+      "support",
+      "gold"
+    ],
+    "tags": [
+      "gold",
+      "control",
+      "buffer"
+    ]
+  },
+  "65": {
+    "name": "Omin",
+    "roles": [
+      "support",
+      "gold",
+      "healer"
+    ],
+    "tags": [
+      "gold",
+      "buffer"
+    ]
+  },
+  "66": {
+    "name": "Lazaapz",
+    "roles": [
+      "tank",
+      "support"
+    ],
+    "tags": [
+      "control",
+      "buffer"
+    ]
+  },
+  "67": {
+    "name": "Dragonbait",
+    "roles": [
+      "tank",
+      "support"
+    ],
+    "tags": [
+      "buffer"
+    ]
+  },
+  "68": {
+    "name": "Ulkoria",
+    "roles": [
+      "support"
+    ],
+    "tags": [
+      "buffer"
+    ]
+  },
+  "69": {
+    "name": "Torogar",
+    "roles": [
+      "support",
+      "dps"
+    ],
+    "tags": [
+      "debuffer",
+      "bud"
+    ]
+  },
+  "70": {
+    "name": "Ezmerelda",
+    "roles": [
+      "support"
+    ],
+    "tags": [
+      "speed",
+      "debuffer",
+      "bud"
+    ]
+  },
+  "71": {
+    "name": "Penelope",
+    "roles": [
+      "support",
+      "gold",
+      "healer"
+    ],
+    "tags": [
+      "gold",
+      "debuffer",
+      "bud"
+    ]
+  },
+  "72": {
+    "name": "Lucius",
+    "roles": [
+      "dps"
+    ],
+    "tags": [
+      "debuffer",
+      "bud"
+    ]
+  },
+  "73": {
+    "name": "Baeloth",
+    "roles": [
+      "gold",
+      "support"
+    ],
+    "tags": [
+      "gold",
+      "buffer"
+    ]
+  },
+  "74": {
+    "name": "Talin",
+    "roles": [
+      "support"
+    ],
+    "tags": [
+      "debuffer",
+      "bud"
+    ]
+  },
+  "75": {
+    "name": "Hew Maan",
+    "roles": [
+      "support"
+    ],
+    "tags": [
+      "speed",
+      "buffer"
+    ]
+  },
+  "76": {
+    "name": "Orisha",
+    "roles": [
+      "dps",
+      "support"
+    ],
+    "tags": [
+      "buffer"
+    ]
+  },
+  "77": {
+    "name": "Alyndra",
+    "roles": [
+      "support"
+    ],
+    "tags": [
+      "buffer"
+    ]
+  },
+  "78": {
+    "name": "Orkira",
+    "roles": [
+      "healer",
+      "support"
+    ],
+    "tags": [
+      "debuffer",
+      "bud"
+    ]
+  },
+  "79": {
+    "name": "Shaka",
+    "roles": [
+      "healer",
+      "support"
+    ],
+    "tags": [
+      "buffer"
+    ]
+  },
+  "80": {
+    "name": "Mehen",
+    "roles": [
+      "support",
+      "gold"
+    ],
+    "tags": [
+      "gold",
+      "debuffer",
+      "bud"
+    ]
+  },
+  "81": {
+    "name": "Selise",
+    "roles": [
+      "tank",
+      "support"
+    ],
+    "tags": [
+      "debuffer",
+      "bud"
+    ]
+  },
+  "82": {
+    "name": "Sgt. Knox",
+    "roles": [
+      "tank",
+      "support"
+    ],
+    "tags": [
+      "buffer"
+    ]
+  },
+  "83": {
+    "name": "Ellywick",
+    "roles": [
+      "support",
+      "gold",
+      "healer"
+    ],
+    "tags": [
+      "gold",
+      "buffer"
+    ]
+  },
+  "84": {
+    "name": "Prudence",
+    "roles": [
+      "dps"
+    ]
+  },
+  "85": {
+    "name": "Corazon",
+    "roles": [
+      "support"
+    ],
+    "tags": [
+      "buffer"
+    ]
+  },
+  "86": {
+    "name": "Reya",
+    "roles": [
+      "support"
+    ],
+    "tags": [
+      "buffer"
+    ]
+  },
+  "87": {
+    "name": "NERDS",
+    "roles": [
+      "dps",
+      "tank",
+      "healer",
+      "support"
+    ],
+    "tags": [
+      "debuffer",
+      "bud"
+    ]
+  },
+  "88": {
+    "name": "Xerophon",
+    "roles": [
+      "support"
+    ],
+    "tags": [
+      "buffer"
+    ]
+  },
+  "89": {
+    "name": "D'hani",
+    "roles": [
+      "dps",
+      "gold"
+    ],
+    "tags": [
+      "gold",
+      "debuffer",
+      "bud"
+    ]
+  },
+  "90": {
+    "name": "Brig",
+    "roles": [
+      "support"
+    ],
+    "tags": [
+      "buffer"
+    ]
+  },
+  "91": {
+    "name": "Widdle",
+    "roles": [
+      "support",
+      "healer"
+    ],
+    "tags": [
+      "speed",
+      "buffer"
+    ]
+  },
+  "92": {
+    "name": "Yorven",
+    "roles": [
+      "dps",
+      "support"
+    ],
+    "tags": [
+      "control",
+      "buffer"
+    ]
+  },
+  "93": {
+    "name": "Viconia",
+    "roles": [
+      "healer",
+      "support"
+    ],
+    "tags": [
+      "buffer"
+    ]
+  },
+  "94": {
+    "name": "Rust",
+    "roles": [
+      "gold",
+      "support"
+    ],
+    "tags": [
+      "gold",
+      "buffer"
+    ]
+  },
+  "95": {
+    "name": "Vi",
+    "roles": [
+      "gold",
+      "support"
+    ],
+    "tags": [
+      "gold",
+      "speed",
+      "buffer"
+    ]
+  },
+  "96": {
+    "name": "Desmond",
+    "roles": [
+      "support"
+    ],
+    "tags": [
+      "buffer"
+    ]
+  },
+  "97": {
+    "name": "Tatyana",
+    "roles": [
+      "tank",
+      "support"
+    ],
+    "tags": [
+      "speed",
+      "buffer"
+    ]
+  },
+  "98": {
+    "name": "Gazrick",
+    "roles": [
+      "gold",
+      "support"
+    ],
+    "tags": [
+      "gold",
+      "debuffer",
+      "bud"
+    ]
+  },
+  "99": {
+    "name": "Dungeon Master",
+    "roles": [
+      "gold",
+      "healer",
+      "support"
+    ],
+    "tags": [
+      "gold",
+      "buffer"
+    ]
+  },
+  "100": {
+    "name": "Nordom",
+    "roles": [
+      "support"
+    ],
+    "tags": [
+      "debuffer",
+      "bud"
+    ]
+  },
+  "101": {
+    "name": "Merilwen",
+    "roles": [
+      "gold",
+      "support"
+    ],
+    "tags": [
+      "gold",
+      "buffer"
+    ]
+  },
+  "102": {
+    "name": "Nahara",
+    "roles": [
+      "dps"
+    ],
+    "tags": [
+      "speed"
+    ]
+  },
+  "103": {
+    "name": "Valentine",
+    "roles": [
+      "support",
+      "gold"
+    ],
+    "tags": [
+      "gold",
+      "buffer"
+    ]
+  },
+  "104": {
+    "name": "Voronika",
+    "roles": [
+      "support"
+    ],
+    "tags": [
+      "buffer"
+    ]
+  },
+  "105": {
+    "name": "Dob",
+    "roles": [
+      "support",
+      "gold"
+    ],
+    "tags": [
+      "gold",
+      "buffer"
+    ]
+  },
+  "106": {
+    "name": "Blooshi",
+    "roles": [
+      "support",
+      "tank"
+    ],
+    "tags": [
+      "buffer"
+    ]
+  },
+  "113": {
+    "name": "Egbert",
+    "roles": [
+      "tank",
+      "support",
+      "healer",
+      "gold"
+    ],
+    "tags": [
+      "gold",
+      "control",
+      "buffer"
+    ]
+  },
+  "114": {
+    "name": "Kent",
+    "roles": [
+      "dps",
+      "support"
+    ],
+    "tags": [
+      "buffer"
+    ]
+  },
+  "115": {
+    "name": "Virgil",
+    "roles": [
+      "support"
+    ],
+    "tags": [
+      "speed",
+      "buffer"
+    ]
+  },
+  "116": {
+    "name": "Warduke",
+    "roles": [
+      "tank",
+      "dps"
+    ]
+  },
+  "117": {
+    "name": "Imoen",
+    "roles": [
+      "healer",
+      "support"
+    ],
+    "tags": [
+      "buffer"
+    ]
+  },
+  "118": {
+    "name": "Fen",
+    "roles": [
+      "dps",
+      "support"
+    ],
+    "tags": [
+      "buffer"
+    ]
+  },
+  "119": {
+    "name": "Uriah",
+    "roles": [
+      "healer",
+      "support"
+    ],
+    "tags": [
+      "buffer"
+    ]
+  },
+  "120": {
+    "name": "Solaak",
+    "roles": [
+      "support"
+    ],
+    "tags": [
+      "buffer"
+    ]
+  },
+  "121": {
+    "name": "Miria",
+    "roles": [
+      "support",
+      "tank"
+    ],
+    "tags": [
+      "buffer"
+    ]
+  },
+  "122": {
+    "name": "Antrius",
+    "roles": [
+      "healer",
+      "support"
+    ],
+    "tags": [
+      "debuffer",
+      "bud"
+    ]
+  },
+  "123": {
+    "name": "Nixie",
+    "roles": [
+      "dps",
+      "support",
+      "gold"
+    ],
+    "tags": [
+      "gold",
+      "buffer"
+    ]
+  },
+  "124": {
+    "name": "Evandra",
+    "roles": [
+      "support",
+      "tank",
+      "gold"
+    ],
+    "tags": [
+      "gold",
+      "buffer"
+    ]
+  },
+  "125": {
+    "name": "BBEG",
+    "roles": [
+      "support"
+    ],
+    "tags": [
+      "speed",
+      "buffer"
+    ]
+  },
+  "126": {
+    "name": "Strongheart",
+    "roles": [
+      "healer",
+      "support"
+    ],
+    "tags": [
+      "event",
+      "buffer"
+    ]
+  },
+  "127": {
+    "name": "Vin Ursa",
+    "roles": [
+      "support",
+      "gold"
+    ],
+    "tags": [
+      "gold",
+      "hunter",
+      "buffer"
+    ]
+  },
+  "128": {
+    "name": "Lae'zel",
+    "roles": [
+      "support",
+      "dps"
+    ],
+    "tags": [
+      "speed",
+      "buffer"
+    ]
+  },
+  "129": {
+    "name": "Astarion",
+    "roles": [
+      "gold",
+      "support"
+    ],
+    "tags": [
+      "gold",
+      "buffer"
+    ]
+  },
+  "136": {
+    "name": "Krux",
+    "roles": [
+      "dps",
+      "support",
+      "tank"
+    ],
+    "tags": [
+      "buffer"
+    ]
+  },
+  "138": {
+    "name": "Certainty",
+    "roles": [
+      "gold",
+      "support"
+    ],
+    "tags": [
+      "gold",
+      "buffer"
+    ]
+  },
+  "139": {
+    "name": "Thellora",
+    "roles": [
+      "support",
+      "tank"
+    ],
+    "tags": [
+      "speed",
+      "buffer"
+    ]
+  },
+  "140": {
+    "name": "Jang Sao",
+    "roles": [
+      "healer",
+      "support"
+    ],
+    "tags": [
+      "buffer"
+    ]
+  },
+  "141": {
+    "name": "Shadowheart",
+    "roles": [
+      "healer",
+      "support"
+    ],
+    "tags": [
+      "buffer"
+    ]
+  },
+  "142": {
+    "name": "Wyll",
+    "roles": [
+      "support"
+    ],
+    "tags": [
+      "buffer"
+    ]
+  },
+  "143": {
+    "name": "Karlach",
+    "roles": [
+      "support",
+      "dps",
+      "tank"
+    ],
+    "tags": [
+      "buffer"
+    ]
+  },
+  "144": {
+    "name": "Presto",
+    "roles": [
+      "support"
+    ],
+    "tags": [
+      "debuffer",
+      "bud"
+    ]
+  },
+  "145": {
+    "name": "Dynaheir",
+    "roles": [
+      "support"
+    ],
+    "tags": [
+      "speed",
+      "buffer"
+    ]
+  },
+  "146": {
+    "name": "Dark Urge",
+    "roles": [
+      "dps"
+    ]
+  },
+  "147": {
+    "name": "Gale",
+    "roles": [
+      "support"
+    ],
+    "tags": [
+      "debuffer",
+      "bud"
+    ]
+  },
+  "148": {
+    "name": "Diana",
+    "roles": [
+      "support"
+    ],
+    "tags": [
+      "speed",
+      "buffer"
+    ]
+  },
+  "149": {
+    "name": "Ravengard",
+    "roles": [
+      "support"
+    ],
+    "tags": [
+      "buffer"
+    ]
+  },
+  "150": {
+    "name": "Aeon",
+    "roles": [
+      "support"
+    ],
+    "tags": [
+      "debuffer",
+      "bud"
+    ]
+  },
+  "151": {
+    "name": "Umberto",
+    "roles": [
+      "tank",
+      "support"
+    ],
+    "tags": [
+      "debuffer",
+      "bud"
+    ]
+  },
+  "152": {
+    "name": "Bobby",
+    "roles": [
+      "dps",
+      "support"
+    ],
+    "tags": [
+      "buffer"
+    ]
+  },
+  "153": {
+    "name": "Kas",
+    "roles": [
+      "dps",
+      "healer",
+      "support"
+    ],
+    "tags": [
+      "buffer"
+    ]
+  },
+  "154": {
+    "name": "Minthara",
+    "roles": [
+      "support",
+      "tank"
+    ],
+    "tags": [
+      "debuffer",
+      "bud"
+    ]
+  },
+  "155": {
+    "name": "Wren",
+    "roles": [
+      "support",
+      "dps",
+      "tank"
+    ],
+    "tags": [
+      "debuffer",
+      "bud"
+    ]
+  },
+  "156": {
+    "name": "Halsin",
+    "roles": [
+      "support",
+      "healer"
+    ],
+    "tags": [
+      "speed",
+      "buffer"
+    ]
+  },
+  "157": {
+    "name": "Eric",
+    "roles": [
+      "support",
+      "tank",
+      "gold"
+    ],
+    "tags": [
+      "gold",
+      "control",
+      "buffer"
+    ]
+  },
+  "158": {
+    "name": "Kalix",
+    "roles": [
+      "support"
+    ],
+    "tags": [
+      "hunter",
+      "buffer"
+    ]
+  },
+  "159": {
+    "name": "Volo",
+    "roles": [
+      "support"
+    ],
+    "tags": [
+      "buffer"
+    ]
+  },
+  "160": {
+    "name": "Sheila",
+    "roles": [
+      "support"
+    ],
+    "tags": [
+      "debuffer",
+      "bud"
+    ]
+  },
+  "161": {
+    "name": "Grimm",
+    "roles": [
+      "dps",
+      "tank"
+    ],
+    "tags": [
+      "breaker"
+    ]
+  },
+  "162": {
+    "name": "Vlithryn",
+    "roles": [
+      "support",
+      "healer"
+    ],
+    "tags": [
+      "control",
+      "buffer"
+    ]
+  },
+  "163": {
+    "name": "Hank",
+    "roles": [
+      "support"
+    ],
+    "tags": [
+      "control",
+      "modron",
+      "buffer"
+    ]
+  },
+  "164": {
+    "name": "Tess",
+    "roles": [
+      "support"
+    ],
+    "tags": [
+      "buffer"
+    ]
+  },
+  "165": {
+    "name": "Baldric",
+    "roles": [
+      "support",
+      "healer"
+    ],
+    "tags": [
+      "buffer"
+    ]
+  },
+  "166": {
+    "name": "Cazrin",
+    "roles": [
+      "dps",
+      "support"
+    ],
+    "tags": [
+      "buffer"
+    ]
+  },
+  "167": {
+    "name": "Windfall",
+    "roles": [
+      "dps",
+      "support",
+      "gold"
+    ],
+    "tags": [
+      "gold",
+      "buffer"
+    ]
+  },
+  "168": {
+    "name": "King of Shadows",
+    "roles": [
+      "dps",
+      "tank",
+      "support"
+    ],
+    "tags": [
+      "buffer"
+    ]
+  },
+  "169": {
+    "name": "Skylla",
+    "roles": [
+      "support"
+    ],
+    "tags": [
+      "debuffer",
+      "bud"
+    ]
+  },
+  "170": {
+    "name": "Lark",
+    "roles": [
+      "support"
+    ],
+    "tags": [
+      "speed",
+      "debuffer",
+      "bud"
+    ]
+  },
+  "171": {
+    "name": "Anson",
+    "roles": [
+      "support",
+      "tank"
+    ],
+    "tags": [
+      "control",
+      "buffer"
+    ]
+  },
+  "172": {
+    "name": "Kyre",
+    "roles": [
+      "support"
+    ],
+    "tags": [
+      "control",
+      "buffer"
+    ]
+  },
+  "173": {
+    "name": "Raistlin",
+    "roles": [
+      "dps"
+    ]
+  },
+  "174": {
+    "name": "Tasslehoff",
+    "roles": [
+      "support",
+      "gold"
+    ],
+    "tags": [
+      "gold",
+      "speed",
+      "buffer"
+    ]
+  },
+  "175": {
+    "name": "Laurana",
+    "roles": [
+      "support",
+      "healer"
+    ],
+    "tags": [
+      "buffer"
+    ]
+  },
+  "176": {
+    "name": "Trixie",
+    "roles": [
+      "support",
+      "gold"
+    ],
+    "tags": [
+      "gold",
+      "debuffer",
+      "bud"
+    ]
+  },
+  "177": {
+    "name": "Van Richten",
+    "roles": [
+      "support"
+    ],
+    "tags": [
+      "debuffer",
+      "bud"
+    ]
+  }
+}

@@ -1,0 +1,5 @@
+column,type,description
+code,string,Unieke enum-waarde
+label,string,Menselijk label
+description,string,Betekenis van de run goal
+default_priority,integer,Standaard prioriteit voor deze goal

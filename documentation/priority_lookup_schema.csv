@@ -1,0 +1,4 @@
+column,type,description
+code,string,"Unieke enum-waarde, bijvoorbeeld high"
+score,integer,Numerieke waarde 1-5
+description,string,Hoe zwaar de rule moet meewegen

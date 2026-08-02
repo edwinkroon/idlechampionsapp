@@ -1,0 +1,1980 @@
+{
+  "source": "https://emmotes.github.io/ic_spoilers/patron_roster.html",
+  "patron_ids": {
+    "1": "mirt",
+    "2": "vajra",
+    "3": "strahd",
+    "4": "zariel",
+    "5": "elminster"
+  },
+  "heroes": [
+    {
+      "hero_id": 1,
+      "name": "Bruenor",
+      "seat": 1,
+      "patrons": {
+        "mirt": "available",
+        "vajra": "available",
+        "strahd": "unavailable",
+        "zariel": "feat",
+        "elminster": "unavailable"
+      }
+    },
+    {
+      "hero_id": 2,
+      "name": "Celeste",
+      "seat": 2,
+      "patrons": {
+        "mirt": "available",
+        "vajra": "feat",
+        "strahd": "feat",
+        "zariel": "unavailable",
+        "elminster": "unavailable"
+      }
+    },
+    {
+      "hero_id": 3,
+      "name": "Nayeli",
+      "seat": 3,
+      "patrons": {
+        "mirt": "available",
+        "vajra": "available",
+        "strahd": "unavailable",
+        "zariel": "available",
+        "elminster": "unavailable"
+      }
+    },
+    {
+      "hero_id": 4,
+      "name": "Jarlaxle",
+      "seat": 4,
+      "patrons": {
+        "mirt": "available",
+        "vajra": "unavailable",
+        "strahd": "available",
+        "zariel": "available",
+        "elminster": "unavailable"
+      }
+    },
+    {
+      "hero_id": 5,
+      "name": "Calliope",
+      "seat": 5,
+      "patrons": {
+        "mirt": "available",
+        "vajra": "available",
+        "strahd": "unavailable",
+        "zariel": "available",
+        "elminster": "unavailable"
+      }
+    },
+    {
+      "hero_id": 6,
+      "name": "Asharra",
+      "seat": 6,
+      "patrons": {
+        "mirt": "unavailable",
+        "vajra": "unavailable",
+        "strahd": "available",
+        "zariel": "available",
+        "elminster": "unavailable"
+      }
+    },
+    {
+      "hero_id": 7,
+      "name": "Minsc",
+      "seat": 7,
+      "patrons": {
+        "mirt": "available",
+        "vajra": "available",
+        "strahd": "unavailable",
+        "zariel": "unavailable",
+        "elminster": "unavailable"
+      }
+    },
+    {
+      "hero_id": 8,
+      "name": "Delina",
+      "seat": 8,
+      "patrons": {
+        "mirt": "available",
+        "vajra": "available",
+        "strahd": "available",
+        "zariel": "unavailable",
+        "elminster": "unavailable"
+      }
+    },
+    {
+      "hero_id": 9,
+      "name": "Makos",
+      "seat": 9,
+      "patrons": {
+        "mirt": "available",
+        "vajra": "available",
+        "strahd": "available",
+        "zariel": "available",
+        "elminster": "unavailable"
+      }
+    },
+    {
+      "hero_id": 10,
+      "name": "Tyril",
+      "seat": 10,
+      "patrons": {
+        "mirt": "available",
+        "vajra": "available",
+        "strahd": "available",
+        "zariel": "available",
+        "elminster": "unavailable"
+      }
+    },
+    {
+      "hero_id": 11,
+      "name": "Jamilah",
+      "seat": 11,
+      "patrons": {
+        "mirt": "unavailable",
+        "vajra": "available",
+        "strahd": "unavailable",
+        "zariel": "available",
+        "elminster": "unavailable"
+      }
+    },
+    {
+      "hero_id": 12,
+      "name": "Arkhan",
+      "seat": 12,
+      "patrons": {
+        "mirt": "available",
+        "vajra": "available",
+        "strahd": "unavailable",
+        "zariel": "available",
+        "elminster": "unavailable"
+      }
+    },
+    {
+      "hero_id": 13,
+      "name": "Hitch",
+      "seat": 8,
+      "patrons": {
+        "mirt": "available",
+        "vajra": "unavailable",
+        "strahd": "available",
+        "zariel": "available",
+        "elminster": "unavailable"
+      }
+    },
+    {
+      "hero_id": 14,
+      "name": "Stoki",
+      "seat": 4,
+      "patrons": {
+        "mirt": "unavailable",
+        "vajra": "available",
+        "strahd": "available",
+        "zariel": "feat",
+        "elminster": "timed"
+      }
+    },
+    {
+      "hero_id": 15,
+      "name": "Krond",
+      "seat": 6,
+      "patrons": {
+        "mirt": "available",
+        "vajra": "available",
+        "strahd": "available",
+        "zariel": "unavailable",
+        "elminster": "timed"
+      }
+    },
+    {
+      "hero_id": 16,
+      "name": "Gromma",
+      "seat": 3,
+      "patrons": {
+        "mirt": "unavailable",
+        "vajra": "available",
+        "strahd": "feat",
+        "zariel": "available",
+        "elminster": "timed"
+      }
+    },
+    {
+      "hero_id": 17,
+      "name": "Dhadius",
+      "seat": 5,
+      "patrons": {
+        "mirt": "unavailable",
+        "vajra": "unavailable",
+        "strahd": "available",
+        "zariel": "unavailable",
+        "elminster": "timed"
+      }
+    },
+    {
+      "hero_id": 18,
+      "name": "Drizzt",
+      "seat": 9,
+      "patrons": {
+        "mirt": "available",
+        "vajra": "available",
+        "strahd": "feat",
+        "zariel": "feat",
+        "elminster": "unavailable"
+      }
+    },
+    {
+      "hero_id": 19,
+      "name": "Barrowin",
+      "seat": 10,
+      "patrons": {
+        "mirt": "available",
+        "vajra": "available",
+        "strahd": "feat",
+        "zariel": "unavailable",
+        "elminster": "unavailable"
+      }
+    },
+    {
+      "hero_id": 20,
+      "name": "Regis",
+      "seat": 2,
+      "patrons": {
+        "mirt": "unavailable",
+        "vajra": "available",
+        "strahd": "available",
+        "zariel": "feat",
+        "elminster": "unavailable"
+      }
+    },
+    {
+      "hero_id": 21,
+      "name": "Birdsong",
+      "seat": 9,
+      "patrons": {
+        "mirt": "unavailable",
+        "vajra": "feat",
+        "strahd": "available",
+        "zariel": "feat",
+        "elminster": "unavailable"
+      }
+    },
+    {
+      "hero_id": 22,
+      "name": "Zorbu",
+      "seat": 12,
+      "patrons": {
+        "mirt": "available",
+        "vajra": "available",
+        "strahd": "feat",
+        "zariel": "feat",
+        "elminster": "unavailable"
+      }
+    },
+    {
+      "hero_id": 23,
+      "name": "Strix",
+      "seat": 11,
+      "patrons": {
+        "mirt": "available",
+        "vajra": "available",
+        "strahd": "available",
+        "zariel": "available",
+        "elminster": "unavailable"
+      }
+    },
+    {
+      "hero_id": 24,
+      "name": "Nrakk",
+      "seat": 8,
+      "patrons": {
+        "mirt": "unavailable",
+        "vajra": "available",
+        "strahd": "feat",
+        "zariel": "feat",
+        "elminster": "unavailable"
+      }
+    },
+    {
+      "hero_id": 25,
+      "name": "Catti-brie",
+      "seat": 7,
+      "patrons": {
+        "mirt": "available",
+        "vajra": "available",
+        "strahd": "available",
+        "zariel": "available",
+        "elminster": "unavailable"
+      }
+    },
+    {
+      "hero_id": 26,
+      "name": "Evelyn",
+      "seat": 6,
+      "patrons": {
+        "mirt": "available",
+        "vajra": "available",
+        "strahd": "feat",
+        "zariel": "available",
+        "elminster": "unavailable"
+      }
+    },
+    {
+      "hero_id": 27,
+      "name": "Binwin",
+      "seat": 3,
+      "patrons": {
+        "mirt": "available",
+        "vajra": "available",
+        "strahd": "unavailable",
+        "zariel": "available",
+        "elminster": "timed"
+      }
+    },
+    {
+      "hero_id": 28,
+      "name": "Deekin",
+      "seat": 1,
+      "patrons": {
+        "mirt": "unavailable",
+        "vajra": "available",
+        "strahd": "unavailable",
+        "zariel": "feat",
+        "elminster": "timed"
+      }
+    },
+    {
+      "hero_id": 29,
+      "name": "Xander",
+      "seat": 5,
+      "patrons": {
+        "mirt": "available",
+        "vajra": "unavailable",
+        "strahd": "available",
+        "zariel": "unavailable",
+        "elminster": "unavailable"
+      }
+    },
+    {
+      "hero_id": 30,
+      "name": "Azaka",
+      "seat": 12,
+      "patrons": {
+        "mirt": "unavailable",
+        "vajra": "available",
+        "strahd": "unavailable",
+        "zariel": "available",
+        "elminster": "unavailable"
+      }
+    },
+    {
+      "hero_id": 31,
+      "name": "Ishi",
+      "seat": 4,
+      "patrons": {
+        "mirt": "available",
+        "vajra": "available",
+        "strahd": "feat",
+        "zariel": "available",
+        "elminster": "timed"
+      }
+    },
+    {
+      "hero_id": 32,
+      "name": "Wulfgar",
+      "seat": 10,
+      "patrons": {
+        "mirt": "available",
+        "vajra": "available",
+        "strahd": "unavailable",
+        "zariel": "available",
+        "elminster": "unavailable"
+      }
+    },
+    {
+      "hero_id": 33,
+      "name": "Farideh",
+      "seat": 7,
+      "patrons": {
+        "mirt": "available",
+        "vajra": "available",
+        "strahd": "available",
+        "zariel": "available",
+        "elminster": "timed"
+      }
+    },
+    {
+      "hero_id": 34,
+      "name": "Donaar",
+      "seat": 2,
+      "patrons": {
+        "mirt": "available",
+        "vajra": "available",
+        "strahd": "unavailable",
+        "zariel": "available",
+        "elminster": "timed"
+      }
+    },
+    {
+      "hero_id": 35,
+      "name": "Vlahnya",
+      "seat": 8,
+      "patrons": {
+        "mirt": "available",
+        "vajra": "unavailable",
+        "strahd": "available",
+        "zariel": "unavailable",
+        "elminster": "unavailable"
+      }
+    },
+    {
+      "hero_id": 36,
+      "name": "Warden",
+      "seat": 11,
+      "patrons": {
+        "mirt": "available",
+        "vajra": "feat",
+        "strahd": "unavailable",
+        "zariel": "available",
+        "elminster": "unavailable"
+      }
+    },
+    {
+      "hero_id": 37,
+      "name": "Nerys",
+      "seat": 12,
+      "patrons": {
+        "mirt": "available",
+        "vajra": "available",
+        "strahd": "feat",
+        "zariel": "available",
+        "elminster": "unavailable"
+      }
+    },
+    {
+      "hero_id": 38,
+      "name": "K'thriss",
+      "seat": 1,
+      "patrons": {
+        "mirt": "unavailable",
+        "vajra": "feat",
+        "strahd": "available",
+        "zariel": "feat",
+        "elminster": "timed"
+      }
+    },
+    {
+      "hero_id": 39,
+      "name": "Paultin",
+      "seat": 4,
+      "patrons": {
+        "mirt": "unavailable",
+        "vajra": "available",
+        "strahd": "available",
+        "zariel": "available",
+        "elminster": "unavailable"
+      }
+    },
+    {
+      "hero_id": 40,
+      "name": "Black Viper",
+      "seat": 7,
+      "patrons": {
+        "mirt": "unavailable",
+        "vajra": "available",
+        "strahd": "feat",
+        "zariel": "available",
+        "elminster": "unavailable"
+      }
+    },
+    {
+      "hero_id": 41,
+      "name": "Rosie",
+      "seat": 10,
+      "patrons": {
+        "mirt": "available",
+        "vajra": "feat",
+        "strahd": "feat",
+        "zariel": "feat",
+        "elminster": "timed"
+      }
+    },
+    {
+      "hero_id": 42,
+      "name": "Aila",
+      "seat": 9,
+      "patrons": {
+        "mirt": "unavailable",
+        "vajra": "available",
+        "strahd": "unavailable",
+        "zariel": "unavailable",
+        "elminster": "unavailable"
+      }
+    },
+    {
+      "hero_id": 43,
+      "name": "Spurt",
+      "seat": 3,
+      "patrons": {
+        "mirt": "available",
+        "vajra": "feat",
+        "strahd": "unavailable",
+        "zariel": "unavailable",
+        "elminster": "unavailable"
+      }
+    },
+    {
+      "hero_id": 44,
+      "name": "Qillek",
+      "seat": 5,
+      "patrons": {
+        "mirt": "available",
+        "vajra": "unavailable",
+        "strahd": "available",
+        "zariel": "available",
+        "elminster": "unavailable"
+      }
+    },
+    {
+      "hero_id": 45,
+      "name": "Korth",
+      "seat": 2,
+      "patrons": {
+        "mirt": "available",
+        "vajra": "available",
+        "strahd": "unavailable",
+        "zariel": "feat",
+        "elminster": "unavailable"
+      }
+    },
+    {
+      "hero_id": 46,
+      "name": "Walnut",
+      "seat": 8,
+      "patrons": {
+        "mirt": "unavailable",
+        "vajra": "available",
+        "strahd": "unavailable",
+        "zariel": "unavailable",
+        "elminster": "timed"
+      }
+    },
+    {
+      "hero_id": 47,
+      "name": "Shandie",
+      "seat": 6,
+      "patrons": {
+        "mirt": "available",
+        "vajra": "available",
+        "strahd": "available",
+        "zariel": "available",
+        "elminster": "unavailable"
+      }
+    },
+    {
+      "hero_id": 48,
+      "name": "Jim",
+      "seat": 7,
+      "patrons": {
+        "mirt": "unavailable",
+        "vajra": "unavailable",
+        "strahd": "available",
+        "zariel": "feat",
+        "elminster": "unavailable"
+      }
+    },
+    {
+      "hero_id": 49,
+      "name": "Turiel",
+      "seat": 1,
+      "patrons": {
+        "mirt": "available",
+        "vajra": "available",
+        "strahd": "available",
+        "zariel": "feat",
+        "elminster": "unavailable"
+      }
+    },
+    {
+      "hero_id": 50,
+      "name": "Pwent",
+      "seat": 5,
+      "patrons": {
+        "mirt": "available",
+        "vajra": "available",
+        "strahd": "unavailable",
+        "zariel": "unavailable",
+        "elminster": "unavailable"
+      }
+    },
+    {
+      "hero_id": 51,
+      "name": "Avren",
+      "seat": 11,
+      "patrons": {
+        "mirt": "unavailable",
+        "vajra": "available",
+        "strahd": "available",
+        "zariel": "feat",
+        "elminster": "unavailable"
+      }
+    },
+    {
+      "hero_id": 52,
+      "name": "Sentry",
+      "seat": 4,
+      "patrons": {
+        "mirt": "available",
+        "vajra": "available",
+        "strahd": "unavailable",
+        "zariel": "available",
+        "elminster": "unavailable"
+      }
+    },
+    {
+      "hero_id": 53,
+      "name": "Krull",
+      "seat": 6,
+      "patrons": {
+        "mirt": "available",
+        "vajra": "available",
+        "strahd": "unavailable",
+        "zariel": "unavailable",
+        "elminster": "unavailable"
+      }
+    },
+    {
+      "hero_id": 54,
+      "name": "Artemis",
+      "seat": 3,
+      "patrons": {
+        "mirt": "available",
+        "vajra": "available",
+        "strahd": "available",
+        "zariel": "available",
+        "elminster": "unavailable"
+      }
+    },
+    {
+      "hero_id": 55,
+      "name": "Môrgæn",
+      "seat": 9,
+      "patrons": {
+        "mirt": "unavailable",
+        "vajra": "unavailable",
+        "strahd": "available",
+        "zariel": "unavailable",
+        "elminster": "unavailable"
+      }
+    },
+    {
+      "hero_id": 56,
+      "name": "Havilar",
+      "seat": 10,
+      "patrons": {
+        "mirt": "available",
+        "vajra": "feat",
+        "strahd": "unavailable",
+        "zariel": "feat",
+        "elminster": "timed"
+      }
+    },
+    {
+      "hero_id": 57,
+      "name": "Sisaspia",
+      "seat": 1,
+      "patrons": {
+        "mirt": "available",
+        "vajra": "available",
+        "strahd": "available",
+        "zariel": "available",
+        "elminster": "unavailable"
+      }
+    },
+    {
+      "hero_id": 58,
+      "name": "Briv",
+      "seat": 5,
+      "patrons": {
+        "mirt": "available",
+        "vajra": "available",
+        "strahd": "unavailable",
+        "zariel": "available",
+        "elminster": "unavailable"
+      }
+    },
+    {
+      "hero_id": 59,
+      "name": "Melf",
+      "seat": 12,
+      "patrons": {
+        "mirt": "available",
+        "vajra": "available",
+        "strahd": "available",
+        "zariel": "unavailable",
+        "elminster": "timed"
+      }
+    },
+    {
+      "hero_id": 60,
+      "name": "Krydle",
+      "seat": 2,
+      "patrons": {
+        "mirt": "available",
+        "vajra": "available",
+        "strahd": "available",
+        "zariel": "available",
+        "elminster": "unavailable"
+      }
+    },
+    {
+      "hero_id": 61,
+      "name": "Jaheira",
+      "seat": 9,
+      "patrons": {
+        "mirt": "unavailable",
+        "vajra": "available",
+        "strahd": "unavailable",
+        "zariel": "available",
+        "elminster": "unavailable"
+      }
+    },
+    {
+      "hero_id": 62,
+      "name": "Nova",
+      "seat": 11,
+      "patrons": {
+        "mirt": "available",
+        "vajra": "available",
+        "strahd": "available",
+        "zariel": "unavailable",
+        "elminster": "unavailable"
+      }
+    },
+    {
+      "hero_id": 63,
+      "name": "Freely",
+      "seat": 7,
+      "patrons": {
+        "mirt": "available",
+        "vajra": "unavailable",
+        "strahd": "unavailable",
+        "zariel": "available",
+        "elminster": "unavailable"
+      }
+    },
+    {
+      "hero_id": 64,
+      "name": "Beadle",
+      "seat": 8,
+      "patrons": {
+        "mirt": "timed",
+        "vajra": "timed",
+        "strahd": "available",
+        "zariel": "timed",
+        "elminster": "timed"
+      }
+    },
+    {
+      "hero_id": 65,
+      "name": "Omin",
+      "seat": 3,
+      "patrons": {
+        "mirt": "unavailable",
+        "vajra": "available",
+        "strahd": "unavailable",
+        "zariel": "unavailable",
+        "elminster": "unavailable"
+      }
+    },
+    {
+      "hero_id": 66,
+      "name": "Lazaapz",
+      "seat": 9,
+      "patrons": {
+        "mirt": "available",
+        "vajra": "available",
+        "strahd": "available",
+        "zariel": "unavailable",
+        "elminster": "timed"
+      }
+    },
+    {
+      "hero_id": 67,
+      "name": "Dragonbait",
+      "seat": 11,
+      "patrons": {
+        "mirt": "available",
+        "vajra": "available",
+        "strahd": "available",
+        "zariel": "available",
+        "elminster": "unavailable"
+      }
+    },
+    {
+      "hero_id": 68,
+      "name": "Ulkoria",
+      "seat": 10,
+      "patrons": {
+        "mirt": "available",
+        "vajra": "unavailable",
+        "strahd": "available",
+        "zariel": "available",
+        "elminster": "unavailable"
+      }
+    },
+    {
+      "hero_id": 69,
+      "name": "Torogar",
+      "seat": 10,
+      "patrons": {
+        "mirt": "available",
+        "vajra": "available",
+        "strahd": "unavailable",
+        "zariel": "available",
+        "elminster": "unavailable"
+      }
+    },
+    {
+      "hero_id": 70,
+      "name": "Ezmerelda",
+      "seat": 1,
+      "patrons": {
+        "mirt": "available",
+        "vajra": "available",
+        "strahd": "available",
+        "zariel": "available",
+        "elminster": "timed"
+      }
+    },
+    {
+      "hero_id": 71,
+      "name": "Penelope",
+      "seat": 12,
+      "patrons": {
+        "mirt": "available",
+        "vajra": "available",
+        "strahd": "unavailable",
+        "zariel": "available",
+        "elminster": "timed"
+      }
+    },
+    {
+      "hero_id": 72,
+      "name": "Lucius",
+      "seat": 7,
+      "patrons": {
+        "mirt": "unavailable",
+        "vajra": "feat",
+        "strahd": "feat",
+        "zariel": "available",
+        "elminster": "timed"
+      }
+    },
+    {
+      "hero_id": 73,
+      "name": "Baeloth",
+      "seat": 4,
+      "patrons": {
+        "mirt": "available",
+        "vajra": "available",
+        "strahd": "available",
+        "zariel": "available",
+        "elminster": "unavailable"
+      }
+    },
+    {
+      "hero_id": 74,
+      "name": "Talin",
+      "seat": 2,
+      "patrons": {
+        "mirt": "available",
+        "vajra": "unavailable",
+        "strahd": "available",
+        "zariel": "available",
+        "elminster": "unavailable"
+      }
+    },
+    {
+      "hero_id": 75,
+      "name": "Hew Maan",
+      "seat": 8,
+      "patrons": {
+        "mirt": "available",
+        "vajra": "available",
+        "strahd": "feat",
+        "zariel": "available",
+        "elminster": "unavailable"
+      }
+    },
+    {
+      "hero_id": 76,
+      "name": "Orisha",
+      "seat": 11,
+      "patrons": {
+        "mirt": "available",
+        "vajra": "unavailable",
+        "strahd": "available",
+        "zariel": "available",
+        "elminster": "unavailable"
+      }
+    },
+    {
+      "hero_id": 77,
+      "name": "Alyndra",
+      "seat": 6,
+      "patrons": {
+        "mirt": "unavailable",
+        "vajra": "available",
+        "strahd": "available",
+        "zariel": "unavailable",
+        "elminster": "timed"
+      }
+    },
+    {
+      "hero_id": 78,
+      "name": "Orkira",
+      "seat": 1,
+      "patrons": {
+        "mirt": "available",
+        "vajra": "available",
+        "strahd": "unavailable",
+        "zariel": "available",
+        "elminster": "unavailable"
+      }
+    },
+    {
+      "hero_id": 79,
+      "name": "Shaka",
+      "seat": 9,
+      "patrons": {
+        "mirt": "available",
+        "vajra": "available",
+        "strahd": "available",
+        "zariel": "available",
+        "elminster": "unavailable"
+      }
+    },
+    {
+      "hero_id": 80,
+      "name": "Mehen",
+      "seat": 3,
+      "patrons": {
+        "mirt": "available",
+        "vajra": "available",
+        "strahd": "available",
+        "zariel": "available",
+        "elminster": "timed"
+      }
+    },
+    {
+      "hero_id": 81,
+      "name": "Selise",
+      "seat": 12,
+      "patrons": {
+        "mirt": "unavailable",
+        "vajra": "unavailable",
+        "strahd": "available",
+        "zariel": "available",
+        "elminster": "unavailable"
+      }
+    },
+    {
+      "hero_id": 82,
+      "name": "Sgt. Knox",
+      "seat": 6,
+      "patrons": {
+        "mirt": "available",
+        "vajra": "available",
+        "strahd": "feat",
+        "zariel": "available",
+        "elminster": "timed"
+      }
+    },
+    {
+      "hero_id": 83,
+      "name": "Ellywick",
+      "seat": 10,
+      "patrons": {
+        "mirt": "unavailable",
+        "vajra": "available",
+        "strahd": "available",
+        "zariel": "available",
+        "elminster": "timed"
+      }
+    },
+    {
+      "hero_id": 84,
+      "name": "Prudence",
+      "seat": 5,
+      "patrons": {
+        "mirt": "available",
+        "vajra": "available",
+        "strahd": "available",
+        "zariel": "available",
+        "elminster": "unavailable"
+      }
+    },
+    {
+      "hero_id": 85,
+      "name": "Corazón",
+      "seat": 8,
+      "patrons": {
+        "mirt": "unavailable",
+        "vajra": "feat",
+        "strahd": "available",
+        "zariel": "available",
+        "elminster": "unavailable"
+      }
+    },
+    {
+      "hero_id": 86,
+      "name": "Reya",
+      "seat": 6,
+      "patrons": {
+        "mirt": "available",
+        "vajra": "available",
+        "strahd": "available",
+        "zariel": "available",
+        "elminster": "unavailable"
+      }
+    },
+    {
+      "hero_id": 87,
+      "name": "NERDS",
+      "seat": 1,
+      "patrons": {
+        "mirt": "unavailable",
+        "vajra": "unavailable",
+        "strahd": "unavailable",
+        "zariel": "unavailable",
+        "elminster": "unavailable"
+      }
+    },
+    {
+      "hero_id": 88,
+      "name": "Xerophon",
+      "seat": 7,
+      "patrons": {
+        "mirt": "unavailable",
+        "vajra": "feat",
+        "strahd": "feat",
+        "zariel": "feat",
+        "elminster": "unavailable"
+      }
+    },
+    {
+      "hero_id": 89,
+      "name": "D'hani",
+      "seat": 1,
+      "patrons": {
+        "mirt": "available",
+        "vajra": "available",
+        "strahd": "feat",
+        "zariel": "unavailable",
+        "elminster": "unavailable"
+      }
+    },
+    {
+      "hero_id": 90,
+      "name": "Brig",
+      "seat": 3,
+      "patrons": {
+        "mirt": "available",
+        "vajra": "unavailable",
+        "strahd": "feat",
+        "zariel": "available",
+        "elminster": "unavailable"
+      }
+    },
+    {
+      "hero_id": 91,
+      "name": "Widdle",
+      "seat": 2,
+      "patrons": {
+        "mirt": "unavailable",
+        "vajra": "feat",
+        "strahd": "available",
+        "zariel": "feat",
+        "elminster": "unavailable"
+      }
+    },
+    {
+      "hero_id": 92,
+      "name": "Yorven",
+      "seat": 10,
+      "patrons": {
+        "mirt": "unavailable",
+        "vajra": "available",
+        "strahd": "unavailable",
+        "zariel": "feat",
+        "elminster": "timed"
+      }
+    },
+    {
+      "hero_id": 93,
+      "name": "Viconia",
+      "seat": 5,
+      "patrons": {
+        "mirt": "available",
+        "vajra": "unavailable",
+        "strahd": "available",
+        "zariel": "available",
+        "elminster": "unavailable"
+      }
+    },
+    {
+      "hero_id": 94,
+      "name": "Rust",
+      "seat": 11,
+      "patrons": {
+        "mirt": "unavailable",
+        "vajra": "available",
+        "strahd": "feat",
+        "zariel": "available",
+        "elminster": "timed"
+      }
+    },
+    {
+      "hero_id": 95,
+      "name": "Vi",
+      "seat": 12,
+      "patrons": {
+        "mirt": "available",
+        "vajra": "available",
+        "strahd": "available",
+        "zariel": "unavailable",
+        "elminster": "unavailable"
+      }
+    },
+    {
+      "hero_id": 96,
+      "name": "Desmond",
+      "seat": 4,
+      "patrons": {
+        "mirt": "available",
+        "vajra": "unavailable",
+        "strahd": "unavailable",
+        "zariel": "available",
+        "elminster": "unavailable"
+      }
+    },
+    {
+      "hero_id": 97,
+      "name": "Tatyana",
+      "seat": 8,
+      "patrons": {
+        "mirt": "unavailable",
+        "vajra": "available",
+        "strahd": "unavailable",
+        "zariel": "feat",
+        "elminster": "unavailable"
+      }
+    },
+    {
+      "hero_id": 98,
+      "name": "Gazrick",
+      "seat": 7,
+      "patrons": {
+        "mirt": "available",
+        "vajra": "feat",
+        "strahd": "available",
+        "zariel": "feat",
+        "elminster": "unavailable"
+      }
+    },
+    {
+      "hero_id": 99,
+      "name": "Dungeon Master",
+      "seat": 6,
+      "patrons": {
+        "mirt": "always",
+        "vajra": "always",
+        "strahd": "always",
+        "zariel": "always",
+        "elminster": "always"
+      }
+    },
+    {
+      "hero_id": 100,
+      "name": "Nordom",
+      "seat": 9,
+      "patrons": {
+        "mirt": "unavailable",
+        "vajra": "available",
+        "strahd": "available",
+        "zariel": "unavailable",
+        "elminster": "timed"
+      }
+    },
+    {
+      "hero_id": 101,
+      "name": "Merilwen",
+      "seat": 2,
+      "patrons": {
+        "mirt": "unavailable",
+        "vajra": "available",
+        "strahd": "available",
+        "zariel": "feat",
+        "elminster": "unavailable"
+      }
+    },
+    {
+      "hero_id": 102,
+      "name": "Nahara",
+      "seat": 3,
+      "patrons": {
+        "mirt": "unavailable",
+        "vajra": "feat",
+        "strahd": "always",
+        "zariel": "feat",
+        "elminster": "timed"
+      }
+    },
+    {
+      "hero_id": 103,
+      "name": "Valentine",
+      "seat": 5,
+      "patrons": {
+        "mirt": "feat",
+        "vajra": "available",
+        "strahd": "feat",
+        "zariel": "feat",
+        "elminster": "unavailable"
+      }
+    },
+    {
+      "hero_id": 104,
+      "name": "Voronika",
+      "seat": 1,
+      "patrons": {
+        "mirt": "available",
+        "vajra": "available",
+        "strahd": "feat",
+        "zariel": "available",
+        "elminster": "timed"
+      }
+    },
+    {
+      "hero_id": 105,
+      "name": "Dob",
+      "seat": 12,
+      "patrons": {
+        "mirt": "available",
+        "vajra": "available",
+        "strahd": "available",
+        "zariel": "available",
+        "elminster": "unavailable"
+      }
+    },
+    {
+      "hero_id": 106,
+      "name": "Blooshi",
+      "seat": 2,
+      "patrons": {
+        "mirt": "available",
+        "vajra": "available",
+        "strahd": "available",
+        "zariel": "available",
+        "elminster": "unavailable"
+      }
+    },
+    {
+      "hero_id": 113,
+      "name": "Egbert",
+      "seat": 7,
+      "patrons": {
+        "mirt": "available",
+        "vajra": "available",
+        "strahd": "unavailable",
+        "zariel": "available",
+        "elminster": "unavailable"
+      }
+    },
+    {
+      "hero_id": 114,
+      "name": "Kent",
+      "seat": 4,
+      "patrons": {
+        "mirt": "available",
+        "vajra": "available",
+        "strahd": "available",
+        "zariel": "timed",
+        "elminster": "unavailable"
+      }
+    },
+    {
+      "hero_id": 115,
+      "name": "Virgil",
+      "seat": 10,
+      "patrons": {
+        "mirt": "available",
+        "vajra": "available",
+        "strahd": "available",
+        "zariel": "feat",
+        "elminster": "unavailable"
+      }
+    },
+    {
+      "hero_id": 116,
+      "name": "Warduke",
+      "seat": 8,
+      "patrons": {
+        "mirt": "available",
+        "vajra": "available",
+        "strahd": "unavailable",
+        "zariel": "feat",
+        "elminster": "unavailable"
+      }
+    },
+    {
+      "hero_id": 117,
+      "name": "Imoen",
+      "seat": 11,
+      "patrons": {
+        "mirt": "available",
+        "vajra": "available",
+        "strahd": "available",
+        "zariel": "feat",
+        "elminster": "unavailable"
+      }
+    },
+    {
+      "hero_id": 118,
+      "name": "Fen",
+      "seat": 6,
+      "patrons": {
+        "mirt": "available",
+        "vajra": "available",
+        "strahd": "available",
+        "zariel": "available",
+        "elminster": "unavailable"
+      }
+    },
+    {
+      "hero_id": 119,
+      "name": "Uriah",
+      "seat": 9,
+      "patrons": {
+        "mirt": "available",
+        "vajra": "feat",
+        "strahd": "feat",
+        "zariel": "available",
+        "elminster": "timed"
+      }
+    },
+    {
+      "hero_id": 120,
+      "name": "Solaak",
+      "seat": 2,
+      "patrons": {
+        "mirt": "available",
+        "vajra": "available",
+        "strahd": "available",
+        "zariel": "available",
+        "elminster": "unavailable"
+      }
+    },
+    {
+      "hero_id": 121,
+      "name": "Miria",
+      "seat": 12,
+      "patrons": {
+        "mirt": "available",
+        "vajra": "available",
+        "strahd": "available",
+        "zariel": "feat",
+        "elminster": "unavailable"
+      }
+    },
+    {
+      "hero_id": 122,
+      "name": "Antrius",
+      "seat": 4,
+      "patrons": {
+        "mirt": "available",
+        "vajra": "feat",
+        "strahd": "unavailable",
+        "zariel": "available",
+        "elminster": "unavailable"
+      }
+    },
+    {
+      "hero_id": 123,
+      "name": "Nixie",
+      "seat": 1,
+      "patrons": {
+        "mirt": "unavailable",
+        "vajra": "available",
+        "strahd": "unavailable",
+        "zariel": "feat",
+        "elminster": "unavailable"
+      }
+    },
+    {
+      "hero_id": 124,
+      "name": "Evandra",
+      "seat": 5,
+      "patrons": {
+        "mirt": "unavailable",
+        "vajra": "available",
+        "strahd": "feat",
+        "zariel": "feat",
+        "elminster": "unavailable"
+      }
+    },
+    {
+      "hero_id": 125,
+      "name": "BBEG",
+      "seat": 3,
+      "patrons": {
+        "mirt": "available",
+        "vajra": "timed",
+        "strahd": "available",
+        "zariel": "timed",
+        "elminster": "timed"
+      }
+    },
+    {
+      "hero_id": 126,
+      "name": "Strongheart",
+      "seat": 11,
+      "patrons": {
+        "mirt": "available",
+        "vajra": "feat",
+        "strahd": "feat",
+        "zariel": "available",
+        "elminster": "timed"
+      }
+    },
+    {
+      "hero_id": 127,
+      "name": "Vin Ursa",
+      "seat": 7,
+      "patrons": {
+        "mirt": "available",
+        "vajra": "unavailable",
+        "strahd": "available",
+        "zariel": "unavailable",
+        "elminster": "unavailable"
+      }
+    },
+    {
+      "hero_id": 128,
+      "name": "Lae'zel",
+      "seat": 2,
+      "patrons": {
+        "mirt": "available",
+        "vajra": "available",
+        "strahd": "unavailable",
+        "zariel": "unavailable",
+        "elminster": "timed"
+      }
+    },
+    {
+      "hero_id": 129,
+      "name": "Astarion",
+      "seat": 10,
+      "patrons": {
+        "mirt": "available",
+        "vajra": "available",
+        "strahd": "available",
+        "zariel": "unavailable",
+        "elminster": "timed"
+      }
+    },
+    {
+      "hero_id": 136,
+      "name": "Krux",
+      "seat": 4,
+      "patrons": {
+        "mirt": "available",
+        "vajra": "available",
+        "strahd": "unavailable",
+        "zariel": "unavailable",
+        "elminster": "unavailable"
+      }
+    },
+    {
+      "hero_id": 138,
+      "name": "Certainty",
+      "seat": 5,
+      "patrons": {
+        "mirt": "available",
+        "vajra": "feat",
+        "strahd": "available",
+        "zariel": "available",
+        "elminster": "timed"
+      }
+    },
+    {
+      "hero_id": 139,
+      "name": "Thellora",
+      "seat": 1,
+      "patrons": {
+        "mirt": "unavailable",
+        "vajra": "feat",
+        "strahd": "feat",
+        "zariel": "available",
+        "elminster": "timed"
+      }
+    },
+    {
+      "hero_id": 140,
+      "name": "Jang Sao",
+      "seat": 8,
+      "patrons": {
+        "mirt": "unavailable",
+        "vajra": "unavailable",
+        "strahd": "available",
+        "zariel": "unavailable",
+        "elminster": "timed"
+      }
+    },
+    {
+      "hero_id": 141,
+      "name": "Shadowheart",
+      "seat": 6,
+      "patrons": {
+        "mirt": "feat",
+        "vajra": "available",
+        "strahd": "unavailable",
+        "zariel": "unavailable",
+        "elminster": "timed"
+      }
+    },
+    {
+      "hero_id": 142,
+      "name": "Wyll",
+      "seat": 12,
+      "patrons": {
+        "mirt": "available",
+        "vajra": "available",
+        "strahd": "available",
+        "zariel": "feat",
+        "elminster": "timed"
+      }
+    },
+    {
+      "hero_id": 143,
+      "name": "Karlach",
+      "seat": 4,
+      "patrons": {
+        "mirt": "available",
+        "vajra": "available",
+        "strahd": "unavailable",
+        "zariel": "always",
+        "elminster": "timed"
+      }
+    },
+    {
+      "hero_id": 144,
+      "name": "Presto",
+      "seat": 2,
+      "patrons": {
+        "mirt": "available",
+        "vajra": "feat",
+        "strahd": "available",
+        "zariel": "feat",
+        "elminster": "timed"
+      }
+    },
+    {
+      "hero_id": 145,
+      "name": "Dynaheir",
+      "seat": 3,
+      "patrons": {
+        "mirt": "available",
+        "vajra": "available",
+        "strahd": "available",
+        "zariel": "feat",
+        "elminster": "timed"
+      }
+    },
+    {
+      "hero_id": 146,
+      "name": "Dark Urge",
+      "seat": 11,
+      "patrons": {
+        "mirt": "always",
+        "vajra": "always",
+        "strahd": "always",
+        "zariel": "always",
+        "elminster": "always"
+      }
+    },
+    {
+      "hero_id": 147,
+      "name": "Gale",
+      "seat": 1,
+      "patrons": {
+        "mirt": "feat",
+        "vajra": "available",
+        "strahd": "available",
+        "zariel": "unavailable",
+        "elminster": "always"
+      }
+    },
+    {
+      "hero_id": 148,
+      "name": "Diana",
+      "seat": 9,
+      "patrons": {
+        "mirt": "available",
+        "vajra": "feat",
+        "strahd": "feat",
+        "zariel": "unavailable",
+        "elminster": "timed"
+      }
+    },
+    {
+      "hero_id": 149,
+      "name": "Ravengard",
+      "seat": 8,
+      "patrons": {
+        "mirt": "feat",
+        "vajra": "available",
+        "strahd": "feat",
+        "zariel": "available",
+        "elminster": "timed"
+      }
+    },
+    {
+      "hero_id": 150,
+      "name": "Aeon",
+      "seat": 10,
+      "patrons": {
+        "mirt": "available",
+        "vajra": "timed",
+        "strahd": "available",
+        "zariel": "available",
+        "elminster": "timed"
+      }
+    },
+    {
+      "hero_id": 151,
+      "name": "Umberto",
+      "seat": 7,
+      "patrons": {
+        "mirt": "available",
+        "vajra": "available",
+        "strahd": "feat",
+        "zariel": "available",
+        "elminster": "timed"
+      }
+    },
+    {
+      "hero_id": 152,
+      "name": "Bobby",
+      "seat": 12,
+      "patrons": {
+        "mirt": "available",
+        "vajra": "feat",
+        "strahd": "unavailable",
+        "zariel": "unavailable",
+        "elminster": "timed"
+      }
+    },
+    {
+      "hero_id": 153,
+      "name": "Kas",
+      "seat": 6,
+      "patrons": {
+        "mirt": "available",
+        "vajra": "available",
+        "strahd": "available",
+        "zariel": "available",
+        "elminster": "timed"
+      }
+    },
+    {
+      "hero_id": 154,
+      "name": "Minthara",
+      "seat": 3,
+      "patrons": {
+        "mirt": "available",
+        "vajra": "available",
+        "strahd": "unavailable",
+        "zariel": "available",
+        "elminster": "timed"
+      }
+    },
+    {
+      "hero_id": 155,
+      "name": "Wren",
+      "seat": 3,
+      "patrons": {
+        "mirt": "available",
+        "vajra": "available",
+        "strahd": "available",
+        "zariel": "available",
+        "elminster": "timed"
+      }
+    },
+    {
+      "hero_id": 156,
+      "name": "Halsin",
+      "seat": 3,
+      "patrons": {
+        "mirt": "available",
+        "vajra": "available",
+        "strahd": "unavailable",
+        "zariel": "available",
+        "elminster": "timed"
+      }
+    },
+    {
+      "hero_id": 157,
+      "name": "Eric",
+      "seat": 4,
+      "patrons": {
+        "mirt": "available",
+        "vajra": "available",
+        "strahd": "feat",
+        "zariel": "unavailable",
+        "elminster": "timed"
+      }
+    },
+    {
+      "hero_id": 158,
+      "name": "Kalix",
+      "seat": 5,
+      "patrons": {
+        "mirt": "available",
+        "vajra": "available",
+        "strahd": "available",
+        "zariel": "feat",
+        "elminster": "timed"
+      }
+    },
+    {
+      "hero_id": 159,
+      "name": "Volo",
+      "seat": 9,
+      "patrons": {
+        "mirt": "available",
+        "vajra": "unavailable",
+        "strahd": "available",
+        "zariel": "feat",
+        "elminster": "timed"
+      }
+    },
+    {
+      "hero_id": 160,
+      "name": "Sheila",
+      "seat": 7,
+      "patrons": {
+        "mirt": "available",
+        "vajra": "unavailable",
+        "strahd": "feat",
+        "zariel": "feat",
+        "elminster": "timed"
+      }
+    },
+    {
+      "hero_id": 161,
+      "name": "Grimm",
+      "seat": 2,
+      "patrons": {
+        "mirt": "available",
+        "vajra": "available",
+        "strahd": "timed",
+        "zariel": "available",
+        "elminster": "timed"
+      }
+    },
+    {
+      "hero_id": 162,
+      "name": "Vlithryn",
+      "seat": 11,
+      "patrons": {
+        "mirt": "available",
+        "vajra": "available",
+        "strahd": "available",
+        "zariel": "unavailable",
+        "elminster": "timed"
+      }
+    },
+    {
+      "hero_id": 163,
+      "name": "Hank",
+      "seat": 1,
+      "patrons": {
+        "mirt": "available",
+        "vajra": "feat",
+        "strahd": "unavailable",
+        "zariel": "unavailable",
+        "elminster": "timed"
+      }
+    },
+    {
+      "hero_id": 164,
+      "name": "Tess",
+      "seat": 8,
+      "patrons": {
+        "mirt": "available",
+        "vajra": "feat",
+        "strahd": "available",
+        "zariel": "available",
+        "elminster": "timed"
+      }
+    },
+    {
+      "hero_id": 165,
+      "name": "Baldric",
+      "seat": 12,
+      "patrons": {
+        "mirt": "unavailable",
+        "vajra": "feat",
+        "strahd": "available",
+        "zariel": "available",
+        "elminster": "timed"
+      }
+    },
+    {
+      "hero_id": 166,
+      "name": "Cazrin",
+      "seat": 10,
+      "patrons": {
+        "mirt": "available",
+        "vajra": "available",
+        "strahd": "available",
+        "zariel": "feat",
+        "elminster": "timed"
+      }
+    },
+    {
+      "hero_id": 167,
+      "name": "Windfall",
+      "seat": 5,
+      "patrons": {
+        "mirt": "available",
+        "vajra": "available",
+        "strahd": "available",
+        "zariel": "available",
+        "elminster": "timed"
+      }
+    },
+    {
+      "hero_id": 168,
+      "name": "King of Shadows",
+      "seat": 9,
+      "patrons": {
+        "mirt": "available",
+        "vajra": "available",
+        "strahd": "available",
+        "zariel": "available",
+        "elminster": "timed"
+      }
+    },
+    {
+      "hero_id": 169,
+      "name": "Skylla",
+      "seat": 4,
+      "patrons": {
+        "mirt": "available",
+        "vajra": "available",
+        "strahd": "unavailable",
+        "zariel": "unavailable",
+        "elminster": "timed"
+      }
+    },
+    {
+      "hero_id": 170,
+      "name": "Lark",
+      "seat": 6,
+      "patrons": {
+        "mirt": "unavailable",
+        "vajra": "feat",
+        "strahd": "feat",
+        "zariel": "available",
+        "elminster": "timed"
+      }
+    },
+    {
+      "hero_id": 171,
+      "name": "Anson",
+      "seat": 1,
+      "patrons": {
+        "mirt": "available",
+        "vajra": "available",
+        "strahd": "feat",
+        "zariel": "feat",
+        "elminster": "timed"
+      }
+    },
+    {
+      "hero_id": 172,
+      "name": "Kyre",
+      "seat": 5,
+      "patrons": {
+        "mirt": "available",
+        "vajra": "available",
+        "strahd": "available",
+        "zariel": "feat",
+        "elminster": "timed"
+      }
+    },
+    {
+      "hero_id": 173,
+      "name": "Raistlin",
+      "seat": 2,
+      "patrons": {
+        "mirt": "feat",
+        "vajra": "unavailable",
+        "strahd": "available",
+        "zariel": "unavailable",
+        "elminster": "timed"
+      }
+    },
+    {
+      "hero_id": 174,
+      "name": "Tasslehoff",
+      "seat": 11,
+      "patrons": {
+        "mirt": "available",
+        "vajra": "available",
+        "strahd": "feat",
+        "zariel": "feat",
+        "elminster": "timed"
+      }
+    },
+    {
+      "hero_id": 175,
+      "name": "Laurana",
+      "seat": 7,
+      "patrons": {
+        "mirt": "available",
+        "vajra": "available",
+        "strahd": "available",
+        "zariel": "available",
+        "elminster": "timed"
+      }
+    },
+    {
+      "hero_id": 176,
+      "name": "Trixie",
+      "seat": 8,
+      "patrons": {
+        "mirt": "unavailable",
+        "vajra": "unavailable",
+        "strahd": "unavailable",
+        "zariel": "unavailable",
+        "elminster": "timed"
+      }
+    },
+    {
+      "hero_id": 177,
+      "name": "Van Richten",
+      "seat": 10,
+      "patrons": {
+        "mirt": "available",
+        "vajra": "available",
+        "strahd": "always",
+        "zariel": "feat",
+        "elminster": "timed"
+      }
+    }
+  ]
+}

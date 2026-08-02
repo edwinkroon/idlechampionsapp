@@ -1,0 +1,10 @@
+code,label,description,example_value
+run_goal,Run goal,Inspecteer het hoofddoel van de run,push
+alignment,Alignment,Inspecteer alignment-vereisten of alignment counts,evil>=3
+enemy_type,Enemy type,Inspecteer type vijanden in het avontuur,humanoid
+formation_composition,Formation composition,"Inspecteer species, magic count of andere formation data",magic>=4
+adjacency_or_position,Adjacency or position,Inspecteer positie en adjacency van champions,carry_adjacent=true
+carry_target,Carry target,Inspecteer welke champion de actieve dps/carry is,Artemis
+owned_synergy,Owned synergy,Inspecteer of benodigde synergie-champions aanwezig zijn,has_fiend_team=true
+automation_goal,Automation goal,Inspecteer modron/gem farm automation-doelen,briv_stack_farm
+stat_threshold,Stat threshold,Inspecteer stat-gerelateerde drempels zoals CHA-count,cha_13_plus>=4

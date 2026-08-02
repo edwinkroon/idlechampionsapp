@@ -1,0 +1,5 @@
+column,type,description
+code,string,Unieke enum-waarde
+label,string,Menselijk label
+description,string,Welk inputveld Cursor moet inspecteren
+example_value,string,Voorbeeld van een condition_value

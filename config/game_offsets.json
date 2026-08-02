@@ -1,0 +1,56 @@
+{
+  "version": "0.1.0",
+  "game_version_note": "Copy from game_offsets.example.json and fill verified offsets for your game build.",
+  "process": {
+    "executable_names": ["IdleChampions.exe"],
+    "modules": ["GameAssembly.dll", "UnityPlayer.dll"]
+  },
+  "values": {
+    "current_area": {
+      "description": "Current adventure area number shown in the UI.",
+      "candidates": [
+        {
+          "id": "example_gameassembly_chain",
+          "status": "unverified",
+          "description": "Replace offsets after Cheat Engine validation.",
+          "value_type": "int32",
+          "min_plausible": 1,
+          "max_plausible": 10000,
+          "max_delta_per_second": 50,
+          "pointer_chain": {
+            "module": "GameAssembly.dll",
+            "static_offset": "0x0",
+            "offsets": [],
+            "notes": "TODO/VERIFY: No offsets configured yet."
+          }
+        }
+      ]
+    },
+    "current_zone": {
+      "candidates": []
+    },
+    "current_adventure_id": {
+      "candidates": []
+    },
+    "gems_this_reset": {
+      "description": "Gems earned this Modron/adventure reset (not total red rubies).",
+      "candidates": [
+        {
+          "id": "example_gems_this_reset_chain",
+          "status": "unverified",
+          "description": "Replace offsets after Cheat Engine validation.",
+          "value_type": "int32",
+          "min_plausible": 0,
+          "max_plausible": 10000000,
+          "max_delta_per_second": 500,
+          "pointer_chain": {
+            "module": "GameAssembly.dll",
+            "static_offset": "0x0",
+            "offsets": [],
+            "notes": "TODO/VERIFY: No offsets configured yet. Do not use Script Hub ReadGems (that is total redRubies)."
+          }
+        }
+      ]
+    }
+  }
+}

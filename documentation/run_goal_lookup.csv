@@ -1,0 +1,7 @@
+code,label,description,default_priority
+speed_farm,Speed farm,"Snelle area clears, gem farming, automation first",5
+gold_farm,Gold farm,Favor- en gold-find runs,4
+push,Push,"Maximale progressie, wall pushing, boss damage",5
+survival,Survival,"Overleven, frontline stability, sustain",4
+variant,Variant,Restrictieve variantregels of utility-driven runs,3
+generic_progression,Generic progression,Standaard progressie zonder uitgesproken focus,3

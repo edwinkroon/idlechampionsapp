@@ -1,0 +1,88 @@
+{
+  "version": "0.1.0",
+  "game_version_note": "VERIFY: set your client build (Steam/EGS) and patch date. Offsets break after updates.",
+  "process": {
+    "executable_names": ["IdleChampions.exe"],
+    "modules": ["GameAssembly.dll", "UnityPlayer.dll"]
+  },
+  "values": {
+    "current_area": {
+      "description": "Current adventure area number shown in the UI (e.g. Area 3).",
+      "candidates": [
+        {
+          "id": "example_gameassembly_chain",
+          "status": "unverified",
+          "description": "Template — replace static_offset and offsets after Cheat Engine validation.",
+          "value_type": "int32",
+          "min_plausible": 1,
+          "max_plausible": 10000,
+          "max_delta_per_second": 50,
+          "pointer_chain": {
+            "module": "GameAssembly.dll",
+            "static_offset": "0x0",
+            "offsets": [],
+            "notes": "TODO/VERIFY: Export pointer path from Cheat Engine (see ic_reader/README.md). Do not use 0x0 in production."
+          }
+        },
+        {
+          "id": "example_unityplayer_chain",
+          "status": "unverified",
+          "description": "Alternate module if GameAssembly chain fails on your install.",
+          "value_type": "int32",
+          "min_plausible": 1,
+          "max_plausible": 10000,
+          "max_delta_per_second": 50,
+          "pointer_chain": {
+            "module": "UnityPlayer.dll",
+            "static_offset": "0x0",
+            "offsets": [],
+            "notes": "TODO/VERIFY: Some community tools use GameAssembly.dll only; validate on your machine."
+          }
+        }
+      ]
+    },
+    "current_zone": {
+      "description": "Optional: campaign zone index if distinct from area (VERIFY).",
+      "candidates": []
+    },
+    "current_adventure_id": {
+      "description": "Optional: adventure/campaign id (VERIFY).",
+      "candidates": []
+    },
+    "gems_this_reset": {
+      "description": "Gems earned this Modron/adventure reset (UI: gems this run). NOT total red rubies.",
+      "candidates": [
+        {
+          "id": "example_gems_this_reset_chain",
+          "status": "unverified",
+          "description": "Template — find this_reset_gems_earned (or equivalent live counter) via Cheat Engine.",
+          "value_type": "int32",
+          "min_plausible": 0,
+          "max_plausible": 10000000,
+          "max_delta_per_second": 500,
+          "pointer_chain": {
+            "module": "GameAssembly.dll",
+            "static_offset": "0x0",
+            "offsets": [],
+            "notes": "TODO/VERIFY: Search int32 for gems this run while clearing a boss chest; pointer-scan. Script Hub ReadGems() is total redRubies — that is a different value."
+          }
+        }
+      ]
+    }
+  },
+  "validation_workflow": {
+    "steps": [
+      "1. Attach Cheat Engine to IdleChampions.exe (read-only: do not freeze or write values).",
+      "2. Search int32 for your current area while changing areas in-game.",
+      "3. Narrow to a stable pointer path; note module + offsets.",
+      "4. Copy into game_offsets.json under current_area.candidates with status verify.",
+      "5. Run: python main.py --watch-area --debug and compare to UI.",
+      "6. When stable across restarts, set status to verified.",
+      "7. For gems this Modron run: search int32 for the gems counter while clearing a boss chest (value increases by ~5–10). Pointer-scan into gems_this_reset.candidates. Do NOT use total red rubies / Script Hub ReadGems()."
+    ],
+    "community_references": [
+      "https://github.com/mikebaldi/Idle-Champions (SharedFunctions/MemoryRead — pointer layout changes per patch)",
+      "https://github.com/mikebaldi/Idle-Champions/blob/main/SharedFunctions/MemoryRead/SH_StaticMemoryPointer.ahk"
+    ]
+  }
+}

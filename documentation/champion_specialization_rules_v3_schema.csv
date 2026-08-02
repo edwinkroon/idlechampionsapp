@@ -1,0 +1,22 @@
+column,type,description
+rule_id,string,"Unieke sleutel, bijvoorbeeld seat05_briv_default"
+rule_version,string,"Versie van de ruleset, standaard v3"
+seat,integer,Seat/positie van de champion
+champion,string,Naam van de champion
+specialization_family,string,Menselijke samenvatting van het type specialization-keuze
+run_goal,string,Verwijst naar run_goal_lookup.code
+decision_context,string,"Contextlabel voor advies, zoals speed_farm, push, survival of variant"
+condition_field,string,Verwijst naar condition_field_lookup.code
+condition_operator,string,"Bijvoorbeeld equals, contains, gte, in_list, any_true"
+condition_value,string,"Waarde waarop getest wordt, zoals speed_farm, evil_count>=3 of humanoid"
+machine_default,string,Genormaliseerde default specialization
+machine_alternative,string,Genormaliseerde alternatieve specialization
+override_when,string,Korte menselijke override-uitleg
+default_confidence,integer,Score 1-5 voor vertrouwen in de default keuze
+priority_code,string,Verwijst naar priority_lookup.code
+manual_review_code,string,Verwijst naar manual_review_lookup.code
+tags,string,Komma-gescheiden tags voor filtering
+notes_for_cursor,string,Aanvullende implementatiehint voor Cursor
+advice_pattern,string,Templatezin voor adviesgeneratie
+source_basis,string,"Korte herkomstsamenvatting, zoals community_default of formation_dependent"
+active,boolean,true als de regel actief gebruikt moet worden

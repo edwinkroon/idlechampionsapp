@@ -1,0 +1,4 @@
+column,type,description
+tag,string,Toegestane tag
+description,string,Betekenis van de tag
+group_name,string,"Groepering zoals goal, role, condition, synergy"

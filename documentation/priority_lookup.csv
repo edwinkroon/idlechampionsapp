@@ -1,0 +1,6 @@
+code,score,description
+critical,5,Bijna altijd eerst evalueren
+high,4,Belangrijke regel voor standaard advies
+medium,3,Handige regel maar vaker contextafhankelijk
+low,2,Niche-regel of lage adviesimpact
+fallback,1,Alleen gebruiken als niets anders matcht

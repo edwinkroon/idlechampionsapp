@@ -1,0 +1,4 @@
+column,type,description
+specialization_key,string,Genormaliseerde specialization sleutel
+display_label,string,Menselijk label
+normalization_notes,string,Hoe alternatieve schrijfwijzen hierop mappen

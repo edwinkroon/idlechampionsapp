@@ -1,0 +1,4 @@
+column,type,description
+code,string,"Unieke enum-waarde, bijvoorbeeld yes of no"
+label,string,Menselijk label
+description,string,Wanneer handmatige review nodig is

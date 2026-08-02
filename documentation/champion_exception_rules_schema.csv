@@ -1,0 +1,10 @@
+column,type,description
+exception_id,string,Unieke sleutel voor de uitzondering
+champion,string,Naam van de champion
+seat,integer,Seat van de champion
+trigger_field,string,Veld dat de uitzondering triggert
+trigger_operator,string,Operator voor de trigger
+trigger_value,string,Waarde voor de trigger
+forced_specialization,string,Specialization die gekozen moet worden bij deze uitzondering
+reason,string,Korte uitleg waarom dit een uitzondering is
+manual_review_code,string,Verwijst naar manual_review_lookup.code

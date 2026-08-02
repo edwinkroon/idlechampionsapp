@@ -1,0 +1,9 @@
+name,purpose
+champion_specialization_rules_v3,Hoofdtabel met 1 regel per champion-specialization adviespad.
+run_goal_lookup,"Vaste enumeraties voor het doel van de run, zoals speed_farm of push."
+condition_field_lookup,Vaste enumeraties voor welk veld Cursor moet inspecteren.
+priority_lookup,Standaard prioriteitsniveaus en betekenis.
+manual_review_lookup,Waarden voor wel of geen handmatige review.
+champion_exception_rules,Uitzonderingstabel voor champions met contextafhankelijke overrides.
+tag_lookup,Beschrijving van toegestane tags.
+specialization_value_lookup,Normalisatie van specialization labels voor machinegebruik.

@@ -1,0 +1,46 @@
+{
+  "version": 1,
+  "notes": "Explicit route/label -> upgrade_id when keyword matching is ambiguous.",
+  "champions": {
+    "Shandie": {
+      "Dash": 9732,
+      "speed_route": 9732,
+      "Speed route": 9732
+    },
+    "Thellora": {
+      "speed_route": 12983,
+      "Speed route": 12983
+    },
+    "Sentry": {
+      "speed_route": 8866,
+      "Speed route": 8866
+    },
+    "Hew Maan": {
+      "speed_route": 10653,
+      "Speed route": 10653
+    },
+    "BBEG": {
+      "speed_route": 11545,
+      "Speed route": 11545,
+      "Control route": 11545,
+      "Support route": 11545
+    },
+    "Ellywick": {
+      "speed_route": 15232,
+      "Speed route": 15232,
+      "Support route": 15232,
+      "gold_route": 15233,
+      "Gold route": 15233
+    },
+    "Melf": {
+      "speed_route": 19340,
+      "Speed route": 19340,
+      "Support route": 19342,
+      "Push route": 19342,
+      "speed_route@1": 19342,
+      "Speed route@1": 19342,
+      "Support route@1": 19342,
+      "Push route@1": 19342
+    }
+  }
+}

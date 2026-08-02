@@ -1,0 +1,7 @@
+{
+  "install_path": "",
+  "party_modron_goals": {
+    "1": 225
+  },
+  "notes": "Optional manual override. install_path: leave empty for auto-detect. party_modron_goals: Modron Set Area Goal per party slot (overrides API milestone fields like adventure_area_goal)."
+}

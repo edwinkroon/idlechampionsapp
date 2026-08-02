@@ -1,0 +1,98 @@
+{
+  "parties": {
+    "0": [
+      {
+        "duration_sec": 3600.0,
+        "area_goal": 275,
+        "peak_area": 280,
+        "recorded_at": 1785619799.9263077
+      },
+      {
+        "duration_sec": 3600.0,
+        "area_goal": 300,
+        "peak_area": 300,
+        "recorded_at": 1785619799.7900891
+      },
+      {
+        "duration_sec": 1500.0,
+        "area_goal": 300,
+        "peak_area": 300,
+        "recorded_at": 1785619799.7787325
+      },
+      {
+        "duration_sec": 1400.0,
+        "area_goal": 300,
+        "peak_area": 300,
+        "recorded_at": 1785619799.7778516
+      },
+      {
+        "duration_sec": 1300.0,
+        "area_goal": 300,
+        "peak_area": 300,
+        "recorded_at": 1785619799.7769318
+      }
+    ],
+    "1": [
+      {
+        "duration_sec": 407.0,
+        "area_goal": 225,
+        "peak_area": 216,
+        "recorded_at": 1785655711.6684954
+      },
+      {
+        "duration_sec": 405.5139753818512,
+        "area_goal": 225,
+        "peak_area": 216,
+        "recorded_at": 1785654847.1705241
+      },
+      {
+        "duration_sec": 395.3939869403839,
+        "area_goal": 225,
+        "peak_area": 216,
+        "recorded_at": 1785654416.6683795
+      },
+      {
+        "duration_sec": 390.15228295326233,
+        "area_goal": 225,
+        "peak_area": 216,
+        "recorded_at": 1785653996.2410553
+      },
+      {
+        "duration_sec": 438.0,
+        "area_goal": 225,
+        "peak_area": 221,
+        "recorded_at": 1785653597.303091
+      },
+      {
+        "duration_sec": 1380.0,
+        "area_goal": 225,
+        "peak_area": 226,
+        "recorded_at": 1785653551.383617
+      },
+      {
+        "duration_sec": 479.0,
+        "area_goal": 225,
+        "peak_area": 226,
+        "recorded_at": 1785644988.2938719
+      },
+      {
+        "duration_sec": 468.0,
+        "area_goal": 225,
+        "peak_area": 226,
+        "recorded_at": 1785637822.4220438
+      },
+      {
+        "duration_sec": 476.0,
+        "area_goal": 225,
+        "peak_area": 226,
+        "recorded_at": 1785631597.5259984
+      },
+      {
+        "duration_sec": 3600.0,
+        "area_goal": 275,
+        "peak_area": 280,
+        "recorded_at": 1785619799.9142187
+      }
+    ]
+  }
+}

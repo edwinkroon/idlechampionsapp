@@ -1,0 +1,4 @@
+code,label,description
+yes,Ja,Menselijke review aanbevolen omdat de keuze sterk contextafhankelijk is
+no,Nee,Regel kan automatisch worden toegepast
+conditional,Voorwaardelijk,Automatisch alleen als vereiste inputvelden compleet zijn

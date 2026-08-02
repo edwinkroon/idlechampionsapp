@@ -1,0 +1,11 @@
+rule_id,champion,role,tag,run_goal,context,condition_field,condition_operator,condition_value,tip_type,headline,detail,priority,rule_source_type
+tank_not_front,,tank,,generic_progression|push|speed_farm,*,seat_zone,not_in,front,placement,Tank niet vooraan,{hero} staat op {seat} ({zone}) — zet een tank in de frontlinie (slot 1–3).,2,authored
+tank_not_front_gold,,tank,,gold_farm,*,seat_zone,not_in,front,placement,Tank niet vooraan,{hero} staat te ver achterin voor een tank — overweeg naar voren te schuiven.,3,authored
+buffer_far_from_carry,,,buffer,generic_progression|push,*,adjacent_to_carry,false,,swap,Buffer ver van BUD,{hero} ({seat}) staat niet naast BUD {carry} ({carry_seat}) — wissel of schuif dichterbij zodat buffs op je carry landen.,2,authored
+debuffer_far_from_carry,,,debuffer,generic_progression|push,*,adjacent_to_carry,false,,swap,Debuffer ver van BUD,{hero} ({seat}) debufft BUD {carry} ({carry_seat}) beter vanaf een naburig slot.,2,authored
+support_far_from_carry,,support,,generic_progression|push,*,adjacent_to_carry,false,,swap,Support ver van BUD,{hero} ({seat}) — support-rol werkt sterker adjacent aan BUD {carry} ({carry_seat}).,3,authored
+formation_not_full,,,,generic_progression|push|gold_farm|speed_farm,*,party_size,lt,10,warning,Formatie niet vol,Slechts {party_size} champions — vul lege slots; supports naast carry leveren vaak meer op dan extra DPS.,2,heuristic
+modron_no_speed,,,speed,speed_farm,modron,party_has_tag,false,speed,warning,Geen speed in party,Modron draait op areas/uur — zet een speed-champion in formation.,2,authored
+gold_no_gold_role,,,gold,gold_farm,*,party_has_tag,false,gold,warning,Geen gold champion,Gold-run zonder gold-specialist — overweeg Jarlaxle/Freely/Ellywick.,2,heuristic
+carry_no_buffer_adjacent,,,buffer,generic_progression|push,*,carry_has_adjacent_tag,false,buffer,warning,BUD mist adjacent buffer,{carry} ({carry_seat}) heeft geen buffer naast zich — grote BUD/push winst mogelijk.,1,authored
+carry_no_debuffer,,,debuffer,generic_progression|push,*,party_has_tag,false,debuffer,warning,Geen debuffer,Geen debuffer in party — overweeg Krull/Aila/Gromma voor BUD/push.,3,heuristic

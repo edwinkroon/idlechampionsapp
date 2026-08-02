@@ -1,0 +1,11 @@
+specialization_key,display_label,normalization_notes
+speed_route,Speed route,Mapt varianten zoals Boss Wants Speed of Dash naar een speed-keuze
+gold_route,Gold route,Mapt economy/gold find labels naar gold-keuze
+support_route,Support route,Mapt generieke support of buff-keuzes
+tank_route,Tank route,Mapt frontline of survivability-keuzes
+healing_route,Healing route,Mapt healing/sustain-keuzes
+debuff_route,Debuff route,Mapt debuff/hex/pain-achtige keuzes
+damage_route,Damage route,Mapt pure dps/self-scaling keuzes
+utility_route,Utility route,Mapt niche utility/control/automation keuzes
+formation_route,Formation route,"Mapt keuzes die afhangen van species, bond of formatie-opbouw"
+enemy_type_route,Enemy type route,Mapt enemy-specifieke keuzes

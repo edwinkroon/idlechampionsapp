@@ -1,0 +1,5 @@
+exception_id,champion,seat,trigger_field,trigger_operator,trigger_value,forced_specialization,reason,manual_review_code
+asharra_alt_bond,Asharra,6,formation_composition,contains,secondary_bond_outscores_primary,support_route,Bond choice depends on exact formation composition,yes
+freely_alignment_swap,Freely,7,alignment,equals,alignment_distribution_changed,gold_route,Alignment-driven recommendation can flip between teams,conditional
+minsc_enemy_swap,Minsc,7,enemy_type,equals,boss_or_zone_enemy_type_changed,enemy_type_route,Enemy-type specialization should follow the current adventure,conditional
+briv_survival_override,Briv,5,run_goal,equals,survival,tank_route,Use tank route if speed farm is failing due to deaths,no

@@ -1,0 +1,5114 @@
+{
+  "version": 1,
+  "ui": {
+    "click_positions": {
+      "1": [
+        [
+          0.5,
+          0.76
+        ]
+      ],
+      "2": [
+        [
+          0.4,
+          0.76
+        ],
+        [
+          0.6,
+          0.76
+        ]
+      ],
+      "3": [
+        [
+          0.28,
+          0.76
+        ],
+        [
+          0.5,
+          0.76
+        ],
+        [
+          0.72,
+          0.76
+        ]
+      ],
+      "4": [
+        [
+          0.2,
+          0.76
+        ],
+        [
+          0.4,
+          0.76
+        ],
+        [
+          0.6,
+          0.76
+        ],
+        [
+          0.8,
+          0.76
+        ]
+      ]
+    }
+  },
+  "heroes": {
+    "1": {
+      "name": "Bruenor",
+      "default": [
+        7
+      ],
+      "options": [
+        {
+          "upgrade_id": 6,
+          "name": "Shield Master",
+          "required_level": 150,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 7,
+          "name": "Battle Master",
+          "required_level": 150,
+          "tier_index": 0
+        }
+      ]
+    },
+    "2": {
+      "name": "Celeste",
+      "default": [
+        30
+      ],
+      "options": [
+        {
+          "upgrade_id": 29,
+          "name": "War Domain",
+          "required_level": 100,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 30,
+          "name": "Life Domain",
+          "required_level": 100,
+          "tier_index": 0
+        }
+      ]
+    },
+    "3": {
+      "name": "Nayeli",
+      "default": [
+        44
+      ],
+      "options": [
+        {
+          "upgrade_id": 43,
+          "name": "Oath of Vengeance",
+          "required_level": 100,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 44,
+          "name": "Oath of Devotion",
+          "required_level": 100,
+          "tier_index": 0
+        }
+      ]
+    },
+    "4": {
+      "name": "Jarlaxle",
+      "default": [
+        59
+      ],
+      "options": [
+        {
+          "upgrade_id": 58,
+          "name": "Secret Lord of Luskan",
+          "required_level": 150,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 59,
+          "name": "Leader of the Bregan D'aerthe",
+          "required_level": 150,
+          "tier_index": 0
+        }
+      ]
+    },
+    "5": {
+      "name": "Calliope",
+      "default": [
+        76
+      ],
+      "options": [
+        {
+          "upgrade_id": 75,
+          "name": "College of Valor",
+          "required_level": 80,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 76,
+          "name": "College of Lore",
+          "required_level": 80,
+          "tier_index": 0
+        }
+      ]
+    },
+    "6": {
+      "name": "Asharra",
+      "default": [
+        91,
+        975
+      ],
+      "options": [
+        {
+          "upgrade_id": 90,
+          "name": "Bond: Humans",
+          "required_level": 10,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 91,
+          "name": "Bond: Dwarves and Elves",
+          "required_level": 10,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 92,
+          "name": "Bond: Potpourri",
+          "required_level": 10,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 975,
+          "name": "Bond: Half n' Half",
+          "required_level": 325,
+          "tier_index": 1
+        },
+        {
+          "upgrade_id": 976,
+          "name": "Bond: Exotic Species",
+          "required_level": 325,
+          "tier_index": 1
+        },
+        {
+          "upgrade_id": 977,
+          "name": "Bond: Short-folk",
+          "required_level": 325,
+          "tier_index": 1
+        }
+      ]
+    },
+    "7": {
+      "name": "Minsc",
+      "default": [
+        108
+      ],
+      "options": [
+        {
+          "upgrade_id": 108,
+          "name": "Favored Enemy: Humanoids",
+          "required_level": 50,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 109,
+          "name": "Favored Enemy: Beasts",
+          "required_level": 50,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 110,
+          "name": "Favored Enemy: Undead",
+          "required_level": 50,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 111,
+          "name": "Favored Enemy: Fey",
+          "required_level": 50,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 112,
+          "name": "Favored Enemy: Monstrosities",
+          "required_level": 50,
+          "tier_index": 0
+        }
+      ]
+    },
+    "8": {
+      "name": "Delina",
+      "default": [
+        129
+      ],
+      "options": [
+        {
+          "upgrade_id": 129,
+          "name": "Font of Magic",
+          "required_level": 200,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 130,
+          "name": "Tides of Chaos",
+          "required_level": 200,
+          "tier_index": 0
+        }
+      ]
+    },
+    "9": {
+      "name": "Makos",
+      "default": [
+        140
+      ],
+      "options": [
+        {
+          "upgrade_id": 139,
+          "name": "Dark Luck",
+          "required_level": 15,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 140,
+          "name": "Dark Blessing",
+          "required_level": 15,
+          "tier_index": 0
+        }
+      ]
+    },
+    "10": {
+      "name": "Tyril",
+      "default": [
+        145
+      ],
+      "options": [
+        {
+          "upgrade_id": 145,
+          "name": "Moonbeam",
+          "required_level": 45,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 146,
+          "name": "Wild Shape",
+          "required_level": 45,
+          "tier_index": 0
+        }
+      ]
+    },
+    "11": {
+      "name": "Jamilah",
+      "default": [
+        239
+      ],
+      "options": [
+        {
+          "upgrade_id": 239,
+          "name": "Bruiser",
+          "required_level": 60,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 240,
+          "name": "Indomitable Might",
+          "required_level": 60,
+          "tier_index": 0
+        }
+      ]
+    },
+    "12": {
+      "name": "Arkhan",
+      "default": [
+        243
+      ],
+      "options": [
+        {
+          "upgrade_id": 243,
+          "name": "Bulk Up",
+          "required_level": 65,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 244,
+          "name": "Usurped Power",
+          "required_level": 65,
+          "tier_index": 0
+        }
+      ]
+    },
+    "13": {
+      "name": "Hitch",
+      "default": [
+        391
+      ],
+      "options": [
+        {
+          "upgrade_id": 386,
+          "name": "More Daggers",
+          "required_level": 160,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 391,
+          "name": "Charismatic",
+          "required_level": 160,
+          "tier_index": 0
+        }
+      ]
+    },
+    "14": {
+      "name": "Stoki",
+      "default": [
+        16056
+      ],
+      "options": [
+        {
+          "upgrade_id": 16056,
+          "name": "All Out Assault",
+          "required_level": 200,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 16057,
+          "name": "Bend It Like Birdsong",
+          "required_level": 200,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 16058,
+          "name": "A Little Bit Faster Now",
+          "required_level": 200,
+          "tier_index": 0
+        }
+      ]
+    },
+    "15": {
+      "name": "Krond",
+      "default": [
+        17242
+      ],
+      "options": [
+        {
+          "upgrade_id": 17238,
+          "name": "Survival of the Strongest",
+          "required_level": 60,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 17239,
+          "name": "Survival of the Fittest",
+          "required_level": 60,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 17240,
+          "name": "Survival of the Smartest",
+          "required_level": 60,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 17242,
+          "name": "Eldritch Strike",
+          "required_level": 150,
+          "tier_index": 1
+        },
+        {
+          "upgrade_id": 17243,
+          "name": "Power Behind the Throne",
+          "required_level": 150,
+          "tier_index": 1
+        },
+        {
+          "upgrade_id": 17244,
+          "name": "War Magic",
+          "required_level": 150,
+          "tier_index": 1
+        }
+      ]
+    },
+    "16": {
+      "name": "Gromma",
+      "default": [
+        14878
+      ],
+      "options": [
+        {
+          "upgrade_id": 14877,
+          "name": "Circle of the Mountain",
+          "required_level": 100,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 14878,
+          "name": "Circle of the Arctic",
+          "required_level": 100,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 14879,
+          "name": "Circle of the Swamp",
+          "required_level": 100,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 14880,
+          "name": "Stoneskin",
+          "required_level": 300,
+          "tier_index": 1
+        },
+        {
+          "upgrade_id": 14881,
+          "name": "Entanglement",
+          "required_level": 300,
+          "tier_index": 1
+        },
+        {
+          "upgrade_id": 14882,
+          "name": "Melf's Acid Arrow",
+          "required_level": 300,
+          "tier_index": 1
+        }
+      ]
+    },
+    "17": {
+      "name": "Dhadius",
+      "default": [
+        14559
+      ],
+      "options": [
+        {
+          "upgrade_id": 14556,
+          "name": "Together In Magic",
+          "required_level": 140,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 14557,
+          "name": "Apart in Magic",
+          "required_level": 140,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 14558,
+          "name": "Empowered Orbs",
+          "required_level": 260,
+          "tier_index": 1
+        },
+        {
+          "upgrade_id": 14559,
+          "name": "Empowered Empowerment",
+          "required_level": 260,
+          "tier_index": 1
+        },
+        {
+          "upgrade_id": 14560,
+          "name": "Use Smaller Words",
+          "required_level": 260,
+          "tier_index": 1
+        }
+      ]
+    },
+    "18": {
+      "name": "Drizzt",
+      "default": [
+        11517
+      ],
+      "options": [
+        {
+          "upgrade_id": 11516,
+          "name": "Leader of the Companions",
+          "required_level": 180,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 11517,
+          "name": "Drow Stalker",
+          "required_level": 180,
+          "tier_index": 0
+        }
+      ]
+    },
+    "19": {
+      "name": "Barrowin",
+      "default": [
+        10690
+      ],
+      "options": [
+        {
+          "upgrade_id": 10689,
+          "name": "Greater Blessing",
+          "required_level": 130,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 10690,
+          "name": "Booming Voice",
+          "required_level": 130,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 10691,
+          "name": "Hammer of the Law",
+          "required_level": 130,
+          "tier_index": 0
+        }
+      ]
+    },
+    "20": {
+      "name": "Regis",
+      "default": [
+        11530
+      ],
+      "options": [
+        {
+          "upgrade_id": 11530,
+          "name": "Ruby Encouragement (Ahead)",
+          "required_level": 20,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 11531,
+          "name": "Ruby Encouragement (Behind)",
+          "required_level": 20,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 11532,
+          "name": "Ruby Weakness (Ranged)",
+          "required_level": 150,
+          "tier_index": 1
+        },
+        {
+          "upgrade_id": 11533,
+          "name": "Ruby Weakness (Melee)",
+          "required_level": 150,
+          "tier_index": 1
+        },
+        {
+          "upgrade_id": 11534,
+          "name": "Ruby Weakness (Magic)",
+          "required_level": 150,
+          "tier_index": 1
+        }
+      ]
+    },
+    "21": {
+      "name": "Birdsong",
+      "default": [
+        10783
+      ],
+      "options": [
+        {
+          "upgrade_id": 10778,
+          "name": "Theme of Valor",
+          "required_level": 60,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 10779,
+          "name": "Theme of Consideration",
+          "required_level": 60,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 10780,
+          "name": "Theme of Deception",
+          "required_level": 60,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 10781,
+          "name": "Unison",
+          "required_level": 130,
+          "tier_index": 1
+        },
+        {
+          "upgrade_id": 10782,
+          "name": "Soprano",
+          "required_level": 130,
+          "tier_index": 1
+        },
+        {
+          "upgrade_id": 10783,
+          "name": "Concertino",
+          "required_level": 130,
+          "tier_index": 1
+        }
+      ]
+    },
+    "22": {
+      "name": "Zorbu",
+      "default": [
+        12993
+      ],
+      "options": [
+        {
+          "upgrade_id": 12993,
+          "name": "Lead The Pack",
+          "required_level": 60,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 12994,
+          "name": "Hunting Partners",
+          "required_level": 60,
+          "tier_index": 0
+        }
+      ]
+    },
+    "23": {
+      "name": "Strix",
+      "default": [
+        12292
+      ],
+      "options": [
+        {
+          "upgrade_id": 12290,
+          "name": "Olfactory Fatigue",
+          "required_level": 190,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 12291,
+          "name": "Scent of Brimstone",
+          "required_level": 190,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 12292,
+          "name": "Smelly Lunch",
+          "required_level": 190,
+          "tier_index": 0
+        }
+      ]
+    },
+    "24": {
+      "name": "Nrakk",
+      "default": [
+        13005
+      ],
+      "options": [
+        {
+          "upgrade_id": 13005,
+          "name": "Githzerai Focus",
+          "required_level": 200,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 13006,
+          "name": "Githzerai Agility",
+          "required_level": 200,
+          "tier_index": 0
+        }
+      ]
+    },
+    "25": {
+      "name": "Catti-brie",
+      "default": [
+        11313
+      ],
+      "options": [
+        {
+          "upgrade_id": 11312,
+          "name": "Piercing Arrow",
+          "required_level": 220,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 11313,
+          "name": "Big Push",
+          "required_level": 220,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 11314,
+          "name": "Critical Family",
+          "required_level": 220,
+          "tier_index": 0
+        }
+      ]
+    },
+    "26": {
+      "name": "Evelyn",
+      "default": [
+        12211
+      ],
+      "options": [
+        {
+          "upgrade_id": 12210,
+          "name": "Fighting Style: Protection",
+          "required_level": 240,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 12211,
+          "name": "Compel Duel",
+          "required_level": 240,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 12212,
+          "name": "Lathander's Allies",
+          "required_level": 240,
+          "tier_index": 0
+        }
+      ]
+    },
+    "27": {
+      "name": "Binwin",
+      "default": [
+        18465
+      ],
+      "options": [
+        {
+          "upgrade_id": 18463,
+          "name": "Overkill",
+          "required_level": 120,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 18464,
+          "name": "Dwarven Encouragement",
+          "required_level": 120,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 18465,
+          "name": "Tallest in Faerûn",
+          "required_level": 120,
+          "tier_index": 0
+        }
+      ]
+    },
+    "28": {
+      "name": "Deekin",
+      "default": [
+        18862
+      ],
+      "options": [
+        {
+          "upgrade_id": 18860,
+          "name": "Unorthodox Stories",
+          "required_level": 130,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 18861,
+          "name": "DOOOOOM From Afar",
+          "required_level": 130,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 18862,
+          "name": "Troubadour Troupe",
+          "required_level": 130,
+          "tier_index": 0
+        }
+      ]
+    },
+    "29": {
+      "name": "Xander",
+      "default": [
+        1196
+      ],
+      "options": [
+        {
+          "upgrade_id": 1195,
+          "name": "Trying Extra Hard",
+          "required_level": 175,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 1196,
+          "name": "Follow Closely",
+          "required_level": 175,
+          "tier_index": 0
+        }
+      ]
+    },
+    "30": {
+      "name": "Azaka",
+      "default": [
+        1237
+      ],
+      "options": [
+        {
+          "upgrade_id": 1237,
+          "name": "Resist the Curse",
+          "required_level": 100,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 1238,
+          "name": "Lycanthrope Forever",
+          "required_level": 100,
+          "tier_index": 0
+        }
+      ]
+    },
+    "31": {
+      "name": "Ishi",
+      "default": [
+        16532
+      ],
+      "options": [
+        {
+          "upgrade_id": 16532,
+          "name": "Friend to the Familiar",
+          "required_level": 90,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 16533,
+          "name": "Friend to the Feared",
+          "required_level": 90,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 16534,
+          "name": "Friend to the Exceptional",
+          "required_level": 90,
+          "tier_index": 0
+        }
+      ]
+    },
+    "32": {
+      "name": "Wulfgar",
+      "default": [
+        11509
+      ],
+      "options": [
+        {
+          "upgrade_id": 11508,
+          "name": "Heavy Blows",
+          "required_level": 140,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 11509,
+          "name": "Flag Bearer",
+          "required_level": 140,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 11510,
+          "name": "Moradin's Will",
+          "required_level": 140,
+          "tier_index": 0
+        }
+      ]
+    },
+    "33": {
+      "name": "Farideh",
+      "default": [
+        17839
+      ],
+      "options": [
+        {
+          "upgrade_id": 17839,
+          "name": "Daughters of Mehen",
+          "required_level": 140,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 17840,
+          "name": "Fury of Asmodeus",
+          "required_level": 140,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 17841,
+          "name": "Pact with Lorcan",
+          "required_level": 140,
+          "tier_index": 0
+        }
+      ]
+    },
+    "34": {
+      "name": "Donaar",
+      "default": [
+        18659,
+        18662
+      ],
+      "options": [
+        {
+          "upgrade_id": 18657,
+          "name": "Not So Straightforward",
+          "required_level": 150,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 18658,
+          "name": "Scales and Horns",
+          "required_level": 150,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 18659,
+          "name": "Business Partners",
+          "required_level": 150,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 18660,
+          "name": "Command: Hold",
+          "required_level": 250,
+          "tier_index": 1
+        },
+        {
+          "upgrade_id": 18661,
+          "name": "Command: Duel",
+          "required_level": 250,
+          "tier_index": 1
+        },
+        {
+          "upgrade_id": 18662,
+          "name": "Command: Cower",
+          "required_level": 250,
+          "tier_index": 1
+        },
+        {
+          "upgrade_id": 18663,
+          "name": "Command: Droppit",
+          "required_level": 250,
+          "tier_index": 1
+        }
+      ]
+    },
+    "35": {
+      "name": "Vlahnya",
+      "default": [
+        1659
+      ],
+      "options": [
+        {
+          "upgrade_id": 1658,
+          "name": "Spy Network",
+          "required_level": 200,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 1659,
+          "name": "Breaking Out Solo",
+          "required_level": 200,
+          "tier_index": 0
+        }
+      ]
+    },
+    "36": {
+      "name": "Warden",
+      "default": [
+        13246
+      ],
+      "options": [
+        {
+          "upgrade_id": 13246,
+          "name": "The Dark Hunger",
+          "required_level": 80,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 13247,
+          "name": "Shadows in the Night",
+          "required_level": 80,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 13248,
+          "name": "Charm of the Fallen",
+          "required_level": 80,
+          "tier_index": 0
+        }
+      ]
+    },
+    "37": {
+      "name": "Nerys",
+      "default": [
+        9747
+      ],
+      "options": [
+        {
+          "upgrade_id": 9745,
+          "name": "Kelemvor's Heal",
+          "required_level": 80,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 9746,
+          "name": "Kelemvor's Will",
+          "required_level": 80,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 9747,
+          "name": "Kelemvor's Foe",
+          "required_level": 80,
+          "tier_index": 0
+        }
+      ]
+    },
+    "38": {
+      "name": "K'thriss",
+      "default": [
+        17328
+      ],
+      "options": [
+        {
+          "upgrade_id": 17328,
+          "name": "Velvet Touch",
+          "required_level": 130,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 17329,
+          "name": "Ligotti's Minions",
+          "required_level": 130,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 17330,
+          "name": "The Unknowable Ur",
+          "required_level": 130,
+          "tier_index": 0
+        }
+      ]
+    },
+    "39": {
+      "name": "Paultin",
+      "default": [
+        2038
+      ],
+      "options": [
+        {
+          "upgrade_id": 2038,
+          "name": "Luck of the Vistani",
+          "required_level": 280,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 2039,
+          "name": "Additional Secrets",
+          "required_level": 280,
+          "tier_index": 0
+        }
+      ]
+    },
+    "40": {
+      "name": "Black Viper",
+      "default": [
+        2112
+      ],
+      "options": [
+        {
+          "upgrade_id": 2111,
+          "name": "Assassinate",
+          "required_level": 215,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 2112,
+          "name": "Collector",
+          "required_level": 215,
+          "tier_index": 0
+        }
+      ]
+    },
+    "41": {
+      "name": "Rosie",
+      "default": [
+        15613
+      ],
+      "options": [
+        {
+          "upgrade_id": 15609,
+          "name": "Matriarch",
+          "required_level": 170,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 15610,
+          "name": "Familiar Friends",
+          "required_level": 170,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 15611,
+          "name": "Grandmother Night",
+          "required_level": 170,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 15612,
+          "name": "Grandma-Bod",
+          "required_level": 280,
+          "tier_index": 1
+        },
+        {
+          "upgrade_id": 15613,
+          "name": "Busy Beestinger",
+          "required_level": 280,
+          "tier_index": 1
+        },
+        {
+          "upgrade_id": 15614,
+          "name": "Slower Decay",
+          "required_level": 280,
+          "tier_index": 1
+        }
+      ]
+    },
+    "42": {
+      "name": "Aila",
+      "default": [
+        8785
+      ],
+      "options": [
+        {
+          "upgrade_id": 8784,
+          "name": "Stormcaller",
+          "required_level": 225,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 8785,
+          "name": "Stormbreaker",
+          "required_level": 225,
+          "tier_index": 0
+        }
+      ]
+    },
+    "43": {
+      "name": "Spurt",
+      "default": [
+        10683
+      ],
+      "options": [
+        {
+          "upgrade_id": 10681,
+          "name": "Kobold Family",
+          "required_level": 250,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 10682,
+          "name": "Centi-pult",
+          "required_level": 250,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 10683,
+          "name": "Adopted Family",
+          "required_level": 250,
+          "tier_index": 0
+        }
+      ]
+    },
+    "44": {
+      "name": "Qillek",
+      "default": [
+        8772
+      ],
+      "options": [
+        {
+          "upgrade_id": 8771,
+          "name": "Expanded Blessing",
+          "required_level": 250,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 8772,
+          "name": "Empowered Blessing",
+          "required_level": 250,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 8773,
+          "name": "Seized Assets",
+          "required_level": 250,
+          "tier_index": 0
+        }
+      ]
+    },
+    "45": {
+      "name": "Korth",
+      "default": [
+        13041
+      ],
+      "options": [
+        {
+          "upgrade_id": 13041,
+          "name": "Samurai Training (Behind)",
+          "required_level": 200,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 13042,
+          "name": "Samurai Training (In Front)",
+          "required_level": 200,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 13043,
+          "name": "Samurai Training (Beside)",
+          "required_level": 200,
+          "tier_index": 0
+        }
+      ]
+    },
+    "46": {
+      "name": "Walnut",
+      "default": [
+        19714
+      ],
+      "options": [
+        {
+          "upgrade_id": 19712,
+          "name": "Extended Warranty",
+          "required_level": 180,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 19713,
+          "name": "Sign and Date",
+          "required_level": 180,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 19714,
+          "name": "Ah, Screw It",
+          "required_level": 180,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 19715,
+          "name": "Co-Signers",
+          "required_level": 310,
+          "tier_index": 1
+        },
+        {
+          "upgrade_id": 19716,
+          "name": "Temporary Alliance",
+          "required_level": 310,
+          "tier_index": 1
+        }
+      ]
+    },
+    "47": {
+      "name": "Shandie",
+      "default": [
+        9731
+      ],
+      "options": [
+        {
+          "upgrade_id": 9730,
+          "name": "Known Allies",
+          "required_level": 230,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 9731,
+          "name": "Alchemist's Fire Expertise",
+          "required_level": 230,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 9732,
+          "name": "Criminal Contacts",
+          "required_level": 230,
+          "tier_index": 0
+        }
+      ]
+    },
+    "48": {
+      "name": "Jim",
+      "default": [
+        12132
+      ],
+      "options": [
+        {
+          "upgrade_id": 12132,
+          "name": "Darkmagic Cheer Squad",
+          "required_level": 160,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 12133,
+          "name": "Magic {magic}#CCC {magic}#888 {magic}#444",
+          "required_level": 160,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 12134,
+          "name": "Unpaid Extras",
+          "required_level": 160,
+          "tier_index": 0
+        }
+      ]
+    },
+    "49": {
+      "name": "Turiel",
+      "default": [
+        10664
+      ],
+      "options": [
+        {
+          "upgrade_id": 10663,
+          "name": "Voice of Resilience",
+          "required_level": 300,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 10664,
+          "name": "Voice of Authority",
+          "required_level": 300,
+          "tier_index": 0
+        }
+      ]
+    },
+    "50": {
+      "name": "Pwent",
+      "default": [
+        11496
+      ],
+      "options": [
+        {
+          "upgrade_id": 11496,
+          "name": "Recruiting Drive",
+          "required_level": 200,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 11497,
+          "name": "Scents of Mithral Hall",
+          "required_level": 200,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 11498,
+          "name": "Critical Wound",
+          "required_level": 200,
+          "tier_index": 0
+        }
+      ]
+    },
+    "51": {
+      "name": "Avren",
+      "default": [
+        3099
+      ],
+      "options": [
+        {
+          "upgrade_id": 3095,
+          "name": "Mirror Focus (Good)",
+          "required_level": 100,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 3096,
+          "name": "Mirror Focus (Neutral)",
+          "required_level": 100,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 3097,
+          "name": "Mirror Focus (Evil)",
+          "required_level": 100,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 3098,
+          "name": "Sturdy Mirrors",
+          "required_level": 200,
+          "tier_index": 1
+        },
+        {
+          "upgrade_id": 3099,
+          "name": "Empowered Mirrors",
+          "required_level": 200,
+          "tier_index": 1
+        }
+      ]
+    },
+    "52": {
+      "name": "Sentry",
+      "default": [
+        8866
+      ],
+      "options": [
+        {
+          "upgrade_id": 8763,
+          "name": "Dedicated Guardian",
+          "required_level": 225,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 8866,
+          "name": "Nature's Wrath",
+          "required_level": 225,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 8867,
+          "name": "Sentry's Homeland",
+          "required_level": 225,
+          "tier_index": 0
+        }
+      ]
+    },
+    "53": {
+      "name": "Krull",
+      "default": [
+        3215
+      ],
+      "options": [
+        {
+          "upgrade_id": 3214,
+          "name": "Plague Focus: {Pilfer}#0F0",
+          "required_level": 180,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 3215,
+          "name": "Plague Focus: {Pain}#F00",
+          "required_level": 180,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 3216,
+          "name": "Plague Focus: {Traitor}#F0F",
+          "required_level": 180,
+          "tier_index": 0
+        }
+      ]
+    },
+    "54": {
+      "name": "Artemis",
+      "default": [
+        3270
+      ],
+      "options": [
+        {
+          "upgrade_id": 3269,
+          "name": "Observance: Friend",
+          "required_level": 400,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 3270,
+          "name": "Observance: Foe",
+          "required_level": 400,
+          "tier_index": 0
+        }
+      ]
+    },
+    "55": {
+      "name": "Morgaen",
+      "default": [
+        3336
+      ],
+      "options": [
+        {
+          "upgrade_id": 3330,
+          "name": "Fine As Is",
+          "required_level": 240,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 3331,
+          "name": "Keep Your Distance",
+          "required_level": 240,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 3332,
+          "name": "Monster Fodder",
+          "required_level": 240,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 3333,
+          "name": "Stay Out Of My Way",
+          "required_level": 240,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 3334,
+          "name": "Keep It Simple",
+          "required_level": 300,
+          "tier_index": 1
+        },
+        {
+          "upgrade_id": 3335,
+          "name": "Tight Formation",
+          "required_level": 300,
+          "tier_index": 1
+        },
+        {
+          "upgrade_id": 3336,
+          "name": "Calm Under Pressure",
+          "required_level": 300,
+          "tier_index": 1
+        },
+        {
+          "upgrade_id": 3337,
+          "name": "The Long Game",
+          "required_level": 300,
+          "tier_index": 1
+        },
+        {
+          "upgrade_id": 3340,
+          "name": "Tight Formation",
+          "required_level": 420,
+          "tier_index": 2
+        },
+        {
+          "upgrade_id": 3341,
+          "name": "Calm Under Pressure",
+          "required_level": 420,
+          "tier_index": 2
+        },
+        {
+          "upgrade_id": 3342,
+          "name": "The Long Game",
+          "required_level": 420,
+          "tier_index": 2
+        },
+        {
+          "upgrade_id": 3343,
+          "name": "Keep It Simple",
+          "required_level": 420,
+          "tier_index": 2
+        },
+        {
+          "upgrade_id": 3344,
+          "name": "Calm Under Pressure",
+          "required_level": 420,
+          "tier_index": 2
+        },
+        {
+          "upgrade_id": 3345,
+          "name": "The Long Game",
+          "required_level": 420,
+          "tier_index": 2
+        },
+        {
+          "upgrade_id": 3346,
+          "name": "Keep It Simple",
+          "required_level": 420,
+          "tier_index": 2
+        },
+        {
+          "upgrade_id": 3347,
+          "name": "Tight Formation",
+          "required_level": 420,
+          "tier_index": 2
+        },
+        {
+          "upgrade_id": 3348,
+          "name": "The Long Game",
+          "required_level": 420,
+          "tier_index": 2
+        },
+        {
+          "upgrade_id": 3349,
+          "name": "Keep It Simple",
+          "required_level": 420,
+          "tier_index": 2
+        },
+        {
+          "upgrade_id": 3350,
+          "name": "Tight Formation",
+          "required_level": 420,
+          "tier_index": 2
+        },
+        {
+          "upgrade_id": 3351,
+          "name": "Calm Under Pressure",
+          "required_level": 420,
+          "tier_index": 2
+        }
+      ]
+    },
+    "56": {
+      "name": "Havilar",
+      "default": [
+        18043
+      ],
+      "options": [
+        {
+          "upgrade_id": 18043,
+          "name": "Dembo",
+          "required_level": 150,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 18044,
+          "name": "Olla",
+          "required_level": 150,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 18045,
+          "name": "Bosh",
+          "required_level": 150,
+          "tier_index": 0
+        }
+      ]
+    },
+    "57": {
+      "name": "Sisaspia",
+      "default": [
+        13255
+      ],
+      "options": [
+        {
+          "upgrade_id": 13253,
+          "name": "Simple Infection",
+          "required_level": 220,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 13254,
+          "name": "Spreading Spores",
+          "required_level": 220,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 13255,
+          "name": "Fungal Body",
+          "required_level": 220,
+          "tier_index": 0
+        }
+      ]
+    },
+    "58": {
+      "name": "Briv",
+      "default": [
+        3457
+      ],
+      "options": [
+        {
+          "upgrade_id": 3455,
+          "name": "Metalborn",
+          "required_level": 170,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 3456,
+          "name": "Tempered Steel",
+          "required_level": 170,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 3457,
+          "name": "Go With The Phlo",
+          "required_level": 170,
+          "tier_index": 0
+        }
+      ]
+    },
+    "59": {
+      "name": "Melf",
+      "default": [
+        19340,
+        19342
+      ],
+      "options": [
+        {
+          "upgrade_id": 19339,
+          "name": "Melf's Frequent Foes",
+          "required_level": 110,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 19340,
+          "name": "Melf's Speedy Spawns",
+          "required_level": 110,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 19341,
+          "name": "Melf's Doubled Drops",
+          "required_level": 110,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 19342,
+          "name": "Melf's Abundant Allies",
+          "required_level": 140,
+          "tier_index": 1
+        },
+        {
+          "upgrade_id": 19343,
+          "name": "Melf's Adaptive Attacks",
+          "required_level": 140,
+          "tier_index": 1
+        },
+        {
+          "upgrade_id": 19344,
+          "name": "Melf's Ranked Roles",
+          "required_level": 140,
+          "tier_index": 1
+        },
+        {
+          "upgrade_id": 19345,
+          "name": "Melf's Amorphous Alignment",
+          "required_level": 140,
+          "tier_index": 1
+        }
+      ]
+    },
+    "60": {
+      "name": "Krydle",
+      "default": [
+        9634
+      ],
+      "options": [
+        {
+          "upgrade_id": 9634,
+          "name": "Keep Your Friends Close",
+          "required_level": 400,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 9635,
+          "name": "Keep Your Enemies Closer",
+          "required_level": 400,
+          "tier_index": 0
+        }
+      ]
+    },
+    "61": {
+      "name": "Jaheira",
+      "default": [
+        9714,
+        9718
+      ],
+      "options": [
+        {
+          "upgrade_id": 9714,
+          "name": "Class Act - Spellslingers",
+          "required_level": 30,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 9715,
+          "name": "Class Act - Bruisers",
+          "required_level": 30,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 9716,
+          "name": "Class Act - Hybrids",
+          "required_level": 30,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 9717,
+          "name": "Class Act - Baldur's Gate",
+          "required_level": 30,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 9718,
+          "name": "Hunter - Nature",
+          "required_level": 180,
+          "tier_index": 1
+        },
+        {
+          "upgrade_id": 9719,
+          "name": "Hunter - Twisted Creatures",
+          "required_level": 180,
+          "tier_index": 1
+        },
+        {
+          "upgrade_id": 9720,
+          "name": "Hunter - Civilization",
+          "required_level": 180,
+          "tier_index": 1
+        },
+        {
+          "upgrade_id": 9721,
+          "name": "Hunter - Soulless",
+          "required_level": 180,
+          "tier_index": 1
+        }
+      ]
+    },
+    "62": {
+      "name": "Nova",
+      "default": [
+        8754
+      ],
+      "options": [
+        {
+          "upgrade_id": 8753,
+          "name": "New Recruits",
+          "required_level": 300,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 8754,
+          "name": "Tight Knit",
+          "required_level": 300,
+          "tier_index": 0
+        }
+      ]
+    },
+    "63": {
+      "name": "Freely",
+      "default": [
+        4043
+      ],
+      "options": [
+        {
+          "upgrade_id": 4041,
+          "name": "Trust in Law",
+          "required_level": 100,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 4042,
+          "name": "Value Neutrality",
+          "required_level": 100,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 4043,
+          "name": "Always Expect Chaos",
+          "required_level": 100,
+          "tier_index": 0
+        }
+      ]
+    },
+    "64": {
+      "name": "Beadle",
+      "default": [
+        16727
+      ],
+      "options": [
+        {
+          "upgrade_id": 16727,
+          "name": "Epic Equipment",
+          "required_level": 160,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 16728,
+          "name": "Premium Gear",
+          "required_level": 160,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 16729,
+          "name": "Shiniest Loot",
+          "required_level": 160,
+          "tier_index": 0
+        }
+      ]
+    },
+    "65": {
+      "name": "Omin",
+      "default": [
+        12305
+      ],
+      "options": [
+        {
+          "upgrade_id": 12304,
+          "name": "Form Ranks",
+          "required_level": 180,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 12305,
+          "name": "Favored Friends",
+          "required_level": 180,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 12306,
+          "name": "Long Term Investments",
+          "required_level": 180,
+          "tier_index": 0
+        }
+      ]
+    },
+    "66": {
+      "name": "Lazaapz",
+      "default": [
+        17484,
+        17487
+      ],
+      "options": [
+        {
+          "upgrade_id": 17484,
+          "name": "Fury of the Brawl",
+          "required_level": 90,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 17485,
+          "name": "Fury of the Cabal",
+          "required_level": 90,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 17486,
+          "name": "Fury of the Stall",
+          "required_level": 90,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 17487,
+          "name": "Guardian",
+          "required_level": 160,
+          "tier_index": 1
+        },
+        {
+          "upgrade_id": 17488,
+          "name": "Infiltrator",
+          "required_level": 160,
+          "tier_index": 1
+        }
+      ]
+    },
+    "67": {
+      "name": "Dragonbait",
+      "default": [
+        3278
+      ],
+      "options": [
+        {
+          "upgrade_id": 3277,
+          "name": "Scent: Roasted Chicken",
+          "required_level": 120,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 3278,
+          "name": "Scent: Herbs and Spices",
+          "required_level": 120,
+          "tier_index": 0
+        }
+      ]
+    },
+    "68": {
+      "name": "Ulkoria",
+      "default": [
+        4349
+      ],
+      "options": [
+        {
+          "upgrade_id": 4349,
+          "name": "Shield Guardian",
+          "required_level": 435,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 4350,
+          "name": "Urchin Pranks",
+          "required_level": 435,
+          "tier_index": 0
+        }
+      ]
+    },
+    "69": {
+      "name": "Torogar",
+      "default": [
+        4493
+      ],
+      "options": [
+        {
+          "upgrade_id": 4492,
+          "name": "Tiamat's Word",
+          "required_level": 250,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 4493,
+          "name": "Tiamat's Rage",
+          "required_level": 250,
+          "tier_index": 0
+        }
+      ]
+    },
+    "70": {
+      "name": "Ezmerelda",
+      "default": [
+        15041
+      ],
+      "options": [
+        {
+          "upgrade_id": 15041,
+          "name": "We've Trained For This",
+          "required_level": 200,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 15042,
+          "name": "Vampire Hunter",
+          "required_level": 200,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 15043,
+          "name": "The Devil You Know",
+          "required_level": 200,
+          "tier_index": 0
+        }
+      ]
+    },
+    "71": {
+      "name": "Penelope",
+      "default": [
+        14705
+      ],
+      "options": [
+        {
+          "upgrade_id": 14703,
+          "name": "Keep Your Friends Close",
+          "required_level": 130,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 14704,
+          "name": "Keep Your Future Friends Closer",
+          "required_level": 130,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 14705,
+          "name": "Everybody Gets To Be Friends",
+          "required_level": 130,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 14706,
+          "name": "Fury of the Fireflies",
+          "required_level": 300,
+          "tier_index": 1
+        },
+        {
+          "upgrade_id": 14707,
+          "name": "Splitting The Hive",
+          "required_level": 300,
+          "tier_index": 1
+        },
+        {
+          "upgrade_id": 14708,
+          "name": "Dance of the Ladybugs",
+          "required_level": 300,
+          "tier_index": 1
+        }
+      ]
+    },
+    "72": {
+      "name": "Lucius",
+      "default": [
+        19253
+      ],
+      "options": [
+        {
+          "upgrade_id": 19253,
+          "name": "Dichromancy",
+          "required_level": 120,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 19254,
+          "name": "Corrosion Master",
+          "required_level": 120,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 19255,
+          "name": "Lingering Chill",
+          "required_level": 120,
+          "tier_index": 0
+        }
+      ]
+    },
+    "73": {
+      "name": "Baeloth",
+      "default": [
+        4749
+      ],
+      "options": [
+        {
+          "upgrade_id": 4749,
+          "name": "Baeloth's Birthday Party",
+          "required_level": 220,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 4750,
+          "name": "Over Excited",
+          "required_level": 220,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 4751,
+          "name": "The Show Must Go On",
+          "required_level": 220,
+          "tier_index": 0
+        }
+      ]
+    },
+    "74": {
+      "name": "Talin",
+      "default": [
+        4766
+      ],
+      "options": [
+        {
+          "upgrade_id": 4765,
+          "name": "Path Finder",
+          "required_level": 300,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 4766,
+          "name": "Additional Scatter Tacks",
+          "required_level": 300,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 4767,
+          "name": "Reversal of Fortunes",
+          "required_level": 300,
+          "tier_index": 0
+        }
+      ]
+    },
+    "75": {
+      "name": "Hew Maan",
+      "default": [
+        10653
+      ],
+      "options": [
+        {
+          "upgrade_id": 10653,
+          "name": "Did We Say Humans? We Meant...",
+          "required_level": 240,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 10654,
+          "name": "Law Maan",
+          "required_level": 240,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 10655,
+          "name": "Hello, Fellow Mercenaries!",
+          "required_level": 240,
+          "tier_index": 0
+        }
+      ]
+    },
+    "76": {
+      "name": "Orisha",
+      "default": [
+        4909
+      ],
+      "options": [
+        {
+          "upgrade_id": 4909,
+          "name": "Blazing Soul",
+          "required_level": 100,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 4910,
+          "name": "Long Burn",
+          "required_level": 100,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 4911,
+          "name": "Sirens' Connection",
+          "required_level": 200,
+          "tier_index": 1
+        },
+        {
+          "upgrade_id": 4912,
+          "name": "Fierce Connection",
+          "required_level": 200,
+          "tier_index": 1
+        }
+      ]
+    },
+    "77": {
+      "name": "Alyndra",
+      "default": [
+        17749
+      ],
+      "options": [
+        {
+          "upgrade_id": 17749,
+          "name": "Expansive Vision",
+          "required_level": 150,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 17750,
+          "name": "Extra Judgy",
+          "required_level": 150,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 17751,
+          "name": "Heroes of the Planes",
+          "required_level": 150,
+          "tier_index": 0
+        }
+      ]
+    },
+    "78": {
+      "name": "Orkira",
+      "default": [
+        5577
+      ],
+      "options": [
+        {
+          "upgrade_id": 5576,
+          "name": "Breath of the Phoenix",
+          "required_level": 200,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 5577,
+          "name": "Tailfeather of the Phoenix",
+          "required_level": 200,
+          "tier_index": 0
+        }
+      ]
+    },
+    "79": {
+      "name": "Shaka",
+      "default": [
+        13424
+      ],
+      "options": [
+        {
+          "upgrade_id": 13424,
+          "name": "Blinding Wall of Light",
+          "required_level": 90,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 13425,
+          "name": "Disintegrating Wall of Light",
+          "required_level": 90,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 13420,
+          "name": "Child's Play",
+          "required_level": 150,
+          "tier_index": 1
+        },
+        {
+          "upgrade_id": 13421,
+          "name": "Pen and Paper",
+          "required_level": 150,
+          "tier_index": 1
+        },
+        {
+          "upgrade_id": 13422,
+          "name": "Sunday Edition",
+          "required_level": 150,
+          "tier_index": 1
+        },
+        {
+          "upgrade_id": 13423,
+          "name": "Brain Break",
+          "required_level": 150,
+          "tier_index": 1
+        }
+      ]
+    },
+    "80": {
+      "name": "Mehen",
+      "default": [
+        16152
+      ],
+      "options": [
+        {
+          "upgrade_id": 16150,
+          "name": "Fighting Force",
+          "required_level": 250,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 16151,
+          "name": "Father Figure",
+          "required_level": 250,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 16152,
+          "name": "Found Family",
+          "required_level": 250,
+          "tier_index": 0
+        }
+      ]
+    },
+    "81": {
+      "name": "Selise",
+      "default": [
+        13751
+      ],
+      "options": [
+        {
+          "upgrade_id": 13749,
+          "name": "Relentless Avenger",
+          "required_level": 120,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 13750,
+          "name": "Reflective Shield",
+          "required_level": 120,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 13751,
+          "name": "Mithral Skin",
+          "required_level": 120,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 13752,
+          "name": "Tyr's Eyes",
+          "required_level": 350,
+          "tier_index": 1
+        },
+        {
+          "upgrade_id": 13753,
+          "name": "Relentless Avenger",
+          "required_level": 350,
+          "tier_index": 1
+        },
+        {
+          "upgrade_id": 13754,
+          "name": "Reflective Shield",
+          "required_level": 350,
+          "tier_index": 1
+        },
+        {
+          "upgrade_id": 13755,
+          "name": "Relentless Avenger",
+          "required_level": 350,
+          "tier_index": 1
+        },
+        {
+          "upgrade_id": 13756,
+          "name": "Mithral Skin",
+          "required_level": 350,
+          "tier_index": 1
+        },
+        {
+          "upgrade_id": 13757,
+          "name": "Reflective Shield",
+          "required_level": 350,
+          "tier_index": 1
+        },
+        {
+          "upgrade_id": 13758,
+          "name": "Mithral Skin",
+          "required_level": 350,
+          "tier_index": 1
+        }
+      ]
+    },
+    "82": {
+      "name": "Sgt. Knox",
+      "default": [
+        15961
+      ],
+      "options": [
+        {
+          "upgrade_id": 15959,
+          "name": "Impromptu Allies",
+          "required_level": 160,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 15960,
+          "name": "For The Greater Good",
+          "required_level": 160,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 15961,
+          "name": "Shield Wall",
+          "required_level": 160,
+          "tier_index": 0
+        }
+      ]
+    },
+    "83": {
+      "name": "Ellywick",
+      "default": [
+        15233
+      ],
+      "options": [
+        {
+          "upgrade_id": 15231,
+          "name": "For The Fans",
+          "required_level": 200,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 15232,
+          "name": "Faster Tempo",
+          "required_level": 200,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 15233,
+          "name": "All That Sparkles",
+          "required_level": 200,
+          "tier_index": 0
+        }
+      ]
+    },
+    "84": {
+      "name": "Prudence",
+      "default": [
+        6072
+      ],
+      "options": [
+        {
+          "upgrade_id": 6072,
+          "name": "Eldritch Torrent",
+          "required_level": 600,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 6073,
+          "name": "She Hungers",
+          "required_level": 600,
+          "tier_index": 0
+        }
+      ]
+    },
+    "85": {
+      "name": "Corazon",
+      "default": [
+        6133
+      ],
+      "options": [
+        {
+          "upgrade_id": 6133,
+          "name": "Distant Crewmates",
+          "required_level": 220,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 6134,
+          "name": "Mage Hand",
+          "required_level": 220,
+          "tier_index": 0
+        }
+      ]
+    },
+    "86": {
+      "name": "Reya",
+      "default": [
+        5459
+      ],
+      "options": [
+        {
+          "upgrade_id": 5459,
+          "name": "Champions of Good",
+          "required_level": 160,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 5460,
+          "name": "Champions of Law",
+          "required_level": 160,
+          "tier_index": 0
+        }
+      ]
+    },
+    "87": {
+      "name": "NERDS",
+      "default": [
+        6148
+      ],
+      "options": [
+        {
+          "upgrade_id": 6146,
+          "name": "Orange Leader, Standing By",
+          "required_level": 270,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 6147,
+          "name": "Red Leader, Standing By",
+          "required_level": 270,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 6148,
+          "name": "Green Leader, Standing By",
+          "required_level": 270,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 6149,
+          "name": "Yellow Leader, Standing By",
+          "required_level": 270,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 6150,
+          "name": "Pink Leader, Standing By",
+          "required_level": 270,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 6151,
+          "name": "Purple Leader, Standing By",
+          "required_level": 270,
+          "tier_index": 0
+        }
+      ]
+    },
+    "88": {
+      "name": "Xerophon",
+      "default": [
+        6842
+      ],
+      "options": [
+        {
+          "upgrade_id": 6838,
+          "name": "High Strength",
+          "required_level": 20,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 6839,
+          "name": "Low Strength",
+          "required_level": 20,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 6840,
+          "name": "High Dexterity",
+          "required_level": 50,
+          "tier_index": 1
+        },
+        {
+          "upgrade_id": 6841,
+          "name": "Low Dexterity",
+          "required_level": 50,
+          "tier_index": 1
+        },
+        {
+          "upgrade_id": 6978,
+          "name": "High Constitution",
+          "required_level": 90,
+          "tier_index": 2
+        },
+        {
+          "upgrade_id": 6979,
+          "name": "Low Constitution",
+          "required_level": 90,
+          "tier_index": 2
+        },
+        {
+          "upgrade_id": 6976,
+          "name": "High Intelligence",
+          "required_level": 130,
+          "tier_index": 3
+        },
+        {
+          "upgrade_id": 6977,
+          "name": "Low Intelligence",
+          "required_level": 130,
+          "tier_index": 3
+        },
+        {
+          "upgrade_id": 6980,
+          "name": "High Wisdom",
+          "required_level": 170,
+          "tier_index": 4
+        },
+        {
+          "upgrade_id": 6981,
+          "name": "Low Wisdom",
+          "required_level": 170,
+          "tier_index": 4
+        },
+        {
+          "upgrade_id": 6842,
+          "name": "High Charisma",
+          "required_level": 210,
+          "tier_index": 5
+        },
+        {
+          "upgrade_id": 6843,
+          "name": "Low Charisma",
+          "required_level": 210,
+          "tier_index": 5
+        }
+      ]
+    },
+    "89": {
+      "name": "D'hani",
+      "default": [
+        13717
+      ],
+      "options": [
+        {
+          "upgrade_id": 13717,
+          "name": "Ochre Jelly Yellow",
+          "required_level": 290,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 13718,
+          "name": "Twig Blight Green",
+          "required_level": 290,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 13719,
+          "name": "Frost Giant Blue",
+          "required_level": 290,
+          "tier_index": 0
+        }
+      ]
+    },
+    "90": {
+      "name": "Brig",
+      "default": [
+        6355
+      ],
+      "options": [
+        {
+          "upgrade_id": 6355,
+          "name": "\"Back\"-Up Singer",
+          "required_level": 150,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 6356,
+          "name": "Cream of the Crop",
+          "required_level": 150,
+          "tier_index": 0
+        }
+      ]
+    },
+    "91": {
+      "name": "Widdle",
+      "default": [
+        6910
+      ],
+      "options": [
+        {
+          "upgrade_id": 6909,
+          "name": "Strong and Steady",
+          "required_level": 310,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 6910,
+          "name": "Mind and Body",
+          "required_level": 310,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 6911,
+          "name": "Wisdom and Confidence",
+          "required_level": 310,
+          "tier_index": 0
+        }
+      ]
+    },
+    "92": {
+      "name": "Yorven",
+      "default": [
+        17071
+      ],
+      "options": [
+        {
+          "upgrade_id": 17070,
+          "name": "Hunger For Blood",
+          "required_level": 120,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 17071,
+          "name": "Eldritch Claw Tattoo",
+          "required_level": 120,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 17072,
+          "name": "Follow The Mad Rabbit",
+          "required_level": 120,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 17073,
+          "name": "Infectious Fury",
+          "required_level": 120,
+          "tier_index": 0
+        }
+      ]
+    },
+    "93": {
+      "name": "Viconia",
+      "default": [
+        9785
+      ],
+      "options": [
+        {
+          "upgrade_id": 9784,
+          "name": "Holy Power",
+          "required_level": 80,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 9785,
+          "name": "Begrudging Respect",
+          "required_level": 80,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 9786,
+          "name": "Turn Undead",
+          "required_level": 80,
+          "tier_index": 0
+        }
+      ]
+    },
+    "94": {
+      "name": "Rust",
+      "default": [
+        15363
+      ],
+      "options": [
+        {
+          "upgrade_id": 15362,
+          "name": "Get Rich Quick",
+          "required_level": 240,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 15363,
+          "name": "Even More Riches",
+          "required_level": 240,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 15364,
+          "name": "Rust's Fever Dream",
+          "required_level": 240,
+          "tier_index": 0
+        }
+      ]
+    },
+    "95": {
+      "name": "Vi",
+      "default": [
+        12318
+      ],
+      "options": [
+        {
+          "upgrade_id": 12316,
+          "name": "Bless Their Hearts",
+          "required_level": 200,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 12317,
+          "name": "Positive Reinforcement",
+          "required_level": 200,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 12318,
+          "name": "A Nudge In The Right Direction",
+          "required_level": 200,
+          "tier_index": 0
+        }
+      ]
+    },
+    "96": {
+      "name": "Desmond",
+      "default": [
+        7305
+      ],
+      "options": [
+        {
+          "upgrade_id": 7304,
+          "name": "Double Time",
+          "required_level": 200,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 7305,
+          "name": "Embrace the Beast",
+          "required_level": 200,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 7306,
+          "name": "Strength in Numbers",
+          "required_level": 200,
+          "tier_index": 0
+        }
+      ]
+    },
+    "97": {
+      "name": "Tatyana",
+      "default": [
+        7389
+      ],
+      "options": [
+        {
+          "upgrade_id": 7387,
+          "name": "Your Friends are My Friends",
+          "required_level": 140,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 7388,
+          "name": "By My Side",
+          "required_level": 140,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 7389,
+          "name": "Best Friend Forever",
+          "required_level": 140,
+          "tier_index": 0
+        }
+      ]
+    },
+    "98": {
+      "name": "Gazrick",
+      "default": [
+        7539
+      ],
+      "options": [
+        {
+          "upgrade_id": 7538,
+          "name": "Genius with Gold",
+          "required_level": 200,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 7539,
+          "name": "Aim Around Armor",
+          "required_level": 200,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 7540,
+          "name": "Finesse with Frost",
+          "required_level": 200,
+          "tier_index": 0
+        }
+      ]
+    },
+    "99": {
+      "name": "Dungeon Master",
+      "default": [
+        7850
+      ],
+      "options": [
+        {
+          "upgrade_id": 7849,
+          "name": "Where Did He Go This Time?",
+          "required_level": 100,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 7850,
+          "name": "Fear Not, Champions!",
+          "required_level": 100,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 16144,
+          "name": "Special Guest Stars",
+          "required_level": 100,
+          "tier_index": 0
+        }
+      ]
+    },
+    "100": {
+      "name": "Nordom",
+      "default": [
+        18167
+      ],
+      "options": [
+        {
+          "upgrade_id": 18166,
+          "name": "BASIC Functionality",
+          "required_level": 100,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 18167,
+          "name": "Modron Core Toolbox",
+          "required_level": 100,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 18168,
+          "name": "Core Competency",
+          "required_level": 100,
+          "tier_index": 0
+        }
+      ]
+    },
+    "101": {
+      "name": "Merilwen",
+      "default": [
+        7999
+      ],
+      "options": [
+        {
+          "upgrade_id": 7997,
+          "name": "Stink Like Skunk",
+          "required_level": 200,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 7998,
+          "name": "Treasures Her Friends",
+          "required_level": 200,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 7999,
+          "name": "Meow-il-wen",
+          "required_level": 200,
+          "tier_index": 0
+        }
+      ]
+    },
+    "102": {
+      "name": "Nahara",
+      "default": [
+        19724
+      ],
+      "options": [
+        {
+          "upgrade_id": 19723,
+          "name": "A Grave Experience",
+          "required_level": 250,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 19724,
+          "name": "A Barovian Bond",
+          "required_level": 250,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 19725,
+          "name": "A Skilled Lyre",
+          "required_level": 250,
+          "tier_index": 0
+        }
+      ]
+    },
+    "103": {
+      "name": "Valentine",
+      "default": [
+        8150
+      ],
+      "options": [
+        {
+          "upgrade_id": 8149,
+          "name": "All Hail the God Brain",
+          "required_level": 300,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 8150,
+          "name": "My Loyal Bodyguard",
+          "required_level": 300,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 8151,
+          "name": "Family Business",
+          "required_level": 300,
+          "tier_index": 0
+        }
+      ]
+    },
+    "104": {
+      "name": "Voronika",
+      "default": [
+        15635,
+        15638
+      ],
+      "options": [
+        {
+          "upgrade_id": 15635,
+          "name": "Embrace Evil",
+          "required_level": 190,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 15636,
+          "name": "Hunt The Favored",
+          "required_level": 190,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 15637,
+          "name": "Weaken The Fools",
+          "required_level": 190,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 15638,
+          "name": "Battle Magic",
+          "required_level": 500,
+          "tier_index": 1
+        },
+        {
+          "upgrade_id": 15639,
+          "name": "Powerful Focus",
+          "required_level": 500,
+          "tier_index": 1
+        },
+        {
+          "upgrade_id": 15640,
+          "name": "Strike First, Strike Hard",
+          "required_level": 500,
+          "tier_index": 1
+        }
+      ]
+    },
+    "105": {
+      "name": "Dob",
+      "default": [
+        8745
+      ],
+      "options": [
+        {
+          "upgrade_id": 8742,
+          "name": "Befriend the Magical",
+          "required_level": 160,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 8743,
+          "name": "Befriend the Friendly",
+          "required_level": 160,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 8744,
+          "name": "Befriend the Quick",
+          "required_level": 160,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 8745,
+          "name": "Befriend Everybody!",
+          "required_level": 160,
+          "tier_index": 0
+        }
+      ]
+    },
+    "106": {
+      "name": "Blooshi",
+      "default": [
+        7525
+      ],
+      "options": [
+        {
+          "upgrade_id": 7523,
+          "name": "Sliced Souls",
+          "required_level": 100,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 7524,
+          "name": "Skewered Souls",
+          "required_level": 100,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 7525,
+          "name": "Charred Souls",
+          "required_level": 100,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 7526,
+          "name": "Resilient Spirit",
+          "required_level": 250,
+          "tier_index": 1
+        },
+        {
+          "upgrade_id": 7527,
+          "name": "Wild Spirit",
+          "required_level": 250,
+          "tier_index": 1
+        }
+      ]
+    },
+    "113": {
+      "name": "Egbert",
+      "default": [
+        8877
+      ],
+      "options": [
+        {
+          "upgrade_id": 8877,
+          "name": "Atonement Begins with an Apology",
+          "required_level": 200,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 8878,
+          "name": "Team Chaos Team",
+          "required_level": 200,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 8879,
+          "name": "Smoky Bombs",
+          "required_level": 300,
+          "tier_index": 1
+        },
+        {
+          "upgrade_id": 8880,
+          "name": "Health Kick",
+          "required_level": 300,
+          "tier_index": 1
+        },
+        {
+          "upgrade_id": 8881,
+          "name": "Oxventure Capitalism",
+          "required_level": 300,
+          "tier_index": 1
+        }
+      ]
+    },
+    "114": {
+      "name": "Kent",
+      "default": [
+        9356
+      ],
+      "options": [
+        {
+          "upgrade_id": 9355,
+          "name": "Robust Rivals",
+          "required_level": 250,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 9356,
+          "name": "Potent Poison",
+          "required_level": 250,
+          "tier_index": 0
+        }
+      ]
+    },
+    "115": {
+      "name": "Virgil",
+      "default": [
+        9608
+      ],
+      "options": [
+        {
+          "upgrade_id": 9607,
+          "name": "Mood: Relaxed",
+          "required_level": 150,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 9608,
+          "name": "Mood: Anxious",
+          "required_level": 150,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 9609,
+          "name": "Mood: Determined",
+          "required_level": 150,
+          "tier_index": 0
+        }
+      ]
+    },
+    "116": {
+      "name": "Warduke",
+      "default": [
+        9619
+      ],
+      "options": [
+        {
+          "upgrade_id": 9619,
+          "name": "Chaos Reigns",
+          "required_level": 250,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 9620,
+          "name": "Mercenary for Hire",
+          "required_level": 250,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 9621,
+          "name": "League of Malevolence",
+          "required_level": 250,
+          "tier_index": 0
+        }
+      ]
+    },
+    "117": {
+      "name": "Imoen",
+      "default": [
+        9646
+      ],
+      "options": [
+        {
+          "upgrade_id": 9643,
+          "name": "Beast Slaying Arrows",
+          "required_level": 40,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 9644,
+          "name": "Dragon Slaying Arrows",
+          "required_level": 40,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 9645,
+          "name": "Monstrosity Slaying Arrows",
+          "required_level": 40,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 9646,
+          "name": "Aberration Slaying Arrows",
+          "required_level": 40,
+          "tier_index": 0
+        }
+      ]
+    },
+    "118": {
+      "name": "Fen",
+      "default": [
+        9762
+      ],
+      "options": [
+        {
+          "upgrade_id": 9761,
+          "name": "Shadows of the Underdark",
+          "required_level": 140,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 9762,
+          "name": "Curse of the Dhampir",
+          "required_level": 140,
+          "tier_index": 0
+        }
+      ]
+    },
+    "119": {
+      "name": "Uriah",
+      "default": [
+        19680
+      ],
+      "options": [
+        {
+          "upgrade_id": 19680,
+          "name": "Book of Exalted Deeds",
+          "required_level": 120,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 19681,
+          "name": "Book of Vile Darkness",
+          "required_level": 120,
+          "tier_index": 0
+        }
+      ]
+    },
+    "120": {
+      "name": "Solaak",
+      "default": [
+        10617
+      ],
+      "options": [
+        {
+          "upgrade_id": 10615,
+          "name": "Unwavering",
+          "required_level": 280,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 10616,
+          "name": "Emboldened",
+          "required_level": 280,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 10617,
+          "name": "Confidant",
+          "required_level": 280,
+          "tier_index": 0
+        }
+      ]
+    },
+    "121": {
+      "name": "Miria",
+      "default": [
+        10672
+      ],
+      "options": [
+        {
+          "upgrade_id": 10670,
+          "name": "Methodical",
+          "required_level": 80,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 10671,
+          "name": "Intellectual",
+          "required_level": 80,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 10672,
+          "name": "Independent",
+          "required_level": 80,
+          "tier_index": 0
+        }
+      ]
+    },
+    "122": {
+      "name": "Antrius",
+      "default": [
+        10798
+      ],
+      "options": [
+        {
+          "upgrade_id": 10798,
+          "name": "Bard College",
+          "required_level": 300,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 10799,
+          "name": "Truly Awful Stats",
+          "required_level": 300,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 10800,
+          "name": "The \"A\" In Chaotic Is For Antrius",
+          "required_level": 300,
+          "tier_index": 0
+        }
+      ]
+    },
+    "123": {
+      "name": "Nixie",
+      "default": [
+        10892
+      ],
+      "options": [
+        {
+          "upgrade_id": 10890,
+          "name": "Infernal Impact",
+          "required_level": 130,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 10891,
+          "name": "Flawed Force",
+          "required_level": 130,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 10892,
+          "name": "Anarchy Amplified",
+          "required_level": 130,
+          "tier_index": 0
+        }
+      ]
+    },
+    "124": {
+      "name": "Evandra",
+      "default": [
+        11301
+      ],
+      "options": [
+        {
+          "upgrade_id": 11299,
+          "name": "Powerful Allies",
+          "required_level": 200,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 11300,
+          "name": "Fighting Force",
+          "required_level": 200,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 11301,
+          "name": "Carnival Crew",
+          "required_level": 200,
+          "tier_index": 0
+        }
+      ]
+    },
+    "125": {
+      "name": "BBEG",
+      "default": [
+        11545
+      ],
+      "options": [
+        {
+          "upgrade_id": 11544,
+          "name": "Powergaming",
+          "required_level": 150,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 11545,
+          "name": "Min-Maxing",
+          "required_level": 150,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 11546,
+          "name": "Rules Lawyering",
+          "required_level": 150,
+          "tier_index": 0
+        }
+      ]
+    },
+    "126": {
+      "name": "Strongheart",
+      "default": [
+        19734
+      ],
+      "options": [
+        {
+          "upgrade_id": 19733,
+          "name": "Valor's Call",
+          "required_level": 80,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 19734,
+          "name": "Honorary Member",
+          "required_level": 80,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 19738,
+          "name": "A Righteous Event",
+          "required_level": 80,
+          "tier_index": 0
+        }
+      ]
+    },
+    "127": {
+      "name": "Vin Ursa",
+      "default": [
+        12094
+      ],
+      "options": [
+        {
+          "upgrade_id": 12090,
+          "name": "Front Deck",
+          "required_level": 30,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 12091,
+          "name": "Rear Deck",
+          "required_level": 30,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 12092,
+          "name": "Friends in Low Places",
+          "required_level": 250,
+          "tier_index": 1
+        },
+        {
+          "upgrade_id": 12093,
+          "name": "Friends in Meh Places",
+          "required_level": 250,
+          "tier_index": 1
+        },
+        {
+          "upgrade_id": 12094,
+          "name": "Friends in High Places",
+          "required_level": 250,
+          "tier_index": 1
+        }
+      ]
+    },
+    "128": {
+      "name": "Lae'zel",
+      "default": [
+        12119
+      ],
+      "options": [
+        {
+          "upgrade_id": 12118,
+          "name": "Champion",
+          "required_level": 230,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 12119,
+          "name": "Battle Master",
+          "required_level": 230,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 12120,
+          "name": "Eldritch Knight",
+          "required_level": 230,
+          "tier_index": 0
+        }
+      ]
+    },
+    "129": {
+      "name": "Astarion",
+      "default": [
+        12496
+      ],
+      "options": [
+        {
+          "upgrade_id": 12493,
+          "name": "Outflank (Top)",
+          "required_level": 10,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 12494,
+          "name": "Outflank (Bottom)",
+          "required_level": 10,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 12495,
+          "name": "Thief",
+          "required_level": 200,
+          "tier_index": 1
+        },
+        {
+          "upgrade_id": 12496,
+          "name": "Arcane Trickster",
+          "required_level": 200,
+          "tier_index": 1
+        },
+        {
+          "upgrade_id": 12497,
+          "name": "Assassin",
+          "required_level": 200,
+          "tier_index": 1
+        }
+      ]
+    },
+    "136": {
+      "name": "Krux",
+      "default": [
+        11660
+      ],
+      "options": [
+        {
+          "upgrade_id": 11658,
+          "name": "Nautical Knockback",
+          "required_level": 250,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 11659,
+          "name": "Take the Helm",
+          "required_level": 250,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 11660,
+          "name": "Foe of Xaryxis",
+          "required_level": 250,
+          "tier_index": 0
+        }
+      ]
+    },
+    "138": {
+      "name": "Certainty",
+      "default": [
+        12510
+      ],
+      "options": [
+        {
+          "upgrade_id": 12510,
+          "name": "Best And The Brightest",
+          "required_level": 200,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 12511,
+          "name": "Smooth Negotiators",
+          "required_level": 200,
+          "tier_index": 0
+        }
+      ]
+    },
+    "139": {
+      "name": "Thellora",
+      "default": [
+        12984
+      ],
+      "options": [
+        {
+          "upgrade_id": 12982,
+          "name": "Defender of the Meek",
+          "required_level": 150,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 12983,
+          "name": "Vanguard of the Quick",
+          "required_level": 150,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 12984,
+          "name": "Callessa's Blessed",
+          "required_level": 150,
+          "tier_index": 0
+        }
+      ]
+    },
+    "140": {
+      "name": "Jang Sao",
+      "default": [
+        13263
+      ],
+      "options": [
+        {
+          "upgrade_id": 13261,
+          "name": "Wisdom of the Ages",
+          "required_level": 100,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 13262,
+          "name": "Speed of Shooting Stars",
+          "required_level": 100,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 13263,
+          "name": "Moon Collector",
+          "required_level": 170,
+          "tier_index": 1
+        },
+        {
+          "upgrade_id": 13264,
+          "name": "Star Caller",
+          "required_level": 170,
+          "tier_index": 1
+        },
+        {
+          "upgrade_id": 13265,
+          "name": "Night Runner",
+          "required_level": 170,
+          "tier_index": 1
+        }
+      ]
+    },
+    "141": {
+      "name": "Shadowheart",
+      "default": [
+        13281
+      ],
+      "options": [
+        {
+          "upgrade_id": 13279,
+          "name": "Guidance",
+          "required_level": 180,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 13280,
+          "name": "Sister of Darkness",
+          "required_level": 180,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 13281,
+          "name": "Find Yourself",
+          "required_level": 180,
+          "tier_index": 0
+        }
+      ]
+    },
+    "142": {
+      "name": "Wyll",
+      "default": [
+        13433
+      ],
+      "options": [
+        {
+          "upgrade_id": 13433,
+          "name": "Pact of the Blade",
+          "required_level": 110,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 13434,
+          "name": "Pact of the Chain",
+          "required_level": 110,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 13435,
+          "name": "Pact of the Tome",
+          "required_level": 110,
+          "tier_index": 0
+        }
+      ]
+    },
+    "143": {
+      "name": "Karlach",
+      "default": [
+        13726
+      ],
+      "options": [
+        {
+          "upgrade_id": 13726,
+          "name": "Berserker",
+          "required_level": 130,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 13727,
+          "name": "Wildheart",
+          "required_level": 130,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 13728,
+          "name": "Wild Magic",
+          "required_level": 130,
+          "tier_index": 0
+        }
+      ]
+    },
+    "144": {
+      "name": "Presto",
+      "default": [
+        13765
+      ],
+      "options": [
+        {
+          "upgrade_id": 13765,
+          "name": "Humble Heroes",
+          "required_level": 200,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 13766,
+          "name": "Junior Juggernauts",
+          "required_level": 200,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 13767,
+          "name": "Magical Mastery",
+          "required_level": 200,
+          "tier_index": 0
+        }
+      ]
+    },
+    "145": {
+      "name": "Dynaheir",
+      "default": [
+        13879
+      ],
+      "options": [
+        {
+          "upgrade_id": 13879,
+          "name": "Circle Magic",
+          "required_level": 250,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 13880,
+          "name": "Iron Lord's Justice",
+          "required_level": 250,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 13881,
+          "name": "Loyal Bodyguard",
+          "required_level": 250,
+          "tier_index": 0
+        }
+      ]
+    },
+    "146": {
+      "name": "Dark Urge",
+      "default": [
+        14384
+      ],
+      "options": [
+        {
+          "upgrade_id": 14382,
+          "name": "Storm Sorcery",
+          "required_level": 130,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 14383,
+          "name": "Draconic Bloodline",
+          "required_level": 130,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 14384,
+          "name": "Divine Soul",
+          "required_level": 130,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 14385,
+          "name": "Embrace the Urge",
+          "required_level": 180,
+          "tier_index": 1
+        },
+        {
+          "upgrade_id": 14386,
+          "name": "Resist the Urge",
+          "required_level": 180,
+          "tier_index": 1
+        }
+      ]
+    },
+    "147": {
+      "name": "Gale",
+      "default": [
+        14578
+      ],
+      "adventures": {
+        "31": [
+          14576,
+          14580
+        ]
+      },
+      "options": [
+        {
+          "upgrade_id": 14574,
+          "name": "Evocation",
+          "required_level": 140,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 14575,
+          "name": "Abjuration",
+          "required_level": 140,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 14576,
+          "name": "Enchantment",
+          "required_level": 140,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 14577,
+          "name": "Illusion",
+          "required_level": 140,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 14578,
+          "name": "Ceremorphosis",
+          "required_level": 250,
+          "tier_index": 1
+        },
+        {
+          "upgrade_id": 14579,
+          "name": "Mystical Mentor",
+          "required_level": 250,
+          "tier_index": 1
+        },
+        {
+          "upgrade_id": 14580,
+          "name": "Finite Fellowship",
+          "required_level": 250,
+          "tier_index": 1
+        }
+      ]
+    },
+    "148": {
+      "name": "Diana",
+      "default": [
+        14796
+      ],
+      "options": [
+        {
+          "upgrade_id": 14791,
+          "name": "Inspire: Acrobatic Assault",
+          "required_level": 60,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 14792,
+          "name": "Inspire: Modest Might",
+          "required_level": 60,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 14793,
+          "name": "Inspire: Fledgling Fury",
+          "required_level": 60,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 14796,
+          "name": "Ensemble Cast",
+          "required_level": 130,
+          "tier_index": 1
+        },
+        {
+          "upgrade_id": 14797,
+          "name": "Spotlight Episode",
+          "required_level": 130,
+          "tier_index": 1
+        }
+      ]
+    },
+    "149": {
+      "name": "Ravengard",
+      "default": [
+        15033
+      ],
+      "options": [
+        {
+          "upgrade_id": 15031,
+          "name": "Lead The Charge",
+          "required_level": 200,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 15032,
+          "name": "Strength of Baldur's Gate",
+          "required_level": 200,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 15033,
+          "name": "Legacy of Ravengard",
+          "required_level": 200,
+          "tier_index": 0
+        }
+      ]
+    },
+    "150": {
+      "name": "Aeon",
+      "default": [
+        15200
+      ],
+      "options": [
+        {
+          "upgrade_id": 15199,
+          "name": "Immediate Infiltration",
+          "required_level": 150,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 15200,
+          "name": "Play the Long Game",
+          "required_level": 150,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 15201,
+          "name": "Artificer's Arsenal",
+          "required_level": 250,
+          "tier_index": 1
+        },
+        {
+          "upgrade_id": 15202,
+          "name": "Spy Network",
+          "required_level": 250,
+          "tier_index": 1
+        },
+        {
+          "upgrade_id": 15203,
+          "name": "Powerful Patronage",
+          "required_level": 250,
+          "tier_index": 1
+        }
+      ]
+    },
+    "151": {
+      "name": "Umberto",
+      "default": [
+        15053
+      ],
+      "options": [
+        {
+          "upgrade_id": 15052,
+          "name": "Law's Alliance",
+          "required_level": 200,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 15053,
+          "name": "Family of Orphans",
+          "required_level": 200,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 15054,
+          "name": "Call of the Wardens",
+          "required_level": 200,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 15055,
+          "name": "More Bees",
+          "required_level": 400,
+          "tier_index": 1
+        },
+        {
+          "upgrade_id": 15056,
+          "name": "More Clues",
+          "required_level": 400,
+          "tier_index": 1
+        },
+        {
+          "upgrade_id": 15057,
+          "name": "More Damage",
+          "required_level": 400,
+          "tier_index": 1
+        }
+      ]
+    },
+    "152": {
+      "name": "Bobby",
+      "default": [
+        15448
+      ],
+      "options": [
+        {
+          "upgrade_id": 15447,
+          "name": "Stunning Strength",
+          "required_level": 110,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 15448,
+          "name": "Group Charge",
+          "required_level": 110,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 15449,
+          "name": "Not So Low",
+          "required_level": 250,
+          "tier_index": 1
+        },
+        {
+          "upgrade_id": 15450,
+          "name": "Still Growing Up",
+          "required_level": 250,
+          "tier_index": 1
+        },
+        {
+          "upgrade_id": 15451,
+          "name": "Strong Armed",
+          "required_level": 250,
+          "tier_index": 1
+        }
+      ]
+    },
+    "153": {
+      "name": "Kas",
+      "default": [
+        15624
+      ],
+      "options": [
+        {
+          "upgrade_id": 15623,
+          "name": "Kas the Bloody Handed",
+          "required_level": 180,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 15624,
+          "name": "Kas the Betrayer",
+          "required_level": 180,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 15625,
+          "name": "Kas the Destroyer",
+          "required_level": 180,
+          "tier_index": 0
+        }
+      ]
+    },
+    "154": {
+      "name": "Minthara",
+      "default": [
+        15948
+      ],
+      "options": [
+        {
+          "upgrade_id": 15946,
+          "name": "House Matron",
+          "required_level": 250,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 15947,
+          "name": "True Soul",
+          "required_level": 250,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 15948,
+          "name": "Soul Destroyer",
+          "required_level": 250,
+          "tier_index": 0
+        }
+      ]
+    },
+    "155": {
+      "name": "Wren",
+      "default": [
+        15217
+      ],
+      "options": [
+        {
+          "upgrade_id": 15217,
+          "name": "Glitch Form: Dwarf Monk",
+          "required_level": 80,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 15218,
+          "name": "Glitch Form: Tabaxi Barbarian",
+          "required_level": 80,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 15219,
+          "name": "Glitch Form: Warforged Sorcerer",
+          "required_level": 80,
+          "tier_index": 0
+        }
+      ]
+    },
+    "156": {
+      "name": "Halsin",
+      "default": [
+        15966
+      ],
+      "options": [
+        {
+          "upgrade_id": 15966,
+          "name": "Harbinger of the Wilds",
+          "required_level": 240,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 15967,
+          "name": "Sage of the Transformed",
+          "required_level": 240,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 15968,
+          "name": "Protector of the Grove",
+          "required_level": 240,
+          "tier_index": 0
+        }
+      ]
+    },
+    "157": {
+      "name": "Eric",
+      "default": [
+        16135
+      ],
+      "options": [
+        {
+          "upgrade_id": 16134,
+          "name": "Trait: Cautious",
+          "required_level": 30,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 16135,
+          "name": "Trait: Brave",
+          "required_level": 30,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 16136,
+          "name": "Trait: Sarcastic",
+          "required_level": 30,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 16137,
+          "name": "Unassuming Force",
+          "required_level": 470,
+          "tier_index": 1
+        },
+        {
+          "upgrade_id": 16138,
+          "name": "Youthful Valor",
+          "required_level": 470,
+          "tier_index": 1
+        },
+        {
+          "upgrade_id": 16139,
+          "name": "Treasure Hunters",
+          "required_level": 470,
+          "tier_index": 1
+        }
+      ]
+    },
+    "158": {
+      "name": "Kalix",
+      "default": [
+        16522
+      ],
+      "options": [
+        {
+          "upgrade_id": 16521,
+          "name": "Strength in Numbers",
+          "required_level": 240,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 16522,
+          "name": "Creative Camouflage",
+          "required_level": 240,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 16523,
+          "name": "One For You, One For Me",
+          "required_level": 240,
+          "tier_index": 0
+        }
+      ]
+    },
+    "159": {
+      "name": "Volo",
+      "default": [
+        16556
+      ],
+      "options": [
+        {
+          "upgrade_id": 16554,
+          "name": "Volo's Guide to Spirits and Specters",
+          "required_level": 150,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 16555,
+          "name": "Volo's Guide to Brain-Eating Tadpoles",
+          "required_level": 150,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 16556,
+          "name": "Volo's Guide to All Things Magical",
+          "required_level": 150,
+          "tier_index": 0
+        }
+      ]
+    },
+    "160": {
+      "name": "Sheila",
+      "default": [
+        16543
+      ],
+      "options": [
+        {
+          "upgrade_id": 16541,
+          "name": "Meekly Meeting",
+          "required_level": 90,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 16542,
+          "name": "Youthful Allies",
+          "required_level": 90,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 16543,
+          "name": "A Rosy Outlook",
+          "required_level": 90,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 16544,
+          "name": "Frightening Strike",
+          "required_level": 200,
+          "tier_index": 1
+        },
+        {
+          "upgrade_id": 16545,
+          "name": "Enraging Strike",
+          "required_level": 200,
+          "tier_index": 1
+        },
+        {
+          "upgrade_id": 16546,
+          "name": "Confusing Strike",
+          "required_level": 200,
+          "tier_index": 1
+        }
+      ]
+    },
+    "161": {
+      "name": "Grimm",
+      "default": [
+        16890
+      ],
+      "options": [
+        {
+          "upgrade_id": 16890,
+          "name": "Giant Hunter",
+          "required_level": 200,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 16891,
+          "name": "Giant Taunter",
+          "required_level": 200,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 16892,
+          "name": "Giant Profits",
+          "required_level": 200,
+          "tier_index": 0
+        }
+      ]
+    },
+    "162": {
+      "name": "Vlithryn",
+      "default": [
+        17049
+      ],
+      "options": [
+        {
+          "upgrade_id": 17048,
+          "name": "Who Else Would Save Them?",
+          "required_level": 80,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 17049,
+          "name": "Help the Unfortunate",
+          "required_level": 80,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 17050,
+          "name": "Spreading the Word",
+          "required_level": 80,
+          "tier_index": 0
+        }
+      ]
+    },
+    "163": {
+      "name": "Hank",
+      "default": [
+        17086
+      ],
+      "options": [
+        {
+          "upgrade_id": 17083,
+          "name": "Heart of Heroes",
+          "required_level": 110,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 17084,
+          "name": "Arrow Alliance",
+          "required_level": 110,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 17085,
+          "name": "Unyielding Unity",
+          "required_level": 110,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 17086,
+          "name": "Tactical Advantage",
+          "required_level": 230,
+          "tier_index": 1
+        },
+        {
+          "upgrade_id": 17087,
+          "name": "Dragon Slayer",
+          "required_level": 230,
+          "tier_index": 1
+        }
+      ]
+    },
+    "164": {
+      "name": "Tess",
+      "default": [
+        17321
+      ],
+      "options": [
+        {
+          "upgrade_id": 17321,
+          "name": "The Fallback Plan",
+          "required_level": 150,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 17322,
+          "name": "Eyes on the Horizon",
+          "required_level": 150,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 17323,
+          "name": "Rogues' Gallery",
+          "required_level": 150,
+          "tier_index": 0
+        }
+      ]
+    },
+    "165": {
+      "name": "Baldric",
+      "default": [
+        17495
+      ],
+      "options": [
+        {
+          "upgrade_id": 17491,
+          "name": "Bargain With Tyr",
+          "required_level": 70,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 17492,
+          "name": "Bargain With Moradin",
+          "required_level": 70,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 17493,
+          "name": "Bargain With Tymora",
+          "required_level": 70,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 17494,
+          "name": "Bargain With Mystra",
+          "required_level": 70,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 17495,
+          "name": "Bargain With Eldath",
+          "required_level": 70,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 17496,
+          "name": "Dark Bargain",
+          "required_level": 150,
+          "tier_index": 1
+        },
+        {
+          "upgrade_id": 17497,
+          "name": "Bargain With Moradin",
+          "required_level": 150,
+          "tier_index": 1
+        },
+        {
+          "upgrade_id": 17498,
+          "name": "Bargain With Tymora",
+          "required_level": 150,
+          "tier_index": 1
+        },
+        {
+          "upgrade_id": 17499,
+          "name": "Bargain With Mystra",
+          "required_level": 150,
+          "tier_index": 1
+        },
+        {
+          "upgrade_id": 17500,
+          "name": "Bargain With Eldath",
+          "required_level": 150,
+          "tier_index": 1
+        },
+        {
+          "upgrade_id": 17501,
+          "name": "Bargain With Tyr",
+          "required_level": 150,
+          "tier_index": 1
+        },
+        {
+          "upgrade_id": 17502,
+          "name": "Dark Bargain",
+          "required_level": 150,
+          "tier_index": 1
+        },
+        {
+          "upgrade_id": 17503,
+          "name": "Bargain With Tymora",
+          "required_level": 150,
+          "tier_index": 1
+        },
+        {
+          "upgrade_id": 17504,
+          "name": "Bargain With Mystra",
+          "required_level": 150,
+          "tier_index": 1
+        },
+        {
+          "upgrade_id": 17505,
+          "name": "Bargain With Eldath",
+          "required_level": 150,
+          "tier_index": 1
+        },
+        {
+          "upgrade_id": 17506,
+          "name": "Bargain With Tyr",
+          "required_level": 150,
+          "tier_index": 1
+        },
+        {
+          "upgrade_id": 17507,
+          "name": "Bargain With Moradin",
+          "required_level": 150,
+          "tier_index": 1
+        },
+        {
+          "upgrade_id": 17508,
+          "name": "Dark Bargain",
+          "required_level": 150,
+          "tier_index": 1
+        },
+        {
+          "upgrade_id": 17509,
+          "name": "Bargain With Mystra",
+          "required_level": 150,
+          "tier_index": 1
+        },
+        {
+          "upgrade_id": 17510,
+          "name": "Bargain With Eldath",
+          "required_level": 150,
+          "tier_index": 1
+        },
+        {
+          "upgrade_id": 17511,
+          "name": "Bargain With Tyr",
+          "required_level": 150,
+          "tier_index": 1
+        },
+        {
+          "upgrade_id": 17512,
+          "name": "Bargain With Moradin",
+          "required_level": 150,
+          "tier_index": 1
+        },
+        {
+          "upgrade_id": 17513,
+          "name": "Bargain With Tymora",
+          "required_level": 150,
+          "tier_index": 1
+        },
+        {
+          "upgrade_id": 17514,
+          "name": "Dark Bargain",
+          "required_level": 150,
+          "tier_index": 1
+        },
+        {
+          "upgrade_id": 17515,
+          "name": "Bargain With Eldath",
+          "required_level": 150,
+          "tier_index": 1
+        },
+        {
+          "upgrade_id": 17516,
+          "name": "Bargain With Tyr",
+          "required_level": 150,
+          "tier_index": 1
+        },
+        {
+          "upgrade_id": 17517,
+          "name": "Bargain With Moradin",
+          "required_level": 150,
+          "tier_index": 1
+        },
+        {
+          "upgrade_id": 17518,
+          "name": "Bargain With Tymora",
+          "required_level": 150,
+          "tier_index": 1
+        },
+        {
+          "upgrade_id": 17519,
+          "name": "Bargain With Mystra",
+          "required_level": 150,
+          "tier_index": 1
+        },
+        {
+          "upgrade_id": 17520,
+          "name": "Dark Bargain",
+          "required_level": 150,
+          "tier_index": 1
+        }
+      ]
+    },
+    "166": {
+      "name": "Cazrin",
+      "default": [
+        17679
+      ],
+      "options": [
+        {
+          "upgrade_id": 17678,
+          "name": "Self Taught",
+          "required_level": 180,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 17679,
+          "name": "Ancestor's Shadow",
+          "required_level": 180,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 17680,
+          "name": "Lost in the Library",
+          "required_level": 180,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 17681,
+          "name": "Signature Smell",
+          "required_level": 240,
+          "tier_index": 1
+        },
+        {
+          "upgrade_id": 17682,
+          "name": "Smell Mastery",
+          "required_level": 240,
+          "tier_index": 1
+        }
+      ]
+    },
+    "167": {
+      "name": "Windfall",
+      "default": [
+        17059
+      ],
+      "options": [
+        {
+          "upgrade_id": 17056,
+          "name": "Red Dragon's Greed",
+          "required_level": 100,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 17057,
+          "name": "Blue Dragon's Spark",
+          "required_level": 100,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 17058,
+          "name": "Green Dragon's Spite",
+          "required_level": 100,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 17059,
+          "name": "Black Dragon's Corrosion",
+          "required_level": 100,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 17060,
+          "name": "White Dragon's Chill",
+          "required_level": 100,
+          "tier_index": 0
+        }
+      ]
+    },
+    "168": {
+      "name": "King of Shadows",
+      "default": [
+        17765
+      ],
+      "options": [
+        {
+          "upgrade_id": 17762,
+          "name": "Master of Pawns",
+          "required_level": 210,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 17763,
+          "name": "Shadow Unleashed",
+          "required_level": 210,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 17764,
+          "name": "Legacy of Illefarn",
+          "required_level": 280,
+          "tier_index": 1
+        },
+        {
+          "upgrade_id": 17765,
+          "name": "Embrace the Shadow Weave",
+          "required_level": 280,
+          "tier_index": 1
+        },
+        {
+          "upgrade_id": 17766,
+          "name": "Rites of Survival",
+          "required_level": 280,
+          "tier_index": 1
+        }
+      ]
+    },
+    "169": {
+      "name": "Skylla",
+      "default": [
+        17850
+      ],
+      "options": [
+        {
+          "upgrade_id": 17848,
+          "name": "Witch's Switch",
+          "required_level": 110,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 17849,
+          "name": "League of Malevolence",
+          "required_level": 110,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 17850,
+          "name": "Withering Ward",
+          "required_level": 110,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 17851,
+          "name": "Green Fire",
+          "required_level": 200,
+          "tier_index": 1
+        },
+        {
+          "upgrade_id": 17852,
+          "name": "Blue Fire",
+          "required_level": 200,
+          "tier_index": 1
+        },
+        {
+          "upgrade_id": 17853,
+          "name": "Violet Fire",
+          "required_level": 200,
+          "tier_index": 1
+        }
+      ]
+    },
+    "170": {
+      "name": "Lark",
+      "default": [
+        18055
+      ],
+      "options": [
+        {
+          "upgrade_id": 18055,
+          "name": "Band of Misfits",
+          "required_level": 170,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 18056,
+          "name": "Center of Attention",
+          "required_level": 170,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 18057,
+          "name": "Path of Nightmares",
+          "required_level": 170,
+          "tier_index": 0
+        }
+      ]
+    },
+    "171": {
+      "name": "Anson",
+      "default": [
+        18475
+      ],
+      "options": [
+        {
+          "upgrade_id": 18474,
+          "name": "Pure of Heart",
+          "required_level": 230,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 18475,
+          "name": "Found Family",
+          "required_level": 230,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 18476,
+          "name": "Never Surrender",
+          "required_level": 230,
+          "tier_index": 0
+        }
+      ]
+    },
+    "172": {
+      "name": "Kyre",
+      "default": [
+        18671
+      ],
+      "options": [
+        {
+          "upgrade_id": 18671,
+          "name": "Complete Control",
+          "required_level": 170,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 18672,
+          "name": "Faster Than Light",
+          "required_level": 170,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 18673,
+          "name": "Pure of Soul",
+          "required_level": 170,
+          "tier_index": 0
+        }
+      ]
+    },
+    "173": {
+      "name": "Raistlin",
+      "default": [
+        18934
+      ],
+      "options": [
+        {
+          "upgrade_id": 18934,
+          "name": "Heroic Mage",
+          "required_level": 130,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 18935,
+          "name": "Reclusive Mage",
+          "required_level": 130,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 18936,
+          "name": "War Mage",
+          "required_level": 130,
+          "tier_index": 0
+        }
+      ]
+    },
+    "174": {
+      "name": "Tasslehoff",
+      "default": [
+        19238
+      ],
+      "options": [
+        {
+          "upgrade_id": 19240,
+          "name": "Map Collector: Pre-Cataclysm",
+          "required_level": 20,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 19241,
+          "name": "Map Collector: Time of Darkness",
+          "required_level": 20,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 19242,
+          "name": "Map Collector: War of the Lance",
+          "required_level": 20,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 19237,
+          "name": "Small Friends",
+          "required_level": 150,
+          "tier_index": 1
+        },
+        {
+          "upgrade_id": 19238,
+          "name": "Fast Friends",
+          "required_level": 150,
+          "tier_index": 1
+        },
+        {
+          "upgrade_id": 19239,
+          "name": "Old Friends",
+          "required_level": 150,
+          "tier_index": 1
+        }
+      ]
+    },
+    "175": {
+      "name": "Laurana",
+      "default": [
+        19354
+      ],
+      "options": [
+        {
+          "upgrade_id": 19354,
+          "name": "Battle Plan: Charge",
+          "required_level": 30,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 19355,
+          "name": "Battle Plan: Outflank",
+          "required_level": 30,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 19356,
+          "name": "Battle Plan: Fortify",
+          "required_level": 30,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 19357,
+          "name": "Lead the Attack",
+          "required_level": 120,
+          "tier_index": 1
+        },
+        {
+          "upgrade_id": 19358,
+          "name": "Protect the Vulnerable",
+          "required_level": 120,
+          "tier_index": 1
+        },
+        {
+          "upgrade_id": 19359,
+          "name": "Wield the Dragonlance",
+          "required_level": 120,
+          "tier_index": 1
+        }
+      ]
+    },
+    "176": {
+      "name": "Trixie",
+      "default": [
+        19692
+      ],
+      "options": [
+        {
+          "upgrade_id": 19692,
+          "name": "Faster, Friends",
+          "required_level": 160,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 19693,
+          "name": "Ultimate Friends",
+          "required_level": 160,
+          "tier_index": 0
+        }
+      ]
+    },
+    "177": {
+      "name": "Van Richten",
+      "default": [
+        19702,
+        19704
+      ],
+      "options": [
+        {
+          "upgrade_id": 19700,
+          "name": "Occult Allies",
+          "required_level": 120,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 19701,
+          "name": "Scholar of Dread",
+          "required_level": 120,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 19702,
+          "name": "Endless Hunt",
+          "required_level": 120,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 19703,
+          "name": "Occult Aid: Cure Wounds",
+          "required_level": 220,
+          "tier_index": 1
+        },
+        {
+          "upgrade_id": 19704,
+          "name": "Occult Aid: Dispel Evil",
+          "required_level": 220,
+          "tier_index": 1
+        },
+        {
+          "upgrade_id": 19705,
+          "name": "Occult Aid: Sanctuary",
+          "required_level": 220,
+          "tier_index": 1
+        }
+      ]
+    }
+  }
+}

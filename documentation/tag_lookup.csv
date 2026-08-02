@@ -1,0 +1,36 @@
+tag,description,group_name
+speed,Snelheid of farming focus,goal
+gold,Gold/favor focus,goal
+favor,Gold/favor focus,goal
+farming,Speed farming focus,goal
+push,Wall push of damage focus,goal
+survival,Tank/heal/sustain focus,goal
+support,Support focus,role
+dps,Carry of damage focus,role
+tank,Tank/frontline focus,role
+healing,Healing focus,role
+control,Control/utility focus,role
+alignment,Alignment-afhankelijk,condition
+adventure-specific,Adventure of enemy-type afhankelijk,condition
+formation-dependent,Formation compositie-afhankelijk,condition
+positional,Positie of adjacency-afhankelijk,condition
+charisma,Stat-threshold afhankelijk,condition
+magic,Magic-count afhankelijk,condition
+mirror,Carry-target afhankelijk,condition
+modron,Automation/modron afhankelijk,system
+roster-dependent,Afhankelijk van owned roster of synergie,condition
+generic,Generieke placeholder-regel,quality
+progression,Algemene progressie-focus,goal
+niche,Niche of setup-afhankelijk,role
+debuff,Debuff-focus,role
+utility,Utility-focus,role
+attack-speed,Attack-speed of cadence-afhankelijk,condition
+scaling,Scaling of endgame focus,role
+endgame,Endgame scaling focus,goal
+shielding,Shielding of protection focus,role
+ranged,Ranged-setup afhankelijk,condition
+self-scaling,Zelfstandige scaling focus,role
+undead,Undead-synergie of encounter,condition
+variants,Variant-afhankelijk,condition
+crit,Crit of hit-rate afhankelijk,condition
+synergy,Synergie-afhankelijk,condition
