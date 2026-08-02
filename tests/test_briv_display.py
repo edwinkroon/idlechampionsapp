@@ -30,6 +30,39 @@ class BrivDisplayTests(unittest.TestCase):
         self.assertTrue(extras["briv_in_formation"])
         self.assertEqual(extras["briv_sprint_stacks"], 4200)
 
+    def test_briv_not_detected_from_stale_hero_in_seats(self) -> None:
+        instance = {
+            "game_instance_id": 1,
+            "formation": [52, 91, 125, 83, 75, 47, 59, 139, 148],
+            "hero_in_seats": {"5": 58, "4": 52},
+            "formation_saves_v2": [{"name": "gemfarm", "formation": [58, 1, 2]}],
+            "stats": {"briv_sprint_stacks": "1699"},
+        }
+        extras = parse_instance_extras(instance, None, party_index=1)
+        self.assertFalse(extras["briv_in_formation"])
+        self.assertIsNone(extras["briv_sprint_stacks"])
+
+    def test_briv_not_detected_from_shared_roster_game_instance_zero(self) -> None:
+        instance = {
+            "game_instance_id": 1,
+            "formation": [-1, -1, -1],
+            "hero_in_seats": {},
+            "stats": {},
+        }
+        payload = {
+            "details": {
+                "heroes": [
+                    {
+                        "hero_id": 58,
+                        "game_instance_id": 0,
+                        "in_seat": 1,
+                    }
+                ]
+            }
+        }
+        extras = parse_instance_extras(instance, payload, party_index=1)
+        self.assertFalse(extras["briv_in_formation"])
+
     def test_briv_stacks_default_zero_when_in_formation(self) -> None:
         instance = {
             "game_instance_id": 2,

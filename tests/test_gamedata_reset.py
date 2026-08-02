@@ -205,7 +205,7 @@ class GoalRunHistoryTests(_IsolatedGoalRunHistoryTestCase):
     def test_skips_reset_when_goal_not_reached(self) -> None:
         tracker = StatsTracker()
         tracker.add_snapshot(
-            _snap(_party(0, 250, 100, seconds_since_reset=3600, adventure_area_goal=300))
+            _snap(_party(0, 120, 100, seconds_since_reset=3600, adventure_area_goal=300))
         )
         tracker.add_snapshot(_snap(_party(0, 1, 0, seconds_since_reset=60, adventure_area_goal=300)))
 
@@ -255,6 +255,29 @@ class GoalRunHistoryTests(_IsolatedGoalRunHistoryTestCase):
         self.assertEqual(len(history), 1)
         self.assertEqual(history[0].area_goal, 225)
         self.assertEqual(history[0].peak_area, 205)
+
+    def test_records_goal_run_on_reset_after_large_briv_poll_gap(self) -> None:
+        """Last API poll can be well below goal when Briv skips into Modron reset."""
+        tracker = StatsTracker()
+        tracker.add_snapshot(
+            _snap(
+                _party(
+                    1,
+                    150,
+                    100,
+                    seconds_since_reset=480,
+                    modron_area_goal=225,
+                )
+            )
+        )
+        tracker.add_snapshot(
+            _snap(_party(1, 45, 0, seconds_since_reset=20, modron_area_goal=225))
+        )
+
+        history = tracker.goal_run_history(1)
+        self.assertEqual(len(history), 1)
+        self.assertAlmostEqual(history[0].duration_sec, 480.0)
+        self.assertEqual(history[0].peak_area, 150)
 
     def test_records_goal_run_after_thellora_reset_to_area_45(self) -> None:
         tracker = StatsTracker()
@@ -352,8 +375,9 @@ class GoalRunHistoryTests(_IsolatedGoalRunHistoryTestCase):
             format_duration=lambda sec: str(sec),
         )
         self.assertIn("275", display.summary or "")
+        self.assertIn("nog geen voltooide run", display.summary or "")
+        self.assertNotIn("geschat", display.summary or "")
         self.assertEqual(display.extra, ())
-
 
 class GoalRunPersistenceTests(_IsolatedGoalRunHistoryTestCase):
     def test_persists_completed_goal_runs(self) -> None:

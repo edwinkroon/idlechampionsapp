@@ -6,7 +6,7 @@ import json
 import unittest
 from pathlib import Path
 
-from ic_gamedata.formation_seats import active_formation_seats
+from ic_gamedata.formation_seats import active_formation_seats, formation_layout_fingerprint
 
 
 class FormationSeatsTests(unittest.TestCase):
@@ -93,6 +93,52 @@ class FormationSeatsTests(unittest.TestCase):
         self.assertEqual(seats, frozenset({1, 2, 12}))
         self.assertNotIn(5, seats)
         self.assertNotIn(7, seats)
+
+    def test_layout_fingerprint_tracks_live_grid_swaps(self) -> None:
+        payload = {
+            "details": {
+                "active_game_instance_id": 1,
+                "game_instances": [
+                    {
+                        "game_instance_id": 1,
+                        "hero_in_seats": {"3": 3, "8": 164, "9": 168},
+                        "formation": [3, 164, 168],
+                    }
+                ],
+                "heroes": [],
+            }
+        }
+        before = formation_layout_fingerprint(payload)
+        self.assertEqual(before, ((3, 3), (8, 164), (9, 168)))
+
+        # Follow a tip: swap Nayeli (3) with Tess (8)
+        inst = payload["details"]["game_instances"][0]
+        inst["formation"] = [164, 3, 168]
+        inst["hero_in_seats"] = {"3": 164, "8": 3, "9": 168}
+        after = formation_layout_fingerprint(payload)
+        self.assertEqual(after, ((3, 164), (8, 3), (9, 168)))
+        self.assertNotEqual(before, after)
+
+    def test_layout_fingerprint_ignores_benched_seat_holders(self) -> None:
+        payload = {
+            "details": {
+                "active_game_instance_id": 1,
+                "game_instances": [
+                    {
+                        "game_instance_id": 1,
+                        "hero_in_seats": {"3": 3, "8": 164, "9": 168},
+                        "formation": [164, 168, -1],
+                    }
+                ],
+                "heroes": [],
+            }
+        }
+        fp = formation_layout_fingerprint(payload)
+        self.assertEqual(fp, ((8, 164), (9, 168)))
+        self.assertNotIn((3, 3), fp)
+
+    def test_layout_fingerprint_empty_payload(self) -> None:
+        self.assertIsNone(formation_layout_fingerprint({}))
 
 
 if __name__ == "__main__":

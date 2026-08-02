@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 import time
+from typing import TYPE_CHECKING, Any
 
-from PySide6.QtCore import Qt, QThreadPool, Signal
+from PySide6.QtCore import Qt, QThreadPool
 from PySide6.QtWidgets import (
     QFrame,
     QHBoxLayout,
@@ -15,6 +16,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from ic_gamedata.advice_fingerprint import party_id_from_payload
 from ic_ui.tabs.dashboard_tab import DashboardTab
 from ic_ui.widgets.advisor_controls import AdvisorGoalContextBar
 from ic_ui.widgets.advisor_widgets import (
@@ -36,56 +38,41 @@ from ic_ui.widgets.advisor_widgets import (
 )
 from ic_ui.workers.advisor import AdvisorRunnable
 
-
-def party_id_from_payload(payload: dict | None) -> int | None:
-    if not isinstance(payload, dict):
-        return None
-    details = payload.get("details")
-    if not isinstance(details, dict):
-        return None
-    raw = details.get("active_game_instance_id")
-    if raw is None or isinstance(raw, bool):
-        return None
-    try:
-        return int(float(str(raw).strip()))
-    except (TypeError, ValueError):
-        return None
+if TYPE_CHECKING:
+    from ic_core.game_data_service import GameDataService, SnapshotEnvelope
 
 
 class AdvisorTab(QWidget):
     """Analyze party composition, seats, and formation."""
 
-    api_poll_requested = Signal(bool)
-
-    def __init__(self, dashboard_tab: DashboardTab, parent: QWidget | None = None) -> None:
+    def __init__(
+        self,
+        dashboard_tab: DashboardTab,
+        parent: QWidget | None = None,
+        *,
+        data_service: GameDataService | None = None,
+    ) -> None:
         super().__init__(parent)
         self._dashboard_tab = dashboard_tab
+        self._data = data_service
         self._last_payload = None
         self._last_goal = "bud"
         self._last_context = "campaign"
         self._last_party_id: int | None = None
-        self._target_party_id: int | None = None
-        self._last_formation_empty = False
+        self._last_advice_fp: tuple[Any, ...] | None = None
         self._feat_open: dict[int, bool] = {}
         self._analysing = False
         self._pending_auto_refresh = False
         self._pending_analysis: tuple[dict, str | None, bool, bool] | None = None
         self._current_party_changed = False
         self._has_results = False
+        self._worker_signals = None
         self._seat_card_frames: dict[int, QFrame] = {}
         self._build_ui()
 
     @property
     def last_party_id(self) -> int | None:
         return self._last_party_id
-
-    @property
-    def target_party_id(self) -> int | None:
-        return self._target_party_id
-
-    @property
-    def last_formation_empty(self) -> bool:
-        return self._last_formation_empty
 
     @property
     def has_results(self) -> bool:
@@ -95,24 +82,69 @@ class AdvisorTab(QWidget):
     def analysing(self) -> bool:
         return self._analysing
 
-    def refresh_credentials(self) -> bool:
-        return self._dashboard_tab.refresh_credentials_from_log()
+    def on_snapshot(self, envelope: SnapshotEnvelope) -> None:
+        """React to GameDataService updates — refresh when advice-relevant data changes."""
+        force = "advisor" in envelope.force_consumers
+        fp = envelope.advice_fp
+        first = not self._has_results and envelope.payload is not None
+        changed = (
+            envelope.payload is not None
+            and fp is not None
+            and fp != self._last_advice_fp
+        )
+        # Degraded timer polls keep cache; only re-analyze on force/change/first fill.
+        if envelope.degraded and not (force or first or changed):
+            if envelope.err and self._has_results:
+                self._status.setText(
+                    f"{self._status.text().split(' · ')[0]} · {envelope.err}"
+                    if self._status.text()
+                    else envelope.err
+                )
+            return
+        if not (force or first or changed):
+            return
+        if envelope.payload is None:
+            if force and not envelope.auto_refresh:
+                self.notify_fetch_no_payload(envelope.err, auto_refresh=False)
+            return
+        party_changed = (
+            self._last_party_id is not None
+            and envelope.party_id is not None
+            and envelope.party_id != self._last_party_id
+        )
+        err = envelope.err
+        if envelope.quality and envelope.quality.warnings:
+            warn = envelope.quality.warnings[0]
+            err = f"{err} · {warn}" if err else warn
+        self.start_analysis(
+            envelope.payload,
+            err,
+            auto_refresh=envelope.auto_refresh or not force,
+            party_changed=party_changed,
+            advice_fp=fp,
+        )
 
     def request_analyze(self, *, auto_refresh: bool = False) -> None:
-        if self._analysing:
+        if self._data is None:
+            self._status.setText("Geen data-service — herstart de app.")
             return
-        if not self.refresh_credentials():
+        if not self._data.refresh_credentials() and self._data.credentials is None:
             if not auto_refresh:
                 self._status.setText("Geen API-credentials. Ga naar Dashboard → Opnieuw zoeken.")
             return
         if not auto_refresh:
             self._btn_analyze.setEnabled(False)
             self._status.setText("Analyseren…")
-        self.api_poll_requested.emit(auto_refresh)
+        self._data.request_poll(
+            reason="advisor",
+            force_consumers={"advisor", "specializations"},
+            auto_refresh=auto_refresh,
+        )
 
     def notify_fetch_inflight(self, *, manual_request: bool) -> None:
         if manual_request:
-            self._status.setText("Data wordt al opgehaald…")
+            self._btn_analyze.setEnabled(True)
+            self._status.setText("Data wordt al opgehaald… Probeer zo opnieuw of wacht op de poll.")
 
     def notify_fetch_credentials_error(self) -> None:
         self._on_error("Geen API-credentials.")
@@ -140,26 +172,38 @@ class AdvisorTab(QWidget):
         *,
         auto_refresh: bool,
         party_changed: bool = False,
+        advice_fp: tuple[Any, ...] | None = None,
     ) -> None:
         if self._analysing:
             self._pending_analysis = (payload, err, auto_refresh, party_changed)
+            if advice_fp is not None:
+                self._last_advice_fp = advice_fp
             return
+        if advice_fp is not None:
+            self._last_advice_fp = advice_fp
         goal = self._controls.goal()
         context = self._controls.context()
         include_formation = self._controls.include_formation()
         self._pending_auto_refresh = auto_refresh
         self._current_party_changed = party_changed
-        self._target_party_id = party_id_from_payload(payload)
         self._analysing = True
+        target = party_id_from_payload(payload)
         if party_changed:
-            party_txt = (
-                f"party {self._target_party_id}"
-                if self._target_party_id is not None
-                else "nieuwe party"
-            )
+            party_txt = f"party {target}" if target is not None else "nieuwe party"
             self._status.setText(f"Party gewisseld ({party_txt}) — analyseren…")
             self._btn_analyze.setEnabled(False)
-        worker = AdvisorRunnable(goal, context, include_formation, payload, err)
+        elif not auto_refresh:
+            self._status.setText("Analyseren…")
+            self._btn_analyze.setEnabled(False)
+        worker = AdvisorRunnable(
+            goal,
+            context,
+            include_formation,
+            payload,
+            err,
+            signals_parent=self,
+        )
+        self._worker_signals = worker.signals
         worker.signals.done.connect(self._on_done)
         worker.signals.error.connect(self._on_error)
         QThreadPool.globalInstance().start(worker)
@@ -213,6 +257,7 @@ class AdvisorTab(QWidget):
         self.start_analysis(payload, err, auto_refresh=auto_refresh, party_changed=party_changed)
 
     def _on_done(self, result) -> None:
+        self._worker_signals = None
         payload, report, err = result
         auto_refresh = self._pending_auto_refresh
         party_id = party_id_from_payload(payload)
@@ -223,8 +268,6 @@ class AdvisorTab(QWidget):
         )
         self._last_payload = payload
         self._last_party_id = party_id
-        self._target_party_id = party_id
-        self._last_formation_empty = not bool(report.formation_heroes)
         self._last_goal = report.goal
         self._last_context = report.context
         self._analysing = False
@@ -243,6 +286,7 @@ class AdvisorTab(QWidget):
         self._schedule_pending_analysis()
 
     def _on_error(self, msg: str) -> None:
+        self._worker_signals = None
         auto_refresh = self._pending_auto_refresh
         self._analysing = False
         self._btn_analyze.setEnabled(True)

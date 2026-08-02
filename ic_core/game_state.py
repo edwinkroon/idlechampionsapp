@@ -95,8 +95,11 @@ class GameStateService(QObject):
             self.last_api_snap = effective_api
         if snap is not None:
             self.last_update = time.time()
-            if active and self.tracker is not None:
-                if mem_area is not None or mem_gems is not None:
+            # Always feed the session tracker from API polls so Modron doel-runs
+            # are measured even if the dashboard "session" toggle lagged.
+            self.load_tracker()
+            if self.tracker is not None:
+                if active and (mem_area is not None or mem_gems is not None):
                     self.tracker.add_memory_area(
                         mem_area,
                         gems=mem_gems,
@@ -137,9 +140,16 @@ class GameStateService(QObject):
         """Return api/memory/session label and color pairs."""
         from ic_ui.theme import STATUS_IDLE, SUCCESS, WARN
 
+        detail_l = (self.api_detail or "").lower()
         if not credentials_ok:
             api_text, api_color = "API: geen credentials", WARN
-        elif "ok" in self.api_detail.lower() or "log" in self.api_detail.lower():
+        elif "timeout" in detail_l or "netwerkfout" in detail_l or "cache" in detail_l:
+            api_text, api_color = f"API: {self.api_detail}", WARN
+        elif "success=false" in detail_l or "credentials verlopen" in detail_l:
+            api_text, api_color = f"API: {self.api_detail}", WARN
+        elif "formation" in detail_l or "formatie" in detail_l or "in_seat" in detail_l:
+            api_text, api_color = f"API: {self.api_detail}", WARN
+        elif "ok" in detail_l or "log" in detail_l:
             api_text, api_color = f"API: {self.api_detail or 'ok'}", SUCCESS
         elif self.api_detail:
             api_text, api_color = f"API: {self.api_detail}", WARN

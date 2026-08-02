@@ -17,9 +17,11 @@ class SpecializationsRunnable(QRunnable):
         context: str,
         payload: dict,
         err: str | None = None,
+        *,
+        signals_parent: QObject | None = None,
     ) -> None:
         super().__init__()
-        self.signals = SpecializationsSignals()
+        self.signals = SpecializationsSignals(signals_parent)
         self._goal = goal
         self._context = context
         self._payload = payload

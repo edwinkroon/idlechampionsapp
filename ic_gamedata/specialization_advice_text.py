@@ -20,6 +20,8 @@ _FORMATION_REASONS: tuple[tuple[str, str], ...] = (
     ("melee-aanvallers → Pact of the Blade", "Deze keuze wordt gebruikt omdat de actieve formatie vooral melee-aanvallers heeft; Pact of the Blade versterkt Folk Hero op melee champions."),
     ("multiplicatief →", "Deze keuze volgt de qualified champions × percentage-regel uit het spel: elke qualified champion vermenigvuldigt de buff, en de optie met de hoogste totale multiplier wint."),
     ("qualified ×", "Deze keuze volgt de qualified champions × percentage-regel: de specialization met de hoogste score wint."),
+    ("More Damage (snel power)", "Deze keuze is Umberto's snelle power-spec: More Damage versterkt Detective's Entourage meteen (Gaarawarr)."),
+    ("More Bees (tank-spec)", "Deze keuze is Umberto's tank-spec: More Bees versterkt Beehive Barrage tegen aanvallende enemies."),
     ("champions achter KoS → Master of Pawns", "Deze keuze wordt gebruikt omdat meerdere champions in de twee kolommen achter King of Shadows staan; Master of Pawns versterkt Power of the King voor hen."),
     ("KoS als carry / weinig party-buff → Shadow Unleashed", "Deze keuze wordt gebruikt omdat King of Shadows vooral zelf damage draait of weinig allies achter hem heeft; Shadow Unleashed versterkt Phase Three: The Warrior."),
     ("relevante affiliatiegenoten", "Deze keuze wordt gebruikt omdat meerdere Acq Inc-, C-Team- of Waffle Crew-champions in de actieve formatie staan."),

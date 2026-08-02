@@ -21,31 +21,26 @@ def _hero_in_formation(
     *,
     party_index: int | None = None,
 ) -> bool:
+    """True when the hero is on the live formation board for this party.
+
+    Prefer ``formation`` over stale ``hero_in_seats`` / saved loadouts. Do not
+    treat ``formation_saves_v2`` as currently deployed.
+    """
+    formation_ids: list[int] = []
     formation = instance.get("formation")
     if isinstance(formation, list):
         for raw in formation:
             hid = _parse_int(raw)
-            if hid is not None and hid > 0 and hid == hero_id:
-                return True
+            if hid is not None and hid > 0:
+                formation_ids.append(hid)
+    if formation_ids:
+        return hero_id in formation_ids
 
     seats = instance.get("hero_in_seats")
     if isinstance(seats, dict):
         for raw in seats.values():
             if _parse_int(raw) == hero_id:
                 return True
-
-    saves = instance.get("formation_saves_v2")
-    if isinstance(saves, list):
-        for save in saves:
-            if not isinstance(save, dict):
-                continue
-            grid = save.get("formation")
-            if not isinstance(grid, list):
-                continue
-            for raw in grid:
-                hid = _parse_int(raw)
-                if hid is not None and hid > 0 and hid == hero_id:
-                    return True
 
     if payload is not None and party_index is not None:
         details = payload.get("details")
@@ -55,10 +50,12 @@ def _hero_in_formation(
                     continue
                 if _parse_int(hero.get("hero_id")) != hero_id:
                     continue
-                if hero.get("in_seat") not in (1, "1", True):
+                # ``in_seat`` is the seat number; 0 / missing means benched.
+                seat = _parse_int(hero.get("in_seat"))
+                if seat is None or seat <= 0:
                     continue
                 game_id = _parse_int(hero.get("game_instance_id"))
-                if game_id is None or game_id <= 0 or game_id == party_index:
+                if game_id == party_index:
                     return True
 
     return False

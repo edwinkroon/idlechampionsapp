@@ -259,7 +259,7 @@ def merge_party_snapshots(primary: PartySnapshot, secondary: PartySnapshot) -> P
         time_warps_used=time_warps,
         briv_sprint_stacks=briv_stacks,
         briv_steelbones_stacks=steelbones,
-        briv_in_formation=primary.briv_in_formation or secondary.briv_in_formation,
+        briv_in_formation=primary.briv_in_formation,
         active_buffs_text=primary.active_buffs_text or secondary.active_buffs_text,
     )
 

@@ -156,3 +156,45 @@ def active_formation_seats(payload: dict[str, Any]) -> tuple[int | None, frozens
         return active_id, frozenset(sorted(seat_by_hero.values()))
 
     return active_id, frozenset()
+
+
+def formation_layout_fingerprint(
+    payload: dict[str, Any],
+) -> tuple[tuple[int, int], ...] | None:
+    """Stable ``(seat, hero_id)`` pairs for the active party's live board.
+
+    Used by the UI to re-run party advisor when champions are swapped/benched
+    without a party change. Prefers the live ``formation`` grid; falls back to
+    ``in_seat`` flags when the grid is empty. Returns ``None`` when there is no
+    active instance; an empty tuple when the board has no champions.
+    """
+    details = payload.get("details")
+    if not isinstance(details, dict):
+        return None
+    active_id, instance = _active_instance(payload)
+    if instance is None:
+        return None
+
+    seat_by_hero = _seat_by_hero(instance)
+    hero_ids = _formation_hero_ids(instance.get("formation"))
+    if not hero_ids:
+        hero_ids = _formation_hero_ids(details.get("formation"))
+
+    if hero_ids:
+        pairs = [(seat_by_hero.get(hid, 0), hid) for hid in hero_ids]
+        return tuple(sorted(pairs))
+
+    pairs = []
+    for hero in details.get("heroes") or []:
+        if not isinstance(hero, dict):
+            continue
+        if hero.get("in_seat") not in (1, "1", True):
+            continue
+        hero_id = _parse_int(hero.get("hero_id"))
+        game_id = _parse_int(hero.get("game_instance_id"))
+        if hero_id is None:
+            continue
+        if not _hero_belongs_to_party(game_id, active_id):
+            continue
+        pairs.append((seat_by_hero.get(hero_id, 0), hero_id))
+    return tuple(sorted(pairs))

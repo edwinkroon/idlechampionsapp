@@ -7,12 +7,10 @@ from dataclasses import dataclass, field
 
 from ic_gamedata.log_parser import PartySnapshot
 from ic_gamedata.stats_models import (
-    GOAL_COMPLETION_AREA_TOLERANCE,
     GOAL_PEAK_SANITY_MARGIN,
     GOAL_RUN_DURATION_MISMATCH_SEC,
     MAX_PLAUSIBLE_GOAL_RUN_SEC,
     PARTY_INACTIVE_DURATION_THRESHOLD_SEC,
-    _plausible_peak_for_goal,
 )
 from ic_gamedata.stats_rates import _MetricSample
 
@@ -117,8 +115,9 @@ def _goal_completion_margin(goal: int, *, on_reset: bool) -> int:
     if not on_reset:
         # Live near-goal recording (same as previous ``area >= goal - 10``).
         return 10
-    # Briv (and API poll gaps) often skip the exact goal area before reset lands.
-    return max(10, min(50, max(20, goal // 8)))
+    # Briv farms often skip far past the last polled area before Modron lands.
+    # Keep this wide enough for poll gaps, but below "clearly abandoned" peaks.
+    return max(80, min(150, goal // 2))
 
 
 def _goal_run_completed(state: PartyTrackState, *, on_reset: bool = False) -> bool:
@@ -127,14 +126,15 @@ def _goal_run_completed(state: PartyTrackState, *, on_reset: bool = False) -> bo
         return False
     margin = _goal_completion_margin(goal, on_reset=on_reset)
     peak = _segment_peak_for_state(state)
-    if peak is not None:
-        if peak + margin >= goal and _plausible_peak_for_goal(peak, goal):
-            return True
-    # API/memory polls can skip the exact goal area before Modron reset.
     prev_area = state.api_latest.current_area
-    if prev_area is not None and prev_area + margin >= goal:
+    candidates = [value for value in (peak, prev_area) if value is not None]
+    if not candidates:
+        return False
+    best = max(candidates)
+    # At or past the goal always counts (Briv overshoot / noisy peak reads).
+    if best >= goal:
         return True
-    return False
+    return best + margin >= goal
 
 
 def _trustworthy_memory_area(state: PartyTrackState, area: int) -> bool:

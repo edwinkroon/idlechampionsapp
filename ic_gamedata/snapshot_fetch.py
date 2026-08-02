@@ -33,7 +33,7 @@ def fetch_merged_snapshot(
     err = None
     api_detail = ""
 
-    if log_path is not None:
+    if log_path is not None and credentials is None:
         fresh = extract_credentials_from_log(log_path)
         if fresh is not None:
             credentials = fresh

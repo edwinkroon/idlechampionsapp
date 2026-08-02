@@ -43,7 +43,7 @@
     "174": "Tasslehoff: War of the Lance + Old Friends",
     "164": "Tess: dynamic qualified × pct (Fallback/Ranged/Rogue)",
     "168": "King of Shadows: Master of Pawns + Embrace the Shadow Weave (dynamic override)",
-    "151": "Umberto: dynamic qualified × pct (Lawful/Unaffiliated/Ranger-Druid)",
+    "151": "Umberto: tier0 qualified × pct (Lawful/Unaffiliated/Ranger-Druid); tier1 More Damage (More Bees if solo front tank)",
     "166": "Cazrin: dynamic Self Taught vs Ancestor's Shadow (BUD/default → Ancestor's Shadow)"
   }
 }

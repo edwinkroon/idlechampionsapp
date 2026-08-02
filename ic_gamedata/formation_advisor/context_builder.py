@@ -43,7 +43,10 @@ def build_formation_layout_context(
     instance = _active_instance(payload) or {}
     adventure_id = _parse_int(instance.get("current_adventure_id"))
 
+    # Only champions on the live board. ``hero_in_seats`` can still list seat
+    # holders who are benched / not placed — never promote those into active.
     seat_by_hero: dict[int, int] = {}
+    formation_ids = {hero.hero_id for hero in formation}
     for hero in formation:
         if hero.seat is not None:
             seat_by_hero[hero.hero_id] = hero.seat
@@ -53,7 +56,12 @@ def build_formation_layout_context(
         for seat_raw, hero_raw in hero_in_seats.items():
             seat = _parse_int(seat_raw)
             hero_id = _parse_int(hero_raw)
-            if seat is not None and hero_id is not None and hero_id > 0:
+            if (
+                seat is not None
+                and hero_id is not None
+                and hero_id > 0
+                and hero_id in formation_ids
+            ):
                 seat_by_hero.setdefault(hero_id, seat)
 
     stats = instance.get("stats") if isinstance(instance.get("stats"), dict) else {}

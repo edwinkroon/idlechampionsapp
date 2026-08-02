@@ -188,6 +188,45 @@ class FormationAdvisorTests(unittest.TestCase):
         )
         self.assertEqual(report.formation_insights, ())
 
+    def test_context_ignores_benched_hero_in_seats(self) -> None:
+        """Stale seat holders must not get buffer/swap tips."""
+        formation = (
+            _hero(164, "Tess", 8, roles=("support",), tags=("buffer",)),
+            _hero(168, "King of Shadows", 9, roles=("dps", "tank", "support"), tags=("buffer",)),
+        )
+        payload = {
+            "details": {
+                "active_game_instance_id": 1,
+                "game_instances": [
+                    {
+                        "game_instance_id": 1,
+                        "hero_in_seats": {
+                            "3": 3,  # Nayeli listed but not on the board
+                            "8": 164,
+                            "9": 168,
+                        },
+                        "formation": [164, 168, -1],
+                        "stats": {"this_reset_highest_damage_dealt_hero_id": 168},
+                    }
+                ],
+                "heroes": [
+                    {"hero_id": 3, "in_seat": 0, "game_instance_id": 1, "level": 100, "owned": 1},
+                    {"hero_id": 164, "in_seat": 1, "game_instance_id": 1, "level": 100, "owned": 1},
+                    {"hero_id": 168, "in_seat": 1, "game_instance_id": 1, "level": 100, "owned": 1},
+                ],
+            }
+        }
+        ctx = build_formation_layout_context(
+            payload,
+            formation,
+            goal="bud",
+            context="campaign",
+        )
+        self.assertNotIn(3, ctx.active_hero_ids)
+        self.assertEqual(ctx.party_size, 2)
+        insights = evaluate_formation_rules(ctx)
+        self.assertFalse(any(i.hero_id == 3 or "Nayeli" in i.detail for i in insights))
+
 
 if __name__ == "__main__":
     unittest.main()

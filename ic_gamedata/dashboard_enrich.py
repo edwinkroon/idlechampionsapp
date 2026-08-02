@@ -97,7 +97,7 @@ def enrich_party_for_dashboard(
                 tracked_area=tracked.current_area,
                 api_area=api_party.current_area,
             ),
-            briv_in_formation=api_party.briv_in_formation or tracked.briv_in_formation,
+            briv_in_formation=api_party.briv_in_formation,
             active_buffs_text=api_party.active_buffs_text or tracked.active_buffs_text,
             gems_this_reset=api_party.gems_this_reset
             if api_party.gems_this_reset is not None

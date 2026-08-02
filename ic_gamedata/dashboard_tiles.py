@@ -105,14 +105,14 @@ def build_party_tile_view(
     elif ps is not None:
         gold_rate = f"gold/kw: — ({window_note}{reset_note})"
     else:
-        gold_rate = "gold/kw: rates na sessiestart…"
+        gold_rate = "gold/kw: wachten op meting…"
 
     if ps is not None and ps.areas_per_quarter is not None:
         areas_rate = f"{format_number(ps.areas_per_quarter)} areas/kw ({window_note}{reset_note})"
     elif ps is not None:
         areas_rate = f"areas/kw: — ({window_note}{reset_note})"
     else:
-        areas_rate = "areas/kw: rates na sessiestart…"
+        areas_rate = "areas/kw: wachten op meting…"
 
     gold_gained_val = party.gold_gained
 

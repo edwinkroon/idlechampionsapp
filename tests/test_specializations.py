@@ -584,6 +584,53 @@ class SpecializationsTests(unittest.TestCase):
         # lawful: 3, unaffiliated: 6, ranger/druid: 2 → Family of Orphans
         self.assertEqual(pending[0].desired_upgrade_id, 15053)
 
+    def test_umberto_second_tier_prefers_more_damage(self) -> None:
+        payload = json.loads(json.dumps(self.payload))
+        payload["details"]["active_game_instance_id"] = 1
+        inst = next(i for i in payload["details"]["game_instances"] if int(i["game_instance_id"]) == 1)
+        inst["hero_in_seats"] = {
+            "1": 58,
+            "7": 151,
+            "2": 902,
+            "3": 903,
+        }
+        payload["details"]["heroes"] = [
+            {
+                "hero_id": 151,
+                "game_instance_id": 1,
+                "in_seat": 1,
+                "level": 400,
+                "specialization_choices": [15053],
+                "upgrades": [],
+            }
+        ]
+        payload["defines"]["upgrade_defines"] = []
+        fallback = {
+            151: [
+                SpecializationOption(15052, "Law's Alliance", 200, 0),
+                SpecializationOption(15053, "Family of Orphans", 200, 0),
+                SpecializationOption(15054, "Call of the Wardens", 200, 0),
+                SpecializationOption(15055, "More Bees", 400, 1),
+                SpecializationOption(15056, "More Clues", 400, 1),
+                SpecializationOption(15057, "More Damage", 400, 1),
+            ]
+        }
+        fake_tags = {151: ("druid",), 902: ("unaffiliated",), 903: ("unaffiliated",)}
+        with (
+            patch("ic_gamedata.specializations._choices_from_cached_definitions", return_value=fallback),
+            patch("ic_gamedata.specialization_engine._hero_tags_map_from_cached_definitions", return_value=fake_tags),
+            patch("ic_gamedata.specialization_engine._hero_tags_map_from_champion_config", return_value={}),
+            patch(
+                "ic_gamedata.specialization_engine._hero_roles_map_from_champion_config",
+                return_value={151: ("support", "buffer")},
+            ),
+        ):
+            pending = pending_specializations(payload, self.rules)
+        self.assertEqual(len(pending), 1)
+        self.assertEqual(pending[0].desired_upgrade_id, 15057)
+        self.assertEqual(pending[0].desired_option_index, 2)
+        self.assertIn("More Damage", pending[0].rationale)
+
     def test_cazrin_prefers_ancestors_shadow_with_good_and_fallback_party(self) -> None:
         payload = json.loads(json.dumps(self.payload))
         payload["details"]["active_game_instance_id"] = 1

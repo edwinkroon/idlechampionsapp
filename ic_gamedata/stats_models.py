@@ -9,7 +9,8 @@ from ic_gamedata.log_parser import PartySnapshot
 MAX_GOAL_RUN_HISTORY = 50
 GOAL_COMPLETION_AREA_TOLERANCE = 3
 # Ignore memory/API peaks far above the Modron goal (bad memory reads).
-GOAL_PEAK_SANITY_MARGIN = 50
+# Briv can overshoot the goal by a wide margin before Modron reset lands.
+GOAL_PEAK_SANITY_MARGIN = 120
 # Runs longer than this are treated as corrupt timer data and not recorded.
 MAX_PLAUSIBLE_GOAL_RUN_SEC = 4 * 3600
 # Champions like Thellora skip early areas — Modron reset often lands around 45, not 1.

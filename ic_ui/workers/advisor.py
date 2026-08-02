@@ -18,9 +18,11 @@ class AdvisorRunnable(QRunnable):
         include_formation: bool,
         payload: dict,
         err: str | None = None,
+        *,
+        signals_parent: QObject | None = None,
     ) -> None:
         super().__init__()
-        self.signals = AdvisorSignals()
+        self.signals = AdvisorSignals(signals_parent)
         self._goal = goal
         self._context = context
         self._include_formation = include_formation

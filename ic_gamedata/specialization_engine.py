@@ -685,6 +685,9 @@ def _handle_tess(ctx: FormationContext) -> tuple[list[int], str] | None:
 _UMBERTO_LAWS_ALLIANCE = 15052
 _UMBERTO_FAMILY_OF_ORPHANS = 15053
 _UMBERTO_CALL_OF_WARDENS = 15054
+_UMBERTO_MORE_BEES = 15055
+_UMBERTO_MORE_CLUES = 15056
+_UMBERTO_MORE_DAMAGE = 15057
 _UMBERTO_PCT_LAWFUL = 125
 _UMBERTO_PCT_UNAFFILIATED = 100
 _UMBERTO_PCT_RANGER_DRUID = 300
@@ -703,6 +706,17 @@ def _umberto_qualified_counts(active_hero_ids: set[int]) -> tuple[int, int, int]
         if "ranger" in tags or "druid" in tags:
             ranger_druid_count += 1
     return lawful_count, unaffiliated_count, ranger_druid_count
+
+
+def _umberto_tier1_choice(ctx: FormationContext) -> tuple[int, str]:
+    """Second specialization (lvl 400): Gaarawarr quick-power vs tank bees."""
+    roles = set(_hero_roles_map_from_champion_config().get(151, ()))
+    seat = ctx.seat_by_hero.get(151) if ctx.seat_by_hero else None
+    frontline = seat is not None and _formation_column(seat) == 1
+    solo_tank = "tank" in roles and frontline and not _other_tanks(ctx.active_hero_ids, 151)
+    if solo_tank:
+        return _UMBERTO_MORE_BEES, "More Bees (tank-spec)"
+    return _UMBERTO_MORE_DAMAGE, "More Damage (snel power)"
 
 
 _CAZRIN_ID = 166
@@ -931,7 +945,7 @@ def _handle_umberto(ctx: FormationContext) -> tuple[list[int], str] | None:
     lawful_count, unaffiliated_count, ranger_druid_count = _umberto_qualified_counts(
         ctx.active_hero_ids
     )
-    best_id, reason = _pick_best_qualified_stack(
+    tier0_id, tier0_reason = _pick_best_qualified_stack(
         [
             (_UMBERTO_LAWS_ALLIANCE, lawful_count, _UMBERTO_PCT_LAWFUL, "Law's Alliance"),
             (
@@ -950,7 +964,12 @@ def _handle_umberto(ctx: FormationContext) -> tuple[list[int], str] | None:
         default_id=_UMBERTO_FAMILY_OF_ORPHANS,
         default_label="Family of Orphans",
     )
-    return [best_id], reason
+    tier1_id, tier1_label = _umberto_tier1_choice(ctx)
+    tier0_detail = tier0_reason.removeprefix("formatie-regel (").rstrip(")")
+    return (
+        [tier0_id, tier1_id],
+        f"formatie-regel ({tier0_detail}; {tier1_label})",
+    )
 
 
 _VR_ID = 177

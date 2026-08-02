@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import time
+from typing import TYPE_CHECKING, Any
 
 from PySide6.QtCore import QThreadPool
 from PySide6.QtWidgets import (
@@ -15,28 +16,39 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from ic_gamedata.advice_fingerprint import party_id_from_payload
 from ic_ui.tabs.dashboard_tab import DashboardTab
 from ic_ui.widgets.advisor_controls import AdvisorGoalContextBar
 from ic_ui.widgets.advisor_widgets import advisor_card, advisor_card_layout, advisor_lbl
 from ic_ui.workers.specializations import SpecializationsRunnable
 
+if TYPE_CHECKING:
+    from ic_core.game_data_service import GameDataService, SnapshotEnvelope
+
 
 class SpecializationsTab(QWidget):
     """Specialization advice for the active party."""
 
-    def __init__(self, dashboard_tab: DashboardTab, parent: QWidget | None = None) -> None:
+    def __init__(
+        self,
+        dashboard_tab: DashboardTab,
+        parent: QWidget | None = None,
+        *,
+        data_service: GameDataService | None = None,
+    ) -> None:
         super().__init__(parent)
         self._dashboard_tab = dashboard_tab
+        self._data = data_service
         self._last_payload = None
         self._last_goal = "bud"
         self._last_context = "campaign"
         self._last_party_id: int | None = None
-        self._target_party_id: int | None = None
-        self._last_formation_empty = False
+        self._last_advice_fp: tuple[Any, ...] | None = None
         self._analysing = False
         self._pending_analysis: tuple[dict, str | None, bool] | None = None
         self._pending_auto_refresh = False
         self._has_results = False
+        self._worker_signals = None
         self._build_ui()
 
     @property
@@ -51,29 +63,51 @@ class SpecializationsTab(QWidget):
     def last_party_id(self) -> int | None:
         return self._last_party_id
 
-    @property
-    def target_party_id(self) -> int | None:
-        return self._target_party_id
-
-    @property
-    def last_formation_empty(self) -> bool:
-        return self._last_formation_empty
+    def on_snapshot(self, envelope: SnapshotEnvelope) -> None:
+        force = "specializations" in envelope.force_consumers or "advisor" in envelope.force_consumers
+        fp = envelope.advice_fp
+        first = not self._has_results and envelope.payload is not None
+        changed = (
+            envelope.payload is not None
+            and fp is not None
+            and fp != self._last_advice_fp
+        )
+        if envelope.degraded and not (force or first or changed):
+            if envelope.err and self._has_results:
+                base = self._status.text().split(" · ")[0] if self._status.text() else "Specialisaties"
+                self._status.setText(f"{base} · {envelope.err}")
+            return
+        if not (force or first or changed):
+            return
+        if envelope.payload is None:
+            return
+        err = envelope.err
+        if envelope.quality and envelope.quality.warnings:
+            warn = envelope.quality.warnings[0]
+            err = f"{err} · {warn}" if err else warn
+        self.start_analysis(
+            envelope.payload,
+            err,
+            auto_refresh=envelope.auto_refresh or not force,
+            advice_fp=fp,
+        )
 
     def request_refresh(self, *, auto_refresh: bool = False) -> None:
-        if self._analysing:
+        if self._data is None:
+            self._status.setText("Geen data-service — herstart de app.")
             return
-        if not self._dashboard_tab.refresh_credentials_from_log():
+        if not self._data.refresh_credentials() and self._data.credentials is None:
             if not auto_refresh:
                 self._status.setText("Geen API-credentials. Ga naar Dashboard → Opnieuw zoeken.")
-            return
-        if self._dashboard_tab.last_payload is None:
-            if not auto_refresh:
-                self._status.setText("Nog geen API-data. Wacht op de volgende poll of start het dashboard.")
             return
         if not auto_refresh:
             self._btn_refresh.setEnabled(False)
             self._status.setText("Specialisaties analyseren…")
-        self.start_analysis(self._dashboard_tab.last_payload, None, auto_refresh=auto_refresh)
+        self._data.request_poll(
+            reason="specializations",
+            force_consumers={"specializations", "advisor"},
+            auto_refresh=auto_refresh,
+        )
 
     def start_analysis(
         self,
@@ -81,18 +115,23 @@ class SpecializationsTab(QWidget):
         err: str | None,
         *,
         auto_refresh: bool,
+        advice_fp: tuple[Any, ...] | None = None,
     ) -> None:
         if self._analysing:
             self._pending_analysis = (payload, err, auto_refresh)
+            if advice_fp is not None:
+                self._last_advice_fp = advice_fp
             return
-        from ic_ui.tabs.advisor_tab import party_id_from_payload
-
+        if advice_fp is not None:
+            self._last_advice_fp = advice_fp
         goal = self._controls.goal()
         context = self._controls.context()
         self._pending_auto_refresh = auto_refresh
-        self._target_party_id = party_id_from_payload(payload)
         self._analysing = True
-        worker = SpecializationsRunnable(goal, context, payload, err)
+        worker = SpecializationsRunnable(
+            goal, context, payload, err, signals_parent=self
+        )
+        self._worker_signals = worker.signals
         worker.signals.done.connect(self._on_done)
         worker.signals.error.connect(self._on_error)
         QThreadPool.globalInstance().start(worker)
@@ -146,14 +185,12 @@ class SpecializationsTab(QWidget):
         self.start_analysis(payload, err, auto_refresh=auto_refresh)
 
     def _on_done(self, result) -> None:
+        self._worker_signals = None
         payload, report, pending_items, err = result
         auto_refresh = self._pending_auto_refresh
-        from ic_ui.tabs.advisor_tab import party_id_from_payload
 
         self._last_payload = payload
         self._last_party_id = party_id_from_payload(payload)
-        self._target_party_id = self._last_party_id
-        self._last_formation_empty = not bool(report.formation_heroes)
         self._last_goal = report.goal
         self._last_context = report.context
         self._analysing = False
@@ -169,6 +206,7 @@ class SpecializationsTab(QWidget):
         self._schedule_pending_analysis()
 
     def _on_error(self, msg: str) -> None:
+        self._worker_signals = None
         auto_refresh = self._pending_auto_refresh
         self._analysing = False
         self._btn_refresh.setEnabled(True)
