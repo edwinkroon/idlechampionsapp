@@ -5,9 +5,8 @@ from __future__ import annotations
 import html
 import json
 
-from ic_gamedata.seat_advisor.models import SeatRole, VisualSeatNode, STANDARD_SEAT_ROLES
+from ic_gamedata.seat_advisor.models import STANDARD_SEAT_ROLES, VisualSeatNode
 from ic_gamedata.seat_advisor.role_inference import role_label
-
 
 _ZONE_COLORS = {
     "front": "#fee2e2",

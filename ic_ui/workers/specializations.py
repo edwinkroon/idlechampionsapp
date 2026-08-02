@@ -29,7 +29,10 @@ class SpecializationsRunnable(QRunnable):
         try:
             from ic_gamedata.party_advisor import analyze_party
             from ic_gamedata.party_advisor_specializations import advisor_run_goal
-            from ic_gamedata.specializations import load_specialization_rules, pending_specializations
+            from ic_gamedata.specializations import (
+                load_specialization_rules,
+                pending_specializations,
+            )
         except ImportError as exc:
             self.signals.error.emit(f"Importfout: {exc}")
             return

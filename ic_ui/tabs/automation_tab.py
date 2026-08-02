@@ -20,8 +20,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from ic_automation import AutomationController, AutomationSettings
-from ic_automation import win_input
+from ic_automation import AutomationController, AutomationSettings, win_input
 from ic_ui.theme import DEFAULT_WINDOW_TITLE, FKEY_FAMILIAR_COLOR, STATUS_IDLE
 from ic_ui.widgets.option_visibility import bind_option_visibility
 
@@ -80,8 +79,8 @@ class AutomationTab(QWidget):
         if payload is None:
             return
         try:
-            from ic_gamedata.formation_seats import active_formation_seats
             from ic_gamedata.familiar_seats import familiar_level_seats
+            from ic_gamedata.formation_seats import active_formation_seats
         except ImportError:
             return
         party_id, seats = active_formation_seats(payload)

@@ -8,7 +8,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from ic_gamedata.parsing import parse_int as _parse_int, parse_number as _parse_number
+from ic_gamedata.parsing import parse_int as _parse_int
+from ic_gamedata.parsing import parse_number as _parse_number
 
 _BLOCK_SPLIT = re.compile(r"\*{10,}")
 _CALL_RE = re.compile(r"[?&]call=([^&\s]+)", re.IGNORECASE)

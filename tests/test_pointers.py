@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import struct
 import unittest
 
 from ic_reader.exceptions import InvalidPointerChainError

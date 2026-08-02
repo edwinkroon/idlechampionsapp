@@ -6,15 +6,15 @@ import re
 from dataclasses import dataclass, field
 from typing import Any
 
+from ic_gamedata.parsing import parse_int as _parse_int
 from ic_gamedata.specialization_data import (
+    hero_ability_scores_map_from_cached_definitions,
     hero_age_map_from_cached_definitions,
     hero_attack_types_map_from_cached_definitions,
-    hero_ability_scores_map_from_cached_definitions,
+    hero_roles_map_from_champion_config,
     hero_tags_map_from_cached_definitions,
     hero_tags_map_from_champion_config,
-    hero_roles_map_from_champion_config,
 )
-from ic_gamedata.parsing import parse_int as _parse_int
 
 _ROLE_TO_GAME_TAG = {
     "tank": "tanking",
@@ -203,9 +203,7 @@ def _filter_from_by_tags(tags_value: str, *, disallow: bool) -> AdventureRosterF
         filt.has_unknown_rules = True
         filt.active_notes.append("Complexe tag-regel uit API (niet volledig evalueerbaar)")
         return filt
-    if raw.startswith("!"):
-        filt.banned_tags.add(_normalize_tag(raw))
-    elif disallow:
+    if raw.startswith("!") or disallow:
         filt.banned_tags.add(_normalize_tag(raw))
     else:
         filt.required_tags.add(_normalize_tag(raw))
@@ -294,7 +292,11 @@ def _filter_from_patron(payload: dict[str, Any], patron_id: int | None) -> Adven
     if patron_id is None or patron_id <= 0:
         return filt
 
-    from ic_gamedata.patron_roster import PATRON_NAMES, is_hero_allowed_on_patron, load_patron_roster
+    from ic_gamedata.patron_roster import (
+        PATRON_NAMES,
+        is_hero_allowed_on_patron,
+        load_patron_roster,
+    )
 
     roster = load_patron_roster()
     if not roster:

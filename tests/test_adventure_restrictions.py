@@ -214,7 +214,10 @@ class AdventureRestrictionsTests(unittest.TestCase):
         self.assertTrue(is_hero_allowed(159, filt, formation_hero_ids=frozenset({159})))
 
     def test_reserved_formation_seats_from_slot_escort(self) -> None:
-        from ic_gamedata.adventure_restrictions import player_formation_capacity, reserved_formation_seats
+        from ic_gamedata.adventure_restrictions import (
+            player_formation_capacity,
+            reserved_formation_seats,
+        )
 
         payload = _mock_adventure(
             563,

@@ -14,7 +14,10 @@ from ic_gamedata.specialization_rules.models import (
     Rule,
     RuleDataset,
 )
-from ic_gamedata.specialization_rules.route_mapper import map_label_to_upgrade_id, map_route_to_upgrade_id
+from ic_gamedata.specialization_rules.route_mapper import (
+    map_label_to_upgrade_id,
+    map_route_to_upgrade_id,
+)
 
 logger = logging.getLogger(__name__)
 

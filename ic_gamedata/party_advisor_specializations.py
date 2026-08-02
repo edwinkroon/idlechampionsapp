@@ -8,18 +8,17 @@ from typing import Any, Literal
 
 from ic_gamedata.adventure_restrictions import AdventureRosterFilter, is_hero_allowed
 from ic_gamedata.familiar_seats import familiar_party_count
-from ic_gamedata.party_advisor import AdvisorTip, FormationHero, GoalMode, ContextMode
-from ic_gamedata.speed_utility_roles import (
-    recommended_spec_for_speed_utility,
-    speed_utility_role,
-)
+from ic_gamedata.parsing import parse_int as _parse_int
+from ic_gamedata.party_advisor import AdvisorTip, ContextMode, FormationHero, GoalMode
 from ic_gamedata.specialization_engine import FormationContext
 from ic_gamedata.specialization_models import SpecializationOption
-from ic_gamedata.specialization_rules.context_builder import build_evaluation_context, champion_names_match
+from ic_gamedata.specialization_rules.context_builder import (
+    build_evaluation_context,
+    champion_names_match,
+)
 from ic_gamedata.specialization_rules.evaluator import evaluate_specialization
 from ic_gamedata.specialization_rules.loader import cached_documentation_rules
 from ic_gamedata.specialization_rules.models import AdviceResult, Rule
-from ic_gamedata.parsing import parse_int as _parse_int
 from ic_gamedata.specializations import (
     _current_choices,
     _merge_known_options,
@@ -27,6 +26,10 @@ from ic_gamedata.specializations import (
     merged_hero_record_for_specializations,
     pending_specializations,
     resolve_hero_record,
+)
+from ic_gamedata.speed_utility_roles import (
+    recommended_spec_for_speed_utility,
+    speed_utility_role,
 )
 
 InsightStatus = Literal[
@@ -106,7 +109,10 @@ def recommended_spec_for_goal(
     formation: tuple[FormationHero, ...] = (),
 ) -> str | None:
     """CSV-backed specialization labels for speed/gold goals (all tiers)."""
-    from ic_gamedata.speed_utility_roles import recommended_spec_for_speed_utility, speed_utility_role
+    from ic_gamedata.speed_utility_roles import (
+        recommended_spec_for_speed_utility,
+        speed_utility_role,
+    )
 
     if hero is not None:
         utility = speed_utility_role(hero, goal)

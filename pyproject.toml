@@ -1,0 +1,31 @@
+[project]
+name = "idle-champions-app"
+version = "0.1.0"
+description = "Idle Champions companion: dashboard, advisor, automation"
+requires-python = ">=3.11"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+exclude = [
+    "data",
+    "dist",
+    "build",
+    "dist_build",
+    ".git",
+]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "RUF", "PLR1730"]
+ignore = ["E501"]
+
+[tool.ruff.lint.per-file-ignores]
+"ic_ui/**" = ["BLE001", "S110", "E731", "RUF001", "SIM105", "SIM108"]
+"ic_automation/**" = ["BLE001"]
+"ic_reader/**" = ["BLE001"]
+"tests/**" = ["PLR2004"]

@@ -7,8 +7,10 @@ import sys
 from functools import lru_cache
 from pathlib import Path
 
-from ic_gamedata.formation_advisor.models import InsightType, PlacementRule, RuleDataset, RuleSourceType
-from ic_gamedata.parsing import parse_int as _parse_int
+from ic_gamedata.formation_advisor.models import (
+    PlacementRule,
+    RuleDataset,
+)
 
 _RULES_FILE = "formation_placement_rules_v1.csv"
 _PRIORITY_SCORES = {"critical": 1, "high": 2, "medium": 3, "low": 4, "fallback": 5}

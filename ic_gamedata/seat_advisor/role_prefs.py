@@ -5,10 +5,9 @@ from __future__ import annotations
 import json
 import sys
 from pathlib import Path
-from typing import Any
 
 from ic_gamedata.parsing import parse_int as _parse_int
-from ic_gamedata.seat_advisor.models import SeatRole, STANDARD_SEAT_ROLES
+from ic_gamedata.seat_advisor.models import STANDARD_SEAT_ROLES, SeatRole
 
 _PREFS_FILENAME = "champion_role_preferences.json"
 _VALID_GOALS = frozenset({"bud", "gold"})

@@ -93,7 +93,6 @@ class ResetDetectionTests(unittest.TestCase):
         self.assertFalse(detect_adventure_reset(prev, cur))
 
     def test_estimated_gems_do_not_inflate_reset_count(self) -> None:
-        from ic_gamedata.log_parser import GameSnapshot
 
         def snap(area: int, gems: int) -> GameSnapshot:
             return _snap(_party(0, area, gems, seconds_since_reset=5000 + area))

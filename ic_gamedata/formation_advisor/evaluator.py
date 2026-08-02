@@ -7,7 +7,11 @@ from ic_gamedata.formation_advisor.loader import (
     rule_matches_context,
     rule_matches_goal,
 )
-from ic_gamedata.formation_advisor.models import FormationInsight, FormationLayoutContext, PlacementRule
+from ic_gamedata.formation_advisor.models import (
+    FormationInsight,
+    FormationLayoutContext,
+    PlacementRule,
+)
 
 
 def _format_template(template: str, ctx: FormationLayoutContext, **extra: str) -> str:
@@ -67,9 +71,7 @@ def _buffers_and_debuffers(ctx: FormationLayoutContext) -> list[int]:
     for hero_id in ctx.active_hero_ids:
         if hero_id == ctx.carry_hero_id:
             continue
-        if "buffer" in ctx.tags(hero_id) or "debuffer" in ctx.tags(hero_id):
-            result.append(hero_id)
-        elif "support" in ctx.roles(hero_id) and ("buffer" in ctx.tags(hero_id) or ctx.goal == "bud"):
+        if "buffer" in ctx.tags(hero_id) or "debuffer" in ctx.tags(hero_id) or ("support" in ctx.roles(hero_id) and ("buffer" in ctx.tags(hero_id) or ctx.goal == "bud")):
             result.append(hero_id)
     return result
 
@@ -119,9 +121,7 @@ def _evaluate_rule_for_hero(
 
     if field == "seat_zone":
         zone = ctx.zone_of_seat(seat)
-        if op == "not_in" and zone != value:
-            triggered = True
-        elif op == "equals" and zone == value:
+        if (op == "not_in" and zone != value) or (op == "equals" and zone == value):
             triggered = True
 
     elif field == "adjacent_to_carry":

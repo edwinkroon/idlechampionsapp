@@ -6,8 +6,8 @@ import unittest
 
 from ic_gamedata.specialization_custom_stacks import (
     champions_of_tymora_count,
-    dob_qualified_counts,
     diana_inspire_match_count,
+    dob_qualified_counts,
     seat_graph_distance,
     shadowheart_duplicity_distance,
     unavailable_owned_hero_count,

@@ -6,7 +6,6 @@ import time
 
 from PySide6.QtCore import QThreadPool
 from PySide6.QtWidgets import (
-    QComboBox,
     QFrame,
     QHBoxLayout,
     QLabel,
@@ -17,6 +16,7 @@ from PySide6.QtWidgets import (
 )
 
 from ic_ui.tabs.dashboard_tab import DashboardTab
+from ic_ui.widgets.advisor_controls import AdvisorGoalContextBar
 from ic_ui.widgets.advisor_widgets import advisor_card, advisor_card_layout, advisor_lbl
 from ic_ui.workers.specializations import SpecializationsRunnable
 
@@ -70,8 +70,8 @@ class SpecializationsTab(QWidget):
         if self._analysing:
             self._pending_analysis = (payload, err, auto_refresh)
             return
-        goal = self._goal.currentData() or "bud"
-        context = self._context.currentData() or "campaign"
+        goal = self._controls.goal()
+        context = self._controls.context()
         self._pending_auto_refresh = auto_refresh
         self._analysing = True
         worker = SpecializationsRunnable(goal, context, payload, err)
@@ -85,26 +85,11 @@ class SpecializationsTab(QWidget):
         root.setSpacing(6)
 
         ctrl_row = QHBoxLayout()
-        self._goal = QComboBox()
-        self._goal.addItem("BUD / damage", "bud")
-        self._goal.addItem("Gold income", "gold")
-        self._goal.addItem("Speed / areas", "speed")
-        self._context = QComboBox()
-        self._context.addItem("Campaign", "campaign")
-        self._context.addItem("Events", "events")
-        self._context.addItem("Push", "push")
-        self._context.addItem("Modron", "modron")
+        self._controls = AdvisorGoalContextBar()
+        self._controls.changed.connect(self._on_options_changed)
         self._btn_refresh = QPushButton("Verversen")
         self._btn_refresh.clicked.connect(lambda: self.request_refresh(auto_refresh=False))
-
-        self._goal.currentIndexChanged.connect(self._on_options_changed)
-        self._context.currentIndexChanged.connect(self._on_options_changed)
-
-        ctrl_row.addWidget(QLabel("Doel:"))
-        ctrl_row.addWidget(self._goal)
-        ctrl_row.addWidget(QLabel("Context:"))
-        ctrl_row.addWidget(self._context)
-        ctrl_row.addStretch(1)
+        ctrl_row.addWidget(self._controls, stretch=1)
         ctrl_row.addWidget(self._btn_refresh)
         root.addLayout(ctrl_row)
 
@@ -130,8 +115,8 @@ class SpecializationsTab(QWidget):
     def _on_options_changed(self, *_args) -> None:
         if self._last_payload is None:
             return
-        self._last_goal = self._goal.currentData() or "bud"
-        self._last_context = self._context.currentData() or "campaign"
+        self._last_goal = self._controls.goal()
+        self._last_context = self._controls.context()
         self.request_refresh(auto_refresh=False)
 
     def _schedule_pending_analysis(self) -> None:
@@ -245,7 +230,9 @@ class SpecializationsTab(QWidget):
             return
 
         try:
-            from ic_gamedata.specialization_advice_text import human_specialization_reason
+            from ic_gamedata.specialization_advice_text import (
+                human_specialization_reason,
+            )
             from ic_gamedata.specializations import _active_adventure_context
         except ImportError:
             human_specialization_reason = None
@@ -293,7 +280,7 @@ class SpecializationsTab(QWidget):
         try:
             from ic_gamedata.party_advisor import goal_label as advisor_goal_label
         except ImportError:
-            advisor_goal_label = lambda g: g  # noqa: E731
+            advisor_goal_label = lambda g: g
         goal_text = advisor_goal_label(report.goal)
 
         head = advisor_card()

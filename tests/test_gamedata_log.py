@@ -6,7 +6,6 @@ import unittest
 
 from ic_gamedata.log_parser import parse_web_request_log, snapshot_from_payload
 
-
 SAMPLE_BLOCK = """
 https://pslt3.idlechampions.com/~idledragons/post.php?call=getuserdetails&user_id=1
 {"success":true,"details":{"current_area":485,"gold":"1.5e20","stats":{"gold_gained":"2.5e25","this_reset_gems_earned":"187","this_reset_monster_kills":"1200","boss_kills":"40"}}}

@@ -8,11 +8,17 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from ic_gamedata.adventure_restrictions import AdventureRosterFilter, build_adventure_roster_filter, is_hero_allowed
+from ic_gamedata.adventure_restrictions import (
+    build_adventure_roster_filter,
+    is_hero_allowed,
+)
 from ic_gamedata.party_advisor import FormationHero, analyze_party
 from ic_gamedata.seat_advisor import build_seat_advisor_report
 from ic_gamedata.seat_advisor.role_inference import infer_seat_role
-from ic_gamedata.seat_advisor.role_prefs import get_chosen_role, load_role_preferences, set_chosen_role
+from ic_gamedata.seat_advisor.role_prefs import (
+    get_chosen_role,
+    set_chosen_role,
+)
 
 
 def _hero(

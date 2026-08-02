@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import time
-from typing import Any
 
 from ic_reader.models import ReadAttempt, ScoredCandidate, ValueCandidateDef, ValueType
 

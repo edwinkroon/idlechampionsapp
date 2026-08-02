@@ -15,9 +15,12 @@ Eigen programma met duidelijke stappen en een **Test**-knop.
 
 ### Starten
 
-1. **Met Python** (als je Python hebt): dubbelklik op `Start Idle Champions App.bat` of voer in een terminal uit:  
-   `pip install -r requirements.txt`  
-   `python app_launcher.py`
+1. **Met Python** (aanbevolen): dubbelklik op `Start Idle Champions App.bat` of voer in een terminal uit:
+   ```bash
+   pip install -r requirements.txt
+   python app_launcher.py
+   ```
+   Ontwikkelaars: `pip install -r requirements-dev.txt` en daarna `python -m pytest tests` / `python -m ruff check ic_core ic_ui`.
 2. **Zonder Python**: maak eerst een .exe met `build_exe.bat`, daarna kun je `dist\IdleChampionsApp.exe` dubbelklikken.
 
 ### Gebruik in de app
@@ -64,11 +67,9 @@ Na wijziging het script opnieuw starten (of herladen).
 
 ---
 
-## Oude Python-GUI (idle_champions_automation.py)
+## Oude Python-GUI (legacy)
 
-Zelfde idee als de Windows-app, andere layout. In een terminal:  
-`python idle_champions_automation.py`  
-Daarna in de GUI venstertitel en intervallen instellen, dan **Start**.
+`idle_champions_automation.py` en `idle_champions_gamedata.py` zijn oudere entrypoints. Gebruik **`app_launcher.py`** / de PySide6-app.
 
 ---
 
@@ -85,13 +86,16 @@ Daarna in de GUI venstertitel en intervallen instellen, dan **Start**.
 
 | Bestand | Beschrijving |
 |---------|--------------|
-| **`app_launcher.py`** | Start de PySide6-app (dashboard, party advisor, automatisering). |
-| **`ic_ui/pyside_app.py`** | Hoofdvenster en tabs van de app. |
+| **`app_launcher.py`** | Start de PySide6-app (dashboard, analytics, party advisor, automatisering). |
+| **`ic_ui/pyside_app.py`** | Hoofdvenster: tab-wiring en gecentraliseerde API-poll. |
+| **`ic_ui/tabs/`** | UI-tabs (dashboard, analytics, advisor, specializations, automation, sources). |
+| **`ic_core/game_state.py`** | Gedeelde live speldata (GameStateService). |
 | **`Start Idle Champions App.bat`** | Start de app (installeert dependencies indien nodig). |
 | **`build_exe.bat`** | Maakt `IdleChampionsApp.exe` (geen Python nodig om te draaien). |
-| `ic_gamedata/` | Spelpad-detectie (Epic/Steam) + stats uit `webRequestLog.txt`. |
-| `idle_champions_gamedata.py` | Entry point voor speldata/stats (zie tab **Dashboard** in de app). |
-| `requirements.txt` | Python-dependencies (PySide6, pyautogui, pygetwindow, pywin32, psutil). |
+| `ic_gamedata/` | Spelpad-detectie, stats, party advisor domain. |
+| `requirements.txt` | Runtime-dependencies (PySide6, pyqtgraph, pyautogui, …). |
+| `requirements-dev.txt` | pytest + ruff voor ontwikkeling/CI. |
+| `.github/workflows/ci.yml` | GitHub Actions: tests + lint op `ic_core` / `ic_ui`. |
 | `PLAN-AUTOMATISERING.md` | Uitgebreid plan en achtergrond. |
 
 ---

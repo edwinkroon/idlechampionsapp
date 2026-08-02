@@ -12,7 +12,6 @@ from ic_gamedata.formation_advisor.handlers import evaluate_placement_handlers
 from ic_gamedata.formation_advisor.loader import cached_formation_rules
 from ic_gamedata.formation_advisor.models import FormationTopology
 from ic_gamedata.formation_advisor.topology import load_formation_topology
-from ic_gamedata.formation_advisor.advisor import build_formation_insights
 from ic_gamedata.party_advisor import FormationHero, analyze_party
 
 

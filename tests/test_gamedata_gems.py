@@ -7,7 +7,6 @@ import unittest
 from ic_gamedata.log_parser import (
     PartySnapshot,
     merge_party_snapshots,
-    merge_snapshots,
     snapshot_from_payload,
 )
 from ic_gamedata.stats import StatsTracker, _extrapolate_gems

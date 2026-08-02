@@ -29,6 +29,10 @@ Thumbs.db
 Desktop.ini
 .DS_Store
 
+# Runtime / local config (per machine)
+config/goal_run_history.json
+config/gamedata.json
+
 # Runtime logs (keep .gitkeep)
 logs/*
 !logs/.gitkeep

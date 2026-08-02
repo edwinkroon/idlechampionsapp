@@ -6,7 +6,6 @@ import unittest
 
 from ic_gamedata.credentials import extract_credentials_from_log
 
-
 SAMPLE_LOG = (
     "*" * 50
     + "\nhttps://pslt3.idlechampions.com/~idledragons/post.php?call=initializemobilesession&user_id=4602118&hash=abc123&instance_key=999&network_id=21&mobile_client_version=650\n"

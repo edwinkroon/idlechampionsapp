@@ -5,10 +5,10 @@ from __future__ import annotations
 import json
 import os
 import re
+from collections.abc import Iterable
 from dataclasses import dataclass
 from enum import Enum
 from pathlib import Path
-from typing import Iterable
 
 # Epic Games Store catalog id for Idle Champions (fixed by Codename).
 EPIC_APP_NAME = "40cb42e38c0b4a14a1bb133eb3291572"

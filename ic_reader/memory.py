@@ -5,7 +5,6 @@ from __future__ import annotations
 import ctypes
 import struct
 from abc import ABC, abstractmethod
-from typing import Sequence
 
 from ic_reader.exceptions import MemoryReadError
 from ic_reader.models import ValueType

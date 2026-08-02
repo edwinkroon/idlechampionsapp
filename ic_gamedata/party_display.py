@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from ic_gamedata.buff_names import build_buff_name_map, buff_display_name
+from ic_gamedata.buff_names import buff_display_name, build_buff_name_map
 from ic_gamedata.parsing import parse_int as _parse_int
 from ic_gamedata.patron_roster import PATRON_NAMES
 

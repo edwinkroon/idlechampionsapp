@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, Callable
+from typing import Any
 
 from ic_gamedata.log_parser import PartySnapshot
 from ic_gamedata.party_display import format_area_line, format_patron_line, party_tile_title
-from ic_gamedata.stats import GoalRunRecord, MAX_GOAL_RUN_HISTORY, PartySessionStats
+from ic_gamedata.stats import MAX_GOAL_RUN_HISTORY, GoalRunRecord, PartySessionStats
 
 
 @dataclass(frozen=True)

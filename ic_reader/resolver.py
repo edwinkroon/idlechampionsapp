@@ -6,7 +6,7 @@ import logging
 from pathlib import Path
 
 from ic_reader.config_loader import load_config
-from ic_reader.exceptions import ConfigError, ModuleNotFoundError, ProcessNotFoundError
+from ic_reader.exceptions import ConfigError, ProcessNotFoundError
 from ic_reader.memory import MemoryReader, Win32MemoryReader
 from ic_reader.models import (
     GameOffsetsConfig,

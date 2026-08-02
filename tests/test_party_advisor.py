@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import copy
 import json
-import re
 import unittest
 from pathlib import Path
 
@@ -333,8 +332,8 @@ class PartyAdvisorTests(unittest.TestCase):
         self.assertIn("Geen debuffer voor Azaka", joined)
 
     def test_debuffer_tip_suppressed_when_formation_rule_covers(self) -> None:
-        from ic_gamedata.party_advisor import _coverage_from_formation_insights
         from ic_gamedata.formation_advisor.models import FormationInsight
+        from ic_gamedata.party_advisor import _coverage_from_formation_insights
 
         covered = _coverage_from_formation_insights(
             (

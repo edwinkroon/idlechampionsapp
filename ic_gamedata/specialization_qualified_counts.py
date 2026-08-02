@@ -4,8 +4,11 @@ from __future__ import annotations
 
 from typing import Any
 
-from ic_gamedata.adventure_restrictions import hero_matches_specialization_expr
-from ic_gamedata.adventure_restrictions import _hero_meta, _parse_int
+from ic_gamedata.adventure_restrictions import (
+    _hero_meta,
+    _parse_int,
+    hero_matches_specialization_expr,
+)
 from ic_gamedata.specialization_qualified_rules import QualifiedStackOptionRule
 
 _AFFILIATION_TAGS = frozenset(

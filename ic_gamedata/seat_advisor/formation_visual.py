@@ -4,10 +4,10 @@ from __future__ import annotations
 
 from typing import Any
 
-from ic_gamedata.parsing import parse_int as _parse_int
 from ic_gamedata.formation_advisor.topology import load_formation_topology
 from ic_gamedata.formation_seats import active_formation_seats
-from ic_gamedata.seat_advisor.models import SeatRole, VisualSeatNode
+from ic_gamedata.parsing import parse_int as _parse_int
+from ic_gamedata.seat_advisor.models import VisualSeatNode
 
 
 def _parse_float(value: Any) -> float | None:

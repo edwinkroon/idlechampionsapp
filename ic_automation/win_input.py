@@ -15,9 +15,9 @@ try:
 except ImportError:
     gw = None
 try:
-    import win32gui
-    import win32con
     import win32api
+    import win32con
+    import win32gui
     HAS_WIN32 = True
 except ImportError:
     HAS_WIN32 = False

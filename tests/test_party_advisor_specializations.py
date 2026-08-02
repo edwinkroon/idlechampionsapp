@@ -5,17 +5,16 @@ from __future__ import annotations
 import json
 import unittest
 from pathlib import Path
-from unittest.mock import patch
 
 from ic_gamedata.party_advisor import analyze_party, format_report
 from ic_gamedata.party_advisor_specializations import (
     SpecializationInsight,
-    advisor_run_goal,
-    build_specialization_insights,
-    spec_summary_for_hero,
     _is_meaningful_mismatch,
     _open_tier_insight,
     _same_route_family,
+    advisor_run_goal,
+    build_specialization_insights,
+    spec_summary_for_hero,
 )
 from ic_gamedata.specialization_models import PendingSpecialization, SpecializationOption
 

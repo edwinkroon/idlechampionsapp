@@ -6,7 +6,10 @@ from dataclasses import dataclass
 from functools import lru_cache
 from typing import Any, Literal
 
-from ic_gamedata.specialization_data import cached_definitions_data, hero_name_map_from_cached_definitions
+from ic_gamedata.specialization_data import (
+    cached_definitions_data,
+    hero_name_map_from_cached_definitions,
+)
 
 QualifierKind = Literal["expr", "target_filter", "all_crusaders", "unsupported"]
 

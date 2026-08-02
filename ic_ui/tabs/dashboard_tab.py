@@ -319,7 +319,7 @@ class DashboardTab(QWidget):
     def _format_rate_window(window_sec: float | None) -> str:
         if window_sec is None:
             return "warmt op (<3 min)"
-        minutes = max(int(round(window_sec / 60)), 1)
+        minutes = max(round(window_sec / 60), 1)
         if minutes >= 15:
             return "15 min venster"
         return f"{minutes} min venster"
@@ -357,8 +357,8 @@ class DashboardTab(QWidget):
             return
         self._sources_tab.log_lbl.setText(str(info.web_request_log))
         try:
-            from ic_gamedata.log_tailer import WebRequestLogTailer
             from ic_gamedata.credentials import extract_credentials_from_log
+            from ic_gamedata.log_tailer import WebRequestLogTailer
         except ImportError:
             from ic_gamedata import WebRequestLogTailer, extract_credentials_from_log
         self._dash_tailer = WebRequestLogTailer(info.web_request_log)
@@ -403,7 +403,7 @@ class DashboardTab(QWidget):
             from ic_gamedata.snapshot_fetch import fetch_merged_snapshot
         except ImportError:
             from ic_gamedata import fetch_merged_snapshot
-        credentials, payload, api_snap, snap, err, api_detail = fetch_merged_snapshot(
+        credentials, payload, api_snap, snap, _err, api_detail = fetch_merged_snapshot(
             self._dash_credentials,
             log_path,
             self._dash_tailer,

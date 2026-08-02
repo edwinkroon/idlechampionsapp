@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from typing import Any
-
 from ic_gamedata.adventure_restrictions import AdventureRosterFilter, is_hero_allowed
-from ic_gamedata.party_advisor import FormationHero, _is_buffer, _is_debuffer, _is_dps, _is_speed, _is_tank
+from ic_gamedata.party_advisor import (
+    FormationHero,
+)
 from ic_gamedata.seat_advisor.models import BenchCandidate, SeatRole
 from ic_gamedata.seat_advisor.role_inference import role_fits_champion
 

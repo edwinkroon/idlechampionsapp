@@ -8,7 +8,13 @@ from ic_gamedata.adventure_restrictions import AdventureRosterFilter, is_hero_al
 from ic_gamedata.formation_advisor.models import FormationLayoutContext
 from ic_gamedata.formation_advisor.topology import load_formation_topology
 from ic_gamedata.parsing import parse_int as _parse_int
-from ic_gamedata.party_advisor import ContextMode, FormationHero, GoalMode, _owned_heroes, _resolve_bud_hero
+from ic_gamedata.party_advisor import (
+    ContextMode,
+    FormationHero,
+    GoalMode,
+    _owned_heroes,
+    _resolve_bud_hero,
+)
 from ic_gamedata.party_advisor_specializations import advisor_run_goal
 
 

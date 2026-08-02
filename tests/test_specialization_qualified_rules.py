@@ -12,7 +12,6 @@ from ic_gamedata.specialization_engine import (
     _merge_tier_default_ids,
     dynamic_default_ids,
 )
-from ic_gamedata.specializations import SpecializationOption
 from ic_gamedata.specialization_qualified_counts import (
     count_qualified_heroes,
     hero_matches_qualified_option,
@@ -22,10 +21,13 @@ from ic_gamedata.specialization_qualified_rules import (
     QualifiedStackTierRule,
     generic_qualified_stack_hero_ids,
     qualified_stack_tiers_by_hero,
-    tiers_for_known_options,
 )
 from ic_gamedata.specialization_stack_audit import audit_qualified_stack_specs
-from ic_gamedata.specializations import SpecializationOption, pending_specializations, load_specialization_rules
+from ic_gamedata.specializations import (
+    SpecializationOption,
+    load_specialization_rules,
+    pending_specializations,
+)
 
 BATCH2_HERO_IDS = (14, 59, 71, 116, 121, 122, 123, 124, 125, 144, 161, 165, 171, 174)
 

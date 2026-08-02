@@ -230,7 +230,7 @@ class IdleChampionsMainWindow(QMainWindow):
                 title += f" - {adventure_name}"
         self.setWindowTitle(title)
 
-    def closeEvent(self, event) -> None:  # noqa: N802
+    def closeEvent(self, event) -> None:
         self._automation_tab.stop()
         self._dashboard_tab.stop()
         self._dashboard_tab.disconnect_memory()

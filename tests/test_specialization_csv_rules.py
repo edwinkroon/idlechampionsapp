@@ -8,17 +8,16 @@ import tempfile
 import unittest
 from pathlib import Path
 
+from ic_gamedata.specialization_engine import FormationContext
 from ic_gamedata.specialization_models import SpecializationOption
 from ic_gamedata.specialization_rules.context_builder import build_evaluation_context
 from ic_gamedata.specialization_rules.evaluator import (
-    apply_exception_rules,
     evaluate_specialization,
 )
 from ic_gamedata.specialization_rules.loader import load_documentation_rules
-from ic_gamedata.specialization_rules.models import AdviceResult, EvaluationContext, RuleDataset
+from ic_gamedata.specialization_rules.models import EvaluationContext
 from ic_gamedata.specialization_rules.provenance import classify_rule_provenance
 from ic_gamedata.specialization_rules.validator import validate_rule_dataset
-from ic_gamedata.specialization_engine import FormationContext
 
 
 def _ctx(

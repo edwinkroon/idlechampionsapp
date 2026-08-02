@@ -2,9 +2,18 @@
 
 from __future__ import annotations
 
-from ic_gamedata.party_advisor import ContextMode, FormationHero, GoalMode, _is_buffer, _is_debuffer, _is_dps, _is_speed, _is_tank
-from ic_gamedata.speed_utility_roles import infer_speed_utility_seat_role
+from ic_gamedata.party_advisor import (
+    ContextMode,
+    FormationHero,
+    GoalMode,
+    _is_buffer,
+    _is_debuffer,
+    _is_dps,
+    _is_speed,
+    _is_tank,
+)
 from ic_gamedata.seat_advisor.models import SeatRole
+from ic_gamedata.speed_utility_roles import infer_speed_utility_seat_role
 
 
 def infer_seat_role(

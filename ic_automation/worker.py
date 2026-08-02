@@ -5,11 +5,11 @@ from __future__ import annotations
 import queue
 import threading
 import time
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Callable
 
-from ic_automation.settings import AutomationSettings
 from ic_automation import win_input
+from ic_automation.settings import AutomationSettings
 
 
 @dataclass(frozen=True)

@@ -13,23 +13,26 @@ from ic_gamedata.specialization_rules.loader import (
 )
 from ic_gamedata.specialization_rules.models import AdviceResult, EvaluationContext, RuleDataset
 from ic_gamedata.specialization_rules.provenance import RuleSourceType, classify_rule_provenance
-from ic_gamedata.specialization_rules.route_mapper import map_label_to_upgrade_id, map_route_to_upgrade_id
+from ic_gamedata.specialization_rules.route_mapper import (
+    map_label_to_upgrade_id,
+    map_route_to_upgrade_id,
+)
 from ic_gamedata.specialization_rules.validator import validate_rule_dataset
 
 __all__ = [
     "AdviceResult",
     "EvaluationContext",
     "RuleDataset",
+    "RuleSourceType",
     "apply_exception_rules",
     "build_evaluation_context",
     "cached_documentation_rules",
+    "classify_rule_provenance",
     "documentation_dir",
     "evaluate_condition",
     "evaluate_specialization",
     "load_documentation_rules",
     "map_label_to_upgrade_id",
     "map_route_to_upgrade_id",
-    "classify_rule_provenance",
-    "RuleSourceType",
     "validate_rule_dataset",
 ]

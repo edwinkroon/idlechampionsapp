@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import ctypes
 import logging
+from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import Sequence
 
 from ic_reader.exceptions import ModuleNotFoundError, ProcessNotFoundError
 

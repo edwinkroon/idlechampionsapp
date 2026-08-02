@@ -2,21 +2,20 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, Callable
+from typing import Any
 
 from ic_gamedata.loot_stats import HeroLootStats, formation_loot_stack_totals
 from ic_gamedata.specialization_custom_stacks import (
     acqinc_cteam_count,
     ceremorphosis_stack_count,
     champions_of_tymora_count,
-    dob_qualified_counts,
     diana_inspire_match_count,
     diana_inspire_upgrade_id,
-    event_boon_count_from_details,
+    dob_qualified_counts,
     grand_tour_base_adventures_completed,
     high_intelligence_count,
-    modron_core_competency_stacks,
     omin_has_known_associates,
     shadowheart_duplicity_distance,
     unavailable_owned_hero_count,

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import queue
-from typing import Callable
+from collections.abc import Callable
 
 from ic_automation.settings import AutomationSettings
 from ic_automation.worker import AutomationWorker, StatusEvent

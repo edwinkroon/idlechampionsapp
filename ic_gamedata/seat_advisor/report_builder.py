@@ -5,10 +5,20 @@ from __future__ import annotations
 from typing import Any
 
 from ic_gamedata.adventure_restrictions import AdventureRosterFilter, is_hero_allowed
-from ic_gamedata.patron_roster import patron_restriction_note
+from ic_gamedata.champion_role_advice import get_role_advice
+from ic_gamedata.feat_status import build_feat_recommendations
 from ic_gamedata.formation_advisor.models import FormationInsight
 from ic_gamedata.formation_advisor.topology import load_formation_topology
-from ic_gamedata.party_advisor import ContextMode, FormationHero, GoalMode, _loot_ilvl_by_hero, _owned_heroes, _resolve_bud_hero, _resolve_speed_hero
+from ic_gamedata.parsing import parse_int as _parse_int
+from ic_gamedata.party_advisor import (
+    ContextMode,
+    FormationHero,
+    GoalMode,
+    _loot_ilvl_by_hero,
+    _owned_heroes,
+    _resolve_bud_hero,
+    _resolve_speed_hero,
+)
 from ic_gamedata.party_advisor_specializations import (
     SpecializationInsight,
     _formation_context_from_payload,
@@ -16,21 +26,25 @@ from ic_gamedata.party_advisor_specializations import (
     recommended_spec_for_goal,
     resolve_spec_display_status,
 )
-from ic_gamedata.specializations import _merge_known_options, load_specialization_rules
+from ic_gamedata.patron_roster import patron_restriction_note
 from ic_gamedata.seat_advisor.bench_ranker import better_bench_for_role, rank_bench_alternatives
 from ic_gamedata.seat_advisor.formation_visual import build_visual_nodes, load_formation_graph
 from ic_gamedata.seat_advisor.html_grid import generate_formation_html
-from ic_gamedata.seat_advisor.models import SeatAdvisorReport, SeatInsightLine, SeatReport, SeatRole, VisualSeatNode
-from ic_gamedata.champion_role_advice import get_role_advice
+from ic_gamedata.seat_advisor.models import (
+    SeatAdvisorReport,
+    SeatInsightLine,
+    SeatReport,
+    SeatRole,
+    VisualSeatNode,
+)
+from ic_gamedata.seat_advisor.role_inference import infer_seat_role, role_fits_champion, role_label
+from ic_gamedata.seat_advisor.role_prefs import get_chosen_role, load_role_preferences
+from ic_gamedata.specializations import _merge_known_options, load_specialization_rules
 from ic_gamedata.speed_utility_roles import (
     recommended_feats_for_speed_utility,
     speed_utility_relevance_reason,
     speed_utility_role,
 )
-from ic_gamedata.feat_status import build_feat_recommendations
-from ic_gamedata.parsing import parse_int as _parse_int
-from ic_gamedata.seat_advisor.role_inference import infer_seat_role, role_fits_champion, role_label
-from ic_gamedata.seat_advisor.role_prefs import get_chosen_role, load_role_preferences
 
 
 def _active_instance(payload: dict[str, Any]) -> dict[str, Any] | None:

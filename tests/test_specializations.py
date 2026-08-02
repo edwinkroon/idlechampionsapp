@@ -7,6 +7,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
+from ic_gamedata.specialization_models import PendingSpecialization
 from ic_gamedata.specializations import (
     SpecializationOption,
     _current_choices,
@@ -14,7 +15,6 @@ from ic_gamedata.specializations import (
     load_specialization_rules,
     pending_specializations,
 )
-from ic_gamedata.specialization_models import PendingSpecialization
 
 
 class SpecializationsTests(unittest.TestCase):

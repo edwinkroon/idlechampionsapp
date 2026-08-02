@@ -11,13 +11,13 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QPushButton,
-    QScrollArea,
     QVBoxLayout,
     QWidget,
 )
 
 from ic_ui.theme import (
     ACCENT,
+    BG_BADGE,
     BG_INPUT,
     BORDER,
     BUD_BAR,
@@ -26,7 +26,6 @@ from ic_ui.theme import (
     PORTRAIT_H,
     PORTRAIT_W,
     TEXT_BADGE,
-    BG_BADGE,
     TEXT_MUTED,
     WARN_BAR,
     advisor_accent_stylesheet,
@@ -57,14 +56,10 @@ def trim_transparent_pixmap(pixmap: QPixmap) -> QPixmap:
     for y in range(height):
         for x in range(width):
             if image.pixelColor(x, y).alpha() > 16:
-                if x < min_x:
-                    min_x = x
-                if y < min_y:
-                    min_y = y
-                if x > max_x:
-                    max_x = x
-                if y > max_y:
-                    max_y = y
+                min_x = min(min_x, x)
+                min_y = min(min_y, y)
+                max_x = max(max_x, x)
+                max_y = max(max_y, y)
 
     if max_x < min_x or max_y < min_y:
         return pixmap
@@ -97,7 +92,7 @@ class FormationSeatCard(QFrame):
         self._seat = seat
         self.setCursor(Qt.CursorShape.PointingHandCursor)
 
-    def mousePressEvent(self, event) -> None:  # noqa: N802
+    def mousePressEvent(self, event) -> None:
         if event.button() == Qt.MouseButton.LeftButton:
             self.clicked.emit(self._seat)
         super().mousePressEvent(event)
@@ -241,8 +236,8 @@ __all__ = [
     "advisor_card",
     "advisor_card_layout",
     "advisor_divider",
-    "advisor_link_btn",
     "advisor_lbl",
+    "advisor_link_btn",
     "advisor_open_url",
     "advisor_portrait",
     "advisor_role_combo",

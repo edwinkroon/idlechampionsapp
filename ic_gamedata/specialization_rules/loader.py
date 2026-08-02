@@ -8,6 +8,7 @@ import sys
 from functools import lru_cache
 from pathlib import Path
 
+from ic_gamedata.parsing import parse_int as _parse_int
 from ic_gamedata.specialization_rules.models import (
     DataSourceVersion,
     ExceptionRule,
@@ -18,7 +19,6 @@ from ic_gamedata.specialization_rules.models import (
 )
 from ic_gamedata.specialization_rules.provenance import classify_rule_provenance
 from ic_gamedata.specialization_rules.validator import validate_rule_dataset
-from ic_gamedata.parsing import parse_int as _parse_int
 
 _V3_PRODUCTION = "champion_specialization_rules_v3.csv"
 _V3_EXAMPLES = "champion_specialization_rules_v3_example_rows.csv"

@@ -10,7 +10,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Literal
 
-from ic_gamedata.parsing import parse_int as _parse_int, parse_number as _parse_number
+from ic_gamedata.parsing import parse_int as _parse_int
+from ic_gamedata.parsing import parse_number as _parse_number
 
 GoalMode = Literal["bud", "gold", "speed"]
 ContextMode = Literal["campaign", "events", "push", "modron"]
@@ -893,9 +894,7 @@ def _build_improvements(
                     )
                 )
 
-        if context == "push":
-            pass
-        elif context == "modron":
+        if context == "push" or context == "modron":
             pass
 
     elif goal == "speed":
@@ -1357,7 +1356,11 @@ def analyze_party(
     adventure_name = _adventure_name(payload, adventure_id)
     modifiers = _adventure_modifiers(payload, adventure_id)
 
-    from ic_gamedata.adventure_restrictions import build_adventure_roster_filter, player_formation_capacity, restriction_summary
+    from ic_gamedata.adventure_restrictions import (
+        build_adventure_roster_filter,
+        player_formation_capacity,
+        restriction_summary,
+    )
 
     roster_filter = build_adventure_roster_filter(payload, adventure_id)
     restrictions_note = restriction_summary(roster_filter)
@@ -1507,9 +1510,7 @@ def _improvements_for_hero(
 ) -> list[HeroImprovement]:
     matched: list[HeroImprovement] = []
     for item in improvements:
-        if item.seat is not None and hero.seat is not None and item.seat == hero.seat:
-            matched.append(item)
-        elif item.seat is None and item.hero_name == hero.name:
+        if (item.seat is not None and hero.seat is not None and item.seat == hero.seat) or (item.seat is None and item.hero_name == hero.name):
             matched.append(item)
     return matched
 

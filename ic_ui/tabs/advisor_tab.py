@@ -6,8 +6,6 @@ import time
 
 from PySide6.QtCore import Qt, QThreadPool, Signal
 from PySide6.QtWidgets import (
-    QCheckBox,
-    QComboBox,
     QFrame,
     QHBoxLayout,
     QLabel,
@@ -18,6 +16,7 @@ from PySide6.QtWidgets import (
 )
 
 from ic_ui.tabs.dashboard_tab import DashboardTab
+from ic_ui.widgets.advisor_controls import AdvisorGoalContextBar
 from ic_ui.widgets.advisor_widgets import (
     ACCENT,
     BG_INPUT,
@@ -29,8 +28,8 @@ from ic_ui.widgets.advisor_widgets import (
     advisor_card,
     advisor_card_layout,
     advisor_divider,
-    advisor_link_btn,
     advisor_lbl,
+    advisor_link_btn,
     advisor_portrait,
     advisor_role_combo,
     advisor_section,
@@ -135,9 +134,9 @@ class AdvisorTab(QWidget):
         if self._analysing:
             self._pending_analysis = (payload, err, auto_refresh, party_changed)
             return
-        goal = self._goal.currentData() or "bud"
-        context = self._context.currentData() or "campaign"
-        include_formation = self._cb_formation.isChecked()
+        goal = self._controls.goal()
+        context = self._controls.context()
+        include_formation = self._controls.include_formation()
         self._pending_auto_refresh = auto_refresh
         self._current_party_changed = party_changed
         self._analysing = True
@@ -152,33 +151,11 @@ class AdvisorTab(QWidget):
         root.setSpacing(6)
 
         ctrl_row = QHBoxLayout()
-        self._goal = QComboBox()
-        self._goal.addItem("BUD / damage", "bud")
-        self._goal.addItem("Gold income", "gold")
-        self._goal.addItem("Speed / areas", "speed")
-
-        self._context = QComboBox()
-        self._context.addItem("Campaign", "campaign")
-        self._context.addItem("Events", "events")
-        self._context.addItem("Push", "push")
-        self._context.addItem("Modron", "modron")
-
-        self._cb_formation = QCheckBox("Formatie")
-        self._cb_formation.setChecked(True)
-
+        self._controls = AdvisorGoalContextBar(include_formation=True)
+        self._controls.changed.connect(self._on_options_changed)
         self._btn_analyze = QPushButton("Analyseren")
         self._btn_analyze.clicked.connect(lambda: self.request_analyze(auto_refresh=False))
-
-        self._cb_formation.toggled.connect(self._on_options_changed)
-        self._goal.currentIndexChanged.connect(self._on_options_changed)
-        self._context.currentIndexChanged.connect(self._on_options_changed)
-
-        ctrl_row.addWidget(QLabel("Doel:"))
-        ctrl_row.addWidget(self._goal)
-        ctrl_row.addWidget(QLabel("Context:"))
-        ctrl_row.addWidget(self._context)
-        ctrl_row.addWidget(self._cb_formation)
-        ctrl_row.addStretch(1)
+        ctrl_row.addWidget(self._controls, stretch=1)
         ctrl_row.addWidget(self._btn_analyze)
         root.addLayout(ctrl_row)
 
@@ -204,8 +181,8 @@ class AdvisorTab(QWidget):
     def _on_options_changed(self, *_args) -> None:
         if self._last_payload is None:
             return
-        self._last_goal = self._goal.currentData() or "bud"
-        self._last_context = self._context.currentData() or "campaign"
+        self._last_goal = self._controls.goal()
+        self._last_context = self._controls.context()
         self._rerun_with_role_prefs()
 
     def _schedule_pending_analysis(self) -> None:
@@ -266,7 +243,7 @@ class AdvisorTab(QWidget):
             goal=self._last_goal,
             context=self._last_context,
             include_specializations=False,
-            include_formation=self._cb_formation.isChecked(),
+            include_formation=self._controls.include_formation(),
         )
         scroll_y = self._scroll.verticalScrollBar().value()
         self._render_report(report, reset_scroll=False)
@@ -306,7 +283,7 @@ class AdvisorTab(QWidget):
         try:
             from ic_gamedata.party_advisor import goal_label as advisor_goal_label
         except ImportError:
-            advisor_goal_label = lambda g: g  # noqa: E731
+            advisor_goal_label = lambda g: g
         goal_text = advisor_goal_label(report.goal)
 
         head = advisor_card(highlight=False)
@@ -359,7 +336,7 @@ class AdvisorTab(QWidget):
             from ic_gamedata.seat_advisor.models import STANDARD_SEAT_ROLES
             from ic_gamedata.seat_advisor.role_inference import role_label
         except ImportError:
-            role_label = lambda r: r or "?"  # noqa: E731
+            role_label = lambda r: r or "?"
             STANDARD_SEAT_ROLES = []
 
         advisor_section(self._layout, "Seats (meest relevant bovenaan)")
@@ -515,7 +492,7 @@ class AdvisorTab(QWidget):
         try:
             from ic_gamedata.seat_advisor.role_inference import role_label
         except ImportError:
-            role_label = lambda r: r or "?"  # noqa: E731
+            role_label = lambda r: r or "?"
 
         pad = 16
         card_w, card_h = 100, 58

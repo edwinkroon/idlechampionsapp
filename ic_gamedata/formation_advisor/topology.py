@@ -4,14 +4,10 @@
 
 from __future__ import annotations
 
-
-
 from typing import Any
 
 from ic_gamedata.formation_advisor.models import FormationTopology, Zone
 from ic_gamedata.parsing import parse_int as _parse_int
-
-
 
 _DEFAULT_ADJ: dict[int, frozenset[int]] = {
 

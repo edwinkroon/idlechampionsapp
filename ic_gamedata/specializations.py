@@ -8,6 +8,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
+from ic_gamedata.familiar_seats import familiar_party_count
 from ic_gamedata.parsing import parse_int as _parse_int
 from ic_gamedata.specialization_advice_text import human_specialization_reason
 from ic_gamedata.specialization_data import (
@@ -15,17 +16,23 @@ from ic_gamedata.specialization_data import (
     hero_name_map_from_cached_definitions,
     hero_name_map_from_champion_config,
 )
-from ic_gamedata.familiar_seats import familiar_party_count
 from ic_gamedata.specialization_engine import (
     FormationContext,
+)
+from ic_gamedata.specialization_engine import (
     baseline_default_ids as _baseline_default_ids,
+)
+from ic_gamedata.specialization_engine import (
     dynamic_default_ids as _dynamic_default_ids,
 )
-from ic_gamedata.specialization_rules.context_builder import build_evaluation_context, champion_names_match
+from ic_gamedata.specialization_models import PendingSpecialization, SpecializationOption
+from ic_gamedata.specialization_rules.context_builder import (
+    build_evaluation_context,
+    champion_names_match,
+)
 from ic_gamedata.specialization_rules.evaluator import evaluate_specialization
 from ic_gamedata.specialization_rules.loader import cached_documentation_rules
 from ic_gamedata.specialization_rules.models import AdviceResult
-from ic_gamedata.specialization_models import PendingSpecialization, SpecializationOption
 
 # Backward-compatible aliases for tests and patches.
 _hero_name_map_from_cached_definitions = hero_name_map_from_cached_definitions
