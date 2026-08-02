@@ -26,6 +26,24 @@ ignore = ["E501"]
 
 [tool.ruff.lint.per-file-ignores]
 "ic_ui/**" = ["BLE001", "S110", "E731", "RUF001", "SIM105", "SIM108"]
+"ic_gamedata/**" = [
+    "BLE001",
+    "B905",
+    "F841",
+    "PLR0912",
+    "PLR0915",
+    "RUF001",
+    "RUF002",
+    "RUF003",
+    "RUF046",
+    "RUF059",
+    "SIM102",
+    "SIM103",
+    "SIM108",
+    "SIM112",
+    "UP042",
+]
 "ic_automation/**" = ["BLE001"]
 "ic_reader/**" = ["BLE001"]
+"legacy/**" = ["BLE001", "E402"]
 "tests/**" = ["PLR2004"]

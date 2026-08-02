@@ -20,7 +20,7 @@ Eigen programma met duidelijke stappen en een **Test**-knop.
    pip install -r requirements.txt
    python app_launcher.py
    ```
-   Ontwikkelaars: `pip install -r requirements-dev.txt` en daarna `python -m pytest tests` / `python -m ruff check ic_core ic_ui`.
+   Ontwikkelaars: `pip install -r requirements-dev.txt` en daarna `python -m pytest tests` / `python -m ruff check ic_core ic_ui ic_gamedata`.
 2. **Zonder Python**: maak eerst een .exe met `build_exe.bat`, daarna kun je `dist\IdleChampionsApp.exe` dubbelklikken.
 
 ### Gebruik in de app
@@ -69,7 +69,7 @@ Na wijziging het script opnieuw starten (of herladen).
 
 ## Oude Python-GUI (legacy)
 
-`idle_champions_automation.py` en `idle_champions_gamedata.py` zijn oudere entrypoints. Gebruik **`app_launcher.py`** / de PySide6-app.
+De tkinter-app staat in `legacy/idle_champions_automation_tk.py`. Het rootbestand `idle_champions_automation.py` stuurt door naar **`app_launcher.py`**. `idle_champions_gamedata.py` is een compatibiliteitsshim — gebruik **`app_launcher.py`** / de PySide6-app.
 
 ---
 

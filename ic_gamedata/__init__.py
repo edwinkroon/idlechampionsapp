@@ -3,7 +3,6 @@
 from ic_gamedata.api_client import fetch_user_details, fetch_user_details_payload
 from ic_gamedata.credentials import GameCredentials, extract_credentials_from_log
 from ic_gamedata.log_parser import (
-    GameSnapshot,
     PartySnapshot,
     merge_snapshots,
     parse_web_request_log,

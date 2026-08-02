@@ -20,7 +20,7 @@ jobs:
         run: pip install -r requirements-dev.txt
 
       - name: Ruff
-        run: python -m ruff check ic_core ic_ui
+        run: python -m ruff check ic_core ic_ui ic_gamedata
 
       - name: Tests
         run: python -m pytest tests

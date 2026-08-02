@@ -6,25 +6,20 @@ import json
 import math
 import re
 import sys
-from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Literal
+from typing import Any
 
 from ic_gamedata.parsing import parse_int as _parse_int
 from ic_gamedata.parsing import parse_number as _parse_number
-
-GoalMode = Literal["bud", "gold", "speed"]
-ContextMode = Literal["campaign", "events", "push", "modron"]
-
-GOAL_LABELS: dict[str, str] = {
-    "bud": "BUD / damage",
-    "gold": "Gold income",
-    "speed": "Speed / areas",
-}
-
-
-def goal_label(goal: GoalMode) -> str:
-    return GOAL_LABELS.get(goal, goal)
+from ic_gamedata.party_advisor_models import (
+    AdvisorReport,
+    AdvisorTip,
+    ContextMode,
+    FormationHero,
+    GoalMode,
+    HeroImprovement,
+    goal_label,
+)
 
 _RELATIVE_GEAR_WEAK_PCT = 12.0
 
@@ -318,62 +313,6 @@ def _human_buff_note(multiplier: float | None) -> str | None:
     if multiplier > 1000 or math.isinf(multiplier):
         return "Dit adventure heeft een zeer sterke damage-buff."
     return f"Adventure damage-buff: ongeveer {multiplier:.1f}×."
-
-
-@dataclass(frozen=True)
-class FormationHero:
-    hero_id: int
-    name: str
-    seat: int | None
-    level: int
-    gear_score: float
-    ilvl: int
-    ilvl_pct_vs_avg: float
-    gear_rank: int
-    gear_rank_total: int
-    gear_pct_of_best: float
-    gear_label: str
-    role_label: str
-    roles: tuple[str, ...]
-    tags: tuple[str, ...]
-    highest_damage: float
-    active_feats: int
-    is_top_damage: bool
-
-
-@dataclass(frozen=True)
-class HeroImprovement:
-    priority: int
-    hero_name: str | None
-    seat: int | None
-    headline: str
-    action: str
-
-
-@dataclass(frozen=True)
-class AdvisorTip:
-    priority: int
-    title: str
-    detail: str
-
-
-@dataclass(frozen=True)
-class AdvisorReport:
-    goal: GoalMode
-    context: ContextMode
-    adventure_name: str
-    adventure_id: int | None
-    gold_growth_rate: float | None
-    adventure_buff_note: str | None
-    main_dps_name: str | None
-    formation_heroes: tuple[FormationHero, ...]
-    improvements: tuple[HeroImprovement, ...]
-    tips: tuple[AdvisorTip, ...]
-    summary: str
-    specialization_insights: tuple[Any, ...] = ()
-    adventure_restrictions_note: str | None = None
-    formation_insights: tuple[Any, ...] = ()
-    seat_report: Any | None = None
 
 
 def _formation_heroes(payload: dict[str, Any]) -> tuple[FormationHero, ...]:
