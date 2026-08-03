@@ -76,7 +76,7 @@
     "2": {
       "name": "Celeste",
       "default": [
-        30
+        29
       ],
       "options": [
         {
@@ -136,7 +136,7 @@
     "5": {
       "name": "Calliope",
       "default": [
-        76
+        75
       ],
       "options": [
         {
@@ -259,7 +259,7 @@
     "9": {
       "name": "Makos",
       "default": [
-        140
+        139
       ],
       "options": [
         {
@@ -1296,7 +1296,7 @@
     "47": {
       "name": "Shandie",
       "default": [
-        9731
+        9732
       ],
       "options": [
         {
@@ -4699,7 +4699,8 @@
     "166": {
       "name": "Cazrin",
       "default": [
-        17679
+        17679,
+        17682
       ],
       "options": [
         {

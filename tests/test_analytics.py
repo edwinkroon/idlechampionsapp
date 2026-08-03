@@ -60,14 +60,23 @@ class GoalRunAnalyticsTests(unittest.TestCase):
 
     def test_csv_rows_oldest_first(self) -> None:
         records = (
-            GoalRunRecord(duration_sec=100.0, area_goal=200, peak_area=201, recorded_at=2.0),
+            GoalRunRecord(
+                duration_sec=100.0,
+                area_goal=200,
+                peak_area=201,
+                recorded_at=2.0,
+                gems_earned=500,
+            ),
             GoalRunRecord(duration_sec=200.0, area_goal=200, peak_area=202, recorded_at=1.0),
         )
         rows = goal_run_csv_rows(records)
         self.assertEqual(rows[0][0], "run")
+        self.assertIn("gems_earned", rows[0])
         self.assertEqual(rows[1][0], "1")
         self.assertEqual(rows[2][0], "2")
         self.assertEqual(rows[2][1], "100.0")
+        self.assertEqual(rows[2][5], "500")
+        self.assertEqual(rows[1][5], "")
 
     def test_merge_deduplicates_live_history(self) -> None:
         record = GoalRunRecord(duration_sec=100.0, area_goal=200, peak_area=201, recorded_at=1.0)

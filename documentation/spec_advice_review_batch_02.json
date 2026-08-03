@@ -1,0 +1,928 @@
+[
+  {
+    "hero_id": 13,
+    "name": "Hitch",
+    "has_dynamic_handler": false,
+    "sample_reason": "risk sample primary=unmapped_label; tags=unmapped_label",
+    "risk_tags": [
+      "unmapped_label"
+    ],
+    "our_default_advice": [
+      "Charismatic (391)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "High Cha route",
+    "csv_alternative_label": "Other route",
+    "csv_advice_text": "Neem de route die het meeste charisma/synergie in je formatie benut.",
+    "csv_label_maps_to": null,
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 386,
+          "name": "More Daggers",
+          "required_level": 160
+        },
+        {
+          "upgrade_id": 391,
+          "name": "Charismatic",
+          "required_level": 160
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 14,
+    "name": "Stoki",
+    "has_dynamic_handler": false,
+    "sample_reason": "risk sample primary=unmapped_label; tags=unmapped_label",
+    "risk_tags": [
+      "unmapped_label"
+    ],
+    "our_default_advice": [
+      "All Out Assault (16056)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "Support route",
+    "csv_alternative_label": "Stack route",
+    "csv_advice_text": "Neem de lijn die meer support op je dps geeft; stacks alleen als setup dat ondersteunt.",
+    "csv_label_maps_to": null,
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 16056,
+          "name": "All Out Assault",
+          "required_level": 200
+        },
+        {
+          "upgrade_id": 16057,
+          "name": "Bend It Like Birdsong",
+          "required_level": 200
+        },
+        {
+          "upgrade_id": 16058,
+          "name": "A Little Bit Faster Now",
+          "required_level": 200
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 15,
+    "name": "Krond",
+    "has_dynamic_handler": false,
+    "sample_reason": "risk sample primary=multi_tier; tags=multi_tier",
+    "risk_tags": [
+      "multi_tier"
+    ],
+    "our_default_advice": [
+      "Eldritch Strike (17242)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "Damage route",
+    "csv_alternative_label": "Other route",
+    "csv_advice_text": "Als deze champion je carry is, kies de pure damage-route.",
+    "csv_label_maps_to": "War Magic",
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 17238,
+          "name": "Survival of the Strongest",
+          "required_level": 60
+        },
+        {
+          "upgrade_id": 17239,
+          "name": "Survival of the Fittest",
+          "required_level": 60
+        },
+        {
+          "upgrade_id": 17240,
+          "name": "Survival of the Smartest",
+          "required_level": 60
+        }
+      ],
+      "1": [
+        {
+          "upgrade_id": 17242,
+          "name": "Eldritch Strike",
+          "required_level": 150
+        },
+        {
+          "upgrade_id": 17243,
+          "name": "Power Behind the Throne",
+          "required_level": 150
+        },
+        {
+          "upgrade_id": 17244,
+          "name": "War Magic",
+          "required_level": 150
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 16,
+    "name": "Gromma",
+    "has_dynamic_handler": false,
+    "sample_reason": "risk sample primary=multi_tier; tags=multi_tier",
+    "risk_tags": [
+      "multi_tier"
+    ],
+    "our_default_advice": [
+      "Circle of the Arctic (14878)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "Arctic",
+    "csv_alternative_label": "Mountain",
+    "csv_advice_text": "Debuff/tank afhankelijk van encounter; kies de lijn die je push betrouwbaarder maakt.",
+    "csv_label_maps_to": "Circle of the Arctic",
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 14877,
+          "name": "Circle of the Mountain",
+          "required_level": 100
+        },
+        {
+          "upgrade_id": 14878,
+          "name": "Circle of the Arctic",
+          "required_level": 100
+        },
+        {
+          "upgrade_id": 14879,
+          "name": "Circle of the Swamp",
+          "required_level": 100
+        }
+      ],
+      "1": [
+        {
+          "upgrade_id": 14880,
+          "name": "Stoneskin",
+          "required_level": 300
+        },
+        {
+          "upgrade_id": 14881,
+          "name": "Entanglement",
+          "required_level": 300
+        },
+        {
+          "upgrade_id": 14882,
+          "name": "Melf's Acid Arrow",
+          "required_level": 300
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 17,
+    "name": "Dhadius",
+    "has_dynamic_handler": false,
+    "sample_reason": "risk sample primary=multi_tier; tags=multi_tier, unmapped_label",
+    "risk_tags": [
+      "multi_tier",
+      "unmapped_label"
+    ],
+    "our_default_advice": [
+      "Empowered Empowerment (14559)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "Support route",
+    "csv_alternative_label": "Debuff route",
+    "csv_advice_text": "Spec kiezen op basis van wat je carry meer geeft; meestal support/debuff voor push.",
+    "csv_label_maps_to": null,
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 14556,
+          "name": "Together In Magic",
+          "required_level": 140
+        },
+        {
+          "upgrade_id": 14557,
+          "name": "Apart in Magic",
+          "required_level": 140
+        }
+      ],
+      "1": [
+        {
+          "upgrade_id": 14558,
+          "name": "Empowered Orbs",
+          "required_level": 260
+        },
+        {
+          "upgrade_id": 14559,
+          "name": "Empowered Empowerment",
+          "required_level": 260
+        },
+        {
+          "upgrade_id": 14560,
+          "name": "Use Smaller Words",
+          "required_level": 260
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 20,
+    "name": "Regis",
+    "has_dynamic_handler": true,
+    "sample_reason": "risk sample primary=dynamic_handler; tags=dynamic_handler, multi_tier",
+    "risk_tags": [
+      "dynamic_handler",
+      "multi_tier"
+    ],
+    "our_default_advice": [
+      "Ruby Encouragement (Ahead) (11530)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "Ahead",
+    "csv_alternative_label": "Behind",
+    "csv_advice_text": "Kies Ahead/Behind naar de kolom van je DPS; bij Ruby Weakness kies het attack-type van je BUD (melee/ranged/magic).",
+    "csv_label_maps_to": "Ruby Encouragement (Ahead)",
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 11530,
+          "name": "Ruby Encouragement (Ahead)",
+          "required_level": 20
+        },
+        {
+          "upgrade_id": 11531,
+          "name": "Ruby Encouragement (Behind)",
+          "required_level": 20
+        }
+      ],
+      "1": [
+        {
+          "upgrade_id": 11532,
+          "name": "Ruby Weakness (Ranged)",
+          "required_level": 150
+        },
+        {
+          "upgrade_id": 11533,
+          "name": "Ruby Weakness (Melee)",
+          "required_level": 150
+        },
+        {
+          "upgrade_id": 11534,
+          "name": "Ruby Weakness (Magic)",
+          "required_level": 150
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 22,
+    "name": "Zorbu",
+    "has_dynamic_handler": false,
+    "sample_reason": "risk sample primary=formation_or_adventure; tags=formation_or_adventure, unmapped_label",
+    "risk_tags": [
+      "formation_or_adventure",
+      "unmapped_label"
+    ],
+    "our_default_advice": [
+      "Lead The Pack (12993)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "Enemy type route",
+    "csv_alternative_label": "Other route",
+    "csv_advice_text": "Kies de spec die bij de relevante enemy types en je Zorbu-doel past.",
+    "csv_label_maps_to": null,
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 12993,
+          "name": "Lead The Pack",
+          "required_level": 60
+        },
+        {
+          "upgrade_id": 12994,
+          "name": "Hunting Partners",
+          "required_level": 60
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 25,
+    "name": "Catti-brie",
+    "has_dynamic_handler": true,
+    "sample_reason": "risk sample primary=dynamic_handler; tags=dynamic_handler, unmapped_label",
+    "risk_tags": [
+      "dynamic_handler",
+      "unmapped_label"
+    ],
+    "our_default_advice": [
+      "Big Push (11313)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "Support route",
+    "csv_alternative_label": "Crit route",
+    "csv_advice_text": "Neem de route die je carry sterker bufft; vaak support/crit afhankelijk van comp.",
+    "csv_label_maps_to": null,
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 11312,
+          "name": "Piercing Arrow",
+          "required_level": 220
+        },
+        {
+          "upgrade_id": 11313,
+          "name": "Big Push",
+          "required_level": 220
+        },
+        {
+          "upgrade_id": 11314,
+          "name": "Critical Family",
+          "required_level": 220
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 26,
+    "name": "Evelyn",
+    "has_dynamic_handler": true,
+    "sample_reason": "risk sample primary=dynamic_handler; tags=dynamic_handler",
+    "risk_tags": [
+      "dynamic_handler"
+    ],
+    "our_default_advice": [
+      "Compel Duel (12211)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "Support route",
+    "csv_alternative_label": "Other route",
+    "csv_advice_text": "Gebruik meestal de support- of utility-keuze als veilige default; wijk alleen af als de formatie, run-doel of champion-rol daar duidelijk om vraagt.",
+    "csv_label_maps_to": "Lathander's Allies",
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 12210,
+          "name": "Fighting Style: Protection",
+          "required_level": 240
+        },
+        {
+          "upgrade_id": 12211,
+          "name": "Compel Duel",
+          "required_level": 240
+        },
+        {
+          "upgrade_id": 12212,
+          "name": "Lathander's Allies",
+          "required_level": 240
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 28,
+    "name": "Deekin",
+    "has_dynamic_handler": false,
+    "sample_reason": "risk sample primary=farm_gold; tags=farm_gold",
+    "risk_tags": [
+      "farm_gold"
+    ],
+    "our_default_advice": [
+      "Troubadour Troupe (18862)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "Boss Wants Speed",
+    "csv_alternative_label": "Confidence in the Boss",
+    "csv_advice_text": "Speed is standaard voor farming en snelle clears.",
+    "csv_label_maps_to": null,
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 18860,
+          "name": "Unorthodox Stories",
+          "required_level": 130
+        },
+        {
+          "upgrade_id": 18861,
+          "name": "DOOOOOM From Afar",
+          "required_level": 130
+        },
+        {
+          "upgrade_id": 18862,
+          "name": "Troubadour Troupe",
+          "required_level": 130
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 34,
+    "name": "Donaar",
+    "has_dynamic_handler": false,
+    "sample_reason": "risk sample primary=farm_gold; tags=multi_tier, farm_gold",
+    "risk_tags": [
+      "multi_tier",
+      "farm_gold"
+    ],
+    "our_default_advice": [
+      "Business Partners (18659)",
+      "Command: Cower (18662)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "Ohhh Yeah",
+    "csv_alternative_label": "Blessing focus",
+    "csv_advice_text": "Gold voor farm/favor; utility/support voor push.",
+    "csv_label_maps_to": null,
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 18657,
+          "name": "Not So Straightforward",
+          "required_level": 150
+        },
+        {
+          "upgrade_id": 18658,
+          "name": "Scales and Horns",
+          "required_level": 150
+        },
+        {
+          "upgrade_id": 18659,
+          "name": "Business Partners",
+          "required_level": 150
+        }
+      ],
+      "1": [
+        {
+          "upgrade_id": 18660,
+          "name": "Command: Hold",
+          "required_level": 250
+        },
+        {
+          "upgrade_id": 18661,
+          "name": "Command: Duel",
+          "required_level": 250
+        },
+        {
+          "upgrade_id": 18662,
+          "name": "Command: Cower",
+          "required_level": 250
+        },
+        {
+          "upgrade_id": 18663,
+          "name": "Command: Droppit",
+          "required_level": 250
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 36,
+    "name": "Warden",
+    "has_dynamic_handler": true,
+    "sample_reason": "risk sample primary=dynamic_handler; tags=dynamic_handler, unmapped_label",
+    "risk_tags": [
+      "dynamic_handler",
+      "unmapped_label"
+    ],
+    "our_default_advice": [
+      "The Dark Hunger (13246)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "Highest specter-cap route",
+    "csv_alternative_label": "Other route",
+    "csv_advice_text": "Kies de specter-cap met de meeste doelen in je formatie: Evil (Dark Hunger), DEX≥16 (Shadows), of CHA-hoogst (Charm).",
+    "csv_label_maps_to": null,
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 13246,
+          "name": "The Dark Hunger",
+          "required_level": 80
+        },
+        {
+          "upgrade_id": 13247,
+          "name": "Shadows in the Night",
+          "required_level": 80
+        },
+        {
+          "upgrade_id": 13248,
+          "name": "Charm of the Fallen",
+          "required_level": 80
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 39,
+    "name": "Paultin",
+    "has_dynamic_handler": false,
+    "sample_reason": "risk sample primary=farm_gold; tags=farm_gold, unmapped_label",
+    "risk_tags": [
+      "farm_gold",
+      "unmapped_label"
+    ],
+    "our_default_advice": [
+      "Luck of the Vistani (2038)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "Support route",
+    "csv_alternative_label": "Other route",
+    "csv_advice_text": "Gebruik meestal de support- of utility-keuze als veilige default; wijk alleen af als de formatie, run-doel of champion-rol daar duidelijk om vraagt.",
+    "csv_label_maps_to": null,
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 2038,
+          "name": "Luck of the Vistani",
+          "required_level": 280
+        },
+        {
+          "upgrade_id": 2039,
+          "name": "Additional Secrets",
+          "required_level": 280
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 47,
+    "name": "Shandie",
+    "has_dynamic_handler": false,
+    "sample_reason": "risk sample primary=farm_gold; tags=farm_gold",
+    "risk_tags": [
+      "farm_gold"
+    ],
+    "our_default_advice": [
+      "Alchemist's Fire Expertise (9731)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "Dash",
+    "csv_alternative_label": "Other route",
+    "csv_advice_text": "Speed is de standaardkeuze voor farming.",
+    "csv_label_maps_to": "Criminal Contacts",
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 9730,
+          "name": "Known Allies",
+          "required_level": 230
+        },
+        {
+          "upgrade_id": 9731,
+          "name": "Alchemist's Fire Expertise",
+          "required_level": 230
+        },
+        {
+          "upgrade_id": 9732,
+          "name": "Criminal Contacts",
+          "required_level": 230
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 55,
+    "name": "Morgaen",
+    "has_dynamic_handler": false,
+    "sample_reason": "risk sample primary=formation_or_adventure; tags=multi_tier, formation_or_adventure, unmapped_label",
+    "risk_tags": [
+      "multi_tier",
+      "formation_or_adventure",
+      "unmapped_label"
+    ],
+    "our_default_advice": [
+      "Calm Under Pressure (3336)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "Support route",
+    "csv_alternative_label": "Other route",
+    "csv_advice_text": "Gebruik meestal de support- of utility-keuze als veilige default; wijk alleen af als de formatie, run-doel of champion-rol daar duidelijk om vraagt.",
+    "csv_label_maps_to": null,
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 3330,
+          "name": "Fine As Is",
+          "required_level": 240
+        },
+        {
+          "upgrade_id": 3331,
+          "name": "Keep Your Distance",
+          "required_level": 240
+        },
+        {
+          "upgrade_id": 3332,
+          "name": "Monster Fodder",
+          "required_level": 240
+        },
+        {
+          "upgrade_id": 3333,
+          "name": "Stay Out Of My Way",
+          "required_level": 240
+        }
+      ],
+      "1": [
+        {
+          "upgrade_id": 3334,
+          "name": "Keep It Simple",
+          "required_level": 300
+        },
+        {
+          "upgrade_id": 3335,
+          "name": "Tight Formation",
+          "required_level": 300
+        },
+        {
+          "upgrade_id": 3336,
+          "name": "Calm Under Pressure",
+          "required_level": 300
+        },
+        {
+          "upgrade_id": 3337,
+          "name": "The Long Game",
+          "required_level": 300
+        }
+      ],
+      "2": [
+        {
+          "upgrade_id": 3340,
+          "name": "Tight Formation",
+          "required_level": 420
+        },
+        {
+          "upgrade_id": 3341,
+          "name": "Calm Under Pressure",
+          "required_level": 420
+        },
+        {
+          "upgrade_id": 3342,
+          "name": "The Long Game",
+          "required_level": 420
+        },
+        {
+          "upgrade_id": 3343,
+          "name": "Keep It Simple",
+          "required_level": 420
+        },
+        {
+          "upgrade_id": 3344,
+          "name": "Calm Under Pressure",
+          "required_level": 420
+        },
+        {
+          "upgrade_id": 3345,
+          "name": "The Long Game",
+          "required_level": 420
+        },
+        {
+          "upgrade_id": 3346,
+          "name": "Keep It Simple",
+          "required_level": 420
+        },
+        {
+          "upgrade_id": 3347,
+          "name": "Tight Formation",
+          "required_level": 420
+        },
+        {
+          "upgrade_id": 3348,
+          "name": "The Long Game",
+          "required_level": 420
+        },
+        {
+          "upgrade_id": 3349,
+          "name": "Keep It Simple",
+          "required_level": 420
+        },
+        {
+          "upgrade_id": 3350,
+          "name": "Tight Formation",
+          "required_level": 420
+        },
+        {
+          "upgrade_id": 3351,
+          "name": "Calm Under Pressure",
+          "required_level": 420
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 64,
+    "name": "Beadle",
+    "has_dynamic_handler": true,
+    "sample_reason": "risk sample primary=dynamic_handler; tags=dynamic_handler",
+    "risk_tags": [
+      "dynamic_handler"
+    ],
+    "our_default_advice": [
+      "Epic Equipment (16727)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "",
+    "csv_alternative_label": "",
+    "csv_advice_text": "",
+    "csv_label_maps_to": null,
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 16727,
+          "name": "Epic Equipment",
+          "required_level": 160
+        },
+        {
+          "upgrade_id": 16728,
+          "name": "Premium Gear",
+          "required_level": 160
+        },
+        {
+          "upgrade_id": 16729,
+          "name": "Shiniest Loot",
+          "required_level": 160
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 65,
+    "name": "Omin",
+    "has_dynamic_handler": true,
+    "sample_reason": "risk sample primary=fill:dynamic_handler; tags=dynamic_handler, farm_gold, unmapped_label",
+    "risk_tags": [
+      "dynamic_handler",
+      "farm_gold",
+      "unmapped_label"
+    ],
+    "our_default_advice": [
+      "Favored Friends (12305)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "Gold route",
+    "csv_alternative_label": "Support route",
+    "csv_advice_text": "Gold voor favor/gold teams; support voor standaard push.",
+    "csv_label_maps_to": null,
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 12304,
+          "name": "Form Ranks",
+          "required_level": 180
+        },
+        {
+          "upgrade_id": 12305,
+          "name": "Favored Friends",
+          "required_level": 180
+        },
+        {
+          "upgrade_id": 12306,
+          "name": "Long Term Investments",
+          "required_level": 180
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 82,
+    "name": "Sgt. Knox",
+    "has_dynamic_handler": false,
+    "sample_reason": "risk sample primary=formation_or_adventure; tags=formation_or_adventure",
+    "risk_tags": [
+      "formation_or_adventure"
+    ],
+    "our_default_advice": [
+      "Shield Wall (15961)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "Tank route",
+    "csv_alternative_label": "Support route",
+    "csv_advice_text": "Meestal wat je formation mist: tankiness of extra support.",
+    "csv_label_maps_to": "Shield Wall",
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 15959,
+          "name": "Impromptu Allies",
+          "required_level": 160
+        },
+        {
+          "upgrade_id": 15960,
+          "name": "For The Greater Good",
+          "required_level": 160
+        },
+        {
+          "upgrade_id": 15961,
+          "name": "Shield Wall",
+          "required_level": 160
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 149,
+    "name": "Ravengard",
+    "has_dynamic_handler": false,
+    "sample_reason": "risk sample primary=recent; tags=recent",
+    "risk_tags": [
+      "recent"
+    ],
+    "our_default_advice": [
+      "Legacy of Ravengard (15033)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "",
+    "csv_alternative_label": "",
+    "csv_advice_text": "",
+    "csv_label_maps_to": null,
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 15031,
+          "name": "Lead The Charge",
+          "required_level": 200
+        },
+        {
+          "upgrade_id": 15032,
+          "name": "Strength of Baldur's Gate",
+          "required_level": 200
+        },
+        {
+          "upgrade_id": 15033,
+          "name": "Legacy of Ravengard",
+          "required_level": 200
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 153,
+    "name": "Kas",
+    "has_dynamic_handler": false,
+    "sample_reason": "risk sample primary=recent; tags=recent",
+    "risk_tags": [
+      "recent"
+    ],
+    "our_default_advice": [
+      "Kas the Betrayer (15624)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "",
+    "csv_alternative_label": "",
+    "csv_advice_text": "",
+    "csv_label_maps_to": null,
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 15623,
+          "name": "Kas the Bloody Handed",
+          "required_level": 180
+        },
+        {
+          "upgrade_id": 15624,
+          "name": "Kas the Betrayer",
+          "required_level": 180
+        },
+        {
+          "upgrade_id": 15625,
+          "name": "Kas the Destroyer",
+          "required_level": 180
+        }
+      ]
+    }
+  }
+]

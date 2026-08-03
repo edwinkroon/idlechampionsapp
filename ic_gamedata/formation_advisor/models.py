@@ -37,6 +37,7 @@ class FormationLayoutContext:
     context: str
     goal: str
     party_size: int
+    formation_capacity: int | None
     owned_hero_ids: frozenset[int]
     allowed_bench_ids: frozenset[int]
 

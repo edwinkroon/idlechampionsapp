@@ -56,6 +56,21 @@ def _formation_hero_ids(formation: Any) -> list[int]:
     return ids
 
 
+def live_formation_hero_ids(payload: dict[str, Any]) -> list[int]:
+    """Hero IDs currently on the live formation grid (empty slots excluded)."""
+    details = payload.get("details")
+    if not isinstance(details, dict):
+        return []
+    _active_id, instance = _active_instance(payload)
+    if instance is None:
+        return []
+    # An explicit empty list means the board is empty — do not fall back to details.
+    raw = instance.get("formation")
+    if isinstance(raw, list):
+        return _formation_hero_ids(raw)
+    return _formation_hero_ids(details.get("formation"))
+
+
 def _hero_belongs_to_party(game_id: int | None, active_id: int | None) -> bool:
     """Heroes with game_instance_id 0/None are shared roster — treat as active party."""
     if game_id is None or game_id <= 0:

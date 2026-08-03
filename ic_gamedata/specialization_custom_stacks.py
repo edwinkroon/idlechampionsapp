@@ -183,17 +183,21 @@ def dob_qualified_counts(
     attack_types_by_hero: dict[int, frozenset[str]],
     scores_by_hero: dict[int, dict[str, int]],
 ) -> tuple[int, int, int, int]:
+    """Count Dob's Befriend stacks.
+
+    Game text is Oxventure OR the listed filter (magic / CHA≥17 / DEX≥17),
+    not Oxventure-only with an extra filter on top.
+    """
     magical = friendly = quick = 0
     for hero_id in active_hero_ids:
         tags = _hero_tags(hero_id, tags_by_hero)
-        if "oxventure" not in tags:
-            continue
+        is_oxventure = "oxventure" in tags
         scores = scores_by_hero.get(hero_id, {})
-        if "magic" in attack_types_by_hero.get(hero_id, frozenset()):
+        if is_oxventure or "magic" in attack_types_by_hero.get(hero_id, frozenset()):
             magical += 1
-        if scores.get("cha", 0) >= 17:
+        if is_oxventure or scores.get("cha", 0) >= 17:
             friendly += 1
-        if scores.get("dex", 0) >= 17:
+        if is_oxventure or scores.get("dex", 0) >= 17:
             quick += 1
     return magical, friendly, quick, unique_species_count(active_hero_ids, tags_by_hero)
 
@@ -285,12 +289,20 @@ def high_intelligence_count(
 
 
 def unavailable_owned_hero_count(
-    active_hero_ids: set[int],
     owned_hero_ids: frozenset[int] | None,
+    roster_filter: Any | None = None,
 ) -> int:
-    if not owned_hero_ids:
+    """Count owned champions ineligible for the current adventure.
+
+    Matches Gale's Finite Fellowship stacks: unlocked champions that cannot
+    join this adventure. Unrestricted adventures (no roster rules) return 0 —
+    not ``owned - formation``, which massively overvalues Finite Fellowship.
+    """
+    if not owned_hero_ids or roster_filter is None:
         return 0
-    return len(owned_hero_ids - active_hero_ids)
+    from ic_gamedata.adventure_restrictions import is_hero_allowed
+
+    return sum(1 for hero_id in owned_hero_ids if not is_hero_allowed(hero_id, roster_filter))
 
 
 def magic_attack_count(

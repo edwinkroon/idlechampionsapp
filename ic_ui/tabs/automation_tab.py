@@ -145,7 +145,7 @@ class AutomationTab(QWidget):
         row.addRow("Level-interval (seconden, 0 = zo snel mogelijk):", level_interval_sec)
         level_options_layout.addLayout(row)
 
-        fkeys_box = QGroupBox("F-toetsen bij levelen")
+        fkeys_box = QGroupBox("F-toetsen bij levelen (alleen bij handmatige keuze)")
         fkeys_grid = QGridLayout(fkeys_box)
         fkeys: dict[int, QCheckBox] = {}
         for i in range(1, 13):
@@ -153,14 +153,17 @@ class AutomationTab(QWidget):
             cb.setChecked(False)
             fkeys[i] = cb
             fkeys_grid.addWidget(cb, (i - 1) // 4, (i - 1) % 4)
-        fkey_formation_label = QLabel("Alleen seats in de actieve formatie (auto-sync).")
+        fkey_formation_label = QLabel("Alle seats in de actieve formatie (F-vinkjes worden genegeerd).")
         fkey_formation_label.setWordWrap(True)
         limit_level_to_formation = QCheckBox("Beperk levelen tot actieve formatie (auto-sync)")
         limit_level_to_formation.setChecked(True)
         limit_level_to_formation.toggled.connect(self._on_level_scope_changed)
-        level_options_layout.addWidget(fkeys_box)
-        level_options_layout.addWidget(fkey_formation_label)
         level_options_layout.addWidget(limit_level_to_formation)
+        level_options_layout.addWidget(fkey_formation_label)
+        level_options_layout.addWidget(fkeys_box)
+        # Formatie-modus staat standaard aan: F-vinkjes zijn dan niet van toepassing.
+        fkeys_box.setEnabled(False)
+        self._fkeys_box = fkeys_box
         self._fkey_formation_label = fkey_formation_label
         self._limit_level_to_formation = limit_level_to_formation
         outer.addWidget(level_options)
@@ -264,13 +267,17 @@ class AutomationTab(QWidget):
     def _build_settings_snapshot(self) -> AutomationSettings:
         w = self._widgets
         assert w is not None
-        selected = tuple(
-            i
-            for i in range(12, 0, -1)
-            if w.level_fkeys[i].isChecked() and w.level_fkeys[i].isEnabled()
-        )
+        # Actieve-formatie modus: alle formatie-seats, F-vinkjes negeren.
         if self._limit_level_to_formation.isChecked() and self._formation_seats:
-            selected = tuple(i for i in selected if i in self._formation_seats)
+            selected = tuple(
+                i for i in range(12, 0, -1) if i in self._formation_seats
+            )
+        else:
+            selected = tuple(
+                i
+                for i in range(12, 0, -1)
+                if w.level_fkeys[i].isChecked() and w.level_fkeys[i].isEnabled()
+            )
         if self._familiar_level_seats:
             selected = tuple(i for i in selected if i not in self._familiar_level_seats)
         window = self.window()
@@ -376,12 +383,19 @@ class AutomationTab(QWidget):
             return
         w = self._widgets
         limit_to_formation = self._limit_level_to_formation.isChecked()
+        # In formatie-modus sturen we alle seats; F-vinkjes zijn alleen informatief.
+        self._fkeys_box.setEnabled(not limit_to_formation)
         party_changed = party_id != self._formation_party_id
         if not seats:
             party_txt = f"party {party_id}" if party_id is not None else "actieve party"
-            self._fkey_formation_label.setText(
-                f"Formatie {party_txt}: geen seats gevonden — handmatig aanvinken."
-            )
+            if limit_to_formation:
+                self._fkey_formation_label.setText(
+                    f"Formatie {party_txt}: geen seats gevonden — wacht op API-sync."
+                )
+            else:
+                self._fkey_formation_label.setText(
+                    f"Formatie {party_txt}: geen seats gevonden — handmatig aanvinken."
+                )
             if party_changed:
                 self._formation_party_id = party_id
                 self._formation_seats = frozenset()
@@ -407,7 +421,7 @@ class AutomationTab(QWidget):
                 cb.setEnabled(False)
             else:
                 cb.setStyleSheet("")
-                cb.setEnabled(True)
+                cb.setEnabled(not limit_to_formation)
                 if limit_to_formation:
                     cb.setChecked(i in seats)
         seat_list = ", ".join(f"F{s}" for s in sorted(seats))
@@ -421,18 +435,31 @@ class AutomationTab(QWidget):
             )
         elif blocked:
             blocked_txt = ", ".join(f"F{s}" for s in blocked)
-            suffix = f" — familiar op {blocked_txt} (groen, geen vinkje)"
+            suffix = f" — familiar op {blocked_txt} (groen, geen F-level)"
         else:
             suffix = ""
-        mode_txt = "alleen actieve formatie" if limit_to_formation else "handmatige F-keuzes toegestaan"
+        if limit_to_formation:
+            mode_txt = "alle actieve formatie-champs (F-vinkjes genegeerd)"
+        else:
+            mode_txt = "handmatige F-keuzes toegestaan"
         self._fkey_formation_label.setText(
             f"Formatie {party_txt}: {seat_list}{suffix} — {mode_txt}"
         )
 
     def _on_level_scope_changed(self) -> None:
+        limit_to_formation = self._limit_level_to_formation.isChecked()
+        self._fkeys_box.setEnabled(not limit_to_formation)
         if self._formation_seats:
             self._apply_formation_fkeys(
                 self._formation_party_id,
                 self._formation_seats,
                 self._familiar_level_seats,
+            )
+        elif limit_to_formation:
+            self._fkey_formation_label.setText(
+                "Alle seats in de actieve formatie (F-vinkjes worden genegeerd)."
+            )
+        else:
+            self._fkey_formation_label.setText(
+                "Handmatige F-keuzes: vink aan welke seats je wilt levelen."
             )

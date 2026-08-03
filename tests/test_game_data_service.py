@@ -4,19 +4,41 @@ from __future__ import annotations
 
 import json
 import tempfile
+import time
 import unittest
 from pathlib import Path
 from unittest import mock
 
 from PySide6.QtCore import QCoreApplication
 
-from ic_gamedata.advice_fingerprint import advice_fingerprint, party_id_from_payload
+from ic_gamedata.advice_fingerprint import (
+    advice_fingerprint,
+    commit_advice_fingerprint,
+    party_id_from_payload,
+    should_refresh_advice,
+)
 from ic_gamedata.credential_cache import CredentialCache
 from ic_gamedata.credentials import GameCredentials
 from ic_core.game_data_service import GameDataService, SnapshotEnvelope
 
 
-def _payload(*, party: int = 1, formation: list | None = None, adventure: int = 14) -> dict:
+def _payload(*, party: int = 1, formation: list | None = None, adventure: int = 14, levels: dict[int, int] | None = None) -> dict:
+    heroes = [
+        {
+            "hero_id": 164,
+            "owned": 1,
+            "level": (levels or {}).get(164, 1),
+            "specialization_choices": [{"upgrade_id": 1}],
+            "active_feats": [10],
+        },
+        {
+            "hero_id": 168,
+            "owned": 1,
+            "level": (levels or {}).get(168, 1),
+            "specialization_choices": [],
+            "active_feats": [],
+        },
+    ]
     return {
         "details": {
             "active_game_instance_id": party,
@@ -28,15 +50,7 @@ def _payload(*, party: int = 1, formation: list | None = None, adventure: int = 
                     "formation": formation if formation is not None else [164, 168, -1],
                 }
             ],
-            "heroes": [
-                {
-                    "hero_id": 164,
-                    "owned": 1,
-                    "specialization_choices": [{"upgrade_id": 1}],
-                    "active_feats": [10],
-                },
-                {"hero_id": 168, "owned": 1, "specialization_choices": [], "active_feats": []},
-            ],
+            "heroes": heroes,
         }
     }
 
@@ -54,6 +68,45 @@ class AdviceFingerprintTests(unittest.TestCase):
         p2 = json.loads(json.dumps(p1))
         p2["details"]["heroes"][0]["specialization_choices"] = [{"upgrade_id": 99}]
         self.assertNotEqual(advice_fingerprint(p1), advice_fingerprint(p2))
+
+    def test_formation_level_up_changes_fingerprint(self) -> None:
+        """Regression: spec popups after party start require level in the fp."""
+        low = advice_fingerprint(_payload(levels={164: 40, 168: 40}))
+        unlocked = advice_fingerprint(_payload(levels={164: 50, 168: 40}))
+        self.assertIsNotNone(low)
+        self.assertNotEqual(low, unlocked)
+
+    def test_empty_formation_does_not_lock_fingerprint(self) -> None:
+        fp = advice_fingerprint(_payload())
+        self.assertIsNone(commit_advice_fingerprint(fp, formation_empty=True))
+        self.assertEqual(commit_advice_fingerprint(fp, formation_empty=False), fp)
+
+    def test_empty_retry_refreshes_same_fingerprint(self) -> None:
+        """Regression: specs stuck until party switch when first analysis was empty."""
+        fp = advice_fingerprint(_payload())
+        locked = commit_advice_fingerprint(fp, formation_empty=True)
+        self.assertIsNone(locked)
+        # Same layout fingerprint on a later poll must still refresh.
+        self.assertTrue(
+            should_refresh_advice(
+                force=False,
+                first=False,
+                changed=fp is not None and fp != locked,
+                empty_retry=True,
+                degraded=False,
+            )
+        )
+        # Once formation resolves, identical polls can skip.
+        locked = commit_advice_fingerprint(fp, formation_empty=False)
+        self.assertFalse(
+            should_refresh_advice(
+                force=False,
+                first=False,
+                changed=fp != locked,
+                empty_retry=False,
+                degraded=False,
+            )
+        )
 
 
 class CredentialCacheTests(unittest.TestCase):
@@ -139,6 +192,33 @@ class GameDataServiceTests(unittest.TestCase):
         self.assertEqual(received[0].version, 1)
         self.assertIn("advisor", received[0].force_consumers)
         self.assertIsNotNone(received[0].advice_fp)
+
+    def test_log_probe_triggers_change_poll(self) -> None:
+        svc = GameDataService()
+        svc._credentials = GameCredentials("https://x/", "1", "h")
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "webRequestLog.txt"
+            path.write_text("v1", encoding="utf-8")
+            svc.configure(log_path=path, credentials=svc._credentials)
+            self.assertIsNotNone(svc._log_stat_key)
+            with mock.patch.object(svc, "request_poll") as poll:
+                svc._on_log_probe()
+                poll.assert_not_called()
+                path.write_text("v2-changed", encoding="utf-8")
+                svc._on_log_probe()
+                poll.assert_called_once_with(reason="log_change", auto_refresh=True)
+
+    def test_log_change_debounce_defers_second_poll(self) -> None:
+        svc = GameDataService()
+        svc._credentials = GameCredentials("https://x/", "1", "h")
+        svc._last_change_poll_mono = time.monotonic()
+        with mock.patch.object(svc, "request_poll") as poll:
+            svc._request_change_poll()
+            poll.assert_not_called()
+            self.assertTrue(svc._deferred_change_timer.isActive())
+            svc._deferred_change_timer.stop()
+            svc._on_deferred_log_change()
+            poll.assert_called_once_with(reason="log_change", auto_refresh=True)
 
 
 if __name__ == "__main__":

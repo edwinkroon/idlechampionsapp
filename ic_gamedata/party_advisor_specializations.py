@@ -323,6 +323,11 @@ def _open_tier_insight(
     *,
     run_goal: str,
 ) -> SpecializationInsight | None:
+    from ic_gamedata.specialization_advisor_model import (
+        advisor_model_for_hero,
+        preferred_ids_for_run_goal,
+    )
+
     tier_index = pending_item.options[0].tier_index if pending_item.options else 0
     tier_label = tier_index + 1
     options_text = " / ".join(option.name for option in pending_item.options)
@@ -330,7 +335,28 @@ def _open_tier_insight(
     priority = 4 if is_heuristic else 1
     quality = " (generieke placeholder)" if is_heuristic else ""
 
+    model = advisor_model_for_hero(pending_item.hero_id)
+    model_suffix = ""
+    confidence = pending_item.confidence or (2 if pending_item.desired_option_index is None else 3)
+    if model is not None:
+        if model.explanation_summary:
+            model_suffix = f" {model.explanation_summary}"
+        if model.review_needed:
+            confidence = min(confidence, 2)
+            priority = max(priority, 3)
+            if model.review_reasons:
+                model_suffix += f" Review: {model.review_reasons[0]}"
+
     if pending_item.desired_option_index is None:
+        detail = (
+            f"Tier {tier_label} wacht op een keuze ({run_goal.replace('_', ' ')}). "
+            f"Open opties: {options_text}."
+        )
+        if model is not None and model.safe_default is None:
+            detail += " Geen veilige universele default in advisor-model."
+        else:
+            detail += " Er is nog geen vaste regel voor deze tier."
+        detail += model_suffix
         return SpecializationInsight(
             hero_id=pending_item.hero_id,
             hero_name=pending_item.hero_name,
@@ -340,16 +366,28 @@ def _open_tier_insight(
             status="open_tier",
             rule_source_type=pending_item.rule_source_type or "heuristic",
             data_source_version=pending_item.data_source_version or "v2_full",
-            confidence=pending_item.confidence or 2,
+            confidence=confidence,
             headline=f"Open specialization: {pending_item.hero_name}",
-            detail=(
-                f"Tier {tier_label} wacht op een keuze ({run_goal.replace('_', ' ')}). "
-                f"Open opties: {options_text}. Er is nog geen vaste regel voor deze tier."
-            ),
-            priority=5,
+            detail=detail.strip(),
+            priority=5 if model is None or not model.review_needed else 3,
         )
 
     chosen = pending_item.options[pending_item.desired_option_index].name
+    if model is not None:
+        preferred = preferred_ids_for_run_goal(model, run_goal=run_goal)
+        if preferred:
+            match = next(
+                (opt for opt in pending_item.options if opt.upgrade_id == preferred[0]),
+                None,
+            )
+            if match is not None:
+                chosen = match.name
+
+    detail = (
+        f"Kies {chosen} voor tier {tier_label} "
+        f"({run_goal.replace('_', ' ')}){quality}."
+    )
+    detail += model_suffix
     return SpecializationInsight(
         hero_id=pending_item.hero_id,
         hero_name=pending_item.hero_name,
@@ -359,12 +397,9 @@ def _open_tier_insight(
         status="open_tier",
         rule_source_type=pending_item.rule_source_type or "authored",
         data_source_version=pending_item.data_source_version or "v2_full",
-        confidence=pending_item.confidence or 3,
+        confidence=confidence,
         headline=f"Open specialization: {pending_item.hero_name}",
-        detail=(
-            f"Kies {chosen} voor tier {tier_label} "
-            f"({run_goal.replace('_', ' ')}){quality}."
-        ),
+        detail=detail.strip(),
         priority=priority,
     )
 

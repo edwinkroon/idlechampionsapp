@@ -63,7 +63,7 @@ class IdleChampionsMainWindow(QMainWindow):
         self.setCentralWidget(tabs)
         self._build_menu_bar()
 
-        self._data.start_polling(5000)
+        self._data.start_polling()
         from PySide6.QtCore import QTimer
 
         QTimer.singleShot(300, self._dashboard_tab.auto_start)

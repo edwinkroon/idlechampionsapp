@@ -350,13 +350,20 @@ class GoalRunHistoryTests(_IsolatedGoalRunHistoryTestCase):
         from ic_gamedata.stats import GoalRunRecord
 
         history = (
-            GoalRunRecord(duration_sec=754.0, area_goal=300, peak_area=305, recorded_at=0.0),
+            GoalRunRecord(
+                duration_sec=754.0,
+                area_goal=300,
+                peak_area=305,
+                recorded_at=0.0,
+                gems_earned=4200,
+            ),
             GoalRunRecord(
                 duration_sec=812.0,
                 area_goal=300,
                 peak_area=301,
                 recorded_at=0.0,
                 duration_unreliable=True,
+                gems_earned=3900,
             ),
         )
         display = format_goal_run_history(
@@ -364,9 +371,26 @@ class GoalRunHistoryTests(_IsolatedGoalRunHistoryTestCase):
             area_goal=300,
             format_duration=lambda sec: f"{int(sec // 60)}:{int(sec % 60):02d}",
         )
-        self.assertEqual(display.summary, "Laatste doel-run: 12:34 (Modron-doel 300)")
+        self.assertEqual(
+            display.summary,
+            "Laatste doel-run: 12:34 · 4200 gems (Modron-doel 300)",
+        )
         self.assertFalse(display.summary_unreliable)
-        self.assertEqual(display.extra, (("2. 13:32", True),))
+        self.assertEqual(display.extra, (("2. 13:32 · 3900 gems", True),))
+
+    def test_format_goal_run_history_omits_missing_gems(self) -> None:
+        from ic_gamedata.stats import GoalRunRecord
+
+        history = (
+            GoalRunRecord(duration_sec=120.0, area_goal=200, peak_area=200, recorded_at=0.0),
+        )
+        display = format_goal_run_history(
+            history,
+            area_goal=200,
+            format_duration=lambda sec: "2:00",
+        )
+        self.assertEqual(display.summary, "Laatste doel-run: 2:00 (Modron-doel 200)")
+        self.assertNotIn("gems", display.summary or "")
 
     def test_format_goal_run_history_placeholder_when_empty(self) -> None:
         display = format_goal_run_history(
@@ -390,9 +414,11 @@ class GoalRunPersistenceTests(_IsolatedGoalRunHistoryTestCase):
         )
         self.assertEqual(len(tracker.goal_run_history(1)), 1)
         self.assertTrue(self._history_path.is_file())
+        self.assertEqual(tracker.goal_run_history(1)[0].gems_earned, 100)
 
         tracker2 = StatsTracker()
         self.assertEqual(len(tracker2.goal_run_history(1)), 1)
+        self.assertEqual(tracker2.goal_run_history(1)[0].gems_earned, 100)
 
 
 class GoalRunHistoryExtraTests(_IsolatedGoalRunHistoryTestCase):

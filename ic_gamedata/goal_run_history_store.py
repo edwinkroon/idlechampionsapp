@@ -14,13 +14,16 @@ from ic_gamedata.stats_models import (
 
 
 def _record_to_dict(record: GoalRunRecord) -> dict[str, Any]:
-    return {
+    payload: dict[str, Any] = {
         "duration_sec": record.duration_sec,
         "area_goal": record.area_goal,
         "peak_area": record.peak_area,
         "recorded_at": record.recorded_at,
         "duration_unreliable": record.duration_unreliable,
     }
+    if record.gems_earned is not None:
+        payload["gems_earned"] = record.gems_earned
+    return payload
 
 
 def _record_from_dict(raw: dict[str, Any]) -> GoalRunRecord | None:
@@ -33,12 +36,18 @@ def _record_from_dict(raw: dict[str, Any]) -> GoalRunRecord | None:
     peak_area = int(peak_raw) if peak_raw is not None else None
     recorded_at = float(raw.get("recorded_at") or 0.0)
     duration_unreliable = bool(raw.get("duration_unreliable", False))
+    gems_raw = raw.get("gems_earned")
+    try:
+        gems_earned = int(gems_raw) if gems_raw is not None else None
+    except (TypeError, ValueError):
+        gems_earned = None
     return GoalRunRecord(
         duration_sec=duration,
         area_goal=area_goal,
         peak_area=peak_area,
         recorded_at=recorded_at,
         duration_unreliable=duration_unreliable,
+        gems_earned=gems_earned,
     )
 
 

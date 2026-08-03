@@ -103,6 +103,7 @@ def _composition_advice(
     roster_filter: Any | None = None,
     covered: frozenset[str] = frozenset(),
     player_capacity: int | None = None,
+    filled_slots: int | None = None,
 ) -> list[AdvisorTip]:
     """Formatie-/samenstellingsadvies — alleen als er iets nuttigs te verbeteren valt."""
     if len(formation) < 2:
@@ -117,24 +118,28 @@ def _composition_advice(
     speed = [h for h in formation if _is_speed(h)]
     buffers = [h for h in formation if _is_buffer(h)]
 
+    # Prefer the live formation-grid fill count when available — ``formation`` can
+    # lag behind the grid when ``hero_in_seats`` is missing a placed champion.
+    occupied = max(len(formation), filled_slots or 0)
+
     # Te weinig champions in formation (formation advisor covers this when enabled)
     if player_capacity is not None:
-        is_underfilled = len(formation) < player_capacity
+        is_underfilled = occupied < player_capacity
         capacity_label = player_capacity
     else:
-        is_underfilled = len(formation) <= 7
+        is_underfilled = occupied <= 7
         capacity_label = None
 
     if is_underfilled and "formation_not_full" not in covered:
         if capacity_label is not None:
             detail = (
-                f"Je hebt {len(formation)} van {capacity_label} beschikbare champion-slots gevuld "
+                f"Je hebt {occupied} van {capacity_label} beschikbare champion-slots gevuld "
                 "(NPC-slots tellen niet mee). "
                 "Vul lege slots met supports/buffers — dat levert meestal meer op dan een extra DPS."
             )
         else:
             detail = (
-                f"Je hebt {len(formation)} champions in formation. "
+                f"Je hebt {occupied} champions in formation. "
                 "Vul lege slots met supports/buffers — dat levert meestal meer op dan een extra DPS."
             )
         tips.append(_tip(2, "Formatie niet vol", detail))
@@ -362,6 +367,7 @@ def _formation_tips(
     covered: frozenset[str] = frozenset(),
     ilvl_by_hero: dict[int, int] | None = None,
     player_capacity: int | None = None,
+    filled_slots: int | None = None,
 ) -> list[AdvisorTip]:
     """Tactische formation-tips met uitleg (zoals debuffer-advies)."""
     if not formation:
@@ -668,6 +674,7 @@ def _formation_tips(
             roster_filter=roster_filter,
             covered=covered,
             player_capacity=player_capacity,
+            filled_slots=filled_slots,
         )
     )
 

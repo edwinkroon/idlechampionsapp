@@ -21,7 +21,8 @@
     "164": [17321],
     "168": [17762, 17765],
     "151": [15053],
-    "166": [17679]
+    "166": [17679, 17682],
+    "23": [12292]
   },
   "notes": {
     "2": "Celeste: War Domain",
@@ -30,13 +31,14 @@
     "9": "Makos: Dark Blessing",
     "10": "Tyril: Moonbeam",
     "13": "Hitch: Charismatic",
+    "23": "Strix: Smelly Lunch (Poor Hygiene ×5; Gaarawarr default)",
     "26": "Evelyn: Compel Duel (dynamic: Protection/Lathander's Allies)",
     "62": "Nova: Tight Knit",
     "91": "Widdle: Strong and Steady (dynamic override in engine)",
     "128": "Lae'zel: Battle Master",
     "129": "Astarion: Outflank + Assassin",
     "142": "Wyll: dynamic pact choice (Blade/Tome/Chain) from party composition",
-    "147": "Gale: Enchantment + Finite Fellowship",
+    "147": "Gale: Enchantment + Mystical Mentor (Finite Fellowship on restricted)",
     "149": "Ravengard: Lead The Charge",
     "169": "Skylla: Withering Ward + Green Fire",
     "173": "Raistlin: Reclusive Mage",
@@ -44,6 +46,6 @@
     "164": "Tess: dynamic qualified × pct (Fallback/Ranged/Rogue)",
     "168": "King of Shadows: Master of Pawns + Embrace the Shadow Weave (dynamic override)",
     "151": "Umberto: tier0 qualified × pct (Lawful/Unaffiliated/Ranger-Druid); tier1 More Damage (More Bees if solo front tank)",
-    "166": "Cazrin: dynamic Self Taught vs Ancestor's Shadow (BUD/default → Ancestor's Shadow)"
+    "166": "Cazrin: tier0 Self Taught vs Ancestor's Shadow (qualified stacks); tier1 Signature Smell if BUD else Smell Mastery",
   }
 }

@@ -209,8 +209,8 @@ class AutomationWorker:
                 self._next_level = now + (0.05 if interval <= 0 else float(interval))
                 if not settings.level_champions:
                     self._emit(
-                        "Status: actief — geen F-toetsen om te levelen "
-                        "(formatie-filter actief? vink seats uit de formatie aan)"
+                        "Status: actief — geen seats om te levelen "
+                        "(wacht op formatie-sync, of vink F-toetsen handmatig aan)"
                     )
                 elif self._guards_ok(settings):
                     champs = list(settings.level_champions)

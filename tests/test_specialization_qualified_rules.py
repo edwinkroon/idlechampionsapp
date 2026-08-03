@@ -165,6 +165,60 @@ class SpecializationQualifiedRulesTests(unittest.TestCase):
         for hero_id in BATCH2_HERO_IDS:
             self.assertIn(hero_id, generic_ids, msg=f"hero {hero_id} should be generic-covered")
 
+    def test_lazaapz_fury_tier_is_parsed(self) -> None:
+        """Regression: buff_upgrade + i_want_stacks must count as multiply stacks."""
+        qualified_stack_tiers_by_hero.cache_clear()
+        tier = qualified_stack_tiers_by_hero().get(66, {}).get(90)
+        self.assertIsNotNone(tier)
+        assert tier is not None
+        by_id = {opt.upgrade_id: opt for opt in tier.supported_options}
+        self.assertIn(17484, by_id)  # Brawl
+        self.assertIn(17485, by_id)  # Cabal
+        self.assertIn(17486, by_id)  # Stall
+        self.assertEqual(by_id[17484].pct, 100)
+        self.assertEqual(by_id[17485].pct, 150)
+        self.assertEqual(by_id[17486].pct, 150)
+        self.assertIn("melee", by_id[17484].expr.casefold())
+        self.assertIn("evil", by_id[17485].expr.casefold())
+        self.assertIn("control", by_id[17486].expr.casefold())
+
+    def test_lazaapz_prefers_cabal_when_evil_matches_melee_count(self) -> None:
+        """Same qualified count: higher base % (Cabal 150) beats Brawl (100)."""
+        qualified_stack_tiers_by_hero.cache_clear()
+        party = {66, 901, 902, 903, 904}
+        fake_tags = {
+            66: ("evil", "tank"),
+            901: ("evil",),
+            902: ("evil",),
+            903: ("evil",),
+            904: ("evil",),
+        }
+        fake_attacks = {
+            66: frozenset({"melee"}),
+            901: frozenset({"melee"}),
+            902: frozenset({"melee"}),
+            903: frozenset({"melee"}),
+            904: frozenset({"melee"}),
+        }
+        known = [
+            SpecializationOption(17484, "Fury of the Brawl", 90, 0),
+            SpecializationOption(17485, "Fury of the Cabal", 90, 0),
+            SpecializationOption(17486, "Fury of the Stall", 90, 0),
+        ]
+        with (
+            patch(
+                "ic_gamedata.adventure_restrictions.hero_tags_map_from_cached_definitions",
+                return_value=fake_tags,
+            ),
+            patch(
+                "ic_gamedata.adventure_restrictions.hero_attack_types_map_from_cached_definitions",
+                return_value=fake_attacks,
+            ),
+        ):
+            ids, reason = dynamic_default_ids(66, party, known_options=known)
+        self.assertIn(17485, ids)
+        self.assertIn("Cabal", reason)
+
     def test_warduke_prefers_league_of_malevolence_for_evil_party(self) -> None:
         tier = qualified_stack_tiers_by_hero()[116][250]
         party = {116, 901, 902, 903}

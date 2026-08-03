@@ -15,8 +15,13 @@ from ic_gamedata.credential_cache import CredentialCache
 from ic_gamedata.credentials import GameCredentials
 from ic_gamedata.payload_quality import PayloadQuality, assess_payload_quality
 
-_BASE_POLL_MS = 5000
-_MAX_POLL_MS = 60000
+# Slow heartbeat keeps data fresh when the game is quiet.
+_BASE_POLL_MS = 30000
+_MAX_POLL_MS = 120000
+# Cheap mtime/size probe — reacts when the game writes webRequestLog.
+_LOG_PROBE_MS = 1000
+# Avoid stampeding the API when the log grows in bursts.
+_MIN_CHANGE_POLL_GAP_MS = 2000
 
 
 def _format_cache_age(seconds: float) -> str:
@@ -56,6 +61,9 @@ class GameDataService(QObject):
 
     UI tabs subscribe to ``snapshot_updated`` and must not call urllib themselves.
     On API failure the last good snapshot is kept and marked ``degraded``.
+
+    Polling is hybrid: a slow heartbeat plus an immediate poll when
+    ``webRequestLog.txt`` grows (game API activity), debounced to avoid storms.
     """
 
     snapshot_updated = Signal(object)  # SnapshotEnvelope
@@ -77,6 +85,8 @@ class GameDataService(QObject):
         self._pending_reasons: set[str] = set()
         self._pending_force: set[str] = set()
         self._pending_auto_refresh = True
+        self._log_stat_key: tuple[int, int] | None = None
+        self._last_change_poll_mono = 0.0
         self._signals = ApiFetchSignals(self)
         self._signals.done.connect(self._on_fetch_done)
         self._watchdog = QTimer(self)
@@ -87,6 +97,12 @@ class GameDataService(QObject):
         self._poll_timer = QTimer(self)
         self._poll_timer.setInterval(self._base_poll_ms)
         self._poll_timer.timeout.connect(self._on_timer)
+        self._log_probe_timer = QTimer(self)
+        self._log_probe_timer.setInterval(_LOG_PROBE_MS)
+        self._log_probe_timer.timeout.connect(self._on_log_probe)
+        self._deferred_change_timer = QTimer(self)
+        self._deferred_change_timer.setSingleShot(True)
+        self._deferred_change_timer.timeout.connect(self._on_deferred_log_change)
 
     # ------------------------------------------------------------------ config
 
@@ -124,6 +140,10 @@ class GameDataService(QObject):
         self._log_path = log_path
         if path_changed:
             self._cred_cache.clear()
+            self._log_stat_key = None
+            self._deferred_change_timer.stop()
+            # Seed baseline so the first probe does not treat an existing log as "new".
+            self._peek_log_stat(update=True)
         if credentials is not None:
             self._credentials = credentials
         elif log_path is not None:
@@ -136,9 +156,14 @@ class GameDataService(QObject):
         self._poll_timer.setInterval(self._current_poll_interval())
         if not self._poll_timer.isActive():
             self._poll_timer.start()
+        if not self._log_probe_timer.isActive():
+            self._peek_log_stat(update=True)
+            self._log_probe_timer.start()
 
     def stop_polling(self) -> None:
         self._poll_timer.stop()
+        self._log_probe_timer.stop()
+        self._deferred_change_timer.stop()
         self._watchdog.stop()
 
     def refresh_credentials(self) -> bool:
@@ -153,13 +178,59 @@ class GameDataService(QObject):
     def _current_poll_interval(self) -> int:
         if self._consecutive_failures <= 0:
             return self._base_poll_ms
-        # 5s → 10s → 20s → 40s → 60s max while API is down
-        factor = min(2 ** min(self._consecutive_failures, 4), _MAX_POLL_MS // self._base_poll_ms)
+        # 30s → 60s → 120s max while API is down
+        factor = min(2 ** min(self._consecutive_failures, 3), _MAX_POLL_MS // max(self._base_poll_ms, 1))
         return min(self._base_poll_ms * factor, _MAX_POLL_MS)
 
     def _apply_poll_backoff(self) -> None:
         if self._poll_timer.isActive():
             self._poll_timer.setInterval(self._current_poll_interval())
+
+    def _peek_log_stat(self, *, update: bool) -> tuple[int, int] | None:
+        if self._log_path is None:
+            return None
+        try:
+            stat = self._log_path.stat()
+        except OSError:
+            return None
+        key = (stat.st_mtime_ns, stat.st_size)
+        if update:
+            self._log_stat_key = key
+        return key
+
+    def _on_log_probe(self) -> None:
+        key = self._peek_log_stat(update=False)
+        if key is None:
+            return
+        if self._log_stat_key is None:
+            self._log_stat_key = key
+            return
+        if key == self._log_stat_key:
+            return
+        self._log_stat_key = key
+        self._request_change_poll()
+
+    def _request_change_poll(self) -> None:
+        """Poll soon after game log activity; debounce bursts, restart heartbeat."""
+        now = time.monotonic()
+        elapsed_ms = (now - self._last_change_poll_mono) * 1000.0
+        if elapsed_ms >= _MIN_CHANGE_POLL_GAP_MS:
+            self._deferred_change_timer.stop()
+            self._fire_change_poll()
+            return
+        remaining = max(50, int(_MIN_CHANGE_POLL_GAP_MS - elapsed_ms))
+        if not self._deferred_change_timer.isActive():
+            self._deferred_change_timer.start(remaining)
+
+    def _on_deferred_log_change(self) -> None:
+        self._fire_change_poll()
+
+    def _fire_change_poll(self) -> None:
+        self._last_change_poll_mono = time.monotonic()
+        self.request_poll(reason="log_change", auto_refresh=True)
+        # Push the slow heartbeat out so we don't double-fetch shortly after.
+        if self._poll_timer.isActive():
+            self._poll_timer.start()
 
     # ------------------------------------------------------------------ poll API
 

@@ -49,6 +49,12 @@ def modron_area_progress(
     return pct, f"Modron: {current_area} / {modron_goal}"
 
 
+def _goal_run_gems_suffix(gems_earned: int | None) -> str:
+    if gems_earned is None:
+        return ""
+    return f" · {gems_earned} gems"
+
+
 def format_goal_run_history(
     history: tuple[GoalRunRecord, ...],
     *,
@@ -66,11 +72,13 @@ def format_goal_run_history(
     goal = area_goal if area_goal is not None and area_goal > 0 else history[0].area_goal
     latest = history[0]
     summary = (
-        f"Laatste doel-run: {format_duration(latest.duration_sec)} (Modron-doel {goal})"
+        f"Laatste doel-run: {format_duration(latest.duration_sec)}"
+        f"{_goal_run_gems_suffix(latest.gems_earned)} (Modron-doel {goal})"
     )
     extra = tuple(
         (
-            f"{index + 2}. {format_duration(record.duration_sec)}",
+            f"{index + 2}. {format_duration(record.duration_sec)}"
+            f"{_goal_run_gems_suffix(record.gems_earned)}",
             record.duration_unreliable,
         )
         for index, record in enumerate(history[1:MAX_GOAL_RUN_HISTORY])

@@ -17,6 +17,7 @@ from ic_gamedata.formation_advisor.models import (
 def _format_template(template: str, ctx: FormationLayoutContext, **extra: str) -> str:
     carry_id = ctx.carry_hero_id
     carry_seat = ctx.seat_of(carry_id) if carry_id is not None else None
+    capacity = ctx.formation_capacity
     values = {
         "hero": extra.get("hero", ""),
         "seat": extra.get("seat", ""),
@@ -24,6 +25,7 @@ def _format_template(template: str, ctx: FormationLayoutContext, **extra: str) -
         "carry": ctx.name(carry_id) if carry_id is not None else "carry",
         "carry_seat": str(carry_seat) if carry_seat is not None else "—",
         "party_size": str(ctx.party_size),
+        "formation_capacity": str(capacity) if capacity is not None else "?",
         "related_hero": extra.get("related_hero", ""),
         "related_seat": extra.get("related_seat", ""),
     }
@@ -183,8 +185,13 @@ def _evaluate_party_rule(rule: PlacementRule, ctx: FormationLayoutContext) -> Fo
     triggered = False
 
     if field == "party_size" and op == "lt":
-        threshold = int(value) if value.isdigit() else 10
-        triggered = ctx.party_size < threshold
+        # Prefer live layout capacity (9-seat maps, NPC escorts, etc.) over the
+        # CSV fallback threshold (historically 10 for standard formations).
+        if ctx.formation_capacity is not None:
+            triggered = ctx.party_size < ctx.formation_capacity
+        else:
+            threshold = int(value) if value.isdigit() else 10
+            triggered = ctx.party_size < threshold
     elif field == "party_has_tag" and op == "false":
         triggered = not _party_has_tag(ctx, value)
     elif field == "carry_has_adjacent_tag" and op == "false":

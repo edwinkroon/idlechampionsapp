@@ -211,7 +211,9 @@ class DashboardTab(QWidget):
         status_row.addStretch(1)
         root.addLayout(status_row)
 
-        self._dash_status = QLabel("Dashboard gebruikt gecentraliseerde API-poll (elke 5 s). Start voor memory-updates.")
+        self._dash_status = QLabel(
+            "Dashboard gebruikt hybride API-refresh (log-wijziging + max. 30 s). Start voor memory-updates."
+        )
         self._dash_status.setWordWrap(True)
         root.addWidget(self._dash_status)
 
@@ -367,7 +369,9 @@ class DashboardTab(QWidget):
                 credentials=self._dash_credentials,
             )
         if self._dash_credentials is not None:
-            self._dash_status.setText("Klaar. API wordt elke 5 seconden automatisch ververst.")
+            self._dash_status.setText(
+                "Klaar. API ververst bij spelactiviteit (log) en anders binnen 30 seconden."
+            )
             self.api_poll_requested.emit()
         else:
             self._dash_status.setText("Log gevonden maar nog geen credentials.")

@@ -83,10 +83,11 @@ class DegradedApiTests(unittest.TestCase):
             last_success_at=1.0,
         )
         svc._last_success_at = 1.0
-        svc._poll_timer.setInterval(5000)
+        svc._base_poll_ms = 30000
+        svc._poll_timer.setInterval(30000)
         svc._note_failure("API timeout")
         self.assertEqual(svc._consecutive_failures, 1)
-        self.assertEqual(svc._current_poll_interval(), 10000)
+        self.assertEqual(svc._current_poll_interval(), 60000)
         self.assertEqual(len(received), 1)
         self.assertTrue(received[0].degraded)
         self.assertIs(received[0].payload, svc._latest.payload)

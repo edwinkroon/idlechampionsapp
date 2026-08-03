@@ -18,12 +18,16 @@ from ic_gamedata.specialization_data import (
 )
 from ic_gamedata.specialization_engine import (
     FormationContext,
+    HERO_HANDLERS,
 )
 from ic_gamedata.specialization_engine import (
     baseline_default_ids as _baseline_default_ids,
 )
 from ic_gamedata.specialization_engine import (
     dynamic_default_ids as _dynamic_default_ids,
+)
+from ic_gamedata.specialization_engine import (
+    supplement_missing_tier_ids as _supplement_missing_tier_ids,
 )
 from ic_gamedata.specialization_models import PendingSpecialization, SpecializationOption
 from ic_gamedata.specialization_rules.context_builder import (
@@ -678,19 +682,20 @@ def _desired_choice_ids(
         csv_ids and csv_advice and csv_advice.rule_source_type == "heuristic"
     )
 
-    if authored_csv:
-        return csv_ids, csv_source, csv_advice
-
-    if active_hero_ids and cfg.get("default") is not None:
+    def _resolve_dynamic() -> tuple[list[int], str] | None:
+        if not active_hero_ids:
+            return None
         loot_by_hero = None
         account_stats = None
         event_boon_count = 0
         modron_stacks = 0
         owned_hero_ids = None
         hero_upgrade_ids = None
+        roster_filter = None
         if isinstance(payload, dict):
             details = payload.get("details")
             if isinstance(details, dict):
+                from ic_gamedata.adventure_restrictions import build_adventure_roster_filter
                 from ic_gamedata.loot_stats import loot_stats_by_hero
                 from ic_gamedata.specialization_custom_stacks import (
                     event_boon_count_from_details,
@@ -706,7 +711,19 @@ def _desired_choice_ids(
                 modron_stacks = modron_core_competency_stacks(details)
                 owned_hero_ids = owned_hero_ids_from_details(details)
                 hero_upgrade_ids = hero_upgrade_ids_from_details(details)
-        dynamic = _dynamic_default_ids(
+                roster_filter = build_adventure_roster_filter(payload, adventure_id)
+        preferred = _ids(cfg.get("default"))
+        from ic_gamedata.specialization_advisor_model import (
+            advisor_model_for_hero,
+            preferred_ids_for_run_goal,
+        )
+
+        model = advisor_model_for_hero(hero_id)
+        if model is not None:
+            model_ids = preferred_ids_for_run_goal(model, run_goal=resolved_run_goal)
+            if model_ids:
+                preferred = model_ids
+        return _dynamic_default_ids(
             hero_id,
             active_hero_ids,
             highest_damage_hero_id=highest_damage_hero_id,
@@ -720,7 +737,29 @@ def _desired_choice_ids(
             modron_core_competency_stacks=modron_stacks,
             owned_hero_ids=owned_hero_ids,
             hero_upgrade_ids=hero_upgrade_ids,
+            roster_filter=roster_filter,
+            preferred_ids=preferred,
         )
+
+    if authored_csv:
+        # CSV often covers only one tier (e.g. Regis Ahead). Fill open tiers
+        # from formation handlers when available.
+        if known_options and (cfg.get("default") is not None or hero_id in HERO_HANDLERS):
+            dynamic = _resolve_dynamic()
+            if dynamic is not None:
+                merged = _supplement_missing_tier_ids(
+                    known_options, csv_ids, dynamic[0]
+                )
+                if len(merged) > len(csv_ids):
+                    return (
+                        merged,
+                        f"{csv_source}; {dynamic[1]}",
+                        csv_advice,
+                    )
+        return csv_ids, csv_source, csv_advice
+
+    if active_hero_ids and cfg.get("default") is not None:
+        dynamic = _resolve_dynamic()
         if dynamic is not None:
             return (*dynamic, None)
 

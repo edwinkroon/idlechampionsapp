@@ -650,6 +650,66 @@ class PartyAdvisorTests(unittest.TestCase):
         )
         self.assertFalse(any(tip.title == "Formatie niet vol" for tip in tips))
 
+    def test_formation_not_full_uses_grid_fill_when_heroes_list_lags(self) -> None:
+        from ic_gamedata.party_advisor import FormationHero, _composition_advice
+
+        def hero(hid: int, name: str, seat: int) -> FormationHero:
+            return FormationHero(
+                hero_id=hid,
+                name=name,
+                seat=seat,
+                level=400,
+                gear_score=1.0,
+                ilvl=500,
+                ilvl_pct_vs_avg=0.0,
+                gear_rank=1,
+                gear_rank_total=5,
+                gear_pct_of_best=100.0,
+                gear_label="ilvl 500",
+                role_label="Support",
+                roles=("support",),
+                tags=("buffer",),
+                highest_damage=0.0,
+                active_feats=1,
+                is_top_damage=False,
+            )
+
+        # Advisor only resolved 9 heroes, but the live grid has all 10 slots filled.
+        formation = tuple(hero(hid, f"H{hid}", seat) for hid, seat in zip(range(1, 10), range(1, 10)))
+        tips = _composition_advice(
+            formation,
+            goal="bud",
+            context="campaign",
+            owned=[],
+            player_capacity=10,
+            filled_slots=10,
+        )
+        self.assertFalse(any(tip.title == "Formatie niet vol" for tip in tips))
+
+    def test_formation_heroes_includes_grid_champion_missing_from_hero_in_seats(self) -> None:
+        from ic_gamedata.party_advisor import _formation_heroes
+
+        payload = json.loads(json.dumps(self.payload))
+        payload["details"]["active_game_instance_id"] = 1
+        inst = next(i for i in payload["details"]["game_instances"] if int(i["game_instance_id"]) == 1)
+        # 10 on the grid; hero 10 missing from hero_in_seats (stale seat map).
+        inst["formation"] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+        inst["hero_in_seats"] = {str(i): i for i in range(1, 10)}
+        payload["details"]["heroes"] = [
+            {
+                "hero_id": hid,
+                "game_instance_id": 1,
+                "in_seat": 1,
+                "level": 200,
+                "owned": 1,
+                "specialization_choices": [],
+                "upgrades": [],
+            }
+            for hid in range(1, 11)
+        ]
+        formation = _formation_heroes(payload)
+        self.assertEqual({h.hero_id for h in formation}, set(range(1, 11)))
+
 
 if __name__ == "__main__":
     unittest.main()

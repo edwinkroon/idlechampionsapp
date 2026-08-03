@@ -63,12 +63,14 @@ def analyze_party(
     from ic_gamedata.adventure_restrictions import (
         build_adventure_roster_filter,
         player_formation_capacity,
+        player_formation_filled_count,
         restriction_summary,
     )
 
     roster_filter = build_adventure_roster_filter(payload, adventure_id)
     restrictions_note = restriction_summary(roster_filter)
     player_capacity = player_formation_capacity(payload, adventure_id)
+    filled_slots = player_formation_filled_count(payload)
 
     adventure_data = instance.get("adventure_data")
     if not isinstance(adventure_data, dict):
@@ -117,6 +119,7 @@ def analyze_party(
         covered=covered,
         ilvl_by_hero=ilvl_by_hero,
         player_capacity=player_capacity,
+        filled_slots=filled_slots,
     )
 
     specialization_insights: tuple[Any, ...] = ()

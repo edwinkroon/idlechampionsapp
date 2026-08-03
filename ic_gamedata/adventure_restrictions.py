@@ -445,27 +445,64 @@ def reserved_formation_seats(payload: dict[str, Any], adventure_id: int | None) 
     return frozenset(reserved)
 
 
+def _layout_formation_seat_count(payload: dict[str, Any]) -> int | None:
+    """Total seats in the active formation layout (including empty / NPC slots)."""
+    instance = _active_instance(payload)
+    if isinstance(instance, dict):
+        formation_list = instance.get("formation")
+        if isinstance(formation_list, list) and formation_list:
+            return len(formation_list)
+        # Some payloads keep the live grid on details instead of the instance.
+        details = payload.get("details")
+        if isinstance(details, dict):
+            details_formation = details.get("formation")
+            if isinstance(details_formation, list) and details_formation:
+                return len(details_formation)
+        saves = instance.get("formation_saves_v2")
+        if not isinstance(saves, list) or not saves:
+            details = payload.get("details") if isinstance(payload.get("details"), dict) else {}
+            saves = details.get("formation_saves_v2") if isinstance(details, dict) else None
+        if isinstance(saves, list):
+            for save in saves:
+                if not isinstance(save, dict):
+                    continue
+                grid = save.get("formation")
+                if isinstance(grid, list) and grid:
+                    return len(grid)
+    return None
+
+
 def player_formation_capacity(payload: dict[str, Any], adventure_id: int | None) -> int | None:
     """How many player champion seats are available after NPC/reserved slots."""
-    reserved = reserved_formation_seats(payload, adventure_id)
-    if not reserved:
+    layout_seats = _layout_formation_seat_count(payload)
+    if layout_seats is None:
         return None
-
-    instance = _active_instance(payload)
-    formation_list = instance.get("formation") if isinstance(instance, dict) else None
-    if isinstance(formation_list, list) and formation_list:
-        layout_seats = len(formation_list)
-    else:
-        try:
-            from ic_gamedata.formation_seats import active_formation_seats
-        except ImportError:
-            return None
-        _active_id, active_seats = active_formation_seats(payload)
-        if not active_seats:
-            return None
-        layout_seats = max(active_seats)
-
+    reserved = reserved_formation_seats(payload, adventure_id)
     return max(layout_seats - len(reserved), 1)
+
+
+def player_formation_filled_count(payload: dict[str, Any]) -> int | None:
+    """How many live formation-grid slots currently hold a champion (id > 0)."""
+    instance = _active_instance(payload)
+    formation_list: list[Any] | None = None
+    if isinstance(instance, dict) and "formation" in instance:
+        raw = instance.get("formation")
+        if isinstance(raw, list):
+            formation_list = raw
+    if formation_list is None:
+        details = payload.get("details")
+        if isinstance(details, dict):
+            raw = details.get("formation")
+            if isinstance(raw, list):
+                formation_list = raw
+    if formation_list is None:
+        return None
+    filled = 0
+    for item in formation_list:
+        hero_id = _parse_int(item)
+        if hero_id is not None and hero_id > 0:
+            filled += 1
+    return filled
 
 
 def _trials_unavailable_hero_ids(payload: dict[str, Any]) -> set[int]:

@@ -313,14 +313,19 @@ def _hero_on_field(
     active_party_id: int | None,
     seat: int | None,
     active_seats: frozenset[int],
+    on_formation_grid: bool = False,
 ) -> bool:
     """True when the champion is actively placed in the current party formation."""
-    if seat is None:
+    if seat is None and not on_formation_grid:
         return False
     game_id = _parse_int(hero.get("game_instance_id"))
     if game_id is not None and game_id > 0 and active_party_id is not None:
         if game_id != active_party_id:
             return False
+
+    # Live formation grid is authoritative even when hero_in_seats lags.
+    if on_formation_grid:
+        return True
 
     # Live formation seats are authoritative. ``in_seat`` stays 0 for non-active
     # parties in getuserdetails, so trusting it alone empties advisor after a swap.
@@ -359,11 +364,13 @@ def _formation_heroes(payload: dict[str, Any]) -> tuple[FormationHero, ...]:
                 seat_by_hero[hero_id] = seat
 
     try:
-        from ic_gamedata.formation_seats import active_formation_seats
+        from ic_gamedata.formation_seats import active_formation_seats, live_formation_hero_ids
     except ImportError:
         active_seats: frozenset[int] = frozenset()
+        grid_hero_ids: set[int] = set()
     else:
         _active_id, active_seats = active_formation_seats(payload)
+        grid_hero_ids = set(live_formation_hero_ids(payload))
 
     heroes_raw = details.get("heroes")
     if not isinstance(heroes_raw, list):
@@ -386,6 +393,7 @@ def _formation_heroes(payload: dict[str, Any]) -> tuple[FormationHero, ...]:
             active_party_id=active_party_id,
             seat=seat,
             active_seats=active_seats,
+            on_formation_grid=hero_id in grid_hero_ids,
         ):
             continue
 

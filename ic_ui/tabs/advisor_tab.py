@@ -16,7 +16,11 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from ic_gamedata.advice_fingerprint import party_id_from_payload
+from ic_gamedata.advice_fingerprint import (
+    commit_advice_fingerprint,
+    party_id_from_payload,
+    should_refresh_advice,
+)
 from ic_ui.tabs.dashboard_tab import DashboardTab
 from ic_ui.widgets.advisor_controls import AdvisorGoalContextBar
 from ic_ui.widgets.advisor_widgets import (
@@ -37,9 +41,11 @@ from ic_ui.widgets.advisor_widgets import (
     advisor_section,
 )
 from ic_ui.workers.advisor import AdvisorRunnable
+from ic_ui.workers.roster_upgrade import RosterUpgradeRunnable
 
 if TYPE_CHECKING:
     from ic_core.game_data_service import GameDataService, SnapshotEnvelope
+    from ic_gamedata.roster_upgrade_advisor import RosterUpgradeSuggestion
 
 
 class AdvisorTab(QWidget):
@@ -60,13 +66,21 @@ class AdvisorTab(QWidget):
         self._last_context = "campaign"
         self._last_party_id: int | None = None
         self._last_advice_fp: tuple[Any, ...] | None = None
+        self._last_formation_empty = False
+        self._running_advice_fp: tuple[Any, ...] | None = None
         self._feat_open: dict[int, bool] = {}
         self._analysing = False
+        self._roster_searching = False
+        self._roster_suggestions: tuple[RosterUpgradeSuggestion, ...] = ()
+        self._last_report = None
         self._pending_auto_refresh = False
-        self._pending_analysis: tuple[dict, str | None, bool, bool] | None = None
+        self._pending_analysis: tuple[
+            dict, str | None, bool, bool, tuple[Any, ...] | None
+        ] | None = None
         self._current_party_changed = False
         self._has_results = False
         self._worker_signals = None
+        self._roster_worker_signals = None
         self._seat_card_frames: dict[int, QFrame] = {}
         self._build_ui()
 
@@ -82,6 +96,10 @@ class AdvisorTab(QWidget):
     def analysing(self) -> bool:
         return self._analysing
 
+    @property
+    def last_formation_empty(self) -> bool:
+        return self._last_formation_empty
+
     def on_snapshot(self, envelope: SnapshotEnvelope) -> None:
         """React to GameDataService updates — refresh when advice-relevant data changes."""
         force = "advisor" in envelope.force_consumers
@@ -92,16 +110,26 @@ class AdvisorTab(QWidget):
             and fp is not None
             and fp != self._last_advice_fp
         )
+        empty_retry = (
+            envelope.payload is not None
+            and self._last_formation_empty
+            and self._has_results
+            and not self._analysing
+        )
         # Degraded timer polls keep cache; only re-analyze on force/change/first fill.
-        if envelope.degraded and not (force or first or changed):
-            if envelope.err and self._has_results:
+        if not should_refresh_advice(
+            force=force,
+            first=first,
+            changed=changed,
+            empty_retry=empty_retry,
+            degraded=envelope.degraded,
+        ):
+            if envelope.degraded and envelope.err and self._has_results:
                 self._status.setText(
                     f"{self._status.text().split(' · ')[0]} · {envelope.err}"
                     if self._status.text()
                     else envelope.err
                 )
-            return
-        if not (force or first or changed):
             return
         if envelope.payload is None:
             if force and not envelope.auto_refresh:
@@ -135,11 +163,70 @@ class AdvisorTab(QWidget):
         if not auto_refresh:
             self._btn_analyze.setEnabled(False)
             self._status.setText("Analyseren…")
+        cached = self._data.last_payload
+        if cached is not None:
+            self.start_analysis(cached, None, auto_refresh=auto_refresh, advice_fp=None)
         self._data.request_poll(
             reason="advisor",
             force_consumers={"advisor", "specializations"},
             auto_refresh=auto_refresh,
         )
+
+    def request_roster_upgrades(self) -> None:
+        """On-demand search for owned champions that may improve the active party."""
+        payload = self._last_payload
+        if payload is None and self._data is not None:
+            payload = self._data.last_payload
+        if payload is None:
+            self._status.setText("Nog geen party-data — analyseer eerst of wacht op een API-poll.")
+            return
+        if self._roster_searching:
+            return
+        self._last_goal = self._controls.goal()
+        self._last_context = self._controls.context()
+        self._roster_searching = True
+        self._btn_roster.setEnabled(False)
+        self._status.setText("Owned champions vergelijken met de huidige party…")
+        worker = RosterUpgradeRunnable(
+            self._last_goal,
+            self._last_context,
+            payload,
+            signals_parent=self,
+        )
+        self._roster_worker_signals = worker.signals
+        worker.signals.done.connect(self._on_roster_upgrades_done)
+        worker.signals.error.connect(self._on_roster_upgrades_error)
+        QThreadPool.globalInstance().start(worker)
+
+    def _on_roster_upgrades_done(self, suggestions) -> None:
+        self._roster_worker_signals = None
+        self._roster_searching = False
+        self._btn_roster.setEnabled(True)
+        self._roster_suggestions = tuple(suggestions or ())
+        if not self._roster_suggestions:
+            self._status.setText(
+                "Geen duidelijke owned upgrade gevonden — rollen gedekt, of geen veilige "
+                "BUD-swap (support-ilvl alleen is geen reden meer)."
+            )
+        else:
+            self._status.setText(
+                f"{len(self._roster_suggestions)} mogelijke party-upgrade(s) gevonden."
+            )
+        if self._last_report is not None:
+            scroll_y = self._scroll.verticalScrollBar().value()
+            self._render_report(self._last_report, reset_scroll=False)
+            self._scroll.verticalScrollBar().setValue(scroll_y)
+        elif self._roster_suggestions:
+            self._show_results_panel()
+            self._clear()
+            self._render_roster_upgrade_section()
+            self._layout.addStretch(1)
+
+    def _on_roster_upgrades_error(self, msg: str) -> None:
+        self._roster_worker_signals = None
+        self._roster_searching = False
+        self._btn_roster.setEnabled(True)
+        self._status.setText(f"Betere champs mislukt: {msg}")
 
     def notify_fetch_inflight(self, *, manual_request: bool) -> None:
         if manual_request:
@@ -175,17 +262,14 @@ class AdvisorTab(QWidget):
         advice_fp: tuple[Any, ...] | None = None,
     ) -> None:
         if self._analysing:
-            self._pending_analysis = (payload, err, auto_refresh, party_changed)
-            if advice_fp is not None:
-                self._last_advice_fp = advice_fp
+            self._pending_analysis = (payload, err, auto_refresh, party_changed, advice_fp)
             return
-        if advice_fp is not None:
-            self._last_advice_fp = advice_fp
         goal = self._controls.goal()
         context = self._controls.context()
         include_formation = self._controls.include_formation()
         self._pending_auto_refresh = auto_refresh
         self._current_party_changed = party_changed
+        self._running_advice_fp = advice_fp
         self._analysing = True
         target = party_id_from_payload(payload)
         if party_changed:
@@ -218,8 +302,14 @@ class AdvisorTab(QWidget):
         self._controls.changed.connect(self._on_options_changed)
         self._btn_analyze = QPushButton("Analyseren")
         self._btn_analyze.clicked.connect(lambda: self.request_analyze(auto_refresh=False))
+        self._btn_roster = QPushButton("Betere champs")
+        self._btn_roster.setToolTip(
+            "Zoek owned champions die mogelijk beter werken in de huidige party."
+        )
+        self._btn_roster.clicked.connect(self.request_roster_upgrades)
         ctrl_row.addWidget(self._controls, stretch=1)
         ctrl_row.addWidget(self._btn_analyze)
+        ctrl_row.addWidget(self._btn_roster)
         root.addLayout(ctrl_row)
 
         self._status = QLabel("Start automatisch zodra speldata beschikbaar is.")
@@ -246,15 +336,28 @@ class AdvisorTab(QWidget):
             return
         self._last_goal = self._controls.goal()
         self._last_context = self._controls.context()
+        self._roster_suggestions = ()
         self._rerun_with_role_prefs()
 
     def _schedule_pending_analysis(self) -> None:
         pending = self._pending_analysis
         if pending is None or self._analysing:
             return
-        payload, err, auto_refresh, party_changed = pending
+        payload, err, auto_refresh, party_changed, advice_fp = pending
         self._pending_analysis = None
-        self.start_analysis(payload, err, auto_refresh=auto_refresh, party_changed=party_changed)
+        self.start_analysis(
+            payload,
+            err,
+            auto_refresh=auto_refresh,
+            party_changed=party_changed,
+            advice_fp=advice_fp,
+        )
+
+    def _commit_advice_fp(self, *, formation_empty: bool) -> None:
+        self._last_advice_fp = commit_advice_fingerprint(
+            self._running_advice_fp,
+            formation_empty=formation_empty,
+        )
 
     def _on_done(self, result) -> None:
         self._worker_signals = None
@@ -268,8 +371,14 @@ class AdvisorTab(QWidget):
         )
         self._last_payload = payload
         self._last_party_id = party_id
+        self._last_formation_empty = not bool(report.formation_heroes)
+        self._commit_advice_fp(formation_empty=self._last_formation_empty)
+        self._running_advice_fp = None
         self._last_goal = report.goal
         self._last_context = report.context
+        self._last_report = report
+        if party_changed:
+            self._roster_suggestions = ()
         self._analysing = False
         self._btn_analyze.setEnabled(True)
         status = report.summary
@@ -288,6 +397,7 @@ class AdvisorTab(QWidget):
     def _on_error(self, msg: str) -> None:
         self._worker_signals = None
         auto_refresh = self._pending_auto_refresh
+        self._running_advice_fp = None
         self._analysing = False
         self._btn_analyze.setEnabled(True)
         if auto_refresh and self._has_results:
@@ -310,6 +420,7 @@ class AdvisorTab(QWidget):
             include_specializations=False,
             include_formation=self._controls.include_formation(),
         )
+        self._last_report = report
         scroll_y = self._scroll.verticalScrollBar().value()
         self._render_report(report, reset_scroll=False)
         self._scroll.verticalScrollBar().setValue(scroll_y)
@@ -366,6 +477,8 @@ class AdvisorTab(QWidget):
             head_lyt.addWidget(advisor_lbl(report.adventure_buff_note, kind="body"))
         self._layout.addWidget(head)
 
+        self._render_roster_upgrade_section()
+
         if report.seat_report and report.seat_report.seats:
             self._render_seat_section(report.seat_report, goal=report.goal)
 
@@ -395,6 +508,65 @@ class AdvisorTab(QWidget):
 
         if reset_scroll:
             self._scroll.verticalScrollBar().setValue(0)
+
+    def _render_roster_upgrade_section(self) -> None:
+        if not self._roster_suggestions:
+            return
+        try:
+            from ic_gamedata.seat_advisor.role_inference import role_label
+        except ImportError:
+            role_label = lambda role: role
+
+        advisor_section(self._layout, "Betere champs (owned)")
+        intro = advisor_card(highlight=False)
+        intro_lyt = advisor_card_layout(intro)
+        intro_lyt.addWidget(
+            advisor_lbl(
+                "Voorstellen op basis van rollen, seat-legaliteit, gear/ilvl, affiliatie én een "
+                "relatieve BUD-proxy (live carry-damage × support/positie). Geen exacte combat-sim — "
+                "gebruik dit als gerichte shortlist.",
+                kind="muted",
+            )
+        )
+        self._layout.addWidget(intro)
+
+        for item in self._roster_suggestions:
+            card = advisor_card(highlight=True)
+            lyt = advisor_card_layout(card)
+            row = QHBoxLayout()
+            row.setSpacing(10)
+            row.addWidget(
+                advisor_portrait(item.candidate_hero_id),
+                alignment=Qt.AlignmentFlag.AlignTop,
+            )
+            text_col = QVBoxLayout()
+            text_col.setSpacing(2)
+            text_col.addWidget(advisor_lbl(item.title, kind="subtitle"))
+            meta_parts = [role_label(item.role)]
+            if item.same_seat_swap and item.replace_seat is not None:
+                meta_parts.append(f"seat {item.replace_seat}")
+            elif item.candidate_seat is not None:
+                meta_parts.append(f"seat {item.candidate_seat} nieuw")
+                if item.replace_seat is not None:
+                    meta_parts.append(f"bench seat {item.replace_seat}")
+            bud_ratio = getattr(item, "bud_ratio", None)
+            if isinstance(bud_ratio, (int, float)) and bud_ratio > 0:
+                try:
+                    from ic_gamedata.bud_proxy import format_bud_ratio, meaningful_bud_ratio
+                except ImportError:
+                    format_bud_ratio = None
+                    meaningful_bud_ratio = None
+                if (
+                    format_bud_ratio is not None
+                    and meaningful_bud_ratio is not None
+                    and meaningful_bud_ratio(float(bud_ratio))
+                ):
+                    meta_parts.append(f"BUD-proxy {format_bud_ratio(float(bud_ratio))}")
+            text_col.addWidget(advisor_lbl(" · ".join(meta_parts), kind="muted"))
+            row.addLayout(text_col, stretch=1)
+            lyt.addLayout(row)
+            lyt.addWidget(advisor_lbl(f"Waarom: {item.why}", kind="body"))
+            self._layout.addWidget(card)
 
     def _render_seat_section(self, seat_report, *, goal: str = "bud") -> None:
         try:

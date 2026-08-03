@@ -16,7 +16,11 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from ic_gamedata.advice_fingerprint import party_id_from_payload
+from ic_gamedata.advice_fingerprint import (
+    commit_advice_fingerprint,
+    party_id_from_payload,
+    should_refresh_advice,
+)
 from ic_ui.tabs.dashboard_tab import DashboardTab
 from ic_ui.widgets.advisor_controls import AdvisorGoalContextBar
 from ic_ui.widgets.advisor_widgets import advisor_card, advisor_card_layout, advisor_lbl
@@ -44,8 +48,10 @@ class SpecializationsTab(QWidget):
         self._last_context = "campaign"
         self._last_party_id: int | None = None
         self._last_advice_fp: tuple[Any, ...] | None = None
+        self._last_formation_empty = False
+        self._running_advice_fp: tuple[Any, ...] | None = None
         self._analysing = False
-        self._pending_analysis: tuple[dict, str | None, bool] | None = None
+        self._pending_analysis: tuple[dict, str | None, bool, tuple[Any, ...] | None] | None = None
         self._pending_auto_refresh = False
         self._has_results = False
         self._worker_signals = None
@@ -63,6 +69,10 @@ class SpecializationsTab(QWidget):
     def last_party_id(self) -> int | None:
         return self._last_party_id
 
+    @property
+    def last_formation_empty(self) -> bool:
+        return self._last_formation_empty
+
     def on_snapshot(self, envelope: SnapshotEnvelope) -> None:
         force = "specializations" in envelope.force_consumers or "advisor" in envelope.force_consumers
         fp = envelope.advice_fp
@@ -72,14 +82,29 @@ class SpecializationsTab(QWidget):
             and fp is not None
             and fp != self._last_advice_fp
         )
-        if envelope.degraded and not (force or first or changed):
-            if envelope.err and self._has_results:
+        # After party activate, formation layout can fingerprint before hero rows
+        # resolve — keep retrying until analyze_party finds champions.
+        empty_retry = (
+            envelope.payload is not None
+            and self._last_formation_empty
+            and self._has_results
+            and not self._analysing
+        )
+        if not should_refresh_advice(
+            force=force,
+            first=first,
+            changed=changed,
+            empty_retry=empty_retry,
+            degraded=envelope.degraded,
+        ):
+            if envelope.degraded and envelope.err and self._has_results:
                 base = self._status.text().split(" · ")[0] if self._status.text() else "Specialisaties"
                 self._status.setText(f"{base} · {envelope.err}")
             return
-        if not (force or first or changed):
-            return
         if envelope.payload is None:
+            if force and not envelope.auto_refresh:
+                self._btn_refresh.setEnabled(True)
+                self._status.setText(envelope.err or "Geen API-data ontvangen.")
             return
         err = envelope.err
         if envelope.quality and envelope.quality.warnings:
@@ -103,6 +128,12 @@ class SpecializationsTab(QWidget):
         if not auto_refresh:
             self._btn_refresh.setEnabled(False)
             self._status.setText("Specialisaties analyseren…")
+        # Re-analyze cached snapshot immediately — fingerprint gating may have
+        # skipped a later complete poll; waiting only on a new HTTP round-trip
+        # left Verversen looking broken until a party switch changed the fp.
+        cached = self._data.last_payload
+        if cached is not None:
+            self.start_analysis(cached, None, auto_refresh=auto_refresh, advice_fp=None)
         self._data.request_poll(
             reason="specializations",
             force_consumers={"specializations", "advisor"},
@@ -118,15 +149,12 @@ class SpecializationsTab(QWidget):
         advice_fp: tuple[Any, ...] | None = None,
     ) -> None:
         if self._analysing:
-            self._pending_analysis = (payload, err, auto_refresh)
-            if advice_fp is not None:
-                self._last_advice_fp = advice_fp
+            self._pending_analysis = (payload, err, auto_refresh, advice_fp)
             return
-        if advice_fp is not None:
-            self._last_advice_fp = advice_fp
         goal = self._controls.goal()
         context = self._controls.context()
         self._pending_auto_refresh = auto_refresh
+        self._running_advice_fp = advice_fp
         self._analysing = True
         worker = SpecializationsRunnable(
             goal, context, payload, err, signals_parent=self
@@ -150,7 +178,9 @@ class SpecializationsTab(QWidget):
         ctrl_row.addWidget(self._btn_refresh)
         root.addLayout(ctrl_row)
 
-        self._status = QLabel("Data wordt elke 5 seconden automatisch ververst.")
+        self._status = QLabel(
+            "Data ververst bij spelactiviteit (webRequestLog) en anders binnen 30 seconden."
+        )
         self._status.setWordWrap(True)
         root.addWidget(self._status)
 
@@ -180,9 +210,20 @@ class SpecializationsTab(QWidget):
         pending = self._pending_analysis
         if pending is None or self._analysing:
             return
-        payload, err, auto_refresh = pending
+        payload, err, auto_refresh, advice_fp = pending
         self._pending_analysis = None
-        self.start_analysis(payload, err, auto_refresh=auto_refresh)
+        self.start_analysis(payload, err, auto_refresh=auto_refresh, advice_fp=advice_fp)
+
+    def _commit_advice_fp(self, *, formation_empty: bool) -> None:
+        """Only lock the fingerprint once formation heroes resolved.
+
+        Committing early on an empty formation made later identical fingerprints
+        skip — specs then only reappeared after a party switch changed the fp.
+        """
+        self._last_advice_fp = commit_advice_fingerprint(
+            self._running_advice_fp,
+            formation_empty=formation_empty,
+        )
 
     def _on_done(self, result) -> None:
         self._worker_signals = None
@@ -191,6 +232,9 @@ class SpecializationsTab(QWidget):
 
         self._last_payload = payload
         self._last_party_id = party_id_from_payload(payload)
+        self._last_formation_empty = not bool(report.formation_heroes)
+        self._commit_advice_fp(formation_empty=self._last_formation_empty)
+        self._running_advice_fp = None
         self._last_goal = report.goal
         self._last_context = report.context
         self._analysing = False
@@ -208,6 +252,8 @@ class SpecializationsTab(QWidget):
     def _on_error(self, msg: str) -> None:
         self._worker_signals = None
         auto_refresh = self._pending_auto_refresh
+        # Do not lock the fingerprint on failure — allow the next poll to retry.
+        self._running_advice_fp = None
         self._analysing = False
         self._btn_refresh.setEnabled(True)
         if auto_refresh and self._has_results:
@@ -344,6 +390,19 @@ class SpecializationsTab(QWidget):
                 lyt.addWidget(advisor_lbl(f"Advies: {chosen}", kind="spec_pending"))
             else:
                 lyt.addWidget(advisor_lbl("Advies: nog geen vaste keuze", kind="spec_pending"))
+            try:
+                from ic_gamedata.specialization_advisor_model import (
+                    advisor_model_for_hero,
+                    format_advisor_model_lines,
+                )
+
+                model = advisor_model_for_hero(item.hero_id)
+            except ImportError:
+                model = None
+            if model is not None:
+                for line in format_advisor_model_lines(model):
+                    kind = "warn" if model.review_needed and line.startswith("Review") else "body"
+                    lyt.addWidget(advisor_lbl(line, kind=kind))
             if human_specialization_reason is not None:
                 lyt.addWidget(
                     advisor_lbl(
@@ -386,6 +445,37 @@ class SpecializationsTab(QWidget):
             )
         )
         self._layout.addWidget(head)
+
+        review_ids = {item.hero_id for item in (pending_items or ())}
+        if report.seat_report and report.seat_report.seats:
+            review_ids.update(seat.hero_id for seat in report.seat_report.seats if seat.hero_id)
+        for insight in report.specialization_insights or ():
+            review_ids.add(insight.hero_id)
+        try:
+            from ic_gamedata.specialization_advisor_model import review_needed_models_for_heroes
+        except ImportError:
+            review_needed_models_for_heroes = None
+        if review_needed_models_for_heroes is not None:
+            review_models = review_needed_models_for_heroes(review_ids)
+            if review_models:
+                self._section("Review nodig")
+                card = advisor_card()
+                lyt = advisor_card_layout(card)
+                lyt.addWidget(
+                    advisor_lbl(
+                        "Deze champions hebben conflicterende of incomplete specialization-data.",
+                        kind="body",
+                    )
+                )
+                for model in review_models:
+                    reason = model.review_reasons[0] if model.review_reasons else "interne twijfel"
+                    lyt.addWidget(
+                        advisor_lbl(
+                            f"· {model.name}: {reason}",
+                            kind="warn",
+                        )
+                    )
+                self._layout.addWidget(card)
 
         # 1) In-game dialogs still open
         self._section("Open keuzes")

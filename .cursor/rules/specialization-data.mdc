@@ -1,0 +1,52 @@
+---
+description: Normalize and review Idle Champions specialization data
+globs: "**/specialization*.json,**/specializations.json,**/spec_advice*.json,**/specialization*.py,**/specializations.py,scripts/advice/**"
+alwaysApply: false
+---
+
+# Specialization data for the advisor
+
+Treat **game options**, **advice**, and **UI labels** as separate concerns. Never collapse them into one ambiguous default.
+
+## Do
+
+- Preserve `hero_id`, `upgrade_id`, and raw option names exactly; keep `options_by_tier` intact.
+- Split context into explicit fields: `safe_default`, `push_default`, `farm_default`, `conditional_only`.
+- If there is no universal default, set `safe_default` to `null`.
+- On internal conflict or failed label→option mapping, set `review_needed: true` and list `review_reasons`.
+- Prefer machine-readable fields over prose; keep `explanation_summary` ≤ 140 chars.
+- Keep transforms compact and deterministic.
+
+## Don't
+
+```json
+// ❌ BAD — conflicting defaults in one record
+{
+  "our_default_advice": ["Life Domain (30)"],
+  "csv_default_label": "War Domain",
+  "csv_label_maps_to": "War Domain"
+}
+
+// ✅ GOOD — conflict marked; context split
+{
+  "safe_default": null,
+  "push_default": { "upgrade_id": 29, "name": "War Domain" },
+  "conditionals": [
+    { "when": "survival/tank pressure", "upgrade_id": 30, "name": "Life Domain" }
+  ],
+  "review_needed": true,
+  "review_reasons": ["config default Life Domain conflicts with csv War Domain"]
+}
+```
+
+```json
+// ❌ BAD — UI route treated as option name
+{ "csv_default_label": "Piracy", "safe_default": { "name": "Piracy" } }
+
+// ✅ GOOD — unmapped label stays in sources; choice uses real option or null
+{
+  "farm_default": { "upgrade_id": 59, "name": "Leader of the Bregan D'aerthe" },
+  "sources": { "csv_default_label": "Piracy", "csv_label_maps_to": null },
+  "review_needed": true
+}
+```

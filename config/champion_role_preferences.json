@@ -1,6 +1,6 @@
 {
   "34": {
-    "bud": "bud"
+    "bud": "debuffer"
   },
   "58": {
     "bud": "speed"
@@ -14,7 +14,13 @@
   "75": {
     "bud": "speed"
   },
+  "139": {
+    "bud": "support"
+  },
   "148": {
+    "bud": "debuffer"
+  },
+  "151": {
     "bud": "debuffer"
   },
   "153": {
@@ -22,5 +28,8 @@
   },
   "166": {
     "bud": "bud"
+  },
+  "175": {
+    "bud": "tank"
   }
 }

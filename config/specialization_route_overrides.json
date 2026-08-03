@@ -1,11 +1,14 @@
 {
   "version": 1,
-  "notes": "Explicit route/label -> upgrade_id when keyword matching is ambiguous.",
+  "notes": "Explicit route/label -> upgrade_id when keyword matching is ambiguous or wrong.",
   "champions": {
     "Shandie": {
       "Dash": 9732,
       "speed_route": 9732,
-      "Speed route": 9732
+      "Speed route": 9732,
+      "farm_default": 9732,
+      "Ranger Training": 9732,
+      "Criminal Contacts": 9732
     },
     "Thellora": {
       "speed_route": 12983,
@@ -41,6 +44,80 @@
       "Speed route@1": 19342,
       "Support route@1": 19342,
       "Push route@1": 19342
+    },
+    "Ezmerelda": {
+      "Support / Utility": 15041,
+      "Support route": 15041,
+      "support_route": 15041,
+      "We've Trained For This": 15041
+    },
+    "Celeste": {
+      "War Domain": 29,
+      "Support route": 29,
+      "support_route": 29,
+      "Life Domain": 30
+    },
+    "Calliope": {
+      "Valor": 75,
+      "College of Valor": 75,
+      "Support route": 75,
+      "support_route": 75,
+      "Lore": 76,
+      "College of Lore": 76
+    },
+    "Hitch": {
+      "High Cha route": 391,
+      "Charismatic": 391
+    },
+    "Krond": {
+      "Damage route": 17242,
+      "damage_route": 17242,
+      "Damage route@1": 17242,
+      "Eldritch Strike": 17242
+    },
+    "Evelyn": {
+      "Support route": 12211,
+      "support_route": 12211,
+      "Compel Duel": 12211
+    },
+    "Jarlaxle": {
+      "Piracy": 59,
+      "gold_route": 59,
+      "Gold route": 59,
+      "Damage route": 58,
+      "damage_route": 58
+    },
+    "Makos": {
+      "Dark Luck": 139,
+      "gold_route": 139,
+      "Gold route": 139,
+      "Blessing route": 140,
+      "Dark Blessing": 140
+    },
+    "Deekin": {
+      "Boss Wants Speed": 18862,
+      "speed_route": 18862,
+      "Speed route": 18862,
+      "Troubadour Troupe": 18862
+    },
+    "Omin": {
+      "Gold route": 12306,
+      "gold_route": 12306,
+      "Long Term Investments": 12306,
+      "Support route": 12305,
+      "support_route": 12305,
+      "Favored Friends": 12305
+    },
+    "Delina": {
+      "Damage route": 129,
+      "damage_route": 129,
+      "Font of Magic": 129
+    },
+    "Gromma": {
+      "Arctic": 14878,
+      "Circle of the Arctic": 14878,
+      "Mountain": 14877,
+      "Circle of the Mountain": 14877
     }
   }
 }

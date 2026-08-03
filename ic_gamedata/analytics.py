@@ -125,7 +125,18 @@ def format_duration_minutes(seconds: float | None) -> str:
 
 
 def goal_run_csv_rows(records: Sequence[GoalRunRecord]) -> list[list[str]]:
-    rows = [["run", "duration_sec", "duration", "area_goal", "peak_area", "recorded_at", "duration_unreliable"]]
+    rows = [
+        [
+            "run",
+            "duration_sec",
+            "duration",
+            "area_goal",
+            "peak_area",
+            "gems_earned",
+            "recorded_at",
+            "duration_unreliable",
+        ]
+    ]
     chronological = reversed(records)
     for index, record in enumerate(chronological, start=1):
         rows.append(
@@ -135,6 +146,7 @@ def goal_run_csv_rows(records: Sequence[GoalRunRecord]) -> list[list[str]]:
                 format_duration_minutes(record.duration_sec),
                 str(record.area_goal),
                 "" if record.peak_area is None else str(record.peak_area),
+                "" if record.gems_earned is None else str(record.gems_earned),
                 f"{record.recorded_at:.0f}",
                 "yes" if record.duration_unreliable else "",
             ]

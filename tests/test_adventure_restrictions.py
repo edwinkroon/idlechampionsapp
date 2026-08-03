@@ -255,6 +255,38 @@ class AdventureRestrictionsTests(unittest.TestCase):
         self.assertEqual(reserved_formation_seats(payload, 563), frozenset({6, 7, 8}))
         self.assertEqual(player_formation_capacity(payload, 563), 6)
 
+    def test_player_formation_capacity_without_npc_slots(self) -> None:
+        from ic_gamedata.adventure_restrictions import player_formation_capacity
+
+        payload = _mock_adventure(14)
+        payload["details"] = {
+            "active_game_instance_id": 1,
+            "game_instances": [
+                {
+                    "game_instance_id": 1,
+                    "current_adventure_id": 14,
+                    "formation": [1, 2, 3, 4, 5, 6, 7, 8, 9],
+                }
+            ],
+        }
+        self.assertEqual(player_formation_capacity(payload, 14), 9)
+
+    def test_player_formation_filled_count_from_grid(self) -> None:
+        from ic_gamedata.adventure_restrictions import player_formation_filled_count
+
+        payload = _mock_adventure(14)
+        payload["details"] = {
+            "active_game_instance_id": 1,
+            "game_instances": [
+                {
+                    "game_instance_id": 1,
+                    "current_adventure_id": 14,
+                    "formation": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+                }
+            ],
+        }
+        self.assertEqual(player_formation_filled_count(payload), 10)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -59,6 +59,15 @@ def _segment_peak_for_state(state: PartyTrackState) -> int | None:
     return max(values) if values else None
 
 
+def _segment_gems_for_state(state: PartyTrackState) -> int | None:
+    """Gems earned this reset before the segment is closed (prefer live estimate)."""
+    for party in (state.latest, state.api_latest):
+        gems = party.gems_this_reset
+        if gems is not None:
+            return int(gems)
+    return None
+
+
 def _sync_segment_goal(state: PartyTrackState, party: PartySnapshot) -> None:
     goal = _party_modron_goal(party)
     if goal is not None and goal > 0:

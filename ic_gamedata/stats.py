@@ -42,6 +42,7 @@ from ic_gamedata.stats_run_history import (
     _goal_run_duration_sec,
     _party_modron_goal,
     _peak_area,
+    _segment_gems_for_state,
     _segment_goal_for_state,
     _segment_peak_after_reset,
     _segment_peak_for_state,
@@ -257,12 +258,38 @@ class StatsTracker:
         except ImportError:
             pass
 
+    def _persist_goal_run_history(self) -> None:
+        try:
+            from ic_gamedata.goal_run_history_store import save_goal_run_history
+
+            save_goal_run_history(self._goal_run_history)
+        except ImportError:
+            pass
+
+    def _refresh_latest_goal_run_gems(self, party_index: int, gems: int | None) -> None:
+        """Fill/upgrade gems on the most recent run once the segment ends."""
+        if gems is None:
+            return
+        history = self._goal_run_history.get(party_index)
+        if not history:
+            return
+        latest = history[0]
+        if latest.gems_earned is not None and latest.gems_earned >= gems:
+            return
+        from dataclasses import replace
+
+        history[0] = replace(latest, gems_earned=gems)
+        self._persist_goal_run_history()
+
     def _record_goal_run(self, state: _PartyTrackState, *, on_reset: bool = False) -> None:
+        previous = state.api_latest
+        gems = _segment_gems_for_state(state)
         if state.goal_run_recorded_this_segment:
+            if on_reset:
+                self._refresh_latest_goal_run_gems(previous.party_index, gems)
             return
         if not _goal_run_completed(state, on_reset=on_reset):
             return
-        previous = state.api_latest
         duration, duration_unreliable = _goal_run_duration_sec(state)
         if duration <= 0 or duration > MAX_PLAUSIBLE_GOAL_RUN_SEC:
             return
@@ -281,17 +308,13 @@ class StatsTracker:
             peak_area=peak,
             recorded_at=time.time(),
             duration_unreliable=duration_unreliable,
+            gems_earned=gems,
         )
         history = self._goal_run_history.setdefault(previous.party_index, [])
         history.insert(0, record)
         del history[MAX_GOAL_RUN_HISTORY:]
         state.goal_run_recorded_this_segment = True
-        try:
-            from ic_gamedata.goal_run_history_store import save_goal_run_history
-
-            save_goal_run_history(self._goal_run_history)
-        except ImportError:
-            pass
+        self._persist_goal_run_history()
 
     def _maybe_record_goal_run(self, state: _PartyTrackState) -> None:
         """Record as soon as the Modron goal is reached — do not wait for reset."""

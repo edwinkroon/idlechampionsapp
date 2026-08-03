@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
@@ -51,6 +52,7 @@ class FormationContext:
     modron_core_competency_stacks: int = 0
     owned_hero_ids: frozenset[int] | None = None
     hero_upgrade_ids: dict[int, frozenset[int]] | None = None
+    roster_filter: Any | None = None
 
 
 HeroHandler = Callable[[FormationContext], tuple[list[int], str] | None]
@@ -302,6 +304,17 @@ def formation_metrics(active_hero_ids: set[int]) -> FormationMetrics:
     )
 
 
+def _keyword_in_spec_name(name: str, keyword: str) -> bool:
+    """Match specialization keywords without substring false positives (evil⊂devil)."""
+    needle = keyword.casefold().strip()
+    if not needle:
+        return False
+    haystack = name.casefold()
+    if any(ch in needle for ch in (" ", ":", "'")):
+        return needle in haystack
+    return re.search(rf"(?<![a-z0-9]){re.escape(needle)}(?![a-z0-9])", haystack) is not None
+
+
 def _score_specialization_option(
     opt: SpecializationOption,
     hero_id: int,
@@ -321,7 +334,7 @@ def _score_specialization_option(
 
     def _add(points: int, reason: str, *, keyword: str | None = None) -> None:
         nonlocal score
-        if keyword is None or keyword in name:
+        if keyword is None or _keyword_in_spec_name(name, keyword):
             score += points
             if reason not in reasons:
                 reasons.append(reason)
@@ -337,54 +350,72 @@ def _score_specialization_option(
     for tag_key, weight in (("gold", 4), ("speed", 4)):
         if tag_key in all_tags:
             for word in profile_keywords[tag_key]:
-                if word in name:
+                if _keyword_in_spec_name(name, word):
                     _add(weight, f"{tag_key}-profiel")
     for role_key, weight in (("tank", 3), ("healer", 3), ("dps", 3), ("support", 3), ("gold", 3)):
         if role_key in roles:
             for word in profile_keywords.get(role_key, ()):
-                if word in name:
+                if _keyword_in_spec_name(name, word):
                     _add(weight, f"{role_key}-profiel")
 
     if not static_only:
-        if metrics.evil_count >= 3 and any(w in name for w in ("evil", "malevolence", "villain")):
+        if metrics.evil_count >= 3 and any(
+            _keyword_in_spec_name(name, w) for w in ("evil", "malevolence", "villain")
+        ):
             _add(8, f"{metrics.evil_count} evil champions")
         if metrics.companion_count >= 3 and any(
-            w in name for w in ("companion", "hall", "family", "allies", "fellowship", "friends", "tight knit")
+            _keyword_in_spec_name(name, w)
+            for w in ("companion", "hall", "family", "allies", "fellowship", "friends", "tight knit")
         ):
             _add(8, f"{metrics.companion_count} companion/affiliatie synergie")
-        if metrics.debuff_count >= 3 and any(w in name for w in ("ward", "plague", "withering", "debuff", "curse")):
+        if metrics.debuff_count >= 3 and any(
+            _keyword_in_spec_name(name, w) for w in ("ward", "plague", "withering", "debuff", "curse")
+        ):
             _add(6, f"{metrics.debuff_count} debuff champions")
-        if metrics.good_count >= 4 and "good" in name:
+        if metrics.good_count >= 4 and _keyword_in_spec_name(name, "good"):
             _add(6, f"{metrics.good_count} good champions")
-        if metrics.speed_count >= 2 and any(w in name for w in ("phlo", "fast", "speed", "swift")):
+        if metrics.speed_count >= 2 and any(
+            _keyword_in_spec_name(name, w) for w in ("phlo", "fast", "speed", "swift")
+        ):
             _add(5, f"{metrics.speed_count} speed champions")
-        if metrics.gold_count >= 2 and any(w in name for w in ("gold", "rich", "fortune", "riches")):
+        if metrics.gold_count >= 2 and any(
+            _keyword_in_spec_name(name, w) for w in ("gold", "rich", "fortune", "riches")
+        ):
             _add(5, f"{metrics.gold_count} gold champions")
-        if metrics.small_friends_count >= 3 and "small friends" in name:
+        if metrics.small_friends_count >= 3 and _keyword_in_spec_name(name, "small friends"):
             _add(7, f"{metrics.small_friends_count} small-folk champions")
-        if metrics.fast_friends_count >= 3 and "fast friends" in name:
+        if metrics.fast_friends_count >= 3 and _keyword_in_spec_name(name, "fast friends"):
             _add(7, f"{metrics.fast_friends_count} snelle champions")
-        if metrics.bg3_count >= 3 and "finite fellowship" in name:
+        if metrics.bg3_count >= 3 and _keyword_in_spec_name(name, "finite fellowship"):
             _add(8, f"{metrics.bg3_count} Baldur's Gate 3 champions")
-        if "bond: humans" in name:
+        if _keyword_in_spec_name(name, "bond: humans"):
             _add(metrics.human_count * 2, f"{metrics.human_count} human champions")
-        if "bond: dwarves and elves" in name:
+        if _keyword_in_spec_name(name, "bond: dwarves and elves"):
             _add(metrics.dwarf_elf_count * 2, f"{metrics.dwarf_elf_count} dwarf/elf champions")
-        if "bond: short-folk" in name or "short folk" in name:
+        if _keyword_in_spec_name(name, "bond: short-folk") or _keyword_in_spec_name(
+            name, "short folk"
+        ):
             _add(metrics.short_folk_count * 2, f"{metrics.short_folk_count} short-folk champions")
-        if "exotic species" in name:
+        if _keyword_in_spec_name(name, "exotic species"):
             _add(metrics.exotic_count * 2, f"{metrics.exotic_count} exotic champions")
-        if "witch's switch" in name or "witchs switch" in name:
+        if _keyword_in_spec_name(name, "witch's switch") or _keyword_in_spec_name(
+            name, "witchs switch"
+        ):
             if metrics.swap_hits >= 18:
                 _add(4, f"{metrics.swap_hits} sterke ability-score swaps")
             else:
                 score -= 12
-        if "observance: foe" in name and metrics.evil_count >= 2:
+        if _keyword_in_spec_name(name, "observance: foe") and metrics.evil_count >= 2:
             _add(4, "evil-doelwit synergie")
-        if "observance: friend" in name and metrics.good_count >= metrics.evil_count:
+        if (
+            _keyword_in_spec_name(name, "observance: friend")
+            and metrics.good_count >= 2
+            and metrics.good_count >= metrics.evil_count
+        ):
             _add(4, "good-party synergie")
         if highest_damage_hero_id == hero_id and any(
-            w in name for w in ("assassin", "battle", "damage", "piercing", "shield master")
+            _keyword_in_spec_name(name, w)
+            for w in ("assassin", "battle", "damage", "piercing", "shield master")
         ):
             _add(4, "champion is huidige top damage")
 
@@ -404,13 +435,16 @@ def smart_defaults_from_options(
     *,
     highest_damage_hero_id: int | None = None,
     static_only: bool = False,
+    preferred_ids: list[int] | None = None,
 ) -> tuple[list[int], str]:
+    preferred = list(preferred_ids or [])
+    preferred_set = set(preferred)
     chosen_ids: list[int] = []
     reason_parts: list[str] = []
     for tier_index in sorted({opt.tier_index for opt in known_options}):
         tier_options = [opt for opt in known_options if opt.tier_index == tier_index]
         ranked: list[tuple[int, int, SpecializationOption, list[str]]] = []
-        for order, opt in enumerate(tier_options):
+        for opt in tier_options:
             score, reasons = _score_specialization_option(
                 opt,
                 hero_id,
@@ -418,12 +452,25 @@ def smart_defaults_from_options(
                 highest_damage_hero_id=highest_damage_hero_id,
                 static_only=static_only,
             )
-            ranked.append((score, -order, opt, reasons))
-        ranked.sort(key=lambda item: (item[0], item[1]), reverse=True)
+            ranked.append((score, opt.upgrade_id, opt, reasons))
+        ranked.sort(key=lambda item: (-item[0], item[1]))
+        best_score = ranked[0][0]
+        if best_score <= 0:
+            # No formation signal — keep curated config/meta default for this tier.
+            preferred_pick = next(
+                (upgrade_id for upgrade_id in preferred if any(o.upgrade_id == upgrade_id for o in tier_options)),
+                None,
+            )
+            if preferred_pick is not None:
+                chosen_ids.append(preferred_pick)
+                reason_parts.append("config/meta default (geen formatie-signal)")
+                continue
         best = ranked[0]
         chosen_ids.append(best[2].upgrade_id)
         if best[3]:
             reason_parts.append(best[3][0])
+        elif best[2].upgrade_id in preferred_set:
+            reason_parts.append("config/meta default")
     rule_kind = "basis-regel" if static_only else "formatie-regel"
     detail = reason_parts[0] if reason_parts else "profiel-match"
     return chosen_ids, f"{rule_kind} ({detail})"
@@ -436,6 +483,95 @@ def _other_tanks(active_hero_ids: set[int], hero_id: int) -> list[int]:
         for hid in active_hero_ids
         if hid != hero_id and "tank" in roles_by_hero.get(hid, ())
     ]
+
+
+_REGIS_ID = 20
+_REGIS_AHEAD = 11530
+_REGIS_BEHIND = 11531
+_REGIS_RANGED = 11532
+_REGIS_MELEE = 11533
+_REGIS_MAGIC = 11534
+_REGIS_ATTACK_SPECS = {
+    "ranged": (_REGIS_RANGED, "Ruby Weakness (Ranged)"),
+    "melee": (_REGIS_MELEE, "Ruby Weakness (Melee)"),
+    "magic": (_REGIS_MAGIC, "Ruby Weakness (Magic)"),
+}
+
+
+def _regis_attack_counts(active_hero_ids: set[int]) -> dict[str, int]:
+    attack_types_by_hero = _hero_attack_types_map_from_cached_definitions()
+    counts = {"melee": 0, "ranged": 0, "magic": 0}
+    for hid in active_hero_ids:
+        types = attack_types_by_hero.get(hid, frozenset())
+        for attack in counts:
+            if attack in types:
+                counts[attack] += 1
+    return counts
+
+
+def _regis_encouragement_choice(ctx: FormationContext) -> tuple[int, str]:
+    """Ahead buffs the column toward the front; Behind buffs the rear column."""
+    if not ctx.seat_by_hero:
+        return _REGIS_AHEAD, "Ahead (default)"
+    regis_seat = ctx.seat_by_hero.get(_REGIS_ID)
+    focus_id = ctx.highest_damage_hero_id
+    if regis_seat is None or focus_id is None:
+        return _REGIS_AHEAD, "Ahead (default)"
+    focus_seat = ctx.seat_by_hero.get(focus_id)
+    if focus_seat is None:
+        return _REGIS_AHEAD, "Ahead (default)"
+    regis_col = _formation_column(regis_seat)
+    focus_col = _formation_column(focus_seat)
+    if focus_col < regis_col:
+        return _REGIS_AHEAD, "BUD staat vóór Regis → Ahead"
+    if focus_col > regis_col:
+        return _REGIS_BEHIND, "BUD staat achter Regis → Behind"
+    return _REGIS_AHEAD, "Ahead (zelfde kolom default)"
+
+
+def _regis_ruby_weakness_choice(ctx: FormationContext) -> tuple[int, str]:
+    """Match enemies' vulnerability to the carry/party attack type."""
+    attack_types_by_hero = _hero_attack_types_map_from_cached_definitions()
+    counts = _regis_attack_counts(ctx.active_hero_ids)
+
+    focus_id = ctx.highest_damage_hero_id
+    if focus_id is not None:
+        focus_types = {
+            attack
+            for attack in _REGIS_ATTACK_SPECS
+            if attack in attack_types_by_hero.get(focus_id, frozenset())
+        }
+        if len(focus_types) == 1:
+            attack = next(iter(focus_types))
+            upgrade_id, label = _REGIS_ATTACK_SPECS[attack]
+            return upgrade_id, f"BUD/top damage is {attack} → {label}"
+        if focus_types:
+            attack = max(focus_types, key=lambda name: (counts.get(name, 0), name == "melee"))
+            upgrade_id, label = _REGIS_ATTACK_SPECS[attack]
+            return (
+                upgrade_id,
+                f"BUD/top damage deelt {attack} met de formatie → {label}",
+            )
+
+    if sum(counts.values()) <= 0:
+        upgrade_id, label = _REGIS_ATTACK_SPECS["melee"]
+        return upgrade_id, f"geen attack-type data; default {label}"
+
+    attack = max(counts, key=lambda name: (counts[name], name == "melee"))
+    upgrade_id, label = _REGIS_ATTACK_SPECS[attack]
+    return (
+        upgrade_id,
+        f"{counts[attack]} {attack}-aanvallers → {label}",
+    )
+
+
+def _handle_regis(ctx: FormationContext) -> tuple[list[int], str] | None:
+    tier0_id, tier0_reason = _regis_encouragement_choice(ctx)
+    tier1_id, tier1_reason = _regis_ruby_weakness_choice(ctx)
+    return (
+        [tier0_id, tier1_id],
+        f"formatie-regel ({tier0_reason}; {tier1_reason})",
+    )
 
 
 def _handle_bruenor(ctx: FormationContext) -> tuple[list[int], str] | None:
@@ -455,6 +591,51 @@ def _handle_nayeli(ctx: FormationContext) -> tuple[list[int], str] | None:
     if _other_tanks(ctx.active_hero_ids, 3):
         return [44], "formatie-regel (andere tank aanwezig)"
     return [43], "formatie-regel (Nayeli bufft achterliggende champions)"
+
+
+_WARDEN_DARK_HUNGER = 13246
+_WARDEN_SHADOWS = 13247
+_WARDEN_CHARM = 13248
+_ABILITY_ORDER = ("str", "dex", "con", "int", "wis", "cha")
+
+
+def _warden_specter_counts(active_hero_ids: set[int]) -> tuple[int, int, int]:
+    """Counts matching in-game Warden specter-cap specializations."""
+    tags_by_hero = _hero_tags_map_from_cached_definitions()
+    cfg_tags_by_hero = _hero_tags_map_from_champion_config()
+    scores_by_hero = _hero_ability_scores_map_from_cached_definitions()
+
+    evil = dex16 = cha_highest = 0
+    for hid in active_hero_ids:
+        tags = set(tags_by_hero.get(hid, ())) | set(cfg_tags_by_hero.get(hid, ()))
+        if "evil" in tags:
+            evil += 1
+        scores = scores_by_hero.get(hid, {})
+        if scores.get("dex", 0) >= 16:
+            dex16 += 1
+        cha = scores.get("cha", 0)
+        if cha > 0 and cha >= max((scores.get(stat, 0) for stat in _ABILITY_ORDER), default=0):
+            cha_highest += 1
+    return evil, dex16, cha_highest
+
+
+def _handle_warden(ctx: FormationContext) -> tuple[list[int], str] | None:
+    """Pick specter-cap spec by live formation counts (Evil / DEX≥16 / CHA-highest)."""
+    evil, dex16, cha_highest = _warden_specter_counts(ctx.active_hero_ids)
+    ranked = sorted(
+        (
+            (evil, 0, _WARDEN_DARK_HUNGER, f"{evil} evil → The Dark Hunger"),
+            (dex16, 1, _WARDEN_SHADOWS, f"{dex16} DEX≥16 → Shadows in the Night"),
+            (cha_highest, 2, _WARDEN_CHARM, f"{cha_highest} CHA-hoogst → Charm of the Fallen"),
+        ),
+        # Highest count wins; tie-break prefers Dark Hunger (guide default), then Shadows.
+        key=lambda row: (row[0], -row[1]),
+        reverse=True,
+    )
+    _count, _prio, upgrade_id, label = ranked[0]
+    if ranked[0][0] <= 0:
+        return [_WARDEN_DARK_HUNGER], "formatie-regel (geen specter-data; default The Dark Hunger)"
+    return [upgrade_id], f"formatie-regel ({label})"
 
 
 def _handle_catti(ctx: FormationContext) -> tuple[list[int], str] | None:
@@ -500,6 +681,8 @@ def _handle_widdle(ctx: FormationContext) -> tuple[list[int], str] | None:
         "wisdom": sum(1 for hid in ctx.active_hero_ids if _qualifies(hid, "wisdom")),
     }
     best = max(counts.values(), default=0)
+    if best <= 0:
+        return [6909], "formatie-regel (geen ability-score data; default sterkste groep)"
     tied = [key for key, value in counts.items() if value == best]
     if ctx.highest_damage_hero_id is not None:
         for key in tied:
@@ -582,15 +765,17 @@ def _handle_gale(ctx: FormationContext) -> tuple[list[int], str] | None:
         cfg_tags_by_hero,
     )
     high_int = high_intelligence_count(ctx.active_hero_ids, scores_by_hero)
-    unavailable = unavailable_owned_hero_count(ctx.active_hero_ids, ctx.owned_hero_ids)
+    unavailable = unavailable_owned_hero_count(ctx.owned_hero_ids, ctx.roster_filter)
+    # Prefer Mystical Mentor when all stack counts are zero (typical unrestricted
+    # adventure) — Finite Fellowship only wins with real ineligible champions.
     _tier1_id, tier1_reason = _pick_best_qualified_stack(
         [
             (14578, ceremorphosis, 100, "Ceremorphosis"),
             (14579, high_int, 100, "Mystical Mentor"),
             (14580, unavailable, 7.5, "Finite Fellowship"),
         ],
-        default_id=14580,
-        default_label="Finite Fellowship",
+        default_id=14579,
+        default_label="Mystical Mentor",
     )
     return [tier0, _tier1_id], (
         f"formatie-regel ({tier0_reason}; "
@@ -722,6 +907,8 @@ def _umberto_tier1_choice(ctx: FormationContext) -> tuple[int, str]:
 _CAZRIN_ID = 166
 _CAZRIN_SELF_TAUGHT = 17678
 _CAZRIN_ANCESTOR = 17679
+_CAZRIN_SIGNATURE_SMELL = 17681
+_CAZRIN_SMELL_MASTERY = 17682
 _CAZRIN_PCT = 100
 _CAZRIN_SELF_TAUGHT_EXPR = (
     "HasTag(`fallbacks`) || has_base_attack_dmg_type_melee || has_base_attack_dmg_type_ranged"
@@ -755,6 +942,13 @@ def _cazrin_fallback_allies(active_hero_ids: set[int]) -> int:
     return count
 
 
+def _cazrin_smell_choice(ctx: FormationContext) -> tuple[int, str]:
+    """Signature Smell = DPS Cazrin; Smell Mastery = support (Gaarawarr)."""
+    if ctx.highest_damage_hero_id == _CAZRIN_ID:
+        return _CAZRIN_SIGNATURE_SMELL, "Cazrin is huidige top damage → Signature Smell (DPS)"
+    return _CAZRIN_SMELL_MASTERY, "Cazrin als support → Smell Mastery"
+
+
 def _handle_cazrin(ctx: FormationContext) -> tuple[list[int], str] | None:
     self_taught_count, ancestor_count = _cazrin_qualified_counts(ctx.active_hero_ids)
     best_id, reason = _pick_best_qualified_stack(
@@ -778,11 +972,17 @@ def _handle_cazrin(ctx: FormationContext) -> tuple[list[int], str] | None:
                 if fallback_allies >= 1
                 else "; BUD/push → Ancestor's Shadow"
             )
-            return (
-                [_CAZRIN_ANCESTOR],
-                reason.replace("Self Taught", "Ancestor's Shadow").replace(")", f"{ally_note})"),
+            best_id = _CAZRIN_ANCESTOR
+            reason = reason.replace("Self Taught", "Ancestor's Shadow").replace(
+                ")", f"{ally_note})"
             )
-    return [best_id], reason
+
+    smell_id, smell_reason = _cazrin_smell_choice(ctx)
+    tier0_detail = reason.removeprefix("formatie-regel (").rstrip(")")
+    return (
+        [best_id, smell_id],
+        f"formatie-regel ({tier0_detail}; {smell_reason})",
+    )
 
 
 def _handle_omin(ctx: FormationContext) -> tuple[list[int], str] | None:
@@ -1076,6 +1276,23 @@ def _merge_tier_default_ids(
     return [chosen_by_tier[index] for index in sorted(chosen_by_tier)]
 
 
+def supplement_missing_tier_ids(
+    known_options: list[SpecializationOption],
+    primary_ids: list[int],
+    supplement_ids: list[int],
+) -> list[int]:
+    """Keep primary picks per tier; only fill tiers primary does not cover."""
+    chosen_by_tier: dict[int, int] = {}
+    for tier_index in sorted({opt.tier_index for opt in known_options}):
+        tier_ids = {opt.upgrade_id for opt in known_options if opt.tier_index == tier_index}
+        pick = next((upgrade_id for upgrade_id in primary_ids if upgrade_id in tier_ids), None)
+        if pick is None:
+            pick = next((upgrade_id for upgrade_id in supplement_ids if upgrade_id in tier_ids), None)
+        if pick is not None:
+            chosen_by_tier[tier_index] = pick
+    return [chosen_by_tier[index] for index in sorted(chosen_by_tier)]
+
+
 def _combined_dynamic_reason(
     multiply_result: tuple[list[int], str] | None,
     smart_result: tuple[list[int], str] | None,
@@ -1304,8 +1521,10 @@ HERO_HANDLERS: dict[int, HeroHandler] = {
     1: _handle_bruenor,
     2: _handle_celeste,
     3: _handle_nayeli,
+    20: _handle_regis,
     25: _handle_catti,
     26: _handle_evelyn,
+    36: _handle_warden,
     64: _handle_beadle,
     65: _handle_omin,
     91: _handle_widdle,
@@ -1344,6 +1563,8 @@ def dynamic_default_ids(
     modron_core_competency_stacks: int = 0,
     owned_hero_ids: frozenset[int] | None = None,
     hero_upgrade_ids: dict[int, frozenset[int]] | None = None,
+    roster_filter: Any | None = None,
+    preferred_ids: list[int] | None = None,
 ) -> tuple[list[int], str] | None:
     ctx = FormationContext(
         active_hero_ids=active_hero_ids,
@@ -1357,10 +1578,15 @@ def dynamic_default_ids(
         modron_core_competency_stacks=modron_core_competency_stacks,
         owned_hero_ids=owned_hero_ids,
         hero_upgrade_ids=hero_upgrade_ids,
+        roster_filter=roster_filter,
     )
     handler = HERO_HANDLERS.get(hero_id)
     if handler is not None:
         return handler(ctx)
+
+    preferred = list(preferred_ids or [])
+    if not preferred:
+        preferred = list(load_meta_static_defaults().get(hero_id, []))
 
     multiply_result = _pick_generic_qualified_stack_choices(
         hero_id,
@@ -1374,6 +1600,7 @@ def dynamic_default_ids(
             known_options,
             metrics,
             highest_damage_hero_id=highest_damage_hero_id,
+            preferred_ids=preferred,
         )
         merged_ids = _merge_tier_default_ids(
             known_options,
@@ -1395,6 +1622,7 @@ def dynamic_default_ids(
             known_options,
             metrics,
             highest_damage_hero_id=highest_damage_hero_id,
+            preferred_ids=preferred,
         )
     return None
 
@@ -1415,4 +1643,5 @@ def baseline_default_ids(
         known_options,
         EMPTY_FORMATION_METRICS,
         static_only=True,
+        preferred_ids=list(meta or []),
     )

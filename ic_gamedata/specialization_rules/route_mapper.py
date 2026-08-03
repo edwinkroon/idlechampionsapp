@@ -139,9 +139,19 @@ def _tier_options(
     return tier_options or list(options)
 
 
+def _keyword_in_option_name(name: str, keyword: str) -> bool:
+    needle = keyword.casefold().strip()
+    if not needle:
+        return False
+    haystack = name.casefold()
+    if any(ch in needle for ch in (" ", ":", "'")):
+        return needle in haystack
+    return re.search(rf"(?<![a-z0-9]){re.escape(needle)}(?![a-z0-9])", haystack) is not None
+
+
 def _score_option(option: SpecializationOption, keywords: tuple[str, ...]) -> int:
     name = option.name.lower()
-    return sum(2 if keyword in name else 0 for keyword in keywords)
+    return sum(2 if _keyword_in_option_name(name, keyword) else 0 for keyword in keywords)
 
 
 def map_route_to_upgrade_id(

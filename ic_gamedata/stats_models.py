@@ -36,6 +36,7 @@ class GoalRunRecord:
     peak_area: int | None
     recorded_at: float
     duration_unreliable: bool = False
+    gems_earned: int | None = None
 
 
 @dataclass(frozen=True)

@@ -227,6 +227,80 @@ class FormationAdvisorTests(unittest.TestCase):
         insights = evaluate_formation_rules(ctx)
         self.assertFalse(any(i.hero_id == 3 or "Nayeli" in i.detail for i in insights))
 
+    def test_formation_not_full_skipped_when_layout_is_full(self) -> None:
+        """9-seat maps must not warn when all player slots are filled."""
+        heroes = [
+            _hero(hid, f"H{hid}", seat, roles=("support",), tags=("buffer",))
+            for hid, seat in zip(range(1, 10), range(1, 10))
+        ]
+        # Mark one as DPS carry so party rules have a carry target.
+        heroes[0] = _hero(1, "H1", 1, roles=("dps",))
+        formation = tuple(heroes)
+        payload = {
+            "details": {
+                "active_game_instance_id": 1,
+                "game_instances": [
+                    {
+                        "game_instance_id": 1,
+                        "current_adventure_id": 14,
+                        "hero_in_seats": {str(seat): hid for hid, seat in zip(range(1, 10), range(1, 10))},
+                        "formation": list(range(1, 10)),
+                        "stats": {"this_reset_highest_damage_dealt_hero_id": 1},
+                    }
+                ],
+                "heroes": [
+                    {"hero_id": hid, "in_seat": 1, "game_instance_id": 1, "level": 100, "owned": 1}
+                    for hid in range(1, 10)
+                ],
+            }
+        }
+        ctx = build_formation_layout_context(
+            payload,
+            formation,
+            goal="bud",
+            context="campaign",
+        )
+        self.assertEqual(ctx.party_size, 9)
+        self.assertEqual(ctx.formation_capacity, 9)
+        insights = evaluate_formation_rules(ctx)
+        self.assertFalse(any(i.rule_id == "formation_not_full" for i in insights))
+
+    def test_formation_not_full_triggers_when_under_capacity(self) -> None:
+        formation = (
+            _hero(1, "H1", 1, roles=("dps",)),
+            _hero(2, "H2", 2, roles=("support",), tags=("buffer",)),
+            _hero(3, "H3", 3, roles=("tank", "support")),
+        )
+        payload = {
+            "details": {
+                "active_game_instance_id": 1,
+                "game_instances": [
+                    {
+                        "game_instance_id": 1,
+                        "current_adventure_id": 14,
+                        "hero_in_seats": {"1": 1, "2": 2, "3": 3},
+                        "formation": [1, 2, 3, -1, -1, -1, -1, -1, -1],
+                        "stats": {"this_reset_highest_damage_dealt_hero_id": 1},
+                    }
+                ],
+                "heroes": [
+                    {"hero_id": hid, "in_seat": 1, "game_instance_id": 1, "level": 100, "owned": 1}
+                    for hid in (1, 2, 3)
+                ],
+            }
+        }
+        ctx = build_formation_layout_context(
+            payload,
+            formation,
+            goal="bud",
+            context="campaign",
+        )
+        self.assertEqual(ctx.formation_capacity, 9)
+        insights = evaluate_formation_rules(ctx)
+        not_full = [i for i in insights if i.rule_id == "formation_not_full"]
+        self.assertEqual(len(not_full), 1)
+        self.assertIn("3 van 9", not_full[0].detail)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -4,7 +4,11 @@ from __future__ import annotations
 
 from typing import Any
 
-from ic_gamedata.adventure_restrictions import AdventureRosterFilter, is_hero_allowed
+from ic_gamedata.adventure_restrictions import (
+    AdventureRosterFilter,
+    is_hero_allowed,
+    player_formation_capacity,
+)
 from ic_gamedata.formation_advisor.models import FormationLayoutContext
 from ic_gamedata.formation_advisor.topology import load_formation_topology
 from ic_gamedata.parsing import parse_int as _parse_int
@@ -85,6 +89,13 @@ def build_formation_layout_context(
         hero_tags_by_id.setdefault(hid, tags)
 
     topology = load_formation_topology(payload, adventure_id)
+    capacity = player_formation_capacity(payload, adventure_id)
+    try:
+        from ic_gamedata.formation_seats import live_formation_hero_ids
+    except ImportError:
+        grid_count = 0
+    else:
+        grid_count = len(live_formation_hero_ids(payload))
 
     return FormationLayoutContext(
         active_hero_ids=frozenset(seat_by_hero.keys()),
@@ -98,7 +109,8 @@ def build_formation_layout_context(
         run_goal=advisor_run_goal(goal, context),
         context=context,
         goal=goal,
-        party_size=len(seat_by_hero),
+        party_size=max(len(seat_by_hero), grid_count),
+        formation_capacity=capacity,
         owned_hero_ids=owned_ids,
         allowed_bench_ids=allowed_bench,
     )

@@ -121,6 +121,8 @@ def _expr_is_supported(expr: str) -> bool:
 
 
 def _is_multiply_stack_effect(keys: list[Any]) -> bool:
+    has_base_buff_pct = False
+    has_i_want_stacks = False
     for key in keys:
         if not isinstance(key, dict):
             continue
@@ -146,7 +148,18 @@ def _is_multiply_stack_effect(keys: list[Any]) -> bool:
             return True
         if effect_string.startswith("buff_upgrades,") and key.get("stacks_multiply"):
             return True
-    return False
+        # Split pattern (e.g. Lazaapz Fury specs): base buff_upgrade,PCT + i_want_stacks
+        # qualifier via per_hero_attribute / per_crusader. Without this, those tiers fall
+        # through to static defaults and ignore the live qualified × % ranking.
+        if effect_string.startswith("buff_upgrade,") and _parse_pct_from_effect_string(effect_string):
+            has_base_buff_pct = True
+        if (
+            effect_string == "i_want_stacks"
+            and key.get("stack_func") in _MULTIPLY_STACK_FUNCS
+            and key.get("per_hero_expr")
+        ):
+            has_i_want_stacks = True
+    return has_base_buff_pct and has_i_want_stacks
 
 
 def _unsupported_filter_keys(stack_data: dict[str, Any]) -> bool:

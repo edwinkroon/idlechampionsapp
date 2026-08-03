@@ -1,0 +1,330 @@
+[
+  {
+    "hero_id": 1,
+    "name": "Bruenor",
+    "has_dynamic_handler": true,
+    "our_default_advice": [
+      "Battle Master (7)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "Battle Master",
+    "csv_alternative_label": "Gold Find",
+    "csv_advice_text": "Gebruik gold voor farm/favor; support voor push.",
+    "csv_label_maps_to": "Battle Master",
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 6,
+          "name": "Shield Master",
+          "required_level": 150
+        },
+        {
+          "upgrade_id": 7,
+          "name": "Battle Master",
+          "required_level": 150
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 2,
+    "name": "Celeste",
+    "has_dynamic_handler": true,
+    "our_default_advice": [
+      "Life Domain (30)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "War Domain",
+    "csv_alternative_label": "Life Domain",
+    "csv_advice_text": "Healing/survival als je tank onder druk staat; anders support.",
+    "csv_label_maps_to": "War Domain",
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 29,
+          "name": "War Domain",
+          "required_level": 100
+        },
+        {
+          "upgrade_id": 30,
+          "name": "Life Domain",
+          "required_level": 100
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 3,
+    "name": "Nayeli",
+    "has_dynamic_handler": true,
+    "our_default_advice": [
+      "Oath of Devotion (44)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "Oath of Devotion",
+    "csv_alternative_label": "Oath of Vengeance",
+    "csv_advice_text": "Gebruik support/tank voor standaard progressie; alternatief als je formation layout het beloont.",
+    "csv_label_maps_to": "Oath of Devotion",
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 43,
+          "name": "Oath of Vengeance",
+          "required_level": 100
+        },
+        {
+          "upgrade_id": 44,
+          "name": "Oath of Devotion",
+          "required_level": 100
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 4,
+    "name": "Jarlaxle",
+    "has_dynamic_handler": false,
+    "our_default_advice": [
+      "Leader of the Bregan D'aerthe (59)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "Piracy",
+    "csv_alternative_label": "Damage route",
+    "csv_advice_text": "Gold is bijna altijd de default voor farm/favor runs.",
+    "csv_label_maps_to": null,
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 58,
+          "name": "Secret Lord of Luskan",
+          "required_level": 150
+        },
+        {
+          "upgrade_id": 59,
+          "name": "Leader of the Bregan D'aerthe",
+          "required_level": 150
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 5,
+    "name": "Calliope",
+    "has_dynamic_handler": false,
+    "our_default_advice": [
+      "College of Lore (76)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "Valor",
+    "csv_alternative_label": "Lore",
+    "csv_advice_text": "Meestal shielding/support voor stabiele progressie.",
+    "csv_label_maps_to": "College of Valor",
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 75,
+          "name": "College of Valor",
+          "required_level": 80
+        },
+        {
+          "upgrade_id": 76,
+          "name": "College of Lore",
+          "required_level": 80
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 6,
+    "name": "Asharra",
+    "has_dynamic_handler": false,
+    "our_default_advice": [
+      "Bond: Dwarves and Elves (91)",
+      "Bond: Half n' Half (975)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "Potpourri/Bonds",
+    "csv_alternative_label": "Other bond route",
+    "csv_advice_text": "Kies altijd de bond/spec die exact bij je huidige formation past.",
+    "csv_label_maps_to": "Bond: Potpourri",
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 90,
+          "name": "Bond: Humans",
+          "required_level": 10
+        },
+        {
+          "upgrade_id": 91,
+          "name": "Bond: Dwarves and Elves",
+          "required_level": 10
+        },
+        {
+          "upgrade_id": 92,
+          "name": "Bond: Potpourri",
+          "required_level": 10
+        }
+      ],
+      "1": [
+        {
+          "upgrade_id": 975,
+          "name": "Bond: Half n' Half",
+          "required_level": 325
+        },
+        {
+          "upgrade_id": 976,
+          "name": "Bond: Exotic Species",
+          "required_level": 325
+        },
+        {
+          "upgrade_id": 977,
+          "name": "Bond: Short-folk",
+          "required_level": 325
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 7,
+    "name": "Minsc",
+    "has_dynamic_handler": false,
+    "our_default_advice": [
+      "Favored Enemy: Humanoids (108)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "Humanoid/Beast etc.",
+    "csv_alternative_label": "Best enemy type",
+    "csv_advice_text": "Kies altijd de enemy-type/spec die bij het avontuur of de zone past.",
+    "csv_label_maps_to": "Favored Enemy: Humanoids",
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 108,
+          "name": "Favored Enemy: Humanoids",
+          "required_level": 50
+        },
+        {
+          "upgrade_id": 109,
+          "name": "Favored Enemy: Beasts",
+          "required_level": 50
+        },
+        {
+          "upgrade_id": 110,
+          "name": "Favored Enemy: Undead",
+          "required_level": 50
+        },
+        {
+          "upgrade_id": 111,
+          "name": "Favored Enemy: Fey",
+          "required_level": 50
+        },
+        {
+          "upgrade_id": 112,
+          "name": "Favored Enemy: Monstrosities",
+          "required_level": 50
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 8,
+    "name": "Delina",
+    "has_dynamic_handler": false,
+    "our_default_advice": [
+      "Font of Magic (129)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "Damage route",
+    "csv_alternative_label": "Other route",
+    "csv_advice_text": "Alleen damage kiezen; zij is vooral een basis-dps-optie.",
+    "csv_label_maps_to": null,
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 129,
+          "name": "Font of Magic",
+          "required_level": 200
+        },
+        {
+          "upgrade_id": 130,
+          "name": "Tides of Chaos",
+          "required_level": 200
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 9,
+    "name": "Makos",
+    "has_dynamic_handler": false,
+    "our_default_advice": [
+      "Dark Blessing (140)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "Dark Luck",
+    "csv_alternative_label": "Blessing route",
+    "csv_advice_text": "Gold voor favor/farm; support/damage voor pushing.",
+    "csv_label_maps_to": "Dark Luck",
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 139,
+          "name": "Dark Luck",
+          "required_level": 15
+        },
+        {
+          "upgrade_id": 140,
+          "name": "Dark Blessing",
+          "required_level": 15
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 10,
+    "name": "Tyril",
+    "has_dynamic_handler": false,
+    "our_default_advice": [
+      "Moonbeam (145)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "Wild Shape",
+    "csv_alternative_label": "Moonbeam",
+    "csv_advice_text": "Tank/spec voor frontlinie; damage/support afhankelijk van rol in formation.",
+    "csv_label_maps_to": "Wild Shape",
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 145,
+          "name": "Moonbeam",
+          "required_level": 45
+        },
+        {
+          "upgrade_id": 146,
+          "name": "Wild Shape",
+          "required_level": 45
+        }
+      ]
+    }
+  }
+]
