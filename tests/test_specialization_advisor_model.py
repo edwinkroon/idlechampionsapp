@@ -145,6 +145,17 @@ class SpecializationAdvisorModelTests(unittest.TestCase):
         self.assertEqual(preferred_ids_for_run_goal(model, run_goal="gold_farm"), [59])
         self.assertEqual(preferred_ids_for_run_goal(model, run_goal="push"), [58])
 
+    def test_batch03_arkhan_and_jamilah(self) -> None:
+        arkhan = advisor_model_for_hero(12)
+        jamilah = advisor_model_for_hero(11)
+        self.assertIsNotNone(arkhan)
+        self.assertIsNotNone(jamilah)
+        assert arkhan is not None and jamilah is not None
+        self.assertEqual(arkhan.safe_default.upgrade_id if arkhan.safe_default else None, 244)
+        self.assertEqual(jamilah.safe_default.upgrade_id if jamilah.safe_default else None, 239)
+        self.assertFalse(arkhan.review_needed)
+        self.assertFalse(jamilah.review_needed)
+
 
 if __name__ == "__main__":
     unittest.main()

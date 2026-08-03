@@ -1,0 +1,811 @@
+[
+  {
+    "hero_id": 89,
+    "name": "D'hani",
+    "has_dynamic_handler": false,
+    "sample_reason": "baseline",
+    "risk_tags": [
+      "baseline"
+    ],
+    "our_default_advice": [
+      "Ochre Jelly Yellow (13717)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "Debuff focus",
+    "csv_alternative_label": "Paint focus",
+    "csv_advice_text": "Kies wat je formatie het meest versterkt; vaak debuff/support tenzij je bewust haar eigen scaling stapelt.",
+    "csv_label_maps_to": null,
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 13717,
+          "name": "Ochre Jelly Yellow",
+          "required_level": 290
+        },
+        {
+          "upgrade_id": 13718,
+          "name": "Twig Blight Green",
+          "required_level": 290
+        },
+        {
+          "upgrade_id": 13719,
+          "name": "Frost Giant Blue",
+          "required_level": 290
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 90,
+    "name": "Brig",
+    "has_dynamic_handler": false,
+    "sample_reason": "unmapped_label",
+    "risk_tags": [
+      "unmapped_label"
+    ],
+    "our_default_advice": [
+      "\"Back\"-Up Singer (6355)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "Support route",
+    "csv_alternative_label": "Other route",
+    "csv_advice_text": "Gebruik meestal de support- of utility-keuze als veilige default; wijk alleen af als de formatie, run-doel of champion-rol daar duidelijk om vraagt.",
+    "csv_label_maps_to": null,
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 6355,
+          "name": "\"Back\"-Up Singer",
+          "required_level": 150
+        },
+        {
+          "upgrade_id": 6356,
+          "name": "Cream of the Crop",
+          "required_level": 150
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 91,
+    "name": "Widdle",
+    "has_dynamic_handler": true,
+    "sample_reason": "dynamic_handler, farm_gold",
+    "risk_tags": [
+      "dynamic_handler",
+      "farm_gold"
+    ],
+    "our_default_advice": [
+      "Mind and Body (6910)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "Fast Friends",
+    "csv_alternative_label": "Healing/other",
+    "csv_advice_text": "Speed bijna altijd voor farming; support/heal alleen als stabiliteit belangrijker is.",
+    "csv_label_maps_to": null,
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 6909,
+          "name": "Strong and Steady",
+          "required_level": 310
+        },
+        {
+          "upgrade_id": 6910,
+          "name": "Mind and Body",
+          "required_level": 310
+        },
+        {
+          "upgrade_id": 6911,
+          "name": "Wisdom and Confidence",
+          "required_level": 310
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 92,
+    "name": "Yorven",
+    "has_dynamic_handler": false,
+    "sample_reason": "unmapped_label",
+    "risk_tags": [
+      "unmapped_label"
+    ],
+    "our_default_advice": [
+      "Eldritch Claw Tattoo (17071)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "Support route",
+    "csv_alternative_label": "Other route",
+    "csv_advice_text": "Gebruik meestal de support- of utility-keuze als veilige default; wijk alleen af als de formatie, run-doel of champion-rol daar duidelijk om vraagt.",
+    "csv_label_maps_to": null,
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 17070,
+          "name": "Hunger For Blood",
+          "required_level": 120
+        },
+        {
+          "upgrade_id": 17071,
+          "name": "Eldritch Claw Tattoo",
+          "required_level": 120
+        },
+        {
+          "upgrade_id": 17072,
+          "name": "Follow The Mad Rabbit",
+          "required_level": 120
+        },
+        {
+          "upgrade_id": 17073,
+          "name": "Infectious Fury",
+          "required_level": 120
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 93,
+    "name": "Viconia",
+    "has_dynamic_handler": false,
+    "sample_reason": "unmapped_label",
+    "risk_tags": [
+      "unmapped_label"
+    ],
+    "our_default_advice": [
+      "Begrudging Respect (9785)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "Support route",
+    "csv_alternative_label": "Undead route",
+    "csv_advice_text": "Neem undead-spec alleen als je team daar echt van profiteert.",
+    "csv_label_maps_to": null,
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 9784,
+          "name": "Holy Power",
+          "required_level": 80
+        },
+        {
+          "upgrade_id": 9785,
+          "name": "Begrudging Respect",
+          "required_level": 80
+        },
+        {
+          "upgrade_id": 9786,
+          "name": "Turn Undead",
+          "required_level": 80
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 94,
+    "name": "Rust",
+    "has_dynamic_handler": false,
+    "sample_reason": "farm_gold",
+    "risk_tags": [
+      "farm_gold"
+    ],
+    "our_default_advice": [
+      "Even More Riches (15363)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "Gold route",
+    "csv_alternative_label": "Support route",
+    "csv_advice_text": "Gold in economy teams; support anders.",
+    "csv_label_maps_to": "Get Rich Quick",
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 15362,
+          "name": "Get Rich Quick",
+          "required_level": 240
+        },
+        {
+          "upgrade_id": 15363,
+          "name": "Even More Riches",
+          "required_level": 240
+        },
+        {
+          "upgrade_id": 15364,
+          "name": "Rust's Fever Dream",
+          "required_level": 240
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 95,
+    "name": "Vi",
+    "has_dynamic_handler": false,
+    "sample_reason": "unmapped_label",
+    "risk_tags": [
+      "unmapped_label"
+    ],
+    "our_default_advice": [
+      "A Nudge In The Right Direction (12318)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "Support route",
+    "csv_alternative_label": "Other route",
+    "csv_advice_text": "Gebruik meestal de support- of utility-keuze als veilige default; wijk alleen af als de formatie, run-doel of champion-rol daar duidelijk om vraagt.",
+    "csv_label_maps_to": null,
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 12316,
+          "name": "Bless Their Hearts",
+          "required_level": 200
+        },
+        {
+          "upgrade_id": 12317,
+          "name": "Positive Reinforcement",
+          "required_level": 200
+        },
+        {
+          "upgrade_id": 12318,
+          "name": "A Nudge In The Right Direction",
+          "required_level": 200
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 96,
+    "name": "Desmond",
+    "has_dynamic_handler": false,
+    "sample_reason": "baseline",
+    "risk_tags": [
+      "baseline"
+    ],
+    "our_default_advice": [
+      "Embrace the Beast (7305)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "Living on the Edge",
+    "csv_alternative_label": "Other route",
+    "csv_advice_text": "Kies de route die het meeste uit defeated/dead synergie haalt; meestal support-georiënteerd.",
+    "csv_label_maps_to": "Embrace the Beast",
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 7304,
+          "name": "Double Time",
+          "required_level": 200
+        },
+        {
+          "upgrade_id": 7305,
+          "name": "Embrace the Beast",
+          "required_level": 200
+        },
+        {
+          "upgrade_id": 7306,
+          "name": "Strength in Numbers",
+          "required_level": 200
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 97,
+    "name": "Tatyana",
+    "has_dynamic_handler": false,
+    "sample_reason": "unmapped_label",
+    "risk_tags": [
+      "unmapped_label"
+    ],
+    "our_default_advice": [
+      "Best Friend Forever (7389)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "Tank route",
+    "csv_alternative_label": "Utility route",
+    "csv_advice_text": "Tank voor survival; utility als haar pull/clear functie belangrijker is.",
+    "csv_label_maps_to": null,
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 7387,
+          "name": "Your Friends are My Friends",
+          "required_level": 140
+        },
+        {
+          "upgrade_id": 7388,
+          "name": "By My Side",
+          "required_level": 140
+        },
+        {
+          "upgrade_id": 7389,
+          "name": "Best Friend Forever",
+          "required_level": 140
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 98,
+    "name": "Gazrick",
+    "has_dynamic_handler": false,
+    "sample_reason": "farm_gold, unmapped_label",
+    "risk_tags": [
+      "farm_gold",
+      "unmapped_label"
+    ],
+    "our_default_advice": [
+      "Aim Around Armor (7539)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "Support route",
+    "csv_alternative_label": "Other route",
+    "csv_advice_text": "Gebruik meestal de support- of utility-keuze als veilige default; wijk alleen af als de formatie, run-doel of champion-rol daar duidelijk om vraagt.",
+    "csv_label_maps_to": null,
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 7538,
+          "name": "Genius with Gold",
+          "required_level": 200
+        },
+        {
+          "upgrade_id": 7539,
+          "name": "Aim Around Armor",
+          "required_level": 200
+        },
+        {
+          "upgrade_id": 7540,
+          "name": "Finesse with Frost",
+          "required_level": 200
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 99,
+    "name": "Dungeon Master",
+    "has_dynamic_handler": false,
+    "sample_reason": "unmapped_label",
+    "risk_tags": [
+      "unmapped_label"
+    ],
+    "our_default_advice": [
+      "Fear Not, Champions! (7850)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "Utility route",
+    "csv_alternative_label": "Other route",
+    "csv_advice_text": "Kies utility afhankelijk van doel; hij is vooral een enablement-slot.",
+    "csv_label_maps_to": null,
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 7849,
+          "name": "Where Did He Go This Time?",
+          "required_level": 100
+        },
+        {
+          "upgrade_id": 7850,
+          "name": "Fear Not, Champions!",
+          "required_level": 100
+        },
+        {
+          "upgrade_id": 16144,
+          "name": "Special Guest Stars",
+          "required_level": 100
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 100,
+    "name": "Nordom",
+    "has_dynamic_handler": true,
+    "sample_reason": "dynamic_handler",
+    "risk_tags": [
+      "dynamic_handler"
+    ],
+    "our_default_advice": [
+      "Modron Core Toolbox (18167)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "Modron route",
+    "csv_alternative_label": "Other route",
+    "csv_advice_text": "Gebruik als utility-champion volgens automation/modron-doel.",
+    "csv_label_maps_to": "Modron Core Toolbox",
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 18166,
+          "name": "BASIC Functionality",
+          "required_level": 100
+        },
+        {
+          "upgrade_id": 18167,
+          "name": "Modron Core Toolbox",
+          "required_level": 100
+        },
+        {
+          "upgrade_id": 18168,
+          "name": "Core Competency",
+          "required_level": 100
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 101,
+    "name": "Merilwen",
+    "has_dynamic_handler": false,
+    "sample_reason": "farm_gold, unmapped_label",
+    "risk_tags": [
+      "farm_gold",
+      "unmapped_label"
+    ],
+    "our_default_advice": [
+      "Meow-il-wen (7999)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "Gold route",
+    "csv_alternative_label": "Support route",
+    "csv_advice_text": "Gold bij economy runs; support bij diepere pushes.",
+    "csv_label_maps_to": null,
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 7997,
+          "name": "Stink Like Skunk",
+          "required_level": 200
+        },
+        {
+          "upgrade_id": 7998,
+          "name": "Treasures Her Friends",
+          "required_level": 200
+        },
+        {
+          "upgrade_id": 7999,
+          "name": "Meow-il-wen",
+          "required_level": 200
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 102,
+    "name": "Nahara",
+    "has_dynamic_handler": false,
+    "sample_reason": "unmapped_label",
+    "risk_tags": [
+      "unmapped_label"
+    ],
+    "our_default_advice": [
+      "A Barovian Bond (19724)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "Support route",
+    "csv_alternative_label": "Other route",
+    "csv_advice_text": "Gebruik meestal de support- of utility-keuze als veilige default; wijk alleen af als de formatie, run-doel of champion-rol daar duidelijk om vraagt.",
+    "csv_label_maps_to": null,
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 19723,
+          "name": "A Grave Experience",
+          "required_level": 250
+        },
+        {
+          "upgrade_id": 19724,
+          "name": "A Barovian Bond",
+          "required_level": 250
+        },
+        {
+          "upgrade_id": 19725,
+          "name": "A Skilled Lyre",
+          "required_level": 250
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 103,
+    "name": "Valentine",
+    "has_dynamic_handler": false,
+    "sample_reason": "farm_gold",
+    "risk_tags": [
+      "farm_gold"
+    ],
+    "our_default_advice": [
+      "My Loyal Bodyguard (8150)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "Socialite gold",
+    "csv_alternative_label": "Support route",
+    "csv_advice_text": "Gold in economy runs; support als ze vooral formatie-buffs levert.",
+    "csv_label_maps_to": null,
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 8149,
+          "name": "All Hail the God Brain",
+          "required_level": 300
+        },
+        {
+          "upgrade_id": 8150,
+          "name": "My Loyal Bodyguard",
+          "required_level": 300
+        },
+        {
+          "upgrade_id": 8151,
+          "name": "Family Business",
+          "required_level": 300
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 104,
+    "name": "Voronika",
+    "has_dynamic_handler": false,
+    "sample_reason": "multi_tier, farm_gold",
+    "risk_tags": [
+      "multi_tier",
+      "farm_gold"
+    ],
+    "our_default_advice": [
+      "Embrace Evil (15635)",
+      "Battle Magic (15638)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "Support routing",
+    "csv_alternative_label": "Other utility",
+    "csv_advice_text": "Gebruik meestal de support-keuze; alleen afwijken bij niche utility-setup.",
+    "csv_label_maps_to": null,
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 15635,
+          "name": "Embrace Evil",
+          "required_level": 190
+        },
+        {
+          "upgrade_id": 15636,
+          "name": "Hunt The Favored",
+          "required_level": 190
+        },
+        {
+          "upgrade_id": 15637,
+          "name": "Weaken The Fools",
+          "required_level": 190
+        }
+      ],
+      "1": [
+        {
+          "upgrade_id": 15638,
+          "name": "Battle Magic",
+          "required_level": 500
+        },
+        {
+          "upgrade_id": 15639,
+          "name": "Powerful Focus",
+          "required_level": 500
+        },
+        {
+          "upgrade_id": 15640,
+          "name": "Strike First, Strike Hard",
+          "required_level": 500
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 105,
+    "name": "Dob",
+    "has_dynamic_handler": true,
+    "sample_reason": "dynamic_handler, unmapped_label",
+    "risk_tags": [
+      "dynamic_handler",
+      "unmapped_label"
+    ],
+    "our_default_advice": [
+      "Befriend Everybody! (8745)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "Support route",
+    "csv_alternative_label": "Other route",
+    "csv_advice_text": "Gebruik meestal de support- of utility-keuze als veilige default; wijk alleen af als de formatie, run-doel of champion-rol daar duidelijk om vraagt.",
+    "csv_label_maps_to": null,
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 8742,
+          "name": "Befriend the Magical",
+          "required_level": 160
+        },
+        {
+          "upgrade_id": 8743,
+          "name": "Befriend the Friendly",
+          "required_level": 160
+        },
+        {
+          "upgrade_id": 8744,
+          "name": "Befriend the Quick",
+          "required_level": 160
+        },
+        {
+          "upgrade_id": 8745,
+          "name": "Befriend Everybody!",
+          "required_level": 160
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 106,
+    "name": "Blooshi",
+    "has_dynamic_handler": false,
+    "sample_reason": "multi_tier, unmapped_label",
+    "risk_tags": [
+      "multi_tier",
+      "unmapped_label"
+    ],
+    "our_default_advice": [
+      "Charred Souls (7525)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "Tank route",
+    "csv_alternative_label": "Damage/support route",
+    "csv_advice_text": "Tank/spec voor progressie en survivability; alternatief bij offensieve opzet.",
+    "csv_label_maps_to": null,
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 7523,
+          "name": "Sliced Souls",
+          "required_level": 100
+        },
+        {
+          "upgrade_id": 7524,
+          "name": "Skewered Souls",
+          "required_level": 100
+        },
+        {
+          "upgrade_id": 7525,
+          "name": "Charred Souls",
+          "required_level": 100
+        }
+      ],
+      "1": [
+        {
+          "upgrade_id": 7526,
+          "name": "Resilient Spirit",
+          "required_level": 250
+        },
+        {
+          "upgrade_id": 7527,
+          "name": "Wild Spirit",
+          "required_level": 250
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 113,
+    "name": "Egbert",
+    "has_dynamic_handler": false,
+    "sample_reason": "multi_tier, unmapped_label",
+    "risk_tags": [
+      "multi_tier",
+      "unmapped_label"
+    ],
+    "our_default_advice": [
+      "Atonement Begins with an Apology (8877)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "Support route",
+    "csv_alternative_label": "Control route",
+    "csv_advice_text": "Gebruik support als default; control als encounter-management nodig is.",
+    "csv_label_maps_to": null,
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 8877,
+          "name": "Atonement Begins with an Apology",
+          "required_level": 200
+        },
+        {
+          "upgrade_id": 8878,
+          "name": "Team Chaos Team",
+          "required_level": 200
+        }
+      ],
+      "1": [
+        {
+          "upgrade_id": 8879,
+          "name": "Smoky Bombs",
+          "required_level": 300
+        },
+        {
+          "upgrade_id": 8880,
+          "name": "Health Kick",
+          "required_level": 300
+        },
+        {
+          "upgrade_id": 8881,
+          "name": "Oxventure Capitalism",
+          "required_level": 300
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 114,
+    "name": "Kent",
+    "has_dynamic_handler": false,
+    "sample_reason": "unmapped_label",
+    "risk_tags": [
+      "unmapped_label"
+    ],
+    "our_default_advice": [
+      "Potent Poison (9356)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "Support route",
+    "csv_alternative_label": "Ranged route",
+    "csv_advice_text": "Support als veilige default; afwijken bij ranged-specifieke setup.",
+    "csv_label_maps_to": null,
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 9355,
+          "name": "Robust Rivals",
+          "required_level": 250
+        },
+        {
+          "upgrade_id": 9356,
+          "name": "Potent Poison",
+          "required_level": 250
+        }
+      ]
+    }
+  }
+]

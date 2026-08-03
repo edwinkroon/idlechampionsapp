@@ -1,0 +1,753 @@
+[
+  {
+    "hero_id": 11,
+    "name": "Jamilah",
+    "has_dynamic_handler": false,
+    "sample_reason": "baseline",
+    "risk_tags": [
+      "baseline"
+    ],
+    "our_default_advice": [
+      "Bruiser (239)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "Bruiser",
+    "csv_alternative_label": "Other route",
+    "csv_advice_text": "Kies damage als je haar gebruikt; anders meestal geen prioriteit.",
+    "csv_label_maps_to": "Bruiser",
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 239,
+          "name": "Bruiser",
+          "required_level": 60
+        },
+        {
+          "upgrade_id": 240,
+          "name": "Indomitable Might",
+          "required_level": 60
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 12,
+    "name": "Arkhan",
+    "has_dynamic_handler": false,
+    "sample_reason": "baseline",
+    "risk_tags": [
+      "baseline"
+    ],
+    "our_default_advice": [
+      "Bulk Up (243)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "Usurp",
+    "csv_alternative_label": "Bulk Up",
+    "csv_advice_text": "Kies de spec die exact past bij je Arkhan-formatie; vaak pure usurp-logica.",
+    "csv_label_maps_to": "Usurped Power",
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 243,
+          "name": "Bulk Up",
+          "required_level": 65
+        },
+        {
+          "upgrade_id": 244,
+          "name": "Usurped Power",
+          "required_level": 65
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 18,
+    "name": "Drizzt",
+    "has_dynamic_handler": false,
+    "sample_reason": "unmapped_label",
+    "risk_tags": [
+      "unmapped_label"
+    ],
+    "our_default_advice": [
+      "Drow Stalker (11517)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "DPS route",
+    "csv_alternative_label": "Other route",
+    "csv_advice_text": "Als je Drizzt gebruikt als carry, kies pure damage.",
+    "csv_label_maps_to": null,
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 11516,
+          "name": "Leader of the Companions",
+          "required_level": 180
+        },
+        {
+          "upgrade_id": 11517,
+          "name": "Drow Stalker",
+          "required_level": 180
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 19,
+    "name": "Barrowin",
+    "has_dynamic_handler": false,
+    "sample_reason": "unmapped_label",
+    "risk_tags": [
+      "unmapped_label"
+    ],
+    "our_default_advice": [
+      "Booming Voice (10690)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "Healing route",
+    "csv_alternative_label": "Support route",
+    "csv_advice_text": "Healing wanneer sustain telt; support als fight al veilig is.",
+    "csv_label_maps_to": null,
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 10689,
+          "name": "Greater Blessing",
+          "required_level": 130
+        },
+        {
+          "upgrade_id": 10690,
+          "name": "Booming Voice",
+          "required_level": 130
+        },
+        {
+          "upgrade_id": 10691,
+          "name": "Hammer of the Law",
+          "required_level": 130
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 21,
+    "name": "Birdsong",
+    "has_dynamic_handler": false,
+    "sample_reason": "multi_tier, unmapped_label",
+    "risk_tags": [
+      "multi_tier",
+      "unmapped_label"
+    ],
+    "our_default_advice": [
+      "Concertino (10783)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "DPS route",
+    "csv_alternative_label": "Support route",
+    "csv_advice_text": "Kies op basis van rol: carry = damage, anders support.",
+    "csv_label_maps_to": null,
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 10778,
+          "name": "Theme of Valor",
+          "required_level": 60
+        },
+        {
+          "upgrade_id": 10779,
+          "name": "Theme of Consideration",
+          "required_level": 60
+        },
+        {
+          "upgrade_id": 10780,
+          "name": "Theme of Deception",
+          "required_level": 60
+        }
+      ],
+      "1": [
+        {
+          "upgrade_id": 10781,
+          "name": "Unison",
+          "required_level": 130
+        },
+        {
+          "upgrade_id": 10782,
+          "name": "Soprano",
+          "required_level": 130
+        },
+        {
+          "upgrade_id": 10783,
+          "name": "Concertino",
+          "required_level": 130
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 23,
+    "name": "Strix",
+    "has_dynamic_handler": false,
+    "sample_reason": "baseline",
+    "risk_tags": [
+      "baseline"
+    ],
+    "our_default_advice": [
+      "Smelly Lunch (12292)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "Smelly Lunch",
+    "csv_alternative_label": "Olfactory Fatigue",
+    "csv_advice_text": "Meestal Smelly Lunch (Poor Hygiene ×5). Olfactory Fatigue alleen als je Power of Friendship wilt stacken; Scent of Brimstone bij veel Tieflings.",
+    "csv_label_maps_to": "Smelly Lunch",
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 12290,
+          "name": "Olfactory Fatigue",
+          "required_level": 190
+        },
+        {
+          "upgrade_id": 12291,
+          "name": "Scent of Brimstone",
+          "required_level": 190
+        },
+        {
+          "upgrade_id": 12292,
+          "name": "Smelly Lunch",
+          "required_level": 190
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 24,
+    "name": "Nrakk",
+    "has_dynamic_handler": false,
+    "sample_reason": "unmapped_label",
+    "risk_tags": [
+      "unmapped_label"
+    ],
+    "our_default_advice": [
+      "Githzerai Focus (13005)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "Buff route",
+    "csv_alternative_label": "Race route",
+    "csv_advice_text": "Kies de route die je belangrijkste support-interacties activeert.",
+    "csv_label_maps_to": null,
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 13005,
+          "name": "Githzerai Focus",
+          "required_level": 200
+        },
+        {
+          "upgrade_id": 13006,
+          "name": "Githzerai Agility",
+          "required_level": 200
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 27,
+    "name": "Binwin",
+    "has_dynamic_handler": false,
+    "sample_reason": "unmapped_label",
+    "risk_tags": [
+      "unmapped_label"
+    ],
+    "our_default_advice": [
+      "Tallest in Faerûn (18465)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "Support route",
+    "csv_alternative_label": "Other route",
+    "csv_advice_text": "Gebruik meestal de support- of utility-keuze als veilige default; wijk alleen af als de formatie, run-doel of champion-rol daar duidelijk om vraagt.",
+    "csv_label_maps_to": null,
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 18463,
+          "name": "Overkill",
+          "required_level": 120
+        },
+        {
+          "upgrade_id": 18464,
+          "name": "Dwarven Encouragement",
+          "required_level": 120
+        },
+        {
+          "upgrade_id": 18465,
+          "name": "Tallest in Faerûn",
+          "required_level": 120
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 29,
+    "name": "Xander",
+    "has_dynamic_handler": false,
+    "sample_reason": "unmapped_label",
+    "risk_tags": [
+      "unmapped_label"
+    ],
+    "our_default_advice": [
+      "Follow Closely (1196)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "Support route",
+    "csv_alternative_label": "Other route",
+    "csv_advice_text": "Gebruik meestal de support- of utility-keuze als veilige default; wijk alleen af als de formatie, run-doel of champion-rol daar duidelijk om vraagt.",
+    "csv_label_maps_to": null,
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 1195,
+          "name": "Trying Extra Hard",
+          "required_level": 175
+        },
+        {
+          "upgrade_id": 1196,
+          "name": "Follow Closely",
+          "required_level": 175
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 30,
+    "name": "Azaka",
+    "has_dynamic_handler": false,
+    "sample_reason": "unmapped_label",
+    "risk_tags": [
+      "unmapped_label"
+    ],
+    "our_default_advice": [
+      "Resist the Curse (1237)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "Support route",
+    "csv_alternative_label": "Other route",
+    "csv_advice_text": "Gebruik meestal de support- of utility-keuze als veilige default; wijk alleen af als de formatie, run-doel of champion-rol daar duidelijk om vraagt.",
+    "csv_label_maps_to": null,
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 1237,
+          "name": "Resist the Curse",
+          "required_level": 100
+        },
+        {
+          "upgrade_id": 1238,
+          "name": "Lycanthrope Forever",
+          "required_level": 100
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 31,
+    "name": "Ishi",
+    "has_dynamic_handler": false,
+    "sample_reason": "unmapped_label",
+    "risk_tags": [
+      "unmapped_label"
+    ],
+    "our_default_advice": [
+      "Friend to the Familiar (16532)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "Support route",
+    "csv_alternative_label": "Other route",
+    "csv_advice_text": "Gebruik meestal de support- of utility-keuze als veilige default; wijk alleen af als de formatie, run-doel of champion-rol daar duidelijk om vraagt.",
+    "csv_label_maps_to": null,
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 16532,
+          "name": "Friend to the Familiar",
+          "required_level": 90
+        },
+        {
+          "upgrade_id": 16533,
+          "name": "Friend to the Feared",
+          "required_level": 90
+        },
+        {
+          "upgrade_id": 16534,
+          "name": "Friend to the Exceptional",
+          "required_level": 90
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 32,
+    "name": "Wulfgar",
+    "has_dynamic_handler": false,
+    "sample_reason": "unmapped_label",
+    "risk_tags": [
+      "unmapped_label"
+    ],
+    "our_default_advice": [
+      "Flag Bearer (11509)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "Support route",
+    "csv_alternative_label": "Other route",
+    "csv_advice_text": "Gebruik meestal de support- of utility-keuze als veilige default; wijk alleen af als de formatie, run-doel of champion-rol daar duidelijk om vraagt.",
+    "csv_label_maps_to": null,
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 11508,
+          "name": "Heavy Blows",
+          "required_level": 140
+        },
+        {
+          "upgrade_id": 11509,
+          "name": "Flag Bearer",
+          "required_level": 140
+        },
+        {
+          "upgrade_id": 11510,
+          "name": "Moradin's Will",
+          "required_level": 140
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 33,
+    "name": "Farideh",
+    "has_dynamic_handler": false,
+    "sample_reason": "baseline",
+    "risk_tags": [
+      "baseline"
+    ],
+    "our_default_advice": [
+      "Daughters of Mehen (17839)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "",
+    "csv_alternative_label": "",
+    "csv_advice_text": "",
+    "csv_label_maps_to": null,
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 17839,
+          "name": "Daughters of Mehen",
+          "required_level": 140
+        },
+        {
+          "upgrade_id": 17840,
+          "name": "Fury of Asmodeus",
+          "required_level": 140
+        },
+        {
+          "upgrade_id": 17841,
+          "name": "Pact with Lorcan",
+          "required_level": 140
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 35,
+    "name": "Vlahnya",
+    "has_dynamic_handler": false,
+    "sample_reason": "unmapped_label",
+    "risk_tags": [
+      "unmapped_label"
+    ],
+    "our_default_advice": [
+      "Breaking Out Solo (1659)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "Support route",
+    "csv_alternative_label": "Other route",
+    "csv_advice_text": "Gebruik meestal de support- of utility-keuze als veilige default; wijk alleen af als de formatie, run-doel of champion-rol daar duidelijk om vraagt.",
+    "csv_label_maps_to": null,
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 1658,
+          "name": "Spy Network",
+          "required_level": 200
+        },
+        {
+          "upgrade_id": 1659,
+          "name": "Breaking Out Solo",
+          "required_level": 200
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 37,
+    "name": "Nerys",
+    "has_dynamic_handler": false,
+    "sample_reason": "baseline",
+    "risk_tags": [
+      "baseline"
+    ],
+    "our_default_advice": [
+      "Kelemvor's Foe (9747)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "",
+    "csv_alternative_label": "",
+    "csv_advice_text": "",
+    "csv_label_maps_to": null,
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 9745,
+          "name": "Kelemvor's Heal",
+          "required_level": 80
+        },
+        {
+          "upgrade_id": 9746,
+          "name": "Kelemvor's Will",
+          "required_level": 80
+        },
+        {
+          "upgrade_id": 9747,
+          "name": "Kelemvor's Foe",
+          "required_level": 80
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 38,
+    "name": "K'thriss",
+    "has_dynamic_handler": false,
+    "sample_reason": "baseline",
+    "risk_tags": [
+      "baseline"
+    ],
+    "our_default_advice": [
+      "Velvet Touch (17328)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "Efficient Bookkeeping",
+    "csv_alternative_label": "Pain",
+    "csv_advice_text": "Meestal support/debuff voor push; kies de alternatieve scaling alleen als je formatie daar expliciet op leunt.",
+    "csv_label_maps_to": null,
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 17328,
+          "name": "Velvet Touch",
+          "required_level": 130
+        },
+        {
+          "upgrade_id": 17329,
+          "name": "Ligotti's Minions",
+          "required_level": 130
+        },
+        {
+          "upgrade_id": 17330,
+          "name": "The Unknowable Ur",
+          "required_level": 130
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 40,
+    "name": "Black Viper",
+    "has_dynamic_handler": false,
+    "sample_reason": "unmapped_label",
+    "risk_tags": [
+      "unmapped_label"
+    ],
+    "our_default_advice": [
+      "Collector (2112)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "Support route",
+    "csv_alternative_label": "Other route",
+    "csv_advice_text": "Gebruik meestal de support- of utility-keuze als veilige default; wijk alleen af als de formatie, run-doel of champion-rol daar duidelijk om vraagt.",
+    "csv_label_maps_to": null,
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 2111,
+          "name": "Assassinate",
+          "required_level": 215
+        },
+        {
+          "upgrade_id": 2112,
+          "name": "Collector",
+          "required_level": 215
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 41,
+    "name": "Rosie",
+    "has_dynamic_handler": false,
+    "sample_reason": "multi_tier, unmapped_label",
+    "risk_tags": [
+      "multi_tier",
+      "unmapped_label"
+    ],
+    "our_default_advice": [
+      "Busy Beestinger (15613)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "Damage route",
+    "csv_alternative_label": "Other route",
+    "csv_advice_text": "Als deze champion je carry is, kies de pure damage-route.",
+    "csv_label_maps_to": null,
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 15609,
+          "name": "Matriarch",
+          "required_level": 170
+        },
+        {
+          "upgrade_id": 15610,
+          "name": "Familiar Friends",
+          "required_level": 170
+        },
+        {
+          "upgrade_id": 15611,
+          "name": "Grandmother Night",
+          "required_level": 170
+        }
+      ],
+      "1": [
+        {
+          "upgrade_id": 15612,
+          "name": "Grandma-Bod",
+          "required_level": 280
+        },
+        {
+          "upgrade_id": 15613,
+          "name": "Busy Beestinger",
+          "required_level": 280
+        },
+        {
+          "upgrade_id": 15614,
+          "name": "Slower Decay",
+          "required_level": 280
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 42,
+    "name": "Aila",
+    "has_dynamic_handler": false,
+    "sample_reason": "unmapped_label",
+    "risk_tags": [
+      "unmapped_label"
+    ],
+    "our_default_advice": [
+      "Stormbreaker (8785)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "Tank route",
+    "csv_alternative_label": "Debuff route",
+    "csv_advice_text": "Debuff/tank kiezen afhankelijk van push en survivability.",
+    "csv_label_maps_to": null,
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 8784,
+          "name": "Stormcaller",
+          "required_level": 225
+        },
+        {
+          "upgrade_id": 8785,
+          "name": "Stormbreaker",
+          "required_level": 225
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 43,
+    "name": "Spurt",
+    "has_dynamic_handler": false,
+    "sample_reason": "baseline",
+    "risk_tags": [
+      "baseline"
+    ],
+    "our_default_advice": [
+      "Adopted Family (10683)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "Pack Tactics",
+    "csv_alternative_label": "Kobold Family",
+    "csv_advice_text": "Neem meestal de sterkste support-optie; niche keuzes alleen voor specifieke synergie.",
+    "csv_label_maps_to": null,
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 10681,
+          "name": "Kobold Family",
+          "required_level": 250
+        },
+        {
+          "upgrade_id": 10682,
+          "name": "Centi-pult",
+          "required_level": 250
+        },
+        {
+          "upgrade_id": 10683,
+          "name": "Adopted Family",
+          "required_level": 250
+        }
+      ]
+    }
+  }
+]

@@ -162,7 +162,12 @@ def _pack_hero(
     return item
 
 
-def build_pack(limit: int = 10, offset: int = 0) -> list[dict]:
+def build_pack(
+    limit: int = 10,
+    offset: int = 0,
+    *,
+    exclude_ids: set[int] | None = None,
+) -> list[dict]:
     rules = load_specialization_rules()
     role_advice = json.loads(
         (ROOT / "config" / "champion_role_advice.json").read_text(encoding="utf-8")
@@ -170,16 +175,30 @@ def build_pack(limit: int = 10, offset: int = 0) -> list[dict]:
     clear_route_override_cache()
     dataset = cached_documentation_rules()
     rules_by_champ = {r.champion.casefold(): r for r in dataset.rules}
+    exclude_ids = exclude_ids or set()
 
     heroes = sorted(
-        ((int(hid), cfg) for hid, cfg in (rules.get("heroes") or {}).items() if str(hid).isdigit()),
+        (
+            (int(hid), cfg)
+            for hid, cfg in (rules.get("heroes") or {}).items()
+            if str(hid).isdigit() and int(hid) not in exclude_ids
+        ),
         key=lambda item: item[0],
     )
-    selected = heroes[offset : offset + limit]
+    selected = heroes[offset : offset + limit] if limit > 0 else heroes[offset:]
     return [
         _pack_hero(hero_id, cfg, role_advice=role_advice, rules_by_champ=rules_by_champ)
         for hero_id, cfg in selected
     ]
+
+
+def curated_advisor_hero_ids() -> set[int]:
+    path = ROOT / "config" / "specialization_advisor_models.json"
+    if not path.exists():
+        return set()
+    raw = json.loads(path.read_text(encoding="utf-8"))
+    heroes = raw.get("heroes") or {}
+    return {int(hid) for hid in heroes if str(hid).isdigit()}
 
 
 def build_risk_sample(
@@ -244,14 +263,12 @@ def build_risk_sample(
             csv_advice=csv_advice,
             mapped_name=mapped_name,
         )
-        # Primary bucket = first matching priority tag
         primary = next((t for t in buckets if t in tags), "baseline")
         buckets[primary].append((hero_id, cfg, tags))
 
     for key in buckets:
         buckets[key].sort(key=lambda item: item[0])
 
-    # Target mix for 20: handlers, farm, formation/adventure, multi-tier, unmapped, recent fillers
     quotas = {
         "dynamic_handler": 5,
         "farm_gold": 4,
@@ -276,7 +293,6 @@ def build_risk_sample(
     for bucket, n in quotas.items():
         _take(bucket, n)
 
-    # Fill remaining from leftover high-value buckets then any
     fill_order = [
         "dynamic_handler",
         "formation_or_adventure",
@@ -314,19 +330,36 @@ def build_risk_sample(
         for hero_id, cfg, tags, primary in picked
     ]
 
-def to_perplexity_markdown(pack: list[dict]) -> str:
+
+def to_perplexity_markdown(
+    pack: list[dict],
+    *,
+    title: str | None = None,
+    intro: str | None = None,
+) -> str:
     lines = [
-        "# Idle Champions specialization advice review (risk sample)",
-        "",
-        "This batch is a stratified sample (handlers, farm/gold, formation/adventure,",
-        "multi-tier, unmapped labels, recent champs) — not sequential IDs.",
-        "",
-        "Please review each champion below. For each one, answer:",
-        "1. Is there a safe universal default, or should safe_default be null?",
-        "2. Split push vs farm vs formation/adventure conditionals if needed.",
-        "3. Any wrong option names, unmapped UI labels, or missing situational rules?",
+        title or "# Idle Champions specialization advice review",
         "",
     ]
+    if intro:
+        lines.extend([intro, ""])
+    else:
+        lines.extend(
+            [
+                "Please review each champion below. For each one, answer:",
+                "1. Is there a safe universal default, or should safe_default be null?",
+                "2. Split push vs farm vs formation/adventure conditionals if needed.",
+                "3. Any wrong option names, unmapped UI labels, or missing situational rules?",
+                "",
+                "Decision rule:",
+                "- If CSV and config conflict, keep the most stable universal default as safe_default.",
+                "- Use null only when no safe universal default exists.",
+                "- Use conditional_only for situational alternatives.",
+                "- Keep csv_label_maps_to aligned with the chosen safe_default.",
+                "- Keep csv_advice_text specific to when the alternative should be chosen.",
+                "",
+            ]
+        )
     for i, item in enumerate(pack, start=1):
         lines.append(f"## {i}. {item['name']} (hero_id={item['hero_id']})")
         lines.append("")
@@ -363,14 +396,26 @@ def main() -> int:
     parser.add_argument("--offset", type=int, default=0)
     parser.add_argument(
         "--mode",
-        choices=("sequential", "risk"),
+        choices=("sequential", "risk", "remaining"),
         default="sequential",
-        help="sequential=offset/limit by hero_id; risk=stratified sample",
+        help="sequential=offset/limit by hero_id; risk=stratified sample; remaining=all not in advisor models",
     )
     parser.add_argument(
         "--exclude-batch1",
         action="store_true",
         help="With --mode risk, exclude hero_id 1-10 from batch 01",
+    )
+    parser.add_argument(
+        "--batch-size",
+        type=int,
+        default=20,
+        help="With --mode remaining, split into markdown/json files of this size",
+    )
+    parser.add_argument(
+        "--batch-start",
+        type=int,
+        default=3,
+        help="With --mode remaining, first batch number for output filenames",
     )
     parser.add_argument(
         "--out",
@@ -381,21 +426,86 @@ def main() -> int:
     if args.mode == "risk":
         exclude = set(range(1, 11)) if args.exclude_batch1 else set()
         pack = build_risk_sample(limit=args.limit, exclude_ids=exclude)
-    else:
-        pack = build_pack(limit=args.limit, offset=args.offset)
+        md = to_perplexity_markdown(
+            pack,
+            title="# Idle Champions specialization advice review (risk sample)",
+            intro=(
+                "This batch is a stratified sample (handlers, farm/gold, formation/adventure,\n"
+                "multi-tier, unmapped labels, recent champs) — not sequential IDs.\n\n"
+                "Please review each champion below. For each one, answer:\n"
+                "1. Is there a safe universal default, or should safe_default be null?\n"
+                "2. Split push vs farm vs formation/adventure conditionals if needed.\n"
+                "3. Any wrong option names, unmapped UI labels, or missing situational rules?"
+            ),
+        )
+        args.out.parent.mkdir(parents=True, exist_ok=True)
+        args.out.write_text(md, encoding="utf-8")
+        json_path = args.out.with_suffix(".json")
+        json_path.write_text(json.dumps(pack, indent=2, ensure_ascii=False), encoding="utf-8")
+        print("Sample roster:", file=sys.stderr)
+        for item in pack:
+            print(
+                f"  {item['hero_id']:3} {item['name']:<22} {item.get('sample_reason', '')}",
+                file=sys.stderr,
+            )
+        print(f"\nWrote {args.out}", file=sys.stderr)
+        print(f"Wrote {json_path}", file=sys.stderr)
+        return 0
+
+    if args.mode == "remaining":
+        curated = curated_advisor_hero_ids()
+        pack = build_pack(limit=0, offset=0, exclude_ids=curated)
+        out_dir = args.out.parent if args.out.suffix else args.out
+        out_dir.mkdir(parents=True, exist_ok=True)
+        batch_size = max(1, int(args.batch_size))
+        index_lines = [
+            "# Spec advice review — remaining champions (not yet in advisor models)",
+            "",
+            f"Curated models already cover {len(curated)} heroes. Remaining: **{len(pack)}**.",
+            "",
+            "Feed each batch markdown to Perplexity with the decision rule at the top of the file.",
+            "",
+            "| batch | file | heroes | hero_ids |",
+            "|---:|---|---:|---|",
+        ]
+        for i in range(0, len(pack), batch_size):
+            chunk = pack[i : i + batch_size]
+            batch_no = args.batch_start + (i // batch_size)
+            out_md = out_dir / f"spec_advice_review_batch_{batch_no:02d}.md"
+            out_json = out_md.with_suffix(".json")
+            title = (
+                f"# Idle Champions specialization advice review "
+                f"(remaining batch {batch_no}, heroes {i + 1}-{i + len(chunk)} of {len(pack)})"
+            )
+            md = to_perplexity_markdown(chunk, title=title)
+            out_md.write_text(md, encoding="utf-8")
+            out_json.write_text(json.dumps(chunk, indent=2, ensure_ascii=False), encoding="utf-8")
+            ids = ", ".join(str(item["hero_id"]) for item in chunk)
+            index_lines.append(
+                f"| {batch_no} | `{out_md.name}` | {len(chunk)} | {ids} |"
+            )
+            print(f"Wrote {out_md} ({len(chunk)} heroes)", file=sys.stderr)
+        index_path = out_dir / "spec_advice_review_remaining_index.md"
+        index_lines.append("")
+        index_path.write_text("\n".join(index_lines), encoding="utf-8")
+        all_json = out_dir / "spec_advice_review_remaining_all.json"
+        all_json.write_text(json.dumps(pack, indent=2, ensure_ascii=False), encoding="utf-8")
+        print(f"Wrote {index_path}", file=sys.stderr)
+        print(f"Wrote {all_json} ({len(pack)} heroes)", file=sys.stderr)
+        return 0
+
+    pack = build_pack(limit=args.limit, offset=args.offset)
     md = to_perplexity_markdown(pack)
     args.out.parent.mkdir(parents=True, exist_ok=True)
     args.out.write_text(md, encoding="utf-8")
     json_path = args.out.with_suffix(".json")
     json_path.write_text(json.dumps(pack, indent=2, ensure_ascii=False), encoding="utf-8")
-    # Compact roster to stderr for quick scan
     print("Sample roster:", file=sys.stderr)
     for item in pack:
         print(
             f"  {item['hero_id']:3} {item['name']:<22} {item.get('sample_reason', '')}",
             file=sys.stderr,
         )
-    # Avoid Windows console encoding issues on option names.
     try:
         print(md)
     except UnicodeEncodeError:
@@ -404,6 +514,7 @@ def main() -> int:
     print(f"\nWrote {args.out}", file=sys.stderr)
     print(f"Wrote {json_path}", file=sys.stderr)
     return 0
+
 
 if __name__ == "__main__":
     raise SystemExit(main())

@@ -1,0 +1,829 @@
+[
+  {
+    "hero_id": 44,
+    "name": "Qillek",
+    "has_dynamic_handler": false,
+    "sample_reason": "baseline",
+    "risk_tags": [
+      "baseline"
+    ],
+    "our_default_advice": [
+      "Empowered Blessing (8772)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "Empowered Blessing",
+    "csv_alternative_label": "Other route",
+    "csv_advice_text": "Gebruik meestal healing/support; alternatief alleen als offense belangrijker is.",
+    "csv_label_maps_to": "Empowered Blessing",
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 8771,
+          "name": "Expanded Blessing",
+          "required_level": 250
+        },
+        {
+          "upgrade_id": 8772,
+          "name": "Empowered Blessing",
+          "required_level": 250
+        },
+        {
+          "upgrade_id": 8773,
+          "name": "Seized Assets",
+          "required_level": 250
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 45,
+    "name": "Korth",
+    "has_dynamic_handler": false,
+    "sample_reason": "baseline",
+    "risk_tags": [
+      "baseline"
+    ],
+    "our_default_advice": [
+      "Samurai Training (Behind) (13041)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "Rapid Training",
+    "csv_alternative_label": "Group Tactics",
+    "csv_advice_text": "Pak de spec die je carry het beste bufft; vaak afhankelijk van adjacency/attack cadence.",
+    "csv_label_maps_to": "Samurai Training (Behind)",
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 13041,
+          "name": "Samurai Training (Behind)",
+          "required_level": 200
+        },
+        {
+          "upgrade_id": 13042,
+          "name": "Samurai Training (In Front)",
+          "required_level": 200
+        },
+        {
+          "upgrade_id": 13043,
+          "name": "Samurai Training (Beside)",
+          "required_level": 200
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 46,
+    "name": "Walnut",
+    "has_dynamic_handler": false,
+    "sample_reason": "multi_tier, unmapped_label",
+    "risk_tags": [
+      "multi_tier",
+      "unmapped_label"
+    ],
+    "our_default_advice": [
+      "Ah, Screw It (19714)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "Support route",
+    "csv_alternative_label": "Other route",
+    "csv_advice_text": "Gebruik meestal de support- of utility-keuze als veilige default; wijk alleen af als de formatie, run-doel of champion-rol daar duidelijk om vraagt.",
+    "csv_label_maps_to": null,
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 19712,
+          "name": "Extended Warranty",
+          "required_level": 180
+        },
+        {
+          "upgrade_id": 19713,
+          "name": "Sign and Date",
+          "required_level": 180
+        },
+        {
+          "upgrade_id": 19714,
+          "name": "Ah, Screw It",
+          "required_level": 180
+        }
+      ],
+      "1": [
+        {
+          "upgrade_id": 19715,
+          "name": "Co-Signers",
+          "required_level": 310
+        },
+        {
+          "upgrade_id": 19716,
+          "name": "Temporary Alliance",
+          "required_level": 310
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 48,
+    "name": "Jim",
+    "has_dynamic_handler": false,
+    "sample_reason": "baseline",
+    "risk_tags": [
+      "baseline"
+    ],
+    "our_default_advice": [
+      "Darkmagic Cheer Squad (12132)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "Magic magic magic",
+    "csv_alternative_label": "Other route",
+    "csv_advice_text": "Kies utility/damage afhankelijk van gebruik; vaak niche en setup-afhankelijk.",
+    "csv_label_maps_to": "Magic {magic}#CCC {magic}#888 {magic}#444",
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 12132,
+          "name": "Darkmagic Cheer Squad",
+          "required_level": 160
+        },
+        {
+          "upgrade_id": 12133,
+          "name": "Magic {magic}#CCC {magic}#888 {magic}#444",
+          "required_level": 160
+        },
+        {
+          "upgrade_id": 12134,
+          "name": "Unpaid Extras",
+          "required_level": 160
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 49,
+    "name": "Turiel",
+    "has_dynamic_handler": false,
+    "sample_reason": "baseline",
+    "risk_tags": [
+      "baseline"
+    ],
+    "our_default_advice": [
+      "Voice of Authority (10664)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "Frontline",
+    "csv_alternative_label": "Control",
+    "csv_advice_text": "Tank/spec voor survivability; control als enemies positioning relevant is.",
+    "csv_label_maps_to": null,
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 10663,
+          "name": "Voice of Resilience",
+          "required_level": 300
+        },
+        {
+          "upgrade_id": 10664,
+          "name": "Voice of Authority",
+          "required_level": 300
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 50,
+    "name": "Pwent",
+    "has_dynamic_handler": false,
+    "sample_reason": "unmapped_label",
+    "risk_tags": [
+      "unmapped_label"
+    ],
+    "our_default_advice": [
+      "Recruiting Drive (11496)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "Support route",
+    "csv_alternative_label": "DPS route",
+    "csv_advice_text": "Vrijwel altijd support tenzij je een vreemde niche comp draait.",
+    "csv_label_maps_to": null,
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 11496,
+          "name": "Recruiting Drive",
+          "required_level": 200
+        },
+        {
+          "upgrade_id": 11497,
+          "name": "Scents of Mithral Hall",
+          "required_level": 200
+        },
+        {
+          "upgrade_id": 11498,
+          "name": "Critical Wound",
+          "required_level": 200
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 51,
+    "name": "Avren",
+    "has_dynamic_handler": false,
+    "sample_reason": "multi_tier",
+    "risk_tags": [
+      "multi_tier"
+    ],
+    "our_default_advice": [
+      "Empowered Mirrors (3099)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "Good/Sturdy mirror path",
+    "csv_alternative_label": "Other mirror path",
+    "csv_advice_text": "Kies de mirror/spec die op jouw dps en alignment setup de beste mirrors geeft.",
+    "csv_label_maps_to": "Mirror Focus (Good)",
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 3095,
+          "name": "Mirror Focus (Good)",
+          "required_level": 100
+        },
+        {
+          "upgrade_id": 3096,
+          "name": "Mirror Focus (Neutral)",
+          "required_level": 100
+        },
+        {
+          "upgrade_id": 3097,
+          "name": "Mirror Focus (Evil)",
+          "required_level": 100
+        }
+      ],
+      "1": [
+        {
+          "upgrade_id": 3098,
+          "name": "Sturdy Mirrors",
+          "required_level": 200
+        },
+        {
+          "upgrade_id": 3099,
+          "name": "Empowered Mirrors",
+          "required_level": 200
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 52,
+    "name": "Sentry",
+    "has_dynamic_handler": false,
+    "sample_reason": "farm_gold",
+    "risk_tags": [
+      "farm_gold"
+    ],
+    "our_default_advice": [
+      "Nature's Wrath (8866)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "Speed route",
+    "csv_alternative_label": "Tank route",
+    "csv_advice_text": "Speed voor farming; tank/survival voor moeilijke content.",
+    "csv_label_maps_to": "Nature's Wrath",
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 8763,
+          "name": "Dedicated Guardian",
+          "required_level": 225
+        },
+        {
+          "upgrade_id": 8866,
+          "name": "Nature's Wrath",
+          "required_level": 225
+        },
+        {
+          "upgrade_id": 8867,
+          "name": "Sentry's Homeland",
+          "required_level": 225
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 53,
+    "name": "Krull",
+    "has_dynamic_handler": false,
+    "sample_reason": "baseline",
+    "risk_tags": [
+      "baseline"
+    ],
+    "our_default_advice": [
+      "Plague Focus: {Pain}#F00 (3215)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "Pain",
+    "csv_alternative_label": "Traitor",
+    "csv_advice_text": "Meestal de debuff/spec die het meeste BUD/push oplevert in je setup.",
+    "csv_label_maps_to": "Plague Focus: {Pain}#F00",
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 3214,
+          "name": "Plague Focus: {Pilfer}#0F0",
+          "required_level": 180
+        },
+        {
+          "upgrade_id": 3215,
+          "name": "Plague Focus: {Pain}#F00",
+          "required_level": 180
+        },
+        {
+          "upgrade_id": 3216,
+          "name": "Plague Focus: {Traitor}#F0F",
+          "required_level": 180
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 54,
+    "name": "Artemis",
+    "has_dynamic_handler": false,
+    "sample_reason": "baseline",
+    "risk_tags": [
+      "baseline"
+    ],
+    "our_default_advice": [
+      "Observance: Foe (3270)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "Observe",
+    "csv_alternative_label": "Other scaling",
+    "csv_advice_text": "Kies altijd de spec die zijn observe/scaling maximaliseert binnen je setup.",
+    "csv_label_maps_to": null,
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 3269,
+          "name": "Observance: Friend",
+          "required_level": 400
+        },
+        {
+          "upgrade_id": 3270,
+          "name": "Observance: Foe",
+          "required_level": 400
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 56,
+    "name": "Havilar",
+    "has_dynamic_handler": false,
+    "sample_reason": "unmapped_label",
+    "risk_tags": [
+      "unmapped_label"
+    ],
+    "our_default_advice": [
+      "Dembo (18043)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "Imp route",
+    "csv_alternative_label": "Tank route",
+    "csv_advice_text": "Kies op basis van utility vs survivability.",
+    "csv_label_maps_to": null,
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 18043,
+          "name": "Dembo",
+          "required_level": 150
+        },
+        {
+          "upgrade_id": 18044,
+          "name": "Olla",
+          "required_level": 150
+        },
+        {
+          "upgrade_id": 18045,
+          "name": "Bosh",
+          "required_level": 150
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 57,
+    "name": "Sisaspia",
+    "has_dynamic_handler": false,
+    "sample_reason": "baseline",
+    "risk_tags": [
+      "baseline"
+    ],
+    "our_default_advice": [
+      "Fungal Body (13255)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "Spores",
+    "csv_alternative_label": "Healing",
+    "csv_advice_text": "Healing/spec voor veilige progressie; support als overleven al stabiel is.",
+    "csv_label_maps_to": "Spreading Spores",
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 13253,
+          "name": "Simple Infection",
+          "required_level": 220
+        },
+        {
+          "upgrade_id": 13254,
+          "name": "Spreading Spores",
+          "required_level": 220
+        },
+        {
+          "upgrade_id": 13255,
+          "name": "Fungal Body",
+          "required_level": 220
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 58,
+    "name": "Briv",
+    "has_dynamic_handler": false,
+    "sample_reason": "farm_gold",
+    "risk_tags": [
+      "farm_gold"
+    ],
+    "our_default_advice": [
+      "Go With The Phlo (3457)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "Speed route",
+    "csv_alternative_label": "Tank route",
+    "csv_advice_text": "Speed/jump voor gem farm en snelle clears; tank als je hem echt nodig hebt om te overleven.",
+    "csv_label_maps_to": "Go With The Phlo",
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 3455,
+          "name": "Metalborn",
+          "required_level": 170
+        },
+        {
+          "upgrade_id": 3456,
+          "name": "Tempered Steel",
+          "required_level": 170
+        },
+        {
+          "upgrade_id": 3457,
+          "name": "Go With The Phlo",
+          "required_level": 170
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 59,
+    "name": "Melf",
+    "has_dynamic_handler": false,
+    "sample_reason": "multi_tier, farm_gold",
+    "risk_tags": [
+      "multi_tier",
+      "farm_gold"
+    ],
+    "our_default_advice": [
+      "Melf's Speedy Spawns (19340)",
+      "Melf's Abundant Allies (19342)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "Speed route",
+    "csv_alternative_label": "Push route",
+    "csv_advice_text": "Speed bij farm; push-support bij diepere runs.",
+    "csv_label_maps_to": "Melf's Speedy Spawns",
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 19339,
+          "name": "Melf's Frequent Foes",
+          "required_level": 110
+        },
+        {
+          "upgrade_id": 19340,
+          "name": "Melf's Speedy Spawns",
+          "required_level": 110
+        },
+        {
+          "upgrade_id": 19341,
+          "name": "Melf's Doubled Drops",
+          "required_level": 110
+        }
+      ],
+      "1": [
+        {
+          "upgrade_id": 19342,
+          "name": "Melf's Abundant Allies",
+          "required_level": 140
+        },
+        {
+          "upgrade_id": 19343,
+          "name": "Melf's Adaptive Attacks",
+          "required_level": 140
+        },
+        {
+          "upgrade_id": 19344,
+          "name": "Melf's Ranked Roles",
+          "required_level": 140
+        },
+        {
+          "upgrade_id": 19345,
+          "name": "Melf's Amorphous Alignment",
+          "required_level": 140
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 60,
+    "name": "Krydle",
+    "has_dynamic_handler": false,
+    "sample_reason": "baseline",
+    "risk_tags": [
+      "baseline"
+    ],
+    "our_default_advice": [
+      "Keep Your Friends Close (9634)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "",
+    "csv_alternative_label": "",
+    "csv_advice_text": "",
+    "csv_label_maps_to": null,
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 9634,
+          "name": "Keep Your Friends Close",
+          "required_level": 400
+        },
+        {
+          "upgrade_id": 9635,
+          "name": "Keep Your Enemies Closer",
+          "required_level": 400
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 61,
+    "name": "Jaheira",
+    "has_dynamic_handler": false,
+    "sample_reason": "multi_tier, unmapped_label",
+    "risk_tags": [
+      "multi_tier",
+      "unmapped_label"
+    ],
+    "our_default_advice": [
+      "Class Act - Spellslingers (9714)",
+      "Hunter - Nature (9718)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "Support route",
+    "csv_alternative_label": "Other route",
+    "csv_advice_text": "Gebruik meestal de support- of utility-keuze als veilige default; wijk alleen af als de formatie, run-doel of champion-rol daar duidelijk om vraagt.",
+    "csv_label_maps_to": null,
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 9714,
+          "name": "Class Act - Spellslingers",
+          "required_level": 30
+        },
+        {
+          "upgrade_id": 9715,
+          "name": "Class Act - Bruisers",
+          "required_level": 30
+        },
+        {
+          "upgrade_id": 9716,
+          "name": "Class Act - Hybrids",
+          "required_level": 30
+        },
+        {
+          "upgrade_id": 9717,
+          "name": "Class Act - Baldur's Gate",
+          "required_level": 30
+        }
+      ],
+      "1": [
+        {
+          "upgrade_id": 9718,
+          "name": "Hunter - Nature",
+          "required_level": 180
+        },
+        {
+          "upgrade_id": 9719,
+          "name": "Hunter - Twisted Creatures",
+          "required_level": 180
+        },
+        {
+          "upgrade_id": 9720,
+          "name": "Hunter - Civilization",
+          "required_level": 180
+        },
+        {
+          "upgrade_id": 9721,
+          "name": "Hunter - Soulless",
+          "required_level": 180
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 62,
+    "name": "Nova",
+    "has_dynamic_handler": false,
+    "sample_reason": "unmapped_label",
+    "risk_tags": [
+      "unmapped_label"
+    ],
+    "our_default_advice": [
+      "Tight Knit (8754)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "Support route",
+    "csv_alternative_label": "Tankier route",
+    "csv_advice_text": "Meestal support/scaling voor push; tankier alternatief als nodig.",
+    "csv_label_maps_to": null,
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 8753,
+          "name": "New Recruits",
+          "required_level": 300
+        },
+        {
+          "upgrade_id": 8754,
+          "name": "Tight Knit",
+          "required_level": 300
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 63,
+    "name": "Freely",
+    "has_dynamic_handler": false,
+    "sample_reason": "farm_gold",
+    "risk_tags": [
+      "farm_gold"
+    ],
+    "our_default_advice": [
+      "Always Expect Chaos (4043)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "Law/Chaos etc.",
+    "csv_alternative_label": "Alignment route",
+    "csv_advice_text": "Kies de alignment/spec die je team het beste dekt; vaak voor favor/gold setups.",
+    "csv_label_maps_to": "Trust in Law",
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 4041,
+          "name": "Trust in Law",
+          "required_level": 100
+        },
+        {
+          "upgrade_id": 4042,
+          "name": "Value Neutrality",
+          "required_level": 100
+        },
+        {
+          "upgrade_id": 4043,
+          "name": "Always Expect Chaos",
+          "required_level": 100
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 66,
+    "name": "Lazaapz",
+    "has_dynamic_handler": false,
+    "sample_reason": "multi_tier, unmapped_label",
+    "risk_tags": [
+      "multi_tier",
+      "unmapped_label"
+    ],
+    "our_default_advice": [
+      "Fury of the Brawl (17484)",
+      "Guardian (17487)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "Support route",
+    "csv_alternative_label": "Other route",
+    "csv_advice_text": "Gebruik meestal de support- of utility-keuze als veilige default; wijk alleen af als de formatie, run-doel of champion-rol daar duidelijk om vraagt.",
+    "csv_label_maps_to": null,
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 17484,
+          "name": "Fury of the Brawl",
+          "required_level": 90
+        },
+        {
+          "upgrade_id": 17485,
+          "name": "Fury of the Cabal",
+          "required_level": 90
+        },
+        {
+          "upgrade_id": 17486,
+          "name": "Fury of the Stall",
+          "required_level": 90
+        }
+      ],
+      "1": [
+        {
+          "upgrade_id": 17487,
+          "name": "Guardian",
+          "required_level": 160
+        },
+        {
+          "upgrade_id": 17488,
+          "name": "Infiltrator",
+          "required_level": 160
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 67,
+    "name": "Dragonbait",
+    "has_dynamic_handler": false,
+    "sample_reason": "unmapped_label",
+    "risk_tags": [
+      "unmapped_label"
+    ],
+    "our_default_advice": [
+      "Scent: Herbs and Spices (3278)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "Tank route",
+    "csv_alternative_label": "Support route",
+    "csv_advice_text": "Kies tank/survival wanneer je frontlinie onder druk staat; anders de support-optie.",
+    "csv_label_maps_to": null,
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 3277,
+          "name": "Scent: Roasted Chicken",
+          "required_level": 120
+        },
+        {
+          "upgrade_id": 3278,
+          "name": "Scent: Herbs and Spices",
+          "required_level": 120
+        }
+      ]
+    }
+  }
+]

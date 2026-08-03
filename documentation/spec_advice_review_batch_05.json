@@ -1,0 +1,886 @@
+[
+  {
+    "hero_id": 68,
+    "name": "Ulkoria",
+    "has_dynamic_handler": false,
+    "sample_reason": "unmapped_label",
+    "risk_tags": [
+      "unmapped_label"
+    ],
+    "our_default_advice": [
+      "Shield Guardian (4349)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "Magic route",
+    "csv_alternative_label": "Other route",
+    "csv_advice_text": "Alleen goed wanneer je magic-heavy formatie draait; kies de spec die dat maximaliseert.",
+    "csv_label_maps_to": null,
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 4349,
+          "name": "Shield Guardian",
+          "required_level": 435
+        },
+        {
+          "upgrade_id": 4350,
+          "name": "Urchin Pranks",
+          "required_level": 435
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 69,
+    "name": "Torogar",
+    "has_dynamic_handler": false,
+    "sample_reason": "baseline",
+    "risk_tags": [
+      "baseline"
+    ],
+    "our_default_advice": [
+      "Tiamat's Rage (4493)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "",
+    "csv_alternative_label": "",
+    "csv_advice_text": "",
+    "csv_label_maps_to": null,
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 4492,
+          "name": "Tiamat's Word",
+          "required_level": 250
+        },
+        {
+          "upgrade_id": 4493,
+          "name": "Tiamat's Rage",
+          "required_level": 250
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 70,
+    "name": "Ezmerelda",
+    "has_dynamic_handler": false,
+    "sample_reason": "baseline",
+    "risk_tags": [
+      "baseline"
+    ],
+    "our_default_advice": [
+      "We've Trained For This (15041)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "Support route",
+    "csv_alternative_label": "Other route",
+    "csv_advice_text": "Gebruik meestal de support- of utility-keuze als veilige default; wijk alleen af als de formatie, run-doel of champion-rol daar duidelijk om vraagt.",
+    "csv_label_maps_to": "We've Trained For This",
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 15041,
+          "name": "We've Trained For This",
+          "required_level": 200
+        },
+        {
+          "upgrade_id": 15042,
+          "name": "Vampire Hunter",
+          "required_level": 200
+        },
+        {
+          "upgrade_id": 15043,
+          "name": "The Devil You Know",
+          "required_level": 200
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 71,
+    "name": "Penelope",
+    "has_dynamic_handler": false,
+    "sample_reason": "multi_tier, unmapped_label",
+    "risk_tags": [
+      "multi_tier",
+      "unmapped_label"
+    ],
+    "our_default_advice": [
+      "Everybody Gets To Be Friends (14705)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "Support route",
+    "csv_alternative_label": "Control route",
+    "csv_advice_text": "Support als default; control bij lastig encounter-patroon.",
+    "csv_label_maps_to": null,
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 14703,
+          "name": "Keep Your Friends Close",
+          "required_level": 130
+        },
+        {
+          "upgrade_id": 14704,
+          "name": "Keep Your Future Friends Closer",
+          "required_level": 130
+        },
+        {
+          "upgrade_id": 14705,
+          "name": "Everybody Gets To Be Friends",
+          "required_level": 130
+        }
+      ],
+      "1": [
+        {
+          "upgrade_id": 14706,
+          "name": "Fury of the Fireflies",
+          "required_level": 300
+        },
+        {
+          "upgrade_id": 14707,
+          "name": "Splitting The Hive",
+          "required_level": 300
+        },
+        {
+          "upgrade_id": 14708,
+          "name": "Dance of the Ladybugs",
+          "required_level": 300
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 72,
+    "name": "Lucius",
+    "has_dynamic_handler": false,
+    "sample_reason": "unmapped_label",
+    "risk_tags": [
+      "unmapped_label"
+    ],
+    "our_default_advice": [
+      "Dichromancy (19253)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "Support route",
+    "csv_alternative_label": "Other route",
+    "csv_advice_text": "Gebruik meestal de support- of utility-keuze als veilige default; wijk alleen af als de formatie, run-doel of champion-rol daar duidelijk om vraagt.",
+    "csv_label_maps_to": null,
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 19253,
+          "name": "Dichromancy",
+          "required_level": 120
+        },
+        {
+          "upgrade_id": 19254,
+          "name": "Corrosion Master",
+          "required_level": 120
+        },
+        {
+          "upgrade_id": 19255,
+          "name": "Lingering Chill",
+          "required_level": 120
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 73,
+    "name": "Baeloth",
+    "has_dynamic_handler": false,
+    "sample_reason": "unmapped_label",
+    "risk_tags": [
+      "unmapped_label"
+    ],
+    "our_default_advice": [
+      "Baeloth's Birthday Party (4749)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "Support route",
+    "csv_alternative_label": "Djinn route",
+    "csv_advice_text": "Meestal support; utility-keuze als je death-prevention of specifieke interacties nodig hebt.",
+    "csv_label_maps_to": null,
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 4749,
+          "name": "Baeloth's Birthday Party",
+          "required_level": 220
+        },
+        {
+          "upgrade_id": 4750,
+          "name": "Over Excited",
+          "required_level": 220
+        },
+        {
+          "upgrade_id": 4751,
+          "name": "The Show Must Go On",
+          "required_level": 220
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 74,
+    "name": "Talin",
+    "has_dynamic_handler": false,
+    "sample_reason": "farm_gold, formation_or_adventure, unmapped_label",
+    "risk_tags": [
+      "farm_gold",
+      "formation_or_adventure",
+      "unmapped_label"
+    ],
+    "our_default_advice": [
+      "Additional Scatter Tacks (4766)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "Speed route",
+    "csv_alternative_label": "Control route",
+    "csv_advice_text": "Speed voor farms; control/debuff voor lastige zones.",
+    "csv_label_maps_to": null,
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 4765,
+          "name": "Path Finder",
+          "required_level": 300
+        },
+        {
+          "upgrade_id": 4766,
+          "name": "Additional Scatter Tacks",
+          "required_level": 300
+        },
+        {
+          "upgrade_id": 4767,
+          "name": "Reversal of Fortunes",
+          "required_level": 300
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 75,
+    "name": "Hew Maan",
+    "has_dynamic_handler": false,
+    "sample_reason": "farm_gold",
+    "risk_tags": [
+      "farm_gold"
+    ],
+    "our_default_advice": [
+      "Did We Say Humans? We Meant... (10653)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "Speed route",
+    "csv_alternative_label": "Support route",
+    "csv_advice_text": "Gebruik speed voor farming en snelle clears; wijk af als survival of specifieke utility belangrijker is.",
+    "csv_label_maps_to": "Did We Say Humans? We Meant...",
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 10653,
+          "name": "Did We Say Humans? We Meant...",
+          "required_level": 240
+        },
+        {
+          "upgrade_id": 10654,
+          "name": "Law Maan",
+          "required_level": 240
+        },
+        {
+          "upgrade_id": 10655,
+          "name": "Hello, Fellow Mercenaries!",
+          "required_level": 240
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 76,
+    "name": "Orisha",
+    "has_dynamic_handler": false,
+    "sample_reason": "multi_tier, unmapped_label",
+    "risk_tags": [
+      "multi_tier",
+      "unmapped_label"
+    ],
+    "our_default_advice": [
+      "Blazing Soul (4909)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "Support route",
+    "csv_alternative_label": "Other route",
+    "csv_advice_text": "Gebruik meestal de support- of utility-keuze als veilige default; wijk alleen af als de formatie, run-doel of champion-rol daar duidelijk om vraagt.",
+    "csv_label_maps_to": null,
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 4909,
+          "name": "Blazing Soul",
+          "required_level": 100
+        },
+        {
+          "upgrade_id": 4910,
+          "name": "Long Burn",
+          "required_level": 100
+        }
+      ],
+      "1": [
+        {
+          "upgrade_id": 4911,
+          "name": "Sirens' Connection",
+          "required_level": 200
+        },
+        {
+          "upgrade_id": 4912,
+          "name": "Fierce Connection",
+          "required_level": 200
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 77,
+    "name": "Alyndra",
+    "has_dynamic_handler": false,
+    "sample_reason": "unmapped_label",
+    "risk_tags": [
+      "unmapped_label"
+    ],
+    "our_default_advice": [
+      "Expansive Vision (17749)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "Support route",
+    "csv_alternative_label": "Positional route",
+    "csv_advice_text": "Neem meestal support; alternatief als adjacency exact gunstig uitpakt.",
+    "csv_label_maps_to": null,
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 17749,
+          "name": "Expansive Vision",
+          "required_level": 150
+        },
+        {
+          "upgrade_id": 17750,
+          "name": "Extra Judgy",
+          "required_level": 150
+        },
+        {
+          "upgrade_id": 17751,
+          "name": "Heroes of the Planes",
+          "required_level": 150
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 78,
+    "name": "Orkira",
+    "has_dynamic_handler": false,
+    "sample_reason": "unmapped_label",
+    "risk_tags": [
+      "unmapped_label"
+    ],
+    "our_default_advice": [
+      "Tailfeather of the Phoenix (5577)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "Healing route",
+    "csv_alternative_label": "Support route",
+    "csv_advice_text": "Healing/survival wanneer sustain nodig is; anders support.",
+    "csv_label_maps_to": null,
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 5576,
+          "name": "Breath of the Phoenix",
+          "required_level": 200
+        },
+        {
+          "upgrade_id": 5577,
+          "name": "Tailfeather of the Phoenix",
+          "required_level": 200
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 79,
+    "name": "Shaka",
+    "has_dynamic_handler": false,
+    "sample_reason": "multi_tier, unmapped_label",
+    "risk_tags": [
+      "multi_tier",
+      "unmapped_label"
+    ],
+    "our_default_advice": [
+      "Blinding Wall of Light (13424)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "Support route",
+    "csv_alternative_label": "Puzzle route",
+    "csv_advice_text": "Gebruik de route die je puzzle/formatie het beste laat landen.",
+    "csv_label_maps_to": null,
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 13424,
+          "name": "Blinding Wall of Light",
+          "required_level": 90
+        },
+        {
+          "upgrade_id": 13425,
+          "name": "Disintegrating Wall of Light",
+          "required_level": 90
+        }
+      ],
+      "1": [
+        {
+          "upgrade_id": 13420,
+          "name": "Child's Play",
+          "required_level": 150
+        },
+        {
+          "upgrade_id": 13421,
+          "name": "Pen and Paper",
+          "required_level": 150
+        },
+        {
+          "upgrade_id": 13422,
+          "name": "Sunday Edition",
+          "required_level": 150
+        },
+        {
+          "upgrade_id": 13423,
+          "name": "Brain Break",
+          "required_level": 150
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 80,
+    "name": "Mehen",
+    "has_dynamic_handler": false,
+    "sample_reason": "unmapped_label",
+    "risk_tags": [
+      "unmapped_label"
+    ],
+    "our_default_advice": [
+      "Found Family (16152)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "Fiend route",
+    "csv_alternative_label": "Other route",
+    "csv_advice_text": "Alleen echt sterk als je roster bij zijn synergie past; kies dus roster-afhankelijk.",
+    "csv_label_maps_to": null,
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 16150,
+          "name": "Fighting Force",
+          "required_level": 250
+        },
+        {
+          "upgrade_id": 16151,
+          "name": "Father Figure",
+          "required_level": 250
+        },
+        {
+          "upgrade_id": 16152,
+          "name": "Found Family",
+          "required_level": 250
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 81,
+    "name": "Selise",
+    "has_dynamic_handler": false,
+    "sample_reason": "multi_tier",
+    "risk_tags": [
+      "multi_tier"
+    ],
+    "our_default_advice": [
+      "Mithral Skin (13751)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "Tank route",
+    "csv_alternative_label": "Support route",
+    "csv_advice_text": "Kies tank/survival wanneer je frontlinie onder druk staat; anders de support-optie.",
+    "csv_label_maps_to": "Reflective Shield",
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 13749,
+          "name": "Relentless Avenger",
+          "required_level": 120
+        },
+        {
+          "upgrade_id": 13750,
+          "name": "Reflective Shield",
+          "required_level": 120
+        },
+        {
+          "upgrade_id": 13751,
+          "name": "Mithral Skin",
+          "required_level": 120
+        }
+      ],
+      "1": [
+        {
+          "upgrade_id": 13752,
+          "name": "Tyr's Eyes",
+          "required_level": 350
+        },
+        {
+          "upgrade_id": 13753,
+          "name": "Relentless Avenger",
+          "required_level": 350
+        },
+        {
+          "upgrade_id": 13754,
+          "name": "Reflective Shield",
+          "required_level": 350
+        },
+        {
+          "upgrade_id": 13755,
+          "name": "Relentless Avenger",
+          "required_level": 350
+        },
+        {
+          "upgrade_id": 13756,
+          "name": "Mithral Skin",
+          "required_level": 350
+        },
+        {
+          "upgrade_id": 13757,
+          "name": "Reflective Shield",
+          "required_level": 350
+        },
+        {
+          "upgrade_id": 13758,
+          "name": "Mithral Skin",
+          "required_level": 350
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 83,
+    "name": "Ellywick",
+    "has_dynamic_handler": false,
+    "sample_reason": "baseline",
+    "risk_tags": [
+      "baseline"
+    ],
+    "our_default_advice": [
+      "All That Sparkles (15233)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "Support route",
+    "csv_alternative_label": "Other route",
+    "csv_advice_text": "Gebruik meestal de support- of utility-keuze als veilige default; wijk alleen af als de formatie, run-doel of champion-rol daar duidelijk om vraagt.",
+    "csv_label_maps_to": "Faster Tempo",
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 15231,
+          "name": "For The Fans",
+          "required_level": 200
+        },
+        {
+          "upgrade_id": 15232,
+          "name": "Faster Tempo",
+          "required_level": 200
+        },
+        {
+          "upgrade_id": 15233,
+          "name": "All That Sparkles",
+          "required_level": 200
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 84,
+    "name": "Prudence",
+    "has_dynamic_handler": false,
+    "sample_reason": "unmapped_label",
+    "risk_tags": [
+      "unmapped_label"
+    ],
+    "our_default_advice": [
+      "Eldritch Torrent (6072)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "DPS route",
+    "csv_alternative_label": "Utility route",
+    "csv_advice_text": "Als ze carry is, kies pure damage/scaling; anders meestal niet prioriteit.",
+    "csv_label_maps_to": null,
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 6072,
+          "name": "Eldritch Torrent",
+          "required_level": 600
+        },
+        {
+          "upgrade_id": 6073,
+          "name": "She Hungers",
+          "required_level": 600
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 85,
+    "name": "Corazon",
+    "has_dynamic_handler": false,
+    "sample_reason": "unmapped_label",
+    "risk_tags": [
+      "unmapped_label"
+    ],
+    "our_default_advice": [
+      "Distant Crewmates (6133)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "Support route",
+    "csv_alternative_label": "Other route",
+    "csv_advice_text": "Gebruik meestal de support- of utility-keuze als veilige default; wijk alleen af als de formatie, run-doel of champion-rol daar duidelijk om vraagt.",
+    "csv_label_maps_to": null,
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 6133,
+          "name": "Distant Crewmates",
+          "required_level": 220
+        },
+        {
+          "upgrade_id": 6134,
+          "name": "Mage Hand",
+          "required_level": 220
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 86,
+    "name": "Reya",
+    "has_dynamic_handler": false,
+    "sample_reason": "unmapped_label",
+    "risk_tags": [
+      "unmapped_label"
+    ],
+    "our_default_advice": [
+      "Champions of Good (5459)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "Tank route",
+    "csv_alternative_label": "Support route",
+    "csv_advice_text": "Tank/spec in survivability-content; support als frontline al sterk genoeg is.",
+    "csv_label_maps_to": null,
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 5459,
+          "name": "Champions of Good",
+          "required_level": 160
+        },
+        {
+          "upgrade_id": 5460,
+          "name": "Champions of Law",
+          "required_level": 160
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 87,
+    "name": "NERDS",
+    "has_dynamic_handler": false,
+    "sample_reason": "unmapped_label",
+    "risk_tags": [
+      "unmapped_label"
+    ],
+    "our_default_advice": [
+      "Green Leader, Standing By (6148)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "Support route",
+    "csv_alternative_label": "Other route",
+    "csv_advice_text": "Gebruik meestal de support- of utility-keuze als veilige default; wijk alleen af als de formatie, run-doel of champion-rol daar duidelijk om vraagt.",
+    "csv_label_maps_to": null,
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 6146,
+          "name": "Orange Leader, Standing By",
+          "required_level": 270
+        },
+        {
+          "upgrade_id": 6147,
+          "name": "Red Leader, Standing By",
+          "required_level": 270
+        },
+        {
+          "upgrade_id": 6148,
+          "name": "Green Leader, Standing By",
+          "required_level": 270
+        },
+        {
+          "upgrade_id": 6149,
+          "name": "Yellow Leader, Standing By",
+          "required_level": 270
+        },
+        {
+          "upgrade_id": 6150,
+          "name": "Pink Leader, Standing By",
+          "required_level": 270
+        },
+        {
+          "upgrade_id": 6151,
+          "name": "Purple Leader, Standing By",
+          "required_level": 270
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 88,
+    "name": "Xerophon",
+    "has_dynamic_handler": false,
+    "sample_reason": "multi_tier, unmapped_label",
+    "risk_tags": [
+      "multi_tier",
+      "unmapped_label"
+    ],
+    "our_default_advice": [
+      "High Charisma (6842)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "Support route",
+    "csv_alternative_label": "Other route",
+    "csv_advice_text": "Gebruik meestal de support- of utility-keuze als veilige default; wijk alleen af als de formatie, run-doel of champion-rol daar duidelijk om vraagt.",
+    "csv_label_maps_to": null,
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 6838,
+          "name": "High Strength",
+          "required_level": 20
+        },
+        {
+          "upgrade_id": 6839,
+          "name": "Low Strength",
+          "required_level": 20
+        }
+      ],
+      "1": [
+        {
+          "upgrade_id": 6840,
+          "name": "High Dexterity",
+          "required_level": 50
+        },
+        {
+          "upgrade_id": 6841,
+          "name": "Low Dexterity",
+          "required_level": 50
+        }
+      ],
+      "2": [
+        {
+          "upgrade_id": 6978,
+          "name": "High Constitution",
+          "required_level": 90
+        },
+        {
+          "upgrade_id": 6979,
+          "name": "Low Constitution",
+          "required_level": 90
+        }
+      ],
+      "3": [
+        {
+          "upgrade_id": 6976,
+          "name": "High Intelligence",
+          "required_level": 130
+        },
+        {
+          "upgrade_id": 6977,
+          "name": "Low Intelligence",
+          "required_level": 130
+        }
+      ],
+      "4": [
+        {
+          "upgrade_id": 6980,
+          "name": "High Wisdom",
+          "required_level": 170
+        },
+        {
+          "upgrade_id": 6981,
+          "name": "Low Wisdom",
+          "required_level": 170
+        }
+      ],
+      "5": [
+        {
+          "upgrade_id": 6842,
+          "name": "High Charisma",
+          "required_level": 210
+        },
+        {
+          "upgrade_id": 6843,
+          "name": "Low Charisma",
+          "required_level": 210
+        }
+      ]
+    }
+  }
+]

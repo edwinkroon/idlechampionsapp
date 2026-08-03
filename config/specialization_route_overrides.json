@@ -12,28 +12,81 @@
     },
     "Thellora": {
       "speed_route": 12983,
-      "Speed route": 12983
-    },
-    "Sentry": {
-      "speed_route": 8866,
-      "Speed route": 8866
+      "Speed route": 12983,
+      "Vanguard of the Quick": 12983,
+      "Callessa's Blessed": 12984
     },
     "Hew Maan": {
       "speed_route": 10653,
-      "Speed route": 10653
+      "Speed route": 10653,
+      "Did We Say Humans? We Meant...": 10653
     },
     "BBEG": {
       "speed_route": 11545,
       "Speed route": 11545,
       "Control route": 11545,
-      "Support route": 11545
+      "Support route": 11545,
+      "Min-Maxing": 11545
+    },
+    "Evandra": {
+      "Support route": 11299,
+      "Powerful Allies": 11299,
+      "Carnival Crew": 11301
+    },
+    "Strongheart": {
+      "Support route": 19733,
+      "Valor's Call": 19733,
+      "Honorary Member": 19734
+    },
+    "Astarion": {
+      "Damage route": 12493,
+      "Outflank (Top)": 12493,
+      "Arcane Trickster": 12496
+    },
+    "Krux": {
+      "Foe of Xaryxis": 11660
+    },
+    "Virgil": {
+      "Mood: Anxious": 9608
+    },
+    "Lae'zel": {
+      "Battle Master": 12119
+    },
+    "Shadowheart": {
+      "Find Yourself": 13281
+    },
+    "Gale": {
+      "Support route": 14579,
+      "Mystical Mentor": 14579,
+      "Ceremorphosis": 14578
+    },
+    "Halsin": {
+      "Harbinger of the Wilds": 15966
+    },
+    "Kalix": {
+      "Creative Camouflage": 16522
+    },
+    "Grimm": {
+      "Giant Hunter": 16890
+    },
+    "Wyll": {
+      "Pact of the Blade": 13433
+    },
+    "Karlach": {
+      "Berserker": 13726
+    },
+    "Hank": {
+      "Tactical Advantage": 17086
     },
     "Ellywick": {
       "speed_route": 15232,
       "Speed route": 15232,
-      "Support route": 15232,
+      "Faster Tempo": 15232,
+      "Support route": 15233,
+      "support_route": 15233,
       "gold_route": 15233,
-      "Gold route": 15233
+      "Gold route": 15233,
+      "All That Sparkles": 15233
     },
     "Melf": {
       "speed_route": 19340,
@@ -50,6 +103,59 @@
       "Support route": 15041,
       "support_route": 15041,
       "We've Trained For This": 15041
+    },
+    "Selise": {
+      "Tank route": 13750,
+      "Reflective Shield": 13750,
+      "Mithral Skin": 13751
+    },
+    "Talin": {
+      "Additional Scatter Tacks": 4766
+    },
+    "Torogar": {
+      "Tiamat's Rage": 4493
+    },
+    "Ulkoria": {
+      "Shield Guardian": 4349
+    },
+    "Orkira": {
+      "Tailfeather of the Phoenix": 5577
+    },
+    "Prudence": {
+      "Eldritch Torrent": 6072
+    },
+    "Corazon": {
+      "Distant Crewmates": 6133
+    },
+    "Reya": {
+      "Champions of Good": 5459
+    },
+    "NERDS": {
+      "Green Leader, Standing By": 6148
+    },
+    "Xerophon": {
+      "High Charisma": 6842
+    },
+    "Baeloth": {
+      "Baeloth's Birthday Party": 4749
+    },
+    "Lucius": {
+      "Dichromancy": 19253
+    },
+    "Alyndra": {
+      "Expansive Vision": 17749
+    },
+    "Mehen": {
+      "Found Family": 16152
+    },
+    "Orisha": {
+      "Blazing Soul": 4909
+    },
+    "Penelope": {
+      "Everybody Gets To Be Friends": 14705
+    },
+    "Shaka": {
+      "Blinding Wall of Light": 13424
     },
     "Celeste": {
       "War Domain": 29,
@@ -118,6 +224,86 @@
       "Circle of the Arctic": 14878,
       "Mountain": 14877,
       "Circle of the Mountain": 14877
+    },
+    "Jamilah": {
+      "Bruiser": 239,
+      "Damage route": 239,
+      "damage_route": 239
+    },
+    "Arkhan": {
+      "Usurp": 244,
+      "Usurped Power": 244,
+      "Bulk Up": 243
+    },
+    "Drizzt": {
+      "DPS route": 11517,
+      "dps_route": 11517,
+      "Drow Stalker": 11517
+    },
+    "Strix": {
+      "Smelly Lunch": 12292,
+      "Olfactory Fatigue": 12290,
+      "Scent of Brimstone": 12291
+    },
+    "Qillek": {
+      "Empowered Blessing": 8772
+    },
+    "Korth": {
+      "Rapid Training": 13041,
+      "Samurai Training (Behind)": 13041
+    },
+    "Jim": {
+      "Darkmagic Cheer Squad": 12132
+    },
+    "Sentry": {
+      "speed_route": 8866,
+      "Speed route": 8866,
+      "Nature's Wrath": 8866
+    },
+    "Krull": {
+      "Pain": 3215,
+      "Plague Focus: {Pain}#F00": 3215
+    },
+    "Sisaspia": {
+      "Fungal Body": 13255,
+      "Spores": 13255
+    },
+    "Briv": {
+      "speed_route": 3457,
+      "Speed route": 3457,
+      "Go With The Phlo": 3457
+    },
+    "Avren": {
+      "Empowered Mirrors": 3099,
+      "Good/Sturdy mirror path": 3099
+    },
+    "Freely": {
+      "Always Expect Chaos": 4043
+    },
+    "Dragonbait": {
+      "Scent: Herbs and Spices": 3278
+    },
+    "Rust": {
+      "Gold route": 15362,
+      "Get Rich Quick": 15362,
+      "Even More Riches": 15363
+    },
+    "Desmond": {
+      "Living on the Edge": 7305,
+      "Embrace the Beast": 7305
+    },
+    "Nordom": {
+      "Modron route": 18167,
+      "Modron Core Toolbox": 18167
+    },
+    "Dob": {
+      "Befriend Everybody!": 8745
+    },
+    "Widdle": {
+      "Mind and Body": 6910
+    },
+    "Kent": {
+      "Potent Poison": 9356
     }
   }
 }

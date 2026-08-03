@@ -1,0 +1,919 @@
+[
+  {
+    "hero_id": 142,
+    "name": "Wyll",
+    "has_dynamic_handler": true,
+    "sample_reason": "dynamic_handler, unmapped_label, recent",
+    "risk_tags": [
+      "dynamic_handler",
+      "unmapped_label",
+      "recent"
+    ],
+    "our_default_advice": [
+      "Pact of the Blade (13433)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "Support route",
+    "csv_alternative_label": "Other route",
+    "csv_advice_text": "Gebruik meestal de support- of utility-keuze als veilige default; wijk alleen af als de formatie, run-doel of champion-rol daar duidelijk om vraagt.",
+    "csv_label_maps_to": null,
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 13433,
+          "name": "Pact of the Blade",
+          "required_level": 110
+        },
+        {
+          "upgrade_id": 13434,
+          "name": "Pact of the Chain",
+          "required_level": 110
+        },
+        {
+          "upgrade_id": 13435,
+          "name": "Pact of the Tome",
+          "required_level": 110
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 143,
+    "name": "Karlach",
+    "has_dynamic_handler": true,
+    "sample_reason": "dynamic_handler, unmapped_label, recent",
+    "risk_tags": [
+      "dynamic_handler",
+      "unmapped_label",
+      "recent"
+    ],
+    "our_default_advice": [
+      "Berserker (13726)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "Support route",
+    "csv_alternative_label": "Other route",
+    "csv_advice_text": "Gebruik meestal de support- of utility-keuze als veilige default; wijk alleen af als de formatie, run-doel of champion-rol daar duidelijk om vraagt.",
+    "csv_label_maps_to": null,
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 13726,
+          "name": "Berserker",
+          "required_level": 130
+        },
+        {
+          "upgrade_id": 13727,
+          "name": "Wildheart",
+          "required_level": 130
+        },
+        {
+          "upgrade_id": 13728,
+          "name": "Wild Magic",
+          "required_level": 130
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 144,
+    "name": "Presto",
+    "has_dynamic_handler": false,
+    "sample_reason": "unmapped_label, recent",
+    "risk_tags": [
+      "unmapped_label",
+      "recent"
+    ],
+    "our_default_advice": [
+      "Humble Heroes (13765)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "Support route",
+    "csv_alternative_label": "Other route",
+    "csv_advice_text": "Gebruik meestal de support- of utility-keuze als veilige default; wijk alleen af als de formatie, run-doel of champion-rol daar duidelijk om vraagt.",
+    "csv_label_maps_to": null,
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 13765,
+          "name": "Humble Heroes",
+          "required_level": 200
+        },
+        {
+          "upgrade_id": 13766,
+          "name": "Junior Juggernauts",
+          "required_level": 200
+        },
+        {
+          "upgrade_id": 13767,
+          "name": "Magical Mastery",
+          "required_level": 200
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 145,
+    "name": "Dynaheir",
+    "has_dynamic_handler": false,
+    "sample_reason": "unmapped_label, recent",
+    "risk_tags": [
+      "unmapped_label",
+      "recent"
+    ],
+    "our_default_advice": [
+      "Circle Magic (13879)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "Support route",
+    "csv_alternative_label": "DPS route",
+    "csv_advice_text": "Support als default; damage alleen wanneer ze je carry is.",
+    "csv_label_maps_to": null,
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 13879,
+          "name": "Circle Magic",
+          "required_level": 250
+        },
+        {
+          "upgrade_id": 13880,
+          "name": "Iron Lord's Justice",
+          "required_level": 250
+        },
+        {
+          "upgrade_id": 13881,
+          "name": "Loyal Bodyguard",
+          "required_level": 250
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 146,
+    "name": "Dark Urge",
+    "has_dynamic_handler": false,
+    "sample_reason": "multi_tier, recent",
+    "risk_tags": [
+      "multi_tier",
+      "recent"
+    ],
+    "our_default_advice": [
+      "Divine Soul (14384)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "",
+    "csv_alternative_label": "",
+    "csv_advice_text": "",
+    "csv_label_maps_to": null,
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 14382,
+          "name": "Storm Sorcery",
+          "required_level": 130
+        },
+        {
+          "upgrade_id": 14383,
+          "name": "Draconic Bloodline",
+          "required_level": 130
+        },
+        {
+          "upgrade_id": 14384,
+          "name": "Divine Soul",
+          "required_level": 130
+        }
+      ],
+      "1": [
+        {
+          "upgrade_id": 14385,
+          "name": "Embrace the Urge",
+          "required_level": 180
+        },
+        {
+          "upgrade_id": 14386,
+          "name": "Resist the Urge",
+          "required_level": 180
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 147,
+    "name": "Gale",
+    "has_dynamic_handler": true,
+    "sample_reason": "dynamic_handler, multi_tier, recent",
+    "risk_tags": [
+      "dynamic_handler",
+      "multi_tier",
+      "recent"
+    ],
+    "our_default_advice": [
+      "Ceremorphosis (14578)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "Support route",
+    "csv_alternative_label": "Other route",
+    "csv_advice_text": "Gebruik meestal de support- of utility-keuze als veilige default; wijk alleen af als de formatie, run-doel of champion-rol daar duidelijk om vraagt.",
+    "csv_label_maps_to": "Mystical Mentor",
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 14574,
+          "name": "Evocation",
+          "required_level": 140
+        },
+        {
+          "upgrade_id": 14575,
+          "name": "Abjuration",
+          "required_level": 140
+        },
+        {
+          "upgrade_id": 14576,
+          "name": "Enchantment",
+          "required_level": 140
+        },
+        {
+          "upgrade_id": 14577,
+          "name": "Illusion",
+          "required_level": 140
+        }
+      ],
+      "1": [
+        {
+          "upgrade_id": 14578,
+          "name": "Ceremorphosis",
+          "required_level": 250
+        },
+        {
+          "upgrade_id": 14579,
+          "name": "Mystical Mentor",
+          "required_level": 250
+        },
+        {
+          "upgrade_id": 14580,
+          "name": "Finite Fellowship",
+          "required_level": 250
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 148,
+    "name": "Diana",
+    "has_dynamic_handler": true,
+    "sample_reason": "dynamic_handler, multi_tier, unmapped_label, recent",
+    "risk_tags": [
+      "dynamic_handler",
+      "multi_tier",
+      "unmapped_label",
+      "recent"
+    ],
+    "our_default_advice": [
+      "Ensemble Cast (14796)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "Support route",
+    "csv_alternative_label": "Other route",
+    "csv_advice_text": "Gebruik meestal de support- of utility-keuze als veilige default; wijk alleen af als de formatie, run-doel of champion-rol daar duidelijk om vraagt.",
+    "csv_label_maps_to": null,
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 14791,
+          "name": "Inspire: Acrobatic Assault",
+          "required_level": 60
+        },
+        {
+          "upgrade_id": 14792,
+          "name": "Inspire: Modest Might",
+          "required_level": 60
+        },
+        {
+          "upgrade_id": 14793,
+          "name": "Inspire: Fledgling Fury",
+          "required_level": 60
+        }
+      ],
+      "1": [
+        {
+          "upgrade_id": 14796,
+          "name": "Ensemble Cast",
+          "required_level": 130
+        },
+        {
+          "upgrade_id": 14797,
+          "name": "Spotlight Episode",
+          "required_level": 130
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 150,
+    "name": "Aeon",
+    "has_dynamic_handler": false,
+    "sample_reason": "multi_tier, recent",
+    "risk_tags": [
+      "multi_tier",
+      "recent"
+    ],
+    "our_default_advice": [
+      "Play the Long Game (15200)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "",
+    "csv_alternative_label": "",
+    "csv_advice_text": "",
+    "csv_label_maps_to": null,
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 15199,
+          "name": "Immediate Infiltration",
+          "required_level": 150
+        },
+        {
+          "upgrade_id": 15200,
+          "name": "Play the Long Game",
+          "required_level": 150
+        }
+      ],
+      "1": [
+        {
+          "upgrade_id": 15201,
+          "name": "Artificer's Arsenal",
+          "required_level": 250
+        },
+        {
+          "upgrade_id": 15202,
+          "name": "Spy Network",
+          "required_level": 250
+        },
+        {
+          "upgrade_id": 15203,
+          "name": "Powerful Patronage",
+          "required_level": 250
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 151,
+    "name": "Umberto",
+    "has_dynamic_handler": true,
+    "sample_reason": "dynamic_handler, multi_tier, recent",
+    "risk_tags": [
+      "dynamic_handler",
+      "multi_tier",
+      "recent"
+    ],
+    "our_default_advice": [
+      "Family of Orphans (15053)",
+      "More Damage (15057)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "",
+    "csv_alternative_label": "",
+    "csv_advice_text": "",
+    "csv_label_maps_to": null,
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 15052,
+          "name": "Law's Alliance",
+          "required_level": 200
+        },
+        {
+          "upgrade_id": 15053,
+          "name": "Family of Orphans",
+          "required_level": 200
+        },
+        {
+          "upgrade_id": 15054,
+          "name": "Call of the Wardens",
+          "required_level": 200
+        }
+      ],
+      "1": [
+        {
+          "upgrade_id": 15055,
+          "name": "More Bees",
+          "required_level": 400
+        },
+        {
+          "upgrade_id": 15056,
+          "name": "More Clues",
+          "required_level": 400
+        },
+        {
+          "upgrade_id": 15057,
+          "name": "More Damage",
+          "required_level": 400
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 152,
+    "name": "Bobby",
+    "has_dynamic_handler": false,
+    "sample_reason": "multi_tier, recent",
+    "risk_tags": [
+      "multi_tier",
+      "recent"
+    ],
+    "our_default_advice": [
+      "Group Charge (15448)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "",
+    "csv_alternative_label": "",
+    "csv_advice_text": "",
+    "csv_label_maps_to": null,
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 15447,
+          "name": "Stunning Strength",
+          "required_level": 110
+        },
+        {
+          "upgrade_id": 15448,
+          "name": "Group Charge",
+          "required_level": 110
+        }
+      ],
+      "1": [
+        {
+          "upgrade_id": 15449,
+          "name": "Not So Low",
+          "required_level": 250
+        },
+        {
+          "upgrade_id": 15450,
+          "name": "Still Growing Up",
+          "required_level": 250
+        },
+        {
+          "upgrade_id": 15451,
+          "name": "Strong Armed",
+          "required_level": 250
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 154,
+    "name": "Minthara",
+    "has_dynamic_handler": false,
+    "sample_reason": "unmapped_label, recent",
+    "risk_tags": [
+      "unmapped_label",
+      "recent"
+    ],
+    "our_default_advice": [
+      "Soul Destroyer (15948)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "Support route",
+    "csv_alternative_label": "Other route",
+    "csv_advice_text": "Gebruik meestal de support- of utility-keuze als veilige default; wijk alleen af als de formatie, run-doel of champion-rol daar duidelijk om vraagt.",
+    "csv_label_maps_to": null,
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 15946,
+          "name": "House Matron",
+          "required_level": 250
+        },
+        {
+          "upgrade_id": 15947,
+          "name": "True Soul",
+          "required_level": 250
+        },
+        {
+          "upgrade_id": 15948,
+          "name": "Soul Destroyer",
+          "required_level": 250
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 155,
+    "name": "Wren",
+    "has_dynamic_handler": false,
+    "sample_reason": "unmapped_label, recent",
+    "risk_tags": [
+      "unmapped_label",
+      "recent"
+    ],
+    "our_default_advice": [
+      "Glitch Form: Dwarf Monk (15217)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "Support route",
+    "csv_alternative_label": "Other route",
+    "csv_advice_text": "Gebruik meestal de support- of utility-keuze als veilige default; wijk alleen af als de formatie, run-doel of champion-rol daar duidelijk om vraagt.",
+    "csv_label_maps_to": null,
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 15217,
+          "name": "Glitch Form: Dwarf Monk",
+          "required_level": 80
+        },
+        {
+          "upgrade_id": 15218,
+          "name": "Glitch Form: Tabaxi Barbarian",
+          "required_level": 80
+        },
+        {
+          "upgrade_id": 15219,
+          "name": "Glitch Form: Warforged Sorcerer",
+          "required_level": 80
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 156,
+    "name": "Halsin",
+    "has_dynamic_handler": false,
+    "sample_reason": "recent",
+    "risk_tags": [
+      "recent"
+    ],
+    "our_default_advice": [
+      "Harbinger of the Wilds (15966)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "",
+    "csv_alternative_label": "",
+    "csv_advice_text": "",
+    "csv_label_maps_to": null,
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 15966,
+          "name": "Harbinger of the Wilds",
+          "required_level": 240
+        },
+        {
+          "upgrade_id": 15967,
+          "name": "Sage of the Transformed",
+          "required_level": 240
+        },
+        {
+          "upgrade_id": 15968,
+          "name": "Protector of the Grove",
+          "required_level": 240
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 157,
+    "name": "Eric",
+    "has_dynamic_handler": false,
+    "sample_reason": "multi_tier, recent",
+    "risk_tags": [
+      "multi_tier",
+      "recent"
+    ],
+    "our_default_advice": [
+      "Trait: Brave (16135)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "",
+    "csv_alternative_label": "",
+    "csv_advice_text": "",
+    "csv_label_maps_to": null,
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 16134,
+          "name": "Trait: Cautious",
+          "required_level": 30
+        },
+        {
+          "upgrade_id": 16135,
+          "name": "Trait: Brave",
+          "required_level": 30
+        },
+        {
+          "upgrade_id": 16136,
+          "name": "Trait: Sarcastic",
+          "required_level": 30
+        }
+      ],
+      "1": [
+        {
+          "upgrade_id": 16137,
+          "name": "Unassuming Force",
+          "required_level": 470
+        },
+        {
+          "upgrade_id": 16138,
+          "name": "Youthful Valor",
+          "required_level": 470
+        },
+        {
+          "upgrade_id": 16139,
+          "name": "Treasure Hunters",
+          "required_level": 470
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 158,
+    "name": "Kalix",
+    "has_dynamic_handler": false,
+    "sample_reason": "recent",
+    "risk_tags": [
+      "recent"
+    ],
+    "our_default_advice": [
+      "Creative Camouflage (16522)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "",
+    "csv_alternative_label": "",
+    "csv_advice_text": "",
+    "csv_label_maps_to": null,
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 16521,
+          "name": "Strength in Numbers",
+          "required_level": 240
+        },
+        {
+          "upgrade_id": 16522,
+          "name": "Creative Camouflage",
+          "required_level": 240
+        },
+        {
+          "upgrade_id": 16523,
+          "name": "One For You, One For Me",
+          "required_level": 240
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 159,
+    "name": "Volo",
+    "has_dynamic_handler": true,
+    "sample_reason": "dynamic_handler, recent",
+    "risk_tags": [
+      "dynamic_handler",
+      "recent"
+    ],
+    "our_default_advice": [
+      "Volo's Guide to All Things Magical (16556)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "",
+    "csv_alternative_label": "",
+    "csv_advice_text": "",
+    "csv_label_maps_to": null,
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 16554,
+          "name": "Volo's Guide to Spirits and Specters",
+          "required_level": 150
+        },
+        {
+          "upgrade_id": 16555,
+          "name": "Volo's Guide to Brain-Eating Tadpoles",
+          "required_level": 150
+        },
+        {
+          "upgrade_id": 16556,
+          "name": "Volo's Guide to All Things Magical",
+          "required_level": 150
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 160,
+    "name": "Sheila",
+    "has_dynamic_handler": false,
+    "sample_reason": "multi_tier, recent",
+    "risk_tags": [
+      "multi_tier",
+      "recent"
+    ],
+    "our_default_advice": [
+      "A Rosy Outlook (16543)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "",
+    "csv_alternative_label": "",
+    "csv_advice_text": "",
+    "csv_label_maps_to": null,
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 16541,
+          "name": "Meekly Meeting",
+          "required_level": 90
+        },
+        {
+          "upgrade_id": 16542,
+          "name": "Youthful Allies",
+          "required_level": 90
+        },
+        {
+          "upgrade_id": 16543,
+          "name": "A Rosy Outlook",
+          "required_level": 90
+        }
+      ],
+      "1": [
+        {
+          "upgrade_id": 16544,
+          "name": "Frightening Strike",
+          "required_level": 200
+        },
+        {
+          "upgrade_id": 16545,
+          "name": "Enraging Strike",
+          "required_level": 200
+        },
+        {
+          "upgrade_id": 16546,
+          "name": "Confusing Strike",
+          "required_level": 200
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 161,
+    "name": "Grimm",
+    "has_dynamic_handler": false,
+    "sample_reason": "recent",
+    "risk_tags": [
+      "recent"
+    ],
+    "our_default_advice": [
+      "Giant Hunter (16890)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "",
+    "csv_alternative_label": "",
+    "csv_advice_text": "",
+    "csv_label_maps_to": null,
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 16890,
+          "name": "Giant Hunter",
+          "required_level": 200
+        },
+        {
+          "upgrade_id": 16891,
+          "name": "Giant Taunter",
+          "required_level": 200
+        },
+        {
+          "upgrade_id": 16892,
+          "name": "Giant Profits",
+          "required_level": 200
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 162,
+    "name": "Vlithryn",
+    "has_dynamic_handler": true,
+    "sample_reason": "dynamic_handler, recent",
+    "risk_tags": [
+      "dynamic_handler",
+      "recent"
+    ],
+    "our_default_advice": [
+      "Help the Unfortunate (17049)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "",
+    "csv_alternative_label": "",
+    "csv_advice_text": "",
+    "csv_label_maps_to": null,
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 17048,
+          "name": "Who Else Would Save Them?",
+          "required_level": 80
+        },
+        {
+          "upgrade_id": 17049,
+          "name": "Help the Unfortunate",
+          "required_level": 80
+        },
+        {
+          "upgrade_id": 17050,
+          "name": "Spreading the Word",
+          "required_level": 80
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 163,
+    "name": "Hank",
+    "has_dynamic_handler": false,
+    "sample_reason": "multi_tier, recent",
+    "risk_tags": [
+      "multi_tier",
+      "recent"
+    ],
+    "our_default_advice": [
+      "Tactical Advantage (17086)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "",
+    "csv_alternative_label": "",
+    "csv_advice_text": "",
+    "csv_label_maps_to": null,
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 17083,
+          "name": "Heart of Heroes",
+          "required_level": 110
+        },
+        {
+          "upgrade_id": 17084,
+          "name": "Arrow Alliance",
+          "required_level": 110
+        },
+        {
+          "upgrade_id": 17085,
+          "name": "Unyielding Unity",
+          "required_level": 110
+        }
+      ],
+      "1": [
+        {
+          "upgrade_id": 17086,
+          "name": "Tactical Advantage",
+          "required_level": 230
+        },
+        {
+          "upgrade_id": 17087,
+          "name": "Dragon Slayer",
+          "required_level": 230
+        }
+      ]
+    }
+  }
+]

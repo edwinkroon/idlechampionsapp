@@ -1,0 +1,783 @@
+[
+  {
+    "hero_id": 164,
+    "name": "Tess",
+    "has_dynamic_handler": true,
+    "sample_reason": "dynamic_handler, recent",
+    "risk_tags": [
+      "dynamic_handler",
+      "recent"
+    ],
+    "our_default_advice": [
+      "The Fallback Plan (17321)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "",
+    "csv_alternative_label": "",
+    "csv_advice_text": "",
+    "csv_label_maps_to": null,
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 17321,
+          "name": "The Fallback Plan",
+          "required_level": 150
+        },
+        {
+          "upgrade_id": 17322,
+          "name": "Eyes on the Horizon",
+          "required_level": 150
+        },
+        {
+          "upgrade_id": 17323,
+          "name": "Rogues' Gallery",
+          "required_level": 150
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 165,
+    "name": "Baldric",
+    "has_dynamic_handler": false,
+    "sample_reason": "multi_tier, recent",
+    "risk_tags": [
+      "multi_tier",
+      "recent"
+    ],
+    "our_default_advice": [
+      "Bargain With Eldath (17495)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "",
+    "csv_alternative_label": "",
+    "csv_advice_text": "",
+    "csv_label_maps_to": null,
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 17491,
+          "name": "Bargain With Tyr",
+          "required_level": 70
+        },
+        {
+          "upgrade_id": 17492,
+          "name": "Bargain With Moradin",
+          "required_level": 70
+        },
+        {
+          "upgrade_id": 17493,
+          "name": "Bargain With Tymora",
+          "required_level": 70
+        },
+        {
+          "upgrade_id": 17494,
+          "name": "Bargain With Mystra",
+          "required_level": 70
+        },
+        {
+          "upgrade_id": 17495,
+          "name": "Bargain With Eldath",
+          "required_level": 70
+        }
+      ],
+      "1": [
+        {
+          "upgrade_id": 17496,
+          "name": "Dark Bargain",
+          "required_level": 150
+        },
+        {
+          "upgrade_id": 17497,
+          "name": "Bargain With Moradin",
+          "required_level": 150
+        },
+        {
+          "upgrade_id": 17498,
+          "name": "Bargain With Tymora",
+          "required_level": 150
+        },
+        {
+          "upgrade_id": 17499,
+          "name": "Bargain With Mystra",
+          "required_level": 150
+        },
+        {
+          "upgrade_id": 17500,
+          "name": "Bargain With Eldath",
+          "required_level": 150
+        },
+        {
+          "upgrade_id": 17501,
+          "name": "Bargain With Tyr",
+          "required_level": 150
+        },
+        {
+          "upgrade_id": 17502,
+          "name": "Dark Bargain",
+          "required_level": 150
+        },
+        {
+          "upgrade_id": 17503,
+          "name": "Bargain With Tymora",
+          "required_level": 150
+        },
+        {
+          "upgrade_id": 17504,
+          "name": "Bargain With Mystra",
+          "required_level": 150
+        },
+        {
+          "upgrade_id": 17505,
+          "name": "Bargain With Eldath",
+          "required_level": 150
+        },
+        {
+          "upgrade_id": 17506,
+          "name": "Bargain With Tyr",
+          "required_level": 150
+        },
+        {
+          "upgrade_id": 17507,
+          "name": "Bargain With Moradin",
+          "required_level": 150
+        },
+        {
+          "upgrade_id": 17508,
+          "name": "Dark Bargain",
+          "required_level": 150
+        },
+        {
+          "upgrade_id": 17509,
+          "name": "Bargain With Mystra",
+          "required_level": 150
+        },
+        {
+          "upgrade_id": 17510,
+          "name": "Bargain With Eldath",
+          "required_level": 150
+        },
+        {
+          "upgrade_id": 17511,
+          "name": "Bargain With Tyr",
+          "required_level": 150
+        },
+        {
+          "upgrade_id": 17512,
+          "name": "Bargain With Moradin",
+          "required_level": 150
+        },
+        {
+          "upgrade_id": 17513,
+          "name": "Bargain With Tymora",
+          "required_level": 150
+        },
+        {
+          "upgrade_id": 17514,
+          "name": "Dark Bargain",
+          "required_level": 150
+        },
+        {
+          "upgrade_id": 17515,
+          "name": "Bargain With Eldath",
+          "required_level": 150
+        },
+        {
+          "upgrade_id": 17516,
+          "name": "Bargain With Tyr",
+          "required_level": 150
+        },
+        {
+          "upgrade_id": 17517,
+          "name": "Bargain With Moradin",
+          "required_level": 150
+        },
+        {
+          "upgrade_id": 17518,
+          "name": "Bargain With Tymora",
+          "required_level": 150
+        },
+        {
+          "upgrade_id": 17519,
+          "name": "Bargain With Mystra",
+          "required_level": 150
+        },
+        {
+          "upgrade_id": 17520,
+          "name": "Dark Bargain",
+          "required_level": 150
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 166,
+    "name": "Cazrin",
+    "has_dynamic_handler": true,
+    "sample_reason": "dynamic_handler, multi_tier, recent",
+    "risk_tags": [
+      "dynamic_handler",
+      "multi_tier",
+      "recent"
+    ],
+    "our_default_advice": [
+      "Ancestor's Shadow (17679)",
+      "Smell Mastery (17682)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "",
+    "csv_alternative_label": "",
+    "csv_advice_text": "",
+    "csv_label_maps_to": null,
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 17678,
+          "name": "Self Taught",
+          "required_level": 180
+        },
+        {
+          "upgrade_id": 17679,
+          "name": "Ancestor's Shadow",
+          "required_level": 180
+        },
+        {
+          "upgrade_id": 17680,
+          "name": "Lost in the Library",
+          "required_level": 180
+        }
+      ],
+      "1": [
+        {
+          "upgrade_id": 17681,
+          "name": "Signature Smell",
+          "required_level": 240
+        },
+        {
+          "upgrade_id": 17682,
+          "name": "Smell Mastery",
+          "required_level": 240
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 167,
+    "name": "Windfall",
+    "has_dynamic_handler": false,
+    "sample_reason": "recent",
+    "risk_tags": [
+      "recent"
+    ],
+    "our_default_advice": [
+      "Black Dragon's Corrosion (17059)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "",
+    "csv_alternative_label": "",
+    "csv_advice_text": "",
+    "csv_label_maps_to": null,
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 17056,
+          "name": "Red Dragon's Greed",
+          "required_level": 100
+        },
+        {
+          "upgrade_id": 17057,
+          "name": "Blue Dragon's Spark",
+          "required_level": 100
+        },
+        {
+          "upgrade_id": 17058,
+          "name": "Green Dragon's Spite",
+          "required_level": 100
+        },
+        {
+          "upgrade_id": 17059,
+          "name": "Black Dragon's Corrosion",
+          "required_level": 100
+        },
+        {
+          "upgrade_id": 17060,
+          "name": "White Dragon's Chill",
+          "required_level": 100
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 168,
+    "name": "King of Shadows",
+    "has_dynamic_handler": true,
+    "sample_reason": "dynamic_handler, multi_tier, recent",
+    "risk_tags": [
+      "dynamic_handler",
+      "multi_tier",
+      "recent"
+    ],
+    "our_default_advice": [
+      "Embrace the Shadow Weave (17765)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "",
+    "csv_alternative_label": "",
+    "csv_advice_text": "",
+    "csv_label_maps_to": null,
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 17762,
+          "name": "Master of Pawns",
+          "required_level": 210
+        },
+        {
+          "upgrade_id": 17763,
+          "name": "Shadow Unleashed",
+          "required_level": 210
+        }
+      ],
+      "1": [
+        {
+          "upgrade_id": 17764,
+          "name": "Legacy of Illefarn",
+          "required_level": 280
+        },
+        {
+          "upgrade_id": 17765,
+          "name": "Embrace the Shadow Weave",
+          "required_level": 280
+        },
+        {
+          "upgrade_id": 17766,
+          "name": "Rites of Survival",
+          "required_level": 280
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 169,
+    "name": "Skylla",
+    "has_dynamic_handler": true,
+    "sample_reason": "dynamic_handler, multi_tier, recent",
+    "risk_tags": [
+      "dynamic_handler",
+      "multi_tier",
+      "recent"
+    ],
+    "our_default_advice": [
+      "Withering Ward (17850)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "",
+    "csv_alternative_label": "",
+    "csv_advice_text": "",
+    "csv_label_maps_to": null,
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 17848,
+          "name": "Witch's Switch",
+          "required_level": 110
+        },
+        {
+          "upgrade_id": 17849,
+          "name": "League of Malevolence",
+          "required_level": 110
+        },
+        {
+          "upgrade_id": 17850,
+          "name": "Withering Ward",
+          "required_level": 110
+        }
+      ],
+      "1": [
+        {
+          "upgrade_id": 17851,
+          "name": "Green Fire",
+          "required_level": 200
+        },
+        {
+          "upgrade_id": 17852,
+          "name": "Blue Fire",
+          "required_level": 200
+        },
+        {
+          "upgrade_id": 17853,
+          "name": "Violet Fire",
+          "required_level": 200
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 170,
+    "name": "Lark",
+    "has_dynamic_handler": false,
+    "sample_reason": "recent",
+    "risk_tags": [
+      "recent"
+    ],
+    "our_default_advice": [
+      "Band of Misfits (18055)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "",
+    "csv_alternative_label": "",
+    "csv_advice_text": "",
+    "csv_label_maps_to": null,
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 18055,
+          "name": "Band of Misfits",
+          "required_level": 170
+        },
+        {
+          "upgrade_id": 18056,
+          "name": "Center of Attention",
+          "required_level": 170
+        },
+        {
+          "upgrade_id": 18057,
+          "name": "Path of Nightmares",
+          "required_level": 170
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 171,
+    "name": "Anson",
+    "has_dynamic_handler": false,
+    "sample_reason": "recent",
+    "risk_tags": [
+      "recent"
+    ],
+    "our_default_advice": [
+      "Found Family (18475)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "",
+    "csv_alternative_label": "",
+    "csv_advice_text": "",
+    "csv_label_maps_to": null,
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 18474,
+          "name": "Pure of Heart",
+          "required_level": 230
+        },
+        {
+          "upgrade_id": 18475,
+          "name": "Found Family",
+          "required_level": 230
+        },
+        {
+          "upgrade_id": 18476,
+          "name": "Never Surrender",
+          "required_level": 230
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 172,
+    "name": "Kyre",
+    "has_dynamic_handler": false,
+    "sample_reason": "recent",
+    "risk_tags": [
+      "recent"
+    ],
+    "our_default_advice": [
+      "Complete Control (18671)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "",
+    "csv_alternative_label": "",
+    "csv_advice_text": "",
+    "csv_label_maps_to": null,
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 18671,
+          "name": "Complete Control",
+          "required_level": 170
+        },
+        {
+          "upgrade_id": 18672,
+          "name": "Faster Than Light",
+          "required_level": 170
+        },
+        {
+          "upgrade_id": 18673,
+          "name": "Pure of Soul",
+          "required_level": 170
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 173,
+    "name": "Raistlin",
+    "has_dynamic_handler": true,
+    "sample_reason": "dynamic_handler, recent",
+    "risk_tags": [
+      "dynamic_handler",
+      "recent"
+    ],
+    "our_default_advice": [
+      "Heroic Mage (18934)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "",
+    "csv_alternative_label": "",
+    "csv_advice_text": "",
+    "csv_label_maps_to": null,
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 18934,
+          "name": "Heroic Mage",
+          "required_level": 130
+        },
+        {
+          "upgrade_id": 18935,
+          "name": "Reclusive Mage",
+          "required_level": 130
+        },
+        {
+          "upgrade_id": 18936,
+          "name": "War Mage",
+          "required_level": 130
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 174,
+    "name": "Tasslehoff",
+    "has_dynamic_handler": false,
+    "sample_reason": "multi_tier, recent",
+    "risk_tags": [
+      "multi_tier",
+      "recent"
+    ],
+    "our_default_advice": [
+      "Fast Friends (19238)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "",
+    "csv_alternative_label": "",
+    "csv_advice_text": "",
+    "csv_label_maps_to": null,
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 19240,
+          "name": "Map Collector: Pre-Cataclysm",
+          "required_level": 20
+        },
+        {
+          "upgrade_id": 19241,
+          "name": "Map Collector: Time of Darkness",
+          "required_level": 20
+        },
+        {
+          "upgrade_id": 19242,
+          "name": "Map Collector: War of the Lance",
+          "required_level": 20
+        }
+      ],
+      "1": [
+        {
+          "upgrade_id": 19237,
+          "name": "Small Friends",
+          "required_level": 150
+        },
+        {
+          "upgrade_id": 19238,
+          "name": "Fast Friends",
+          "required_level": 150
+        },
+        {
+          "upgrade_id": 19239,
+          "name": "Old Friends",
+          "required_level": 150
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 175,
+    "name": "Laurana",
+    "has_dynamic_handler": false,
+    "sample_reason": "multi_tier, recent",
+    "risk_tags": [
+      "multi_tier",
+      "recent"
+    ],
+    "our_default_advice": [
+      "Battle Plan: Charge (19354)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "",
+    "csv_alternative_label": "",
+    "csv_advice_text": "",
+    "csv_label_maps_to": null,
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 19354,
+          "name": "Battle Plan: Charge",
+          "required_level": 30
+        },
+        {
+          "upgrade_id": 19355,
+          "name": "Battle Plan: Outflank",
+          "required_level": 30
+        },
+        {
+          "upgrade_id": 19356,
+          "name": "Battle Plan: Fortify",
+          "required_level": 30
+        }
+      ],
+      "1": [
+        {
+          "upgrade_id": 19357,
+          "name": "Lead the Attack",
+          "required_level": 120
+        },
+        {
+          "upgrade_id": 19358,
+          "name": "Protect the Vulnerable",
+          "required_level": 120
+        },
+        {
+          "upgrade_id": 19359,
+          "name": "Wield the Dragonlance",
+          "required_level": 120
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 176,
+    "name": "Trixie",
+    "has_dynamic_handler": false,
+    "sample_reason": "recent",
+    "risk_tags": [
+      "recent"
+    ],
+    "our_default_advice": [
+      "Faster, Friends (19692)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "",
+    "csv_alternative_label": "",
+    "csv_advice_text": "",
+    "csv_label_maps_to": null,
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 19692,
+          "name": "Faster, Friends",
+          "required_level": 160
+        },
+        {
+          "upgrade_id": 19693,
+          "name": "Ultimate Friends",
+          "required_level": 160
+        }
+      ]
+    }
+  },
+  {
+    "hero_id": 177,
+    "name": "Van Richten",
+    "has_dynamic_handler": true,
+    "sample_reason": "dynamic_handler, multi_tier, recent",
+    "risk_tags": [
+      "dynamic_handler",
+      "multi_tier",
+      "recent"
+    ],
+    "our_default_advice": [
+      "Endless Hunt (19702)",
+      "Occult Aid: Dispel Evil (19704)"
+    ],
+    "gaarawarr_specializations": [],
+    "gaarawarr_ids": [],
+    "gaarawarr_url": "",
+    "csv_default_label": "",
+    "csv_alternative_label": "",
+    "csv_advice_text": "",
+    "csv_label_maps_to": null,
+    "options_by_tier": {
+      "0": [
+        {
+          "upgrade_id": 19700,
+          "name": "Occult Allies",
+          "required_level": 120
+        },
+        {
+          "upgrade_id": 19701,
+          "name": "Scholar of Dread",
+          "required_level": 120
+        },
+        {
+          "upgrade_id": 19702,
+          "name": "Endless Hunt",
+          "required_level": 120
+        }
+      ],
+      "1": [
+        {
+          "upgrade_id": 19703,
+          "name": "Occult Aid: Cure Wounds",
+          "required_level": 220
+        },
+        {
+          "upgrade_id": 19704,
+          "name": "Occult Aid: Dispel Evil",
+          "required_level": 220
+        },
+        {
+          "upgrade_id": 19705,
+          "name": "Occult Aid: Sanctuary",
+          "required_level": 220
+        }
+      ]
+    }
+  }
+]
