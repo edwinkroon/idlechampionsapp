@@ -16,6 +16,7 @@ Treat **game options**, **advice**, and **UI labels** as separate concerns. Neve
 - On internal conflict or failed label→option mapping, set `review_needed: true` and list `review_reasons`.
 - Prefer machine-readable fields over prose; keep `explanation_summary` ≤ 140 chars.
 - Keep transforms compact and deterministic.
+- When the same option **name** appears under multiple `upgrade_id`s (branched tiers like Selise/Baldric), pin advice and overrides to the **lowest upgrade_id** for that name at that tier. Use `Name@1` override keys for tier-1 pins. Do not leave this as `review_needed` once the canonical ids are documented.
 
 ## Don't
 

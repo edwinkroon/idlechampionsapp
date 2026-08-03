@@ -1,13 +1,11 @@
 # Specialization advice — review needed
 
-2 champions marked `review_needed` in advisor models.
+0 champions marked `review_needed` in advisor models.
 
 Per champion: kies één kant van het conflict, of houd `safe_default` op null.
 
 | hero_id | name | model | safe | push | farm | first reason |
 |---:|---|---|---|---|---|---|
-| 81 | Selise | safe_default | Mithral Skin | Mithral Skin | null | tier1 duplicates option names across upgrade ids |
-| 165 | Baldric | safe_default | Bargain With Eldath | Bargain With Eldath | null | No CSV; tier1 still has many duplicate option names across upgrade ids |
 
 ## Intentional null `safe_default` (context-dependent)
 

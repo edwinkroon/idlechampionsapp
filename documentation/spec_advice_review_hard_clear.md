@@ -8,10 +8,14 @@ After soft-10…17 Perplexity passes, `review_needed` was cleared for all soft-r
 
 ## Still `review_needed: true` (structural)
 
-| hero_id | name | reason |
-|--------:|------|--------|
-| 81 | Selise | tier1 duplicates option names across many upgrade ids |
-| 165 | Baldric | tier1 duplicates option names across many upgrade ids |
+None after the Selise/Baldric duplicate-id resolution (see `spec_advice_duplicate_upgrade_ids.md`).
+
+Previously held:
+
+| hero_id | name | resolution |
+|--------:|------|------------|
+| 81 | Selise | Pin lowest upgrade_id per name; `@1` overrides |
+| 165 | Baldric | Pin lowest upgrade_id per name; `@1` overrides |
 
 ## Intentional null `safe_default` (unchanged)
 
@@ -19,4 +23,4 @@ After soft-10…17 Perplexity passes, `review_needed` was cleared for all soft-r
 
 ## Result
 
-`documentation/spec_advice_review_needed.md`: **2** review_needed, **12** intentional null.
+`documentation/spec_advice_review_needed.md`: **0** review_needed (after Selise/Baldric resolution), **12** intentional null.

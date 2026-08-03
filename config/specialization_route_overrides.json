@@ -190,6 +190,19 @@
       "Meekly Meeting": 16541,
       "Youthful Allies": 16542
     },
+    "Baldric": {
+      "Bargain With Eldath": 17495,
+      "Bargain With Tyr": 17491,
+      "Bargain With Moradin": 17492,
+      "Bargain With Tymora": 17493,
+      "Bargain With Mystra": 17494,
+      "Dark Bargain@1": 17496,
+      "Bargain With Moradin@1": 17497,
+      "Bargain With Tymora@1": 17498,
+      "Bargain With Mystra@1": 17499,
+      "Bargain With Eldath@1": 17500,
+      "Bargain With Tyr@1": 17501
+    },
     "Vlithryn": {
       "Help the Unfortunate": 17049,
       "Who Else Would Save Them?": 17048,
@@ -224,7 +237,13 @@
     "Selise": {
       "Tank route": 13751,
       "Reflective Shield": 13750,
-      "Mithral Skin": 13751
+      "Mithral Skin": 13751,
+      "Relentless Avenger": 13749,
+      "Tyr's Eyes": 13752,
+      "Tyr's Eyes@1": 13752,
+      "Relentless Avenger@1": 13753,
+      "Reflective Shield@1": 13754,
+      "Mithral Skin@1": 13756
     },
     "Valentine": {
       "Socialite gold": 8150,

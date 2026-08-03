@@ -5033,6 +5033,21 @@
           "when": "tier1 variant is selected → Tyr's Eyes",
           "upgrade_id": 13752,
           "name": "Tyr's Eyes"
+        },
+        {
+          "when": "tier1 continues Avenger branch (canonical lowest id)",
+          "upgrade_id": 13753,
+          "name": "Relentless Avenger"
+        },
+        {
+          "when": "tier1 continues Shield branch (canonical lowest id)",
+          "upgrade_id": 13754,
+          "name": "Reflective Shield"
+        },
+        {
+          "when": "tier1 continues Skin branch (canonical lowest id)",
+          "upgrade_id": 13756,
+          "name": "Mithral Skin"
         }
       ],
       "context_flags": {
@@ -5043,13 +5058,11 @@
       "sources": {
         "csv_default_label": "Tank route",
         "csv_label_maps_to": "Mithral Skin",
-        "csv_advice_text": "Reflective Shield for extra shielding; Avenger for utility/carry-protection."
+        "csv_advice_text": "Tier1 reuses names; advice pins lowest upgrade_id per name."
       },
-      "explanation_summary": "Safe Mithral Skin; Shield/Avenger by tank vs utility; CSV aligned to Skin.",
-      "review_needed": true,
-      "review_reasons": [
-        "tier1 duplicates option names across upgrade ids"
-      ],
+      "explanation_summary": "Safe Mithral Skin; tier1 duplicates resolved to lowest upgrade_id per name.",
+      "review_needed": false,
+      "review_reasons": [],
       "options_by_tier": {
         "0": [
           {
@@ -9791,13 +9804,11 @@
       "sources": {
         "csv_default_label": null,
         "csv_label_maps_to": null,
-        "csv_advice_text": "Other Bargain options and Dark Bargain are conditional; only Eldath is universal."
+        "csv_advice_text": "Tier1 reuses deity names across branch ids; advice pins lowest id per name."
       },
-      "explanation_summary": "Safe Bargain With Eldath; other Bargains/Dark Bargain stay conditional.",
-      "review_needed": true,
-      "review_reasons": [
-        "No CSV; tier1 still has many duplicate option names across upgrade ids"
-      ],
+      "explanation_summary": "Safe Bargain With Eldath; tier1 duplicates resolved to lowest upgrade_id per name.",
+      "review_needed": false,
+      "review_reasons": [],
       "options_by_tier": {
         "0": [
           {
