@@ -165,8 +165,8 @@ def format_advisor_model_lines(model: SpecializationAdvisorModel) -> list[str]:
         bits.append(f"push: {model.push_default.name}")
     if model.farm_default is not None:
         bits.append(f"farm: {model.farm_default.name}")
-    if model.advice_model == "conditional_only" and model.safe_default is None:
-        bits.append("geen universele default")
+    if model.safe_default is None and model.advice_model == "conditional_only":
+        bits.append("contextafhankelijk")
     flags = model.context_flags
     if flags.formation_dependent:
         bits.append("formation")
@@ -180,6 +180,15 @@ def format_advisor_model_lines(model: SpecializationAdvisorModel) -> list[str]:
         reason = model.review_reasons[0] if model.review_reasons else "interne twijfel"
         lines.append(f"Review nodig: {reason}")
     return lines
+
+
+def advisor_model_line_kind(model: SpecializationAdvisorModel, line: str) -> str:
+    """Label kind for advisor model lines in the Specializations tab."""
+    if model.review_needed and line.startswith("Review nodig:"):
+        return "warn"
+    if "contextafhankelijk" in line:
+        return "muted"
+    return "body"
 
 
 def review_needed_models_for_heroes(

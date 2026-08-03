@@ -284,6 +284,31 @@ class SpecializationsTab(QWidget):
         lbl.setContentsMargins(0, 8, 0, 4)
         self._layout.addWidget(lbl)
 
+    def _render_review_needed(self, hero_ids: set[int]) -> None:
+        """Show review warnings only when formation heroes still have review_needed."""
+        if not hero_ids:
+            return
+        try:
+            from ic_gamedata.specialization_advisor_model import review_needed_models_for_heroes
+        except ImportError:
+            return
+        review_models = review_needed_models_for_heroes(hero_ids)
+        if not review_models:
+            return
+        self._section("Review nodig")
+        card = advisor_card()
+        lyt = advisor_card_layout(card)
+        lyt.addWidget(
+            advisor_lbl(
+                "Conflicterende of incomplete specialization-data voor deze party.",
+                kind="body",
+            )
+        )
+        for model in review_models:
+            reason = model.review_reasons[0] if model.review_reasons else "interne twijfel"
+            lyt.addWidget(advisor_lbl(f"· {model.name}: {reason}", kind="warn"))
+        self._layout.addWidget(card)
+
     @staticmethod
     def _label_kind(status: str | None) -> str:
         return {
@@ -393,6 +418,7 @@ class SpecializationsTab(QWidget):
             try:
                 from ic_gamedata.specialization_advisor_model import (
                     advisor_model_for_hero,
+                    advisor_model_line_kind,
                     format_advisor_model_lines,
                 )
 
@@ -401,8 +427,7 @@ class SpecializationsTab(QWidget):
                 model = None
             if model is not None:
                 for line in format_advisor_model_lines(model):
-                    kind = "warn" if model.review_needed and line.startswith("Review") else "body"
-                    lyt.addWidget(advisor_lbl(line, kind=kind))
+                    lyt.addWidget(advisor_lbl(line, kind=advisor_model_line_kind(model, line)))
             if human_specialization_reason is not None:
                 lyt.addWidget(
                     advisor_lbl(
@@ -451,31 +476,7 @@ class SpecializationsTab(QWidget):
             review_ids.update(seat.hero_id for seat in report.seat_report.seats if seat.hero_id)
         for insight in report.specialization_insights or ():
             review_ids.add(insight.hero_id)
-        try:
-            from ic_gamedata.specialization_advisor_model import review_needed_models_for_heroes
-        except ImportError:
-            review_needed_models_for_heroes = None
-        if review_needed_models_for_heroes is not None:
-            review_models = review_needed_models_for_heroes(review_ids)
-            if review_models:
-                self._section("Review nodig")
-                card = advisor_card()
-                lyt = advisor_card_layout(card)
-                lyt.addWidget(
-                    advisor_lbl(
-                        "Deze champions hebben conflicterende of incomplete specialization-data.",
-                        kind="body",
-                    )
-                )
-                for model in review_models:
-                    reason = model.review_reasons[0] if model.review_reasons else "interne twijfel"
-                    lyt.addWidget(
-                        advisor_lbl(
-                            f"· {model.name}: {reason}",
-                            kind="warn",
-                        )
-                    )
-                self._layout.addWidget(card)
+        self._render_review_needed(review_ids)
 
         # 1) In-game dialogs still open
         self._section("Open keuzes")

@@ -9,6 +9,8 @@ Per champion: kies één kant van het conflict, of houd `safe_default` op null.
 
 ## Intentional null `safe_default` (context-dependent)
 
+Confirmed **keep_null** after soft review pass; see `documentation/spec_advice_intentional_nulls.md`.
+
 | hero_id | name | summary |
 |---:|---|---|
 | 6 | Asharra | Formation-only bonds. No universal default. |
