@@ -1904,7 +1904,7 @@ RECORDS: dict[int, dict] = {
         "farm_default": None,
         "conditionals": [
             {
-                "when": "magic-heavy formation and maximize caster synergy",
+                "when": "magic-heavy formation and caster synergy is the goal",
                 "upgrade_id": 4350,
                 "name": "Urchin Pranks",
             }
@@ -1916,12 +1916,12 @@ RECORDS: dict[int, dict] = {
         },
         "sources": {
             "csv_default_label": "Magic route",
-            "csv_label_maps_to": None,
+            "csv_label_maps_to": "Shield Guardian",
             "csv_advice_text": "Urchin Pranks only in magic-heavy formations for caster synergy.",
         },
         "explanation_summary": "Safe Shield Guardian; Urchin Pranks only for magic-heavy caster synergy.",
-        "review_needed": True,
-        "review_reasons": ["Magic route unmapped; confirm Guardian vs Pranks for magic-heavy comps"],
+        "review_needed": False,
+        "review_reasons": [],
     },
     69: {
         "advice_model": "safe_default",
@@ -1987,27 +1987,27 @@ RECORDS: dict[int, dict] = {
         "farm_default": None,
         "conditionals": [
             {
-                "when": "tier0 Keep Your Friends Close needed",
+                "when": "tier0 route specifically needed → Keep Your Friends Close",
                 "upgrade_id": 14703,
                 "name": "Keep Your Friends Close",
             },
             {
-                "when": "tier0 Keep Your Future Friends Closer needed",
+                "when": "tier0 route specifically needed → Keep Your Future Friends Closer",
                 "upgrade_id": 14704,
                 "name": "Keep Your Future Friends Closer",
             },
             {
-                "when": "tier1 encounter/control needs Fury of the Fireflies",
+                "when": "tier1 encounter/control need specifically needs it → Fury of the Fireflies",
                 "upgrade_id": 14706,
                 "name": "Fury of the Fireflies",
             },
             {
-                "when": "tier1 encounter/control needs Splitting The Hive",
+                "when": "tier1 encounter/control need specifically needs it → Splitting The Hive",
                 "upgrade_id": 14707,
                 "name": "Splitting The Hive",
             },
             {
-                "when": "tier1 encounter/control needs Dance of the Ladybugs",
+                "when": "tier1 encounter/control need specifically needs it → Dance of the Ladybugs",
                 "upgrade_id": 14708,
                 "name": "Dance of the Ladybugs",
             },
@@ -2019,12 +2019,12 @@ RECORDS: dict[int, dict] = {
         },
         "sources": {
             "csv_default_label": "Support route",
-            "csv_label_maps_to": None,
-            "csv_advice_text": "Tier1 control options by encounter pattern; Support/Control labels unmapped.",
+            "csv_label_maps_to": "Everybody Gets To Be Friends",
+            "csv_advice_text": "Tier0 friends routes and tier1 control picks are encounter-specific.",
         },
-        "explanation_summary": "Safe Everybody Gets To Be Friends; tier1 control picks by encounter pattern.",
-        "review_needed": True,
-        "review_reasons": ["Support/Control routes unmapped; tier1 encounter mapping still soft"],
+        "explanation_summary": "Safe Everybody Gets To Be Friends; tier0/1 alternatives stay encounter-specific.",
+        "review_needed": False,
+        "review_reasons": [],
     },
     72: {
         "advice_model": "safe_default",
@@ -2033,12 +2033,12 @@ RECORDS: dict[int, dict] = {
         "farm_default": None,
         "conditionals": [
             {
-                "when": "situational Corrosion Master variant",
+                "when": "situational corrosion-focused variant is better",
                 "upgrade_id": 19254,
                 "name": "Corrosion Master",
             },
             {
-                "when": "situational Lingering Chill variant",
+                "when": "situational chill-focused variant is better",
                 "upgrade_id": 19255,
                 "name": "Lingering Chill",
             },
@@ -2050,12 +2050,12 @@ RECORDS: dict[int, dict] = {
         },
         "sources": {
             "csv_default_label": "Support route",
-            "csv_label_maps_to": None,
-            "csv_advice_text": "Corrosion Master/Lingering Chill are situational variants only.",
+            "csv_label_maps_to": "Dichromancy",
+            "csv_advice_text": "Corrosion Master/Lingering Chill only as situational variants.",
         },
         "explanation_summary": "Safe Dichromancy; Corrosion Master/Lingering Chill are situational only.",
-        "review_needed": True,
-        "review_reasons": ["Support route unmapped; confirm when Corrosion/Chill beat Dichromancy"],
+        "review_needed": False,
+        "review_reasons": [],
     },
     73: {
         "advice_model": "safe_default",
@@ -2064,12 +2064,12 @@ RECORDS: dict[int, dict] = {
         "farm_default": None,
         "conditionals": [
             {
-                "when": "specific utility interaction needs Over Excited",
+                "when": "specific utility interaction is needed",
                 "upgrade_id": 4750,
                 "name": "Over Excited",
             },
             {
-                "when": "death-prevention interaction needs The Show Must Go On",
+                "when": "death-prevention interaction is needed",
                 "upgrade_id": 4751,
                 "name": "The Show Must Go On",
             },
@@ -2081,12 +2081,12 @@ RECORDS: dict[int, dict] = {
         },
         "sources": {
             "csv_default_label": "Support route",
-            "csv_label_maps_to": None,
-            "csv_advice_text": "Over Excited/Show Must Go On only for utility or death-prevention needs.",
+            "csv_label_maps_to": "Baeloth's Birthday Party",
+            "csv_advice_text": "Over Excited for utility; Show Must Go On for death-prevention.",
         },
         "explanation_summary": "Safe Birthday Party; Over Excited/Show Must Go On for utility/death-prevention.",
-        "review_needed": True,
-        "review_reasons": ["Support/Djinn routes unmapped; utility vs death-prevention triggers soft"],
+        "review_needed": False,
+        "review_reasons": [],
     },
     74: {
         "advice_model": "farm_default",
@@ -2095,12 +2095,12 @@ RECORDS: dict[int, dict] = {
         "farm_default": _choice(4766, "Additional Scatter Tacks"),
         "conditionals": [
             {
-                "when": "speed/navigation style needs Path Finder",
+                "when": "navigation speed or pathing is the goal",
                 "upgrade_id": 4765,
                 "name": "Path Finder",
             },
             {
-                "when": "control/debuff-heavy scenario needs Reversal of Fortunes",
+                "when": "control or debuff-heavy zones are the goal",
                 "upgrade_id": 4767,
                 "name": "Reversal of Fortunes",
             },
@@ -2112,12 +2112,12 @@ RECORDS: dict[int, dict] = {
         },
         "sources": {
             "csv_default_label": "Speed route",
-            "csv_label_maps_to": None,
+            "csv_label_maps_to": "Additional Scatter Tacks",
             "csv_advice_text": "Path Finder for navigation speed; Reversal for control/debuff zones.",
         },
         "explanation_summary": "Safe/farm/push Scatter Tacks; Path Finder and Reversal are situational.",
-        "review_needed": True,
-        "review_reasons": ["Speed/Control routes unmapped to exact option names"],
+        "review_needed": False,
+        "review_reasons": [],
     },
     75: {
         "advice_model": "farm_default",
@@ -2156,14 +2156,14 @@ RECORDS: dict[int, dict] = {
         "push_default": _choice(4909, "Blazing Soul"),
         "farm_default": None,
         "conditionals": [
-            {"when": "tier0 Long Burn needed", "upgrade_id": 4910, "name": "Long Burn"},
+            {"when": "tier0 burn-focused route is needed", "upgrade_id": 4910, "name": "Long Burn"},
             {
-                "when": "tier1 push/run goal needs Sirens' Connection",
+                "when": "tier1 run goal prefers the siren route",
                 "upgrade_id": 4911,
                 "name": "Sirens' Connection",
             },
             {
-                "when": "tier1 push/run goal needs Fierce Connection",
+                "when": "tier1 run goal prefers the fierce route",
                 "upgrade_id": 4912,
                 "name": "Fierce Connection",
             },
@@ -2175,12 +2175,12 @@ RECORDS: dict[int, dict] = {
         },
         "sources": {
             "csv_default_label": "Support route",
-            "csv_label_maps_to": None,
-            "csv_advice_text": "Tier1 Sirens/Fierce Connection split by run goal.",
+            "csv_label_maps_to": "Blazing Soul",
+            "csv_advice_text": "Long Burn is tier0 burn; Sirens/Fierce Connection split by run goal.",
         },
-        "explanation_summary": "Safe Blazing Soul; tier1 connections are run-goal conditionals.",
-        "review_needed": True,
-        "review_reasons": ["Support route unmapped; tier1 run-goal mapping still soft"],
+        "explanation_summary": "Safe Blazing Soul; Long Burn and tier1 connections stay contextual.",
+        "review_needed": False,
+        "review_reasons": [],
     },
     77: {
         "advice_model": "safe_default",
@@ -2189,12 +2189,12 @@ RECORDS: dict[int, dict] = {
         "farm_default": None,
         "conditionals": [
             {
-                "when": "adjacency/team composition prefers Extra Judgy",
+                "when": "adjacency or team composition prefers the alternate support route",
                 "upgrade_id": 17750,
                 "name": "Extra Judgy",
             },
             {
-                "when": "adjacency/team composition prefers Heroes of the Planes",
+                "when": "adjacency or team composition prefers the other positional route",
                 "upgrade_id": 17751,
                 "name": "Heroes of the Planes",
             },
@@ -2206,12 +2206,12 @@ RECORDS: dict[int, dict] = {
         },
         "sources": {
             "csv_default_label": "Support route",
-            "csv_label_maps_to": None,
+            "csv_label_maps_to": "Expansive Vision",
             "csv_advice_text": "Extra Judgy/Heroes of the Planes only when adjacency/comp prefers them.",
         },
         "explanation_summary": "Safe Expansive Vision; Extra Judgy/Planes only for adjacency/comp fits.",
-        "review_needed": True,
-        "review_reasons": ["Support/Positional routes unmapped"],
+        "review_needed": False,
+        "review_reasons": [],
     },
     78: {
         "advice_model": "safe_default",
@@ -2220,7 +2220,7 @@ RECORDS: dict[int, dict] = {
         "farm_default": None,
         "conditionals": [
             {
-                "when": "healing/survival is the main problem",
+                "when": "healing or survival is the main problem",
                 "upgrade_id": 5576,
                 "name": "Breath of the Phoenix",
             }
@@ -2232,12 +2232,12 @@ RECORDS: dict[int, dict] = {
         },
         "sources": {
             "csv_default_label": "Healing route",
-            "csv_label_maps_to": None,
+            "csv_label_maps_to": "Tailfeather of the Phoenix",
             "csv_advice_text": "Breath of the Phoenix only when healing/survival is the main problem.",
         },
         "explanation_summary": "Safe Tailfeather; Breath only when healing/survival is the main problem.",
-        "review_needed": True,
-        "review_reasons": ["Healing/Support routes unmapped to exact option names"],
+        "review_needed": False,
+        "review_reasons": [],
     },
     79: {
         "advice_model": "safe_default",
@@ -2246,14 +2246,30 @@ RECORDS: dict[int, dict] = {
         "farm_default": None,
         "conditionals": [
             {
-                "when": "tier0 Disintegrating Wall of Light needed",
+                "when": "tier0 alternate wall route is explicitly needed",
                 "upgrade_id": 13425,
                 "name": "Disintegrating Wall of Light",
             },
-            {"when": "tier1 puzzle/formation Child's Play", "upgrade_id": 13420, "name": "Child's Play"},
-            {"when": "tier1 puzzle/formation Pen and Paper", "upgrade_id": 13421, "name": "Pen and Paper"},
-            {"when": "tier1 puzzle/formation Sunday Edition", "upgrade_id": 13422, "name": "Sunday Edition"},
-            {"when": "tier1 puzzle/formation Brain Break", "upgrade_id": 13423, "name": "Brain Break"},
+            {
+                "when": "tier1 puzzle or formation route is explicitly needed → Child's Play",
+                "upgrade_id": 13420,
+                "name": "Child's Play",
+            },
+            {
+                "when": "tier1 puzzle or formation route is explicitly needed → Pen and Paper",
+                "upgrade_id": 13421,
+                "name": "Pen and Paper",
+            },
+            {
+                "when": "tier1 puzzle or formation route is explicitly needed → Sunday Edition",
+                "upgrade_id": 13422,
+                "name": "Sunday Edition",
+            },
+            {
+                "when": "tier1 puzzle or formation route is explicitly needed → Brain Break",
+                "upgrade_id": 13423,
+                "name": "Brain Break",
+            },
         ],
         "context_flags": {
             "formation_dependent": True,
@@ -2262,12 +2278,12 @@ RECORDS: dict[int, dict] = {
         },
         "sources": {
             "csv_default_label": "Support route",
-            "csv_label_maps_to": None,
-            "csv_advice_text": "Tier1 puzzle/formation route is context-based; Support/Puzzle unmapped.",
+            "csv_label_maps_to": "Blinding Wall of Light",
+            "csv_advice_text": "Disintegrating Wall is tier0 alt; puzzle/formation picks are tier1 context.",
         },
-        "explanation_summary": "Safe Blinding Wall; tier1 puzzle/formation picks are context conditionals.",
-        "review_needed": True,
-        "review_reasons": ["Support/Puzzle routes unmapped; tier1 puzzle mapping soft"],
+        "explanation_summary": "Safe Blinding Wall; Disintegrating Wall and puzzle/formation picks stay conditional.",
+        "review_needed": False,
+        "review_reasons": [],
     },
     80: {
         "advice_model": "safe_default",
@@ -2276,12 +2292,12 @@ RECORDS: dict[int, dict] = {
         "farm_default": None,
         "conditionals": [
             {
-                "when": "roster synergy clearly prefers Fighting Force",
+                "when": "roster synergy clearly favors the force route",
                 "upgrade_id": 16150,
                 "name": "Fighting Force",
             },
             {
-                "when": "roster synergy clearly prefers Father Figure",
+                "when": "roster synergy clearly favors the father route",
                 "upgrade_id": 16151,
                 "name": "Father Figure",
             },
@@ -2293,12 +2309,12 @@ RECORDS: dict[int, dict] = {
         },
         "sources": {
             "csv_default_label": "Fiend route",
-            "csv_label_maps_to": None,
+            "csv_label_maps_to": "Found Family",
             "csv_advice_text": "Fighting Force/Father Figure only when roster synergy clearly prefers them.",
         },
         "explanation_summary": "Safe Found Family; Fighting Force/Father Figure only for clear roster synergy.",
-        "review_needed": True,
-        "review_reasons": ["Fiend route unmapped; roster-synergy triggers soft"],
+        "review_needed": False,
+        "review_reasons": [],
     },
     81: {
         "advice_model": "safe_default",
@@ -2307,17 +2323,17 @@ RECORDS: dict[int, dict] = {
         "farm_default": None,
         "conditionals": [
             {
-                "when": "tier0 tanking needs Reflective Shield",
+                "when": "tier0 tanking needs extra shielding",
                 "upgrade_id": 13750,
                 "name": "Reflective Shield",
             },
             {
-                "when": "tier0 utility needs Relentless Avenger",
+                "when": "tier0 utility or carry-protection is better",
                 "upgrade_id": 13749,
                 "name": "Relentless Avenger",
             },
             {
-                "when": "tier1 Tyr's Eyes needed",
+                "when": "tier1 variant is selected → Tyr's Eyes",
                 "upgrade_id": 13752,
                 "name": "Tyr's Eyes",
             },
@@ -2329,15 +2345,12 @@ RECORDS: dict[int, dict] = {
         },
         "sources": {
             "csv_default_label": "Tank route",
-            "csv_label_maps_to": "Reflective Shield",
-            "csv_advice_text": "Reflective Shield/Relentless Avenger split by tanking vs utility needs.",
+            "csv_label_maps_to": "Mithral Skin",
+            "csv_advice_text": "Reflective Shield for extra shielding; Avenger for utility/carry-protection.",
         },
-        "explanation_summary": "Safe Mithral Skin; Reflective Shield/Avenger by tank vs utility; CSV maps Shield.",
+        "explanation_summary": "Safe Mithral Skin; Shield/Avenger by tank vs utility; CSV aligned to Skin.",
         "review_needed": True,
-        "review_reasons": [
-            "safe_default Mithral Skin vs csv_label_maps_to Reflective Shield",
-            "tier1 duplicates option names across upgrade ids",
-        ],
+        "review_reasons": ["tier1 duplicates option names across upgrade ids"],
     },
     83: {
         "advice_model": "safe_default",
@@ -2372,7 +2385,7 @@ RECORDS: dict[int, dict] = {
         "farm_default": None,
         "conditionals": [
             {
-                "when": "setup benefits from alternate She Hungers scaling",
+                "when": "the setup benefits from alternate scaling",
                 "upgrade_id": 6073,
                 "name": "She Hungers",
             }
@@ -2384,12 +2397,12 @@ RECORDS: dict[int, dict] = {
         },
         "sources": {
             "csv_default_label": "DPS route",
-            "csv_label_maps_to": None,
+            "csv_label_maps_to": "Eldritch Torrent",
             "csv_advice_text": "She Hungers only when the setup benefits from that alternate scaling.",
         },
         "explanation_summary": "Safe Eldritch Torrent; She Hungers only for alternate scaling setups.",
-        "review_needed": True,
-        "review_reasons": ["DPS/Utility routes unmapped to exact option names"],
+        "review_needed": False,
+        "review_reasons": [],
     },
     85: {
         "advice_model": "safe_default",
@@ -2398,7 +2411,7 @@ RECORDS: dict[int, dict] = {
         "farm_default": None,
         "conditionals": [
             {
-                "when": "specifically need Mage Hand alternate utility",
+                "when": "you specifically need the alternate utility behavior",
                 "upgrade_id": 6134,
                 "name": "Mage Hand",
             }
@@ -2410,12 +2423,12 @@ RECORDS: dict[int, dict] = {
         },
         "sources": {
             "csv_default_label": "Support route",
-            "csv_label_maps_to": None,
+            "csv_label_maps_to": "Distant Crewmates",
             "csv_advice_text": "Mage Hand only when that alternate utility behavior is specifically needed.",
         },
         "explanation_summary": "Safe Distant Crewmates; Mage Hand only for alternate utility needs.",
-        "review_needed": True,
-        "review_reasons": ["Support route unmapped"],
+        "review_needed": False,
+        "review_reasons": [],
     },
     86: {
         "advice_model": "safe_default",
@@ -2424,7 +2437,7 @@ RECORDS: dict[int, dict] = {
         "farm_default": None,
         "conditionals": [
             {
-                "when": "formation/roster alignment prefers Champions of Law",
+                "when": "formation or roster alignment prefers the law route",
                 "upgrade_id": 5460,
                 "name": "Champions of Law",
             }
@@ -2436,12 +2449,12 @@ RECORDS: dict[int, dict] = {
         },
         "sources": {
             "csv_default_label": "Tank route",
-            "csv_label_maps_to": None,
+            "csv_label_maps_to": "Champions of Good",
             "csv_advice_text": "Champions of Law only when formation/roster alignment prefers it.",
         },
         "explanation_summary": "Safe Champions of Good; Law only when formation/roster alignment prefers it.",
-        "review_needed": True,
-        "review_reasons": ["Tank/Support routes unmapped"],
+        "review_needed": False,
+        "review_reasons": [],
     },
     87: {
         "advice_model": "safe_default",
@@ -2482,12 +2495,12 @@ RECORDS: dict[int, dict] = {
         },
         "sources": {
             "csv_default_label": "Support route",
-            "csv_label_maps_to": None,
+            "csv_label_maps_to": "Green Leader, Standing By",
             "csv_advice_text": "Other colors are situational by needed support profile.",
         },
         "explanation_summary": "Safe Green Leader; other colors by needed support profile.",
-        "review_needed": True,
-        "review_reasons": ["Support route unmapped; color-to-profile mapping soft"],
+        "review_needed": False,
+        "review_reasons": [],
     },
     88: {
         "advice_model": "safe_default",
@@ -2495,17 +2508,33 @@ RECORDS: dict[int, dict] = {
         "push_default": _choice(6842, "High Charisma"),
         "farm_default": None,
         "conditionals": [
-            {"when": "tier0 High Strength", "upgrade_id": 6838, "name": "High Strength"},
-            {"when": "tier0 Low Strength", "upgrade_id": 6839, "name": "Low Strength"},
-            {"when": "tier1 High Dexterity", "upgrade_id": 6840, "name": "High Dexterity"},
-            {"when": "tier1 Low Dexterity", "upgrade_id": 6841, "name": "Low Dexterity"},
-            {"when": "tier2 High Constitution", "upgrade_id": 6978, "name": "High Constitution"},
-            {"when": "tier2 Low Constitution", "upgrade_id": 6979, "name": "Low Constitution"},
-            {"when": "tier3 High Intelligence", "upgrade_id": 6976, "name": "High Intelligence"},
-            {"when": "tier3 Low Intelligence", "upgrade_id": 6977, "name": "Low Intelligence"},
-            {"when": "tier4 High Wisdom", "upgrade_id": 6980, "name": "High Wisdom"},
-            {"when": "tier4 Low Wisdom", "upgrade_id": 6981, "name": "Low Wisdom"},
-            {"when": "tier5 Low Charisma", "upgrade_id": 6843, "name": "Low Charisma"},
+            {"when": "tier0 strength choice is needed → High Strength", "upgrade_id": 6838, "name": "High Strength"},
+            {"when": "tier0 strength choice is needed → Low Strength", "upgrade_id": 6839, "name": "Low Strength"},
+            {"when": "tier1 dexterity choice is needed → High Dexterity", "upgrade_id": 6840, "name": "High Dexterity"},
+            {"when": "tier1 dexterity choice is needed → Low Dexterity", "upgrade_id": 6841, "name": "Low Dexterity"},
+            {
+                "when": "tier2 constitution choice is needed → High Constitution",
+                "upgrade_id": 6978,
+                "name": "High Constitution",
+            },
+            {
+                "when": "tier2 constitution choice is needed → Low Constitution",
+                "upgrade_id": 6979,
+                "name": "Low Constitution",
+            },
+            {
+                "when": "tier3 intelligence choice is needed → High Intelligence",
+                "upgrade_id": 6976,
+                "name": "High Intelligence",
+            },
+            {
+                "when": "tier3 intelligence choice is needed → Low Intelligence",
+                "upgrade_id": 6977,
+                "name": "Low Intelligence",
+            },
+            {"when": "tier4 wisdom choice is needed → High Wisdom", "upgrade_id": 6980, "name": "High Wisdom"},
+            {"when": "tier4 wisdom choice is needed → Low Wisdom", "upgrade_id": 6981, "name": "Low Wisdom"},
+            {"when": "tier5 charisma choice is needed → Low Charisma", "upgrade_id": 6843, "name": "Low Charisma"},
         ],
         "context_flags": {
             "formation_dependent": True,
@@ -2514,12 +2543,12 @@ RECORDS: dict[int, dict] = {
         },
         "sources": {
             "csv_default_label": "Support route",
-            "csv_label_maps_to": None,
-            "csv_advice_text": "Each earlier stat tier is a separate conditional choice rule.",
+            "csv_label_maps_to": "High Charisma",
+            "csv_advice_text": "Each earlier/other stat tier is a separate conditional choice rule.",
         },
-        "explanation_summary": "Safe High Charisma (tier5); all earlier stat tiers are separate conditionals.",
-        "review_needed": True,
-        "review_reasons": ["Multi-tier stat picks; Support route unmapped"],
+        "explanation_summary": "Safe High Charisma (tier5); all earlier/other stat tiers are separate conditionals.",
+        "review_needed": False,
+        "review_reasons": [],
     },
     # --- batch 06 remaining ---
     89: {
@@ -2529,12 +2558,12 @@ RECORDS: dict[int, dict] = {
         "farm_default": None,
         "conditionals": [
             {
-                "when": "situational Twig Blight Green paint/scaling",
+                "when": "situational paint/scaling wants green",
                 "upgrade_id": 13718,
                 "name": "Twig Blight Green",
             },
             {
-                "when": "situational Frost Giant Blue paint/scaling",
+                "when": "situational paint/scaling wants blue",
                 "upgrade_id": 13719,
                 "name": "Frost Giant Blue",
             },
@@ -2546,12 +2575,12 @@ RECORDS: dict[int, dict] = {
         },
         "sources": {
             "csv_default_label": "Debuff focus",
-            "csv_label_maps_to": None,
+            "csv_label_maps_to": "Ochre Jelly Yellow",
             "csv_advice_text": "Green/Blue paints are situational paint/scaling choices only.",
         },
         "explanation_summary": "Safe Ochre Jelly Yellow; Green/Blue paints are situational scaling choices.",
-        "review_needed": True,
-        "review_reasons": ["Debuff/Paint focus labels unmapped"],
+        "review_needed": False,
+        "review_reasons": [],
     },
     90: {
         "advice_model": "safe_default",
@@ -2560,7 +2589,7 @@ RECORDS: dict[int, dict] = {
         "farm_default": None,
         "conditionals": [
             {
-                "when": "alternate utility route clearly better",
+                "when": "the alternate utility route is clearly better",
                 "upgrade_id": 6356,
                 "name": "Cream of the Crop",
             }
@@ -2572,12 +2601,12 @@ RECORDS: dict[int, dict] = {
         },
         "sources": {
             "csv_default_label": "Support route",
-            "csv_label_maps_to": None,
+            "csv_label_maps_to": '"Back"-Up Singer',
             "csv_advice_text": "Cream of the Crop only when that utility route is clearly better.",
         },
         "explanation_summary": "Safe Back-Up Singer; Cream of the Crop only for clearer utility route.",
-        "review_needed": True,
-        "review_reasons": ["Support route unmapped"],
+        "review_needed": False,
+        "review_reasons": [],
     },
     91: {
         "advice_model": "farm_default",
@@ -2586,12 +2615,12 @@ RECORDS: dict[int, dict] = {
         "farm_default": _choice(6910, "Mind and Body"),
         "conditionals": [
             {
-                "when": "situational Strong and Steady needed",
+                "when": "a stronger speed-focused setup specifically needs it",
                 "upgrade_id": 6909,
                 "name": "Strong and Steady",
             },
             {
-                "when": "situational Wisdom and Confidence needed",
+                "when": "a wisdom-focused setup specifically needs it",
                 "upgrade_id": 6911,
                 "name": "Wisdom and Confidence",
             },
@@ -2603,12 +2632,12 @@ RECORDS: dict[int, dict] = {
         },
         "sources": {
             "csv_default_label": "Fast Friends",
-            "csv_label_maps_to": None,
-            "csv_advice_text": "Strong and Steady / Wisdom and Confidence are situational only.",
+            "csv_label_maps_to": "Mind and Body",
+            "csv_advice_text": "Strong and Steady for speed focus; Wisdom and Confidence for wisdom focus.",
         },
         "explanation_summary": "Safe/farm/push Mind and Body; Strong/Steady and Wisdom are situational.",
-        "review_needed": True,
-        "review_reasons": ["Fast Friends label unmapped; dynamic handler present"],
+        "review_needed": False,
+        "review_reasons": [],
     },
     92: {
         "advice_model": "safe_default",
@@ -2616,13 +2645,21 @@ RECORDS: dict[int, dict] = {
         "push_default": _choice(17071, "Eldritch Claw Tattoo"),
         "farm_default": None,
         "conditionals": [
-            {"when": "situational Hunger For Blood", "upgrade_id": 17070, "name": "Hunger For Blood"},
             {
-                "when": "situational Follow The Mad Rabbit",
+                "when": "a hunger-based alternate is specifically needed",
+                "upgrade_id": 17070,
+                "name": "Hunger For Blood",
+            },
+            {
+                "when": "a rabbit-based alternate is specifically needed",
                 "upgrade_id": 17072,
                 "name": "Follow The Mad Rabbit",
             },
-            {"when": "situational Infectious Fury", "upgrade_id": 17073, "name": "Infectious Fury"},
+            {
+                "when": "a fury-based alternate is specifically needed",
+                "upgrade_id": 17073,
+                "name": "Infectious Fury",
+            },
         ],
         "context_flags": {
             "formation_dependent": False,
@@ -2631,12 +2668,12 @@ RECORDS: dict[int, dict] = {
         },
         "sources": {
             "csv_default_label": "Support route",
-            "csv_label_maps_to": None,
-            "csv_advice_text": "Hunger/Rabbit/Infectious Fury are situational alternatives only.",
+            "csv_label_maps_to": "Eldritch Claw Tattoo",
+            "csv_advice_text": "Hunger/Rabbit/Infectious Fury only when those alternates are specifically needed.",
         },
         "explanation_summary": "Safe Eldritch Claw Tattoo; other tattoos/paths are situational.",
-        "review_needed": True,
-        "review_reasons": ["Support route unmapped"],
+        "review_needed": False,
+        "review_reasons": [],
     },
     93: {
         "advice_model": "safe_default",
@@ -2644,7 +2681,7 @@ RECORDS: dict[int, dict] = {
         "push_default": _choice(9785, "Begrudging Respect"),
         "farm_default": None,
         "conditionals": [
-            {"when": "situational Holy Power", "upgrade_id": 9784, "name": "Holy Power"},
+            {"when": "holy-power route is specifically needed", "upgrade_id": 9784, "name": "Holy Power"},
             {
                 "when": "undead-focused value is real → Turn Undead",
                 "upgrade_id": 9786,
@@ -2658,12 +2695,12 @@ RECORDS: dict[int, dict] = {
         },
         "sources": {
             "csv_default_label": "Support route",
-            "csv_label_maps_to": None,
-            "csv_advice_text": "Turn Undead only when undead-focused value is real; Holy Power situational.",
+            "csv_label_maps_to": "Begrudging Respect",
+            "csv_advice_text": "Holy Power when specifically needed; Turn Undead when undead value is real.",
         },
-        "explanation_summary": "Safe Begrudging Respect; Turn Undead only for real undead value.",
-        "review_needed": True,
-        "review_reasons": ["Support/Undead routes unmapped"],
+        "explanation_summary": "Safe Begrudging Respect; Holy Power situational; Turn Undead for real undead value.",
+        "review_needed": False,
+        "review_reasons": [],
     },
     94: {
         "advice_model": "farm_default",
@@ -2703,12 +2740,12 @@ RECORDS: dict[int, dict] = {
         "farm_default": None,
         "conditionals": [
             {
-                "when": "situational Bless Their Hearts",
+                "when": "situational support variant is explicitly better → Bless Their Hearts",
                 "upgrade_id": 12316,
                 "name": "Bless Their Hearts",
             },
             {
-                "when": "situational Positive Reinforcement",
+                "when": "situational support variant is explicitly better → Positive Reinforcement",
                 "upgrade_id": 12317,
                 "name": "Positive Reinforcement",
             },
@@ -2720,12 +2757,12 @@ RECORDS: dict[int, dict] = {
         },
         "sources": {
             "csv_default_label": "Support route",
-            "csv_label_maps_to": None,
-            "csv_advice_text": "Bless Their Hearts / Positive Reinforcement are situational only.",
+            "csv_label_maps_to": "A Nudge In The Right Direction",
+            "csv_advice_text": "Bless Their Hearts / Positive Reinforcement only as explicit situational variants.",
         },
         "explanation_summary": "Safe A Nudge In The Right Direction; Bless/Positive are situational only.",
-        "review_needed": True,
-        "review_reasons": ["Support route unmapped"],
+        "review_needed": False,
+        "review_reasons": [],
     },
     96: {
         "advice_model": "safe_default",
@@ -2765,11 +2802,15 @@ RECORDS: dict[int, dict] = {
         "farm_default": None,
         "conditionals": [
             {
-                "when": "situational Your Friends are My Friends",
+                "when": "tank route specifically needs the friend-based option",
                 "upgrade_id": 7387,
                 "name": "Your Friends are My Friends",
             },
-            {"when": "situational By My Side", "upgrade_id": 7388, "name": "By My Side"},
+            {
+                "when": "utility route specifically needs the side-by-side option",
+                "upgrade_id": 7388,
+                "name": "By My Side",
+            },
         ],
         "context_flags": {
             "formation_dependent": False,
@@ -2778,12 +2819,12 @@ RECORDS: dict[int, dict] = {
         },
         "sources": {
             "csv_default_label": "Tank route",
-            "csv_label_maps_to": None,
-            "csv_advice_text": "Your Friends / By My Side are situational tank/utility variants.",
+            "csv_label_maps_to": "Best Friend Forever",
+            "csv_advice_text": "Your Friends for tank friend-based; By My Side for utility side-by-side.",
         },
-        "explanation_summary": "Safe Best Friend Forever; Friends/By My Side are situational.",
-        "review_needed": True,
-        "review_reasons": ["Tank/Utility routes unmapped"],
+        "explanation_summary": "Safe Best Friend Forever; Friends/By My Side are role-specific.",
+        "review_needed": False,
+        "review_reasons": [],
     },
     98: {
         "advice_model": "farm_default",
@@ -2792,12 +2833,12 @@ RECORDS: dict[int, dict] = {
         "farm_default": _choice(7539, "Aim Around Armor"),
         "conditionals": [
             {
-                "when": "situational Genius with Gold support/utility",
+                "when": "situational support or utility value from gold scaling is needed",
                 "upgrade_id": 7538,
                 "name": "Genius with Gold",
             },
             {
-                "when": "situational Finesse with Frost support/utility",
+                "when": "situational support or utility value from frost scaling is needed",
                 "upgrade_id": 7540,
                 "name": "Finesse with Frost",
             },
@@ -2809,12 +2850,12 @@ RECORDS: dict[int, dict] = {
         },
         "sources": {
             "csv_default_label": "Support route",
-            "csv_label_maps_to": None,
+            "csv_label_maps_to": "Aim Around Armor",
             "csv_advice_text": "Genius with Gold / Finesse with Frost are situational support/utility.",
         },
         "explanation_summary": "Safe/farm Aim Around Armor; Gold/Frost variants are situational.",
-        "review_needed": True,
-        "review_reasons": ["Support route unmapped"],
+        "review_needed": False,
+        "review_reasons": [],
     },
     99: {
         "advice_model": "safe_default",
@@ -2823,12 +2864,12 @@ RECORDS: dict[int, dict] = {
         "farm_default": None,
         "conditionals": [
             {
-                "when": "situational Where Did He Go This Time?",
+                "when": "situational utility needs the disappearance route",
                 "upgrade_id": 7849,
                 "name": "Where Did He Go This Time?",
             },
             {
-                "when": "situational Special Guest Stars",
+                "when": "situational utility needs the guest-stars route",
                 "upgrade_id": 16144,
                 "name": "Special Guest Stars",
             },
@@ -2840,12 +2881,12 @@ RECORDS: dict[int, dict] = {
         },
         "sources": {
             "csv_default_label": "Utility route",
-            "csv_label_maps_to": None,
+            "csv_label_maps_to": "Fear Not, Champions!",
             "csv_advice_text": "Where Did He Go / Special Guest Stars are situational utility choices.",
         },
         "explanation_summary": "Safe Fear Not, Champions!; other utility options are situational.",
-        "review_needed": True,
-        "review_reasons": ["Utility route unmapped"],
+        "review_needed": False,
+        "review_reasons": [],
     },
     100: {
         "advice_model": "safe_default",
@@ -2884,9 +2925,13 @@ RECORDS: dict[int, dict] = {
         "push_default": None,
         "farm_default": _choice(7999, "Meow-il-wen"),
         "conditionals": [
-            {"when": "situational Stink Like Skunk", "upgrade_id": 7997, "name": "Stink Like Skunk"},
             {
-                "when": "situational Treasures Her Friends",
+                "when": "situational gold route is explicitly desired",
+                "upgrade_id": 7997,
+                "name": "Stink Like Skunk",
+            },
+            {
+                "when": "situational support route is explicitly desired",
                 "upgrade_id": 7998,
                 "name": "Treasures Her Friends",
             },
@@ -2898,12 +2943,12 @@ RECORDS: dict[int, dict] = {
         },
         "sources": {
             "csv_default_label": "Gold route",
-            "csv_label_maps_to": None,
-            "csv_advice_text": "Stink Like Skunk / Treasures Her Friends are situational.",
+            "csv_label_maps_to": "Meow-il-wen",
+            "csv_advice_text": "Stink Like Skunk for explicit gold; Treasures Her Friends for explicit support.",
         },
         "explanation_summary": "Safe/farm Meow-il-wen; Skunk/Friends are situational.",
-        "review_needed": True,
-        "review_reasons": ["Gold/Support routes unmapped"],
+        "review_needed": False,
+        "review_reasons": [],
     },
     102: {
         "advice_model": "safe_default",
@@ -2912,11 +2957,15 @@ RECORDS: dict[int, dict] = {
         "farm_default": None,
         "conditionals": [
             {
-                "when": "situational A Grave Experience",
+                "when": "situational grave-experience route is explicitly desired",
                 "upgrade_id": 19723,
                 "name": "A Grave Experience",
             },
-            {"when": "situational A Skilled Lyre", "upgrade_id": 19725, "name": "A Skilled Lyre"},
+            {
+                "when": "situational lyre route is explicitly desired",
+                "upgrade_id": 19725,
+                "name": "A Skilled Lyre",
+            },
         ],
         "context_flags": {
             "formation_dependent": False,
@@ -2925,12 +2974,12 @@ RECORDS: dict[int, dict] = {
         },
         "sources": {
             "csv_default_label": "Support route",
-            "csv_label_maps_to": None,
-            "csv_advice_text": "Grave Experience / Skilled Lyre are situational.",
+            "csv_label_maps_to": "A Barovian Bond",
+            "csv_advice_text": "Grave Experience / Skilled Lyre only when those routes are explicitly desired.",
         },
         "explanation_summary": "Safe A Barovian Bond; Grave Experience/Lyre are situational.",
-        "review_needed": True,
-        "review_reasons": ["Support route unmapped"],
+        "review_needed": False,
+        "review_reasons": [],
     },
     103: {
         "advice_model": "farm_default",
@@ -2939,11 +2988,15 @@ RECORDS: dict[int, dict] = {
         "farm_default": _choice(8150, "My Loyal Bodyguard"),
         "conditionals": [
             {
-                "when": "situational All Hail the God Brain",
+                "when": "socialite/gold route is the explicit goal",
                 "upgrade_id": 8149,
                 "name": "All Hail the God Brain",
             },
-            {"when": "situational Family Business", "upgrade_id": 8151, "name": "Family Business"},
+            {
+                "when": "specific family/support synergies are needed",
+                "upgrade_id": 8151,
+                "name": "Family Business",
+            },
         ],
         "context_flags": {
             "formation_dependent": False,
@@ -2952,12 +3005,12 @@ RECORDS: dict[int, dict] = {
         },
         "sources": {
             "csv_default_label": "Socialite gold",
-            "csv_label_maps_to": None,
-            "csv_advice_text": "God Brain / Family Business are situational.",
+            "csv_label_maps_to": "My Loyal Bodyguard",
+            "csv_advice_text": "God Brain for explicit gold; Family Business for family/support synergies.",
         },
         "explanation_summary": "Safe/farm My Loyal Bodyguard; God Brain/Family Business situational.",
-        "review_needed": True,
-        "review_reasons": ["Socialite gold / Support labels unmapped"],
+        "review_needed": False,
+        "review_reasons": [],
     },
     104: {
         "advice_model": "safe_default",
@@ -2965,12 +3018,12 @@ RECORDS: dict[int, dict] = {
         "push_default": _choice(15635, "Embrace Evil"),
         "farm_default": None,
         "conditionals": [
-            {"when": "tier0 Hunt The Favored", "upgrade_id": 15636, "name": "Hunt The Favored"},
-            {"when": "tier0 Weaken The Fools", "upgrade_id": 15637, "name": "Weaken The Fools"},
-            {"when": "tier1 Battle Magic", "upgrade_id": 15638, "name": "Battle Magic"},
-            {"when": "tier1 Powerful Focus", "upgrade_id": 15639, "name": "Powerful Focus"},
+            {"when": "tier0 hunt route is selected", "upgrade_id": 15636, "name": "Hunt The Favored"},
+            {"when": "tier0 weaken route is selected", "upgrade_id": 15637, "name": "Weaken The Fools"},
+            {"when": "tier1 battle route is selected", "upgrade_id": 15638, "name": "Battle Magic"},
+            {"when": "tier1 focus route is selected", "upgrade_id": 15639, "name": "Powerful Focus"},
             {
-                "when": "tier1 Strike First, Strike Hard",
+                "when": "tier1 strike route is selected",
                 "upgrade_id": 15640,
                 "name": "Strike First, Strike Hard",
             },
@@ -2982,12 +3035,12 @@ RECORDS: dict[int, dict] = {
         },
         "sources": {
             "csv_default_label": "Support routing",
-            "csv_label_maps_to": None,
-            "csv_advice_text": "Tier0/tier1 alternates are situational and must stay split by tier.",
+            "csv_label_maps_to": "Embrace Evil",
+            "csv_advice_text": "Tier0 hunt/weaken and tier1 battle/focus/strike stay split by tier.",
         },
         "explanation_summary": "Safe Embrace Evil; other tier0/tier1 picks are situational conditionals.",
-        "review_needed": True,
-        "review_reasons": ["Support routing unmapped; multi-tier situational"],
+        "review_needed": False,
+        "review_reasons": [],
     },
     105: {
         "advice_model": "safe_default",
@@ -2996,17 +3049,17 @@ RECORDS: dict[int, dict] = {
         "farm_default": None,
         "conditionals": [
             {
-                "when": "situational Befriend the Magical",
+                "when": "situational magical profile is needed",
                 "upgrade_id": 8742,
                 "name": "Befriend the Magical",
             },
             {
-                "when": "situational Befriend the Friendly",
+                "when": "situational friendly profile is needed",
                 "upgrade_id": 8743,
                 "name": "Befriend the Friendly",
             },
             {
-                "when": "situational Befriend the Quick",
+                "when": "situational quick profile is needed",
                 "upgrade_id": 8744,
                 "name": "Befriend the Quick",
             },
@@ -3018,12 +3071,12 @@ RECORDS: dict[int, dict] = {
         },
         "sources": {
             "csv_default_label": "Support route",
-            "csv_label_maps_to": None,
-            "csv_advice_text": "Magical/Friendly/Quick are situational; Everybody is the stable default.",
+            "csv_label_maps_to": "Befriend Everybody!",
+            "csv_advice_text": "Magical/Friendly/Quick are profile-based swaps; Everybody is stable default.",
         },
-        "explanation_summary": "Safe Befriend Everybody!; Magical/Friendly/Quick are situational.",
-        "review_needed": True,
-        "review_reasons": ["Support route unmapped; dynamic handler present"],
+        "explanation_summary": "Safe Befriend Everybody!; Magical/Friendly/Quick are profile-based.",
+        "review_needed": False,
+        "review_reasons": [],
     },
     106: {
         "advice_model": "safe_default",
@@ -3031,14 +3084,22 @@ RECORDS: dict[int, dict] = {
         "push_default": _choice(7525, "Charred Souls"),
         "farm_default": None,
         "conditionals": [
-            {"when": "offense needs Sliced Souls", "upgrade_id": 7523, "name": "Sliced Souls"},
-            {"when": "offense needs Skewered Souls", "upgrade_id": 7524, "name": "Skewered Souls"},
             {
-                "when": "tier1 survival needs Resilient Spirit",
+                "when": "offense-focused route is explicitly desired → Sliced Souls",
+                "upgrade_id": 7523,
+                "name": "Sliced Souls",
+            },
+            {
+                "when": "offense-focused route is explicitly desired → Skewered Souls",
+                "upgrade_id": 7524,
+                "name": "Skewered Souls",
+            },
+            {
+                "when": "tier1 survival is the main need",
                 "upgrade_id": 7526,
                 "name": "Resilient Spirit",
             },
-            {"when": "tier1 offense needs Wild Spirit", "upgrade_id": 7527, "name": "Wild Spirit"},
+            {"when": "tier1 offense is the main need", "upgrade_id": 7527, "name": "Wild Spirit"},
         ],
         "context_flags": {
             "formation_dependent": False,
@@ -3047,12 +3108,12 @@ RECORDS: dict[int, dict] = {
         },
         "sources": {
             "csv_default_label": "Tank route",
-            "csv_label_maps_to": None,
-            "csv_advice_text": "Sliced/Skewered and Spirit picks by survival vs offense needs.",
+            "csv_label_maps_to": "Charred Souls",
+            "csv_advice_text": "Sliced/Skewered for offense; Resilient vs Wild Spirit by survival vs offense.",
         },
         "explanation_summary": "Safe Charred Souls; other souls/spirits by survival vs offense needs.",
-        "review_needed": True,
-        "review_reasons": ["Tank/Damage routes unmapped; multi-tier situational"],
+        "review_needed": False,
+        "review_reasons": [],
     },
     113: {
         "advice_model": "safe_default",
@@ -3060,10 +3121,14 @@ RECORDS: dict[int, dict] = {
         "push_default": _choice(8877, "Atonement Begins with an Apology"),
         "farm_default": None,
         "conditionals": [
-            {"when": "tier0 Team Chaos Team", "upgrade_id": 8878, "name": "Team Chaos Team"},
-            {"when": "tier1 Smoky Bombs", "upgrade_id": 8879, "name": "Smoky Bombs"},
-            {"when": "tier1 Health Kick", "upgrade_id": 8880, "name": "Health Kick"},
-            {"when": "tier1 Oxventure Capitalism", "upgrade_id": 8881, "name": "Oxventure Capitalism"},
+            {"when": "tier0 chaos route is selected", "upgrade_id": 8878, "name": "Team Chaos Team"},
+            {"when": "tier1 bomb route is selected", "upgrade_id": 8879, "name": "Smoky Bombs"},
+            {"when": "tier1 health route is selected", "upgrade_id": 8880, "name": "Health Kick"},
+            {
+                "when": "tier1 capitalism route is selected",
+                "upgrade_id": 8881,
+                "name": "Oxventure Capitalism",
+            },
         ],
         "context_flags": {
             "formation_dependent": False,
@@ -3072,12 +3137,12 @@ RECORDS: dict[int, dict] = {
         },
         "sources": {
             "csv_default_label": "Support route",
-            "csv_label_maps_to": None,
+            "csv_label_maps_to": "Atonement Begins with an Apology",
             "csv_advice_text": "Chaos/Bombs/Health/Capitalism are situational tier-based choices.",
         },
         "explanation_summary": "Safe Atonement Apology; other tier0/tier1 picks are situational.",
-        "review_needed": True,
-        "review_reasons": ["Support/Control routes unmapped; multi-tier situational"],
+        "review_needed": False,
+        "review_reasons": [],
     },
     114: {
         "advice_model": "safe_default",
@@ -3086,7 +3151,7 @@ RECORDS: dict[int, dict] = {
         "farm_default": None,
         "conditionals": [
             {
-                "when": "ranged-specific setup prefers Robust Rivals",
+                "when": "ranged-specific setup prefers the ranged route",
                 "upgrade_id": 9355,
                 "name": "Robust Rivals",
             }
@@ -3098,12 +3163,12 @@ RECORDS: dict[int, dict] = {
         },
         "sources": {
             "csv_default_label": "Support route",
-            "csv_label_maps_to": None,
+            "csv_label_maps_to": "Potent Poison",
             "csv_advice_text": "Robust Rivals only when ranged-specific setup actually prefers it.",
         },
         "explanation_summary": "Safe Potent Poison; Robust Rivals only for preferred ranged setups.",
-        "review_needed": True,
-        "review_reasons": ["Support/Ranged routes unmapped"],
+        "review_needed": False,
+        "review_reasons": [],
     },
     # --- batch 07 remaining ---
     115: {
@@ -3113,12 +3178,12 @@ RECORDS: dict[int, dict] = {
         "farm_default": _choice(9608, "Mood: Anxious"),
         "conditionals": [
             {
-                "when": "specific speed need makes Mood: Relaxed better",
+                "when": "specific speed need makes the relaxed route better",
                 "upgrade_id": 9607,
                 "name": "Mood: Relaxed",
             },
             {
-                "when": "specific durability need makes Mood: Determined better",
+                "when": "specific durability need makes the determined route better",
                 "upgrade_id": 9609,
                 "name": "Mood: Determined",
             },
@@ -3130,12 +3195,12 @@ RECORDS: dict[int, dict] = {
         },
         "sources": {
             "csv_default_label": "Speed route",
-            "csv_label_maps_to": None,
-            "csv_advice_text": "Relaxed/Determined only for specific speed or durability needs.",
+            "csv_label_maps_to": "Mood: Anxious",
+            "csv_advice_text": "Relaxed for speed needs; Determined for durability needs.",
         },
         "explanation_summary": "Safe/farm/push Mood: Anxious; Relaxed/Determined only for speed/durability needs.",
-        "review_needed": True,
-        "review_reasons": ["Speed/Support routes unmapped to exact mood option names"],
+        "review_needed": False,
+        "review_reasons": [],
     },
     116: {
         "advice_model": "safe_default",
@@ -3144,12 +3209,12 @@ RECORDS: dict[int, dict] = {
         "farm_default": None,
         "conditionals": [
             {
-                "when": "situational Mercenary for Hire evil/carry variant",
+                "when": "situational evil/carry variant is desired → Mercenary for Hire",
                 "upgrade_id": 9620,
                 "name": "Mercenary for Hire",
             },
             {
-                "when": "situational League of Malevolence evil/carry variant",
+                "when": "situational evil/carry variant is desired → League of Malevolence",
                 "upgrade_id": 9621,
                 "name": "League of Malevolence",
             },
@@ -3161,12 +3226,12 @@ RECORDS: dict[int, dict] = {
         },
         "sources": {
             "csv_default_label": "DPS route",
-            "csv_label_maps_to": None,
+            "csv_label_maps_to": "Chaos Reigns",
             "csv_advice_text": "Mercenary / League of Malevolence are situational evil/carry variants.",
         },
         "explanation_summary": "Safe Chaos Reigns; Mercenary/League are situational evil/carry variants.",
-        "review_needed": True,
-        "review_reasons": ["DPS/Evil routes unmapped"],
+        "review_needed": False,
+        "review_reasons": [],
     },
     117: {
         "advice_model": "safe_default",
@@ -3175,17 +3240,17 @@ RECORDS: dict[int, dict] = {
         "farm_default": None,
         "conditionals": [
             {
-                "when": "enemy-type-specific Beast Slaying Arrows",
+                "when": "enemy-type-specific beast value is needed",
                 "upgrade_id": 9643,
                 "name": "Beast Slaying Arrows",
             },
             {
-                "when": "enemy-type-specific Dragon Slaying Arrows",
+                "when": "enemy-type-specific dragon value is needed",
                 "upgrade_id": 9644,
                 "name": "Dragon Slaying Arrows",
             },
             {
-                "when": "enemy-type-specific Monstrosity Slaying Arrows",
+                "when": "enemy-type-specific monstrosity value is needed",
                 "upgrade_id": 9645,
                 "name": "Monstrosity Slaying Arrows",
             },
@@ -3197,12 +3262,12 @@ RECORDS: dict[int, dict] = {
         },
         "sources": {
             "csv_default_label": "Support route",
-            "csv_label_maps_to": None,
+            "csv_label_maps_to": "Aberration Slaying Arrows",
             "csv_advice_text": "Beast/Dragon/Monstrosity arrows only for enemy-type-specific value.",
         },
         "explanation_summary": "Safe Aberration Slaying Arrows; other arrow types only for enemy-type value.",
-        "review_needed": True,
-        "review_reasons": ["Support route unmapped; enemy-type arrow choice soft"],
+        "review_needed": False,
+        "review_reasons": [],
     },
     118: {
         "advice_model": "safe_default",
@@ -3211,7 +3276,7 @@ RECORDS: dict[int, dict] = {
         "farm_default": None,
         "conditionals": [
             {
-                "when": "Shadows of the Underdark route explicitly better",
+                "when": "Shadows of the Underdark route is explicitly better",
                 "upgrade_id": 9761,
                 "name": "Shadows of the Underdark",
             }
@@ -3223,12 +3288,12 @@ RECORDS: dict[int, dict] = {
         },
         "sources": {
             "csv_default_label": "Support route",
-            "csv_label_maps_to": None,
+            "csv_label_maps_to": "Curse of the Dhampir",
             "csv_advice_text": "Shadows of the Underdark only when that route is explicitly better.",
         },
         "explanation_summary": "Safe Curse of the Dhampir; Shadows only when explicitly better.",
-        "review_needed": True,
-        "review_reasons": ["Support route unmapped"],
+        "review_needed": False,
+        "review_reasons": [],
     },
     119: {
         "advice_model": "safe_default",
@@ -3237,7 +3302,7 @@ RECORDS: dict[int, dict] = {
         "farm_default": None,
         "conditionals": [
             {
-                "when": "alternate alignment/utility path needs Book of Vile Darkness",
+                "when": "alternate alignment or utility path is the right fit",
                 "upgrade_id": 19681,
                 "name": "Book of Vile Darkness",
             }
@@ -3253,8 +3318,8 @@ RECORDS: dict[int, dict] = {
             "csv_advice_text": "Book of Vile Darkness only when that alignment/utility path is right.",
         },
         "explanation_summary": "Safe Book of Exalted Deeds; Vile Darkness only for alternate alignment path.",
-        "review_needed": True,
-        "review_reasons": ["No CSV source; confirm when Vile Darkness beats Exalted"],
+        "review_needed": False,
+        "review_reasons": [],
     },
     120: {
         "advice_model": "safe_default",
@@ -3262,8 +3327,16 @@ RECORDS: dict[int, dict] = {
         "push_default": _choice(10617, "Confidant"),
         "farm_default": None,
         "conditionals": [
-            {"when": "situational Unwavering", "upgrade_id": 10615, "name": "Unwavering"},
-            {"when": "situational Emboldened", "upgrade_id": 10616, "name": "Emboldened"},
+            {
+                "when": "situational unwavering profile is needed",
+                "upgrade_id": 10615,
+                "name": "Unwavering",
+            },
+            {
+                "when": "situational emboldened profile is needed",
+                "upgrade_id": 10616,
+                "name": "Emboldened",
+            },
         ],
         "context_flags": {
             "formation_dependent": False,
@@ -3272,12 +3345,12 @@ RECORDS: dict[int, dict] = {
         },
         "sources": {
             "csv_default_label": "Support route",
-            "csv_label_maps_to": None,
-            "csv_advice_text": "Unwavering and Emboldened are situational only.",
+            "csv_label_maps_to": "Confidant",
+            "csv_advice_text": "Unwavering and Emboldened are situational profile swaps.",
         },
         "explanation_summary": "Safe Confidant; Unwavering/Emboldened are situational only.",
-        "review_needed": True,
-        "review_reasons": ["Support route unmapped"],
+        "review_needed": False,
+        "review_reasons": [],
     },
     121: {
         "advice_model": "safe_default",
@@ -3285,8 +3358,16 @@ RECORDS: dict[int, dict] = {
         "push_default": _choice(10672, "Independent"),
         "farm_default": None,
         "conditionals": [
-            {"when": "situational Methodical utility", "upgrade_id": 10670, "name": "Methodical"},
-            {"when": "situational Intellectual utility", "upgrade_id": 10671, "name": "Intellectual"},
+            {
+                "when": "situational methodical utility is needed",
+                "upgrade_id": 10670,
+                "name": "Methodical",
+            },
+            {
+                "when": "situational intellectual utility is needed",
+                "upgrade_id": 10671,
+                "name": "Intellectual",
+            },
         ],
         "context_flags": {
             "formation_dependent": False,
@@ -3295,12 +3376,12 @@ RECORDS: dict[int, dict] = {
         },
         "sources": {
             "csv_default_label": "Tank route",
-            "csv_label_maps_to": None,
+            "csv_label_maps_to": "Independent",
             "csv_advice_text": "Methodical and Intellectual are situational utility variants.",
         },
         "explanation_summary": "Safe Independent; Methodical/Intellectual are situational utility variants.",
-        "review_needed": True,
-        "review_reasons": ["Tank/Utility routes unmapped"],
+        "review_needed": False,
+        "review_reasons": [],
     },
     122: {
         "advice_model": "safe_default",
@@ -3309,12 +3390,12 @@ RECORDS: dict[int, dict] = {
         "farm_default": None,
         "conditionals": [
             {
-                "when": "situational Truly Awful Stats",
+                "when": "situational awful-stats variant is needed",
                 "upgrade_id": 10799,
                 "name": "Truly Awful Stats",
             },
             {
-                "when": 'situational The "A" In Chaotic Is For Antrius',
+                "when": "situational chaotic variant is needed",
                 "upgrade_id": 10800,
                 "name": 'The "A" In Chaotic Is For Antrius',
             },
@@ -3326,12 +3407,12 @@ RECORDS: dict[int, dict] = {
         },
         "sources": {
             "csv_default_label": "Support route",
-            "csv_label_maps_to": None,
+            "csv_label_maps_to": "Bard College",
             "csv_advice_text": "Truly Awful Stats / Chaotic Antrius are situational variants.",
         },
         "explanation_summary": "Safe Bard College; Awful Stats/Chaotic Antrius are situational.",
-        "review_needed": True,
-        "review_reasons": ["Support route unmapped"],
+        "review_needed": False,
+        "review_reasons": [],
     },
     123: {
         "advice_model": "safe_default",
@@ -3340,12 +3421,12 @@ RECORDS: dict[int, dict] = {
         "farm_default": None,
         "conditionals": [
             {
-                "when": "alternate setup clearly better → Infernal Impact",
+                "when": "the alternate setup is clearly better → Infernal Impact",
                 "upgrade_id": 10890,
                 "name": "Infernal Impact",
             },
             {
-                "when": "alternate setup clearly better → Flawed Force",
+                "when": "the alternate setup is clearly better → Flawed Force",
                 "upgrade_id": 10891,
                 "name": "Flawed Force",
             },
@@ -3357,12 +3438,12 @@ RECORDS: dict[int, dict] = {
         },
         "sources": {
             "csv_default_label": "Support route",
-            "csv_label_maps_to": None,
+            "csv_label_maps_to": "Anarchy Amplified",
             "csv_advice_text": "Infernal Impact / Flawed Force only when the alternate setup is clearly better.",
         },
         "explanation_summary": "Safe Anarchy Amplified; Infernal/Flawed only when clearly better.",
-        "review_needed": True,
-        "review_reasons": ["Support route unmapped"],
+        "review_needed": False,
+        "review_reasons": [],
     },
     124: {
         "advice_model": "safe_default",
@@ -3433,14 +3514,14 @@ RECORDS: dict[int, dict] = {
         "farm_default": None,
         "conditionals": [
             {
-                "when": "situational A Righteous Event for progress/quest goals",
-                "upgrade_id": 19738,
-                "name": "A Righteous Event",
-            },
-            {
-                "when": "setup prefers Valor's Call instead",
+                "when": "use the support option that best fits quest/progress goals",
                 "upgrade_id": 19733,
                 "name": "Valor's Call",
+            },
+            {
+                "when": "specific event or progression setup makes it better",
+                "upgrade_id": 19738,
+                "name": "A Righteous Event",
             },
         ],
         "context_flags": {
@@ -3450,15 +3531,12 @@ RECORDS: dict[int, dict] = {
         },
         "sources": {
             "csv_default_label": "Support route",
-            "csv_label_maps_to": "Valor's Call",
-            "csv_advice_text": "A Righteous Event situational; pick support that best fits progress/quest goals.",
+            "csv_label_maps_to": "Honorary Member",
+            "csv_advice_text": "Valor's Call for quest/progress fit; Righteous Event for specific progression setups.",
         },
-        "explanation_summary": "Safe Honorary Member; CSV maps Support→Valor's Call; Righteous Event situational.",
-        "review_needed": True,
-        "review_reasons": [
-            "safe_default Honorary Member vs csv_label_maps_to Valor's Call",
-            "dynamic handler present",
-        ],
+        "explanation_summary": "Safe Honorary Member; Valor's Call/Righteous Event only for quest/progress setups.",
+        "review_needed": False,
+        "review_reasons": [],
     },
     127: {
         "advice_model": "safe_default",
@@ -3466,15 +3544,23 @@ RECORDS: dict[int, dict] = {
         "push_default": _choice(12094, "Friends in High Places"),
         "farm_default": None,
         "conditionals": [
-            {"when": "tier0 Front Deck positional", "upgrade_id": 12090, "name": "Front Deck"},
-            {"when": "tier0 Rear Deck positional", "upgrade_id": 12091, "name": "Rear Deck"},
             {
-                "when": "tier1 Friends in Low Places context",
+                "when": "tier0 front deck positional setup",
+                "upgrade_id": 12090,
+                "name": "Front Deck",
+            },
+            {
+                "when": "tier0 rear deck positional setup",
+                "upgrade_id": 12091,
+                "name": "Rear Deck",
+            },
+            {
+                "when": "tier1 low places route is needed",
                 "upgrade_id": 12092,
                 "name": "Friends in Low Places",
             },
             {
-                "when": "tier1 Friends in Meh Places context",
+                "when": "tier1 meh places route is needed",
                 "upgrade_id": 12093,
                 "name": "Friends in Meh Places",
             },
@@ -3486,12 +3572,12 @@ RECORDS: dict[int, dict] = {
         },
         "sources": {
             "csv_default_label": "Support route",
-            "csv_label_maps_to": None,
+            "csv_label_maps_to": "Friends in High Places",
             "csv_advice_text": "Tier0 deck and tier1 Low/Meh Places are positional/context-based.",
         },
         "explanation_summary": "Safe Friends in High Places; deck/Low/Meh Places are positional conditionals.",
-        "review_needed": True,
-        "review_reasons": ["Support route unmapped; multi-tier positional"],
+        "review_needed": False,
+        "review_reasons": [],
     },
     128: {
         "advice_model": "farm_default",
@@ -3499,8 +3585,16 @@ RECORDS: dict[int, dict] = {
         "push_default": _choice(12119, "Battle Master"),
         "farm_default": _choice(12119, "Battle Master"),
         "conditionals": [
-            {"when": "situational Champion", "upgrade_id": 12118, "name": "Champion"},
-            {"when": "situational Eldritch Knight", "upgrade_id": 12120, "name": "Eldritch Knight"},
+            {
+                "when": "situational speed-oriented route is needed",
+                "upgrade_id": 12118,
+                "name": "Champion",
+            },
+            {
+                "when": "situational alternative combat route is needed",
+                "upgrade_id": 12120,
+                "name": "Eldritch Knight",
+            },
         ],
         "context_flags": {
             "formation_dependent": False,
@@ -3509,12 +3603,12 @@ RECORDS: dict[int, dict] = {
         },
         "sources": {
             "csv_default_label": "Speed route",
-            "csv_label_maps_to": None,
-            "csv_advice_text": "Champion/Eldritch Knight situational; Battle Master is speed/support default.",
+            "csv_label_maps_to": "Battle Master",
+            "csv_advice_text": "Champion for speed-oriented; Eldritch Knight for alternate combat.",
         },
         "explanation_summary": "Safe/farm/push Battle Master; Champion/Eldritch Knight are situational.",
-        "review_needed": True,
-        "review_reasons": ["Speed/Support routes unmapped"],
+        "review_needed": False,
+        "review_reasons": [],
     },
     129: {
         "advice_model": "safe_default",
@@ -3522,10 +3616,18 @@ RECORDS: dict[int, dict] = {
         "push_default": _choice(12496, "Arcane Trickster"),
         "farm_default": None,
         "conditionals": [
-            {"when": "tier0 Outflank (Top)", "upgrade_id": 12493, "name": "Outflank (Top)"},
-            {"when": "tier0 Outflank (Bottom)", "upgrade_id": 12494, "name": "Outflank (Bottom)"},
-            {"when": "tier1 Thief", "upgrade_id": 12495, "name": "Thief"},
-            {"when": "tier1 Assassin", "upgrade_id": 12497, "name": "Assassin"},
+            {
+                "when": "top/bottom tier0 route explicitly chosen → Outflank (Top)",
+                "upgrade_id": 12493,
+                "name": "Outflank (Top)",
+            },
+            {
+                "when": "top/bottom tier0 route explicitly chosen → Outflank (Bottom)",
+                "upgrade_id": 12494,
+                "name": "Outflank (Bottom)",
+            },
+            {"when": "tier1 thief route is needed", "upgrade_id": 12495, "name": "Thief"},
+            {"when": "tier1 assassin route is needed", "upgrade_id": 12497, "name": "Assassin"},
         ],
         "context_flags": {
             "formation_dependent": True,
@@ -3534,15 +3636,12 @@ RECORDS: dict[int, dict] = {
         },
         "sources": {
             "csv_default_label": "Damage route",
-            "csv_label_maps_to": "Outflank (Top)",
-            "csv_advice_text": "Tier0 Top/Bottom and tier1 Thief/Assassin are situational.",
+            "csv_label_maps_to": "Arcane Trickster",
+            "csv_advice_text": "Outflank Top/Bottom and Thief/Assassin only when those routes are explicit.",
         },
-        "explanation_summary": "Safe Arcane Trickster; CSV maps Damage→Outflank Top; other tiers situational.",
-        "review_needed": True,
-        "review_reasons": [
-            "safe_default Arcane Trickster vs csv_label_maps_to Outflank (Top)",
-            "multi-tier situational",
-        ],
+        "explanation_summary": "Safe Arcane Trickster; Outflank/Thief/Assassin stay conditional.",
+        "review_needed": False,
+        "review_reasons": [],
     },
     136: {
         "advice_model": "safe_default",
@@ -3578,7 +3677,7 @@ RECORDS: dict[int, dict] = {
         "farm_default": None,
         "conditionals": [
             {
-                "when": "alternate support route preferable → Smooth Negotiators",
+                "when": "alternate support route is preferable",
                 "upgrade_id": 12511,
                 "name": "Smooth Negotiators",
             }
@@ -3590,12 +3689,12 @@ RECORDS: dict[int, dict] = {
         },
         "sources": {
             "csv_default_label": "Support route",
-            "csv_label_maps_to": None,
+            "csv_label_maps_to": "Best And The Brightest",
             "csv_advice_text": "Smooth Negotiators only when that alternate support route is preferable.",
         },
         "explanation_summary": "Safe Best And The Brightest; Smooth Negotiators only when preferable.",
-        "review_needed": True,
-        "review_reasons": ["Support route unmapped"],
+        "review_needed": False,
+        "review_reasons": [],
     },
     139: {
         "advice_model": "farm_default",
@@ -3609,7 +3708,7 @@ RECORDS: dict[int, dict] = {
                 "name": "Defender of the Meek",
             },
             {
-                "when": "setup prefers Vanguard of the Quick instead",
+                "when": "speed route is specifically desired → Vanguard of the Quick",
                 "upgrade_id": 12983,
                 "name": "Vanguard of the Quick",
             },
@@ -3621,14 +3720,12 @@ RECORDS: dict[int, dict] = {
         },
         "sources": {
             "csv_default_label": "Speed route",
-            "csv_label_maps_to": "Vanguard of the Quick",
-            "csv_advice_text": "Defender of the Meek only when survivability is the main need.",
+            "csv_label_maps_to": "Callessa's Blessed",
+            "csv_advice_text": "Defender for survivability; Vanguard only when speed is specifically desired.",
         },
-        "explanation_summary": "Safe Callessa's Blessed; CSV maps Speed→Vanguard; Defender for survival.",
-        "review_needed": True,
-        "review_reasons": [
-            "safe_default Callessa's Blessed vs csv_label_maps_to Vanguard of the Quick",
-        ],
+        "explanation_summary": "Safe Callessa's Blessed; Defender for survival; Vanguard only for explicit speed.",
+        "review_needed": False,
+        "review_reasons": [],
     },
     140: {
         "advice_model": "safe_default",
@@ -3637,17 +3734,17 @@ RECORDS: dict[int, dict] = {
         "farm_default": None,
         "conditionals": [
             {
-                "when": "tier0 Wisdom of the Ages",
+                "when": "tier0 wisdom route is chosen",
                 "upgrade_id": 13261,
                 "name": "Wisdom of the Ages",
             },
             {
-                "when": "tier0 Speed of Shooting Stars",
+                "when": "tier0 speed route is chosen",
                 "upgrade_id": 13262,
                 "name": "Speed of Shooting Stars",
             },
-            {"when": "tier1 Star Caller", "upgrade_id": 13264, "name": "Star Caller"},
-            {"when": "tier1 Night Runner", "upgrade_id": 13265, "name": "Night Runner"},
+            {"when": "tier1 star route is chosen", "upgrade_id": 13264, "name": "Star Caller"},
+            {"when": "tier1 night route is chosen", "upgrade_id": 13265, "name": "Night Runner"},
         ],
         "context_flags": {
             "formation_dependent": False,
@@ -3657,11 +3754,11 @@ RECORDS: dict[int, dict] = {
         "sources": {
             "csv_default_label": None,
             "csv_label_maps_to": None,
-            "csv_advice_text": "Tier0 and other tier1 picks are tier-based situational choices.",
+            "csv_advice_text": "Tier0 wisdom/speed and tier1 star/night picks are situational.",
         },
         "explanation_summary": "Safe Moon Collector; other tier0/tier1 picks are situational.",
-        "review_needed": True,
-        "review_reasons": ["No CSV; recent multi-tier champ"],
+        "review_needed": False,
+        "review_reasons": [],
     },
     141: {
         "advice_model": "safe_default",
@@ -3669,9 +3766,13 @@ RECORDS: dict[int, dict] = {
         "push_default": _choice(13281, "Find Yourself"),
         "farm_default": None,
         "conditionals": [
-            {"when": "situational Guidance", "upgrade_id": 13279, "name": "Guidance"},
             {
-                "when": "situational Sister of Darkness",
+                "when": "situational healing route is needed",
+                "upgrade_id": 13279,
+                "name": "Guidance",
+            },
+            {
+                "when": "situational darkness route is needed",
                 "upgrade_id": 13280,
                 "name": "Sister of Darkness",
             },
@@ -3684,11 +3785,11 @@ RECORDS: dict[int, dict] = {
         "sources": {
             "csv_default_label": "Healing route",
             "csv_label_maps_to": None,
-            "csv_advice_text": "Guidance/Sister of Darkness situational; dynamic handler stays context-sensitive.",
+            "csv_advice_text": "Guidance for healing; Sister of Darkness for darkness; handler context-sensitive.",
         },
         "explanation_summary": "Safe Find Yourself; Guidance/Sister situational; handler context-sensitive.",
-        "review_needed": True,
-        "review_reasons": ["Healing/Support unmapped; dynamic handler present"],
+        "review_needed": False,
+        "review_reasons": [],
     },
     # --- batch 08 remaining ---
     142: {
@@ -3697,8 +3798,16 @@ RECORDS: dict[int, dict] = {
         "push_default": _choice(13433, "Pact of the Blade"),
         "farm_default": None,
         "conditionals": [
-            {"when": "situational Pact of the Chain", "upgrade_id": 13434, "name": "Pact of the Chain"},
-            {"when": "situational Pact of the Tome", "upgrade_id": 13435, "name": "Pact of the Tome"},
+            {
+                "when": "situational pact of the chain is needed",
+                "upgrade_id": 13434,
+                "name": "Pact of the Chain",
+            },
+            {
+                "when": "situational pact of the tome is needed",
+                "upgrade_id": 13435,
+                "name": "Pact of the Tome",
+            },
         ],
         "context_flags": {
             "formation_dependent": True,
@@ -3711,8 +3820,8 @@ RECORDS: dict[int, dict] = {
             "csv_advice_text": "Pact of the Chain / Pact of the Tome are situational pact choices.",
         },
         "explanation_summary": "Safe Pact of the Blade; Chain/Tome are situational pact choices.",
-        "review_needed": True,
-        "review_reasons": ["Support route unmapped; dynamic handler present"],
+        "review_needed": False,
+        "review_reasons": [],
     },
     143: {
         "advice_model": "safe_default",
@@ -3720,8 +3829,16 @@ RECORDS: dict[int, dict] = {
         "push_default": _choice(13726, "Berserker"),
         "farm_default": None,
         "conditionals": [
-            {"when": "situational Wildheart route", "upgrade_id": 13727, "name": "Wildheart"},
-            {"when": "situational Wild Magic route", "upgrade_id": 13728, "name": "Wild Magic"},
+            {
+                "when": "situational wildheart route is needed",
+                "upgrade_id": 13727,
+                "name": "Wildheart",
+            },
+            {
+                "when": "situational wild magic route is needed",
+                "upgrade_id": 13728,
+                "name": "Wild Magic",
+            },
         ],
         "context_flags": {
             "formation_dependent": True,
@@ -3734,8 +3851,8 @@ RECORDS: dict[int, dict] = {
             "csv_advice_text": "Wildheart and Wild Magic are situational route choices.",
         },
         "explanation_summary": "Safe Berserker; Wildheart/Wild Magic are situational routes.",
-        "review_needed": True,
-        "review_reasons": ["Support route unmapped; dynamic handler present"],
+        "review_needed": False,
+        "review_reasons": [],
     },
     144: {
         "advice_model": "safe_default",
@@ -3744,12 +3861,12 @@ RECORDS: dict[int, dict] = {
         "farm_default": None,
         "conditionals": [
             {
-                "when": "situational Junior Juggernauts",
+                "when": "situational junior juggernauts route is needed",
                 "upgrade_id": 13766,
                 "name": "Junior Juggernauts",
             },
             {
-                "when": "situational Magical Mastery",
+                "when": "situational magical mastery route is needed",
                 "upgrade_id": 13767,
                 "name": "Magical Mastery",
             },
@@ -3765,8 +3882,8 @@ RECORDS: dict[int, dict] = {
             "csv_advice_text": "Junior Juggernauts / Magical Mastery are situational alternatives.",
         },
         "explanation_summary": "Safe Humble Heroes; Juggernauts/Magical Mastery are situational.",
-        "review_needed": True,
-        "review_reasons": ["Support route unmapped; recent champ"],
+        "review_needed": False,
+        "review_reasons": [],
     },
     145: {
         "advice_model": "safe_default",
@@ -3775,12 +3892,12 @@ RECORDS: dict[int, dict] = {
         "farm_default": None,
         "conditionals": [
             {
-                "when": "situational Iron Lord's Justice support/DPS",
+                "when": "situational iron lord's justice route is needed",
                 "upgrade_id": 13880,
                 "name": "Iron Lord's Justice",
             },
             {
-                "when": "situational Loyal Bodyguard support/DPS",
+                "when": "situational loyal bodyguard route is needed",
                 "upgrade_id": 13881,
                 "name": "Loyal Bodyguard",
             },
@@ -3796,8 +3913,8 @@ RECORDS: dict[int, dict] = {
             "csv_advice_text": "Iron Lord's Justice / Loyal Bodyguard are situational support/DPS variants.",
         },
         "explanation_summary": "Safe Circle Magic; Justice/Bodyguard are situational support/DPS variants.",
-        "review_needed": True,
-        "review_reasons": ["Support/DPS routes unmapped"],
+        "review_needed": False,
+        "review_reasons": [],
     },
     146: {
         "advice_model": "safe_default",
@@ -3805,14 +3922,26 @@ RECORDS: dict[int, dict] = {
         "push_default": _choice(14384, "Divine Soul"),
         "farm_default": None,
         "conditionals": [
-            {"when": "tier0 Storm Sorcery alternative", "upgrade_id": 14382, "name": "Storm Sorcery"},
             {
-                "when": "tier0 Draconic Bloodline alternative",
+                "when": "tier0 storm sorcery is the desired alternate",
+                "upgrade_id": 14382,
+                "name": "Storm Sorcery",
+            },
+            {
+                "when": "tier0 draconic bloodline is the desired alternate",
                 "upgrade_id": 14383,
                 "name": "Draconic Bloodline",
             },
-            {"when": "tier1 Embrace the Urge", "upgrade_id": 14385, "name": "Embrace the Urge"},
-            {"when": "tier1 Resist the Urge", "upgrade_id": 14386, "name": "Resist the Urge"},
+            {
+                "when": "tier1 embrace the urge is chosen",
+                "upgrade_id": 14385,
+                "name": "Embrace the Urge",
+            },
+            {
+                "when": "tier1 resist the urge is chosen",
+                "upgrade_id": 14386,
+                "name": "Resist the Urge",
+            },
         ],
         "context_flags": {
             "formation_dependent": False,
@@ -3825,8 +3954,8 @@ RECORDS: dict[int, dict] = {
             "csv_advice_text": "Tier0 Storm/Draconic alternatives; tier1 Embrace vs Resist the Urge.",
         },
         "explanation_summary": "Safe Divine Soul; tier0 Storm/Draconic and tier1 Urge picks are conditional.",
-        "review_needed": True,
-        "review_reasons": ["No CSV; multi-tier Urge choice soft"],
+        "review_needed": False,
+        "review_reasons": [],
     },
     147: {
         "advice_model": "safe_default",
@@ -3834,17 +3963,21 @@ RECORDS: dict[int, dict] = {
         "push_default": _choice(14578, "Ceremorphosis"),
         "farm_default": None,
         "conditionals": [
-            {"when": "tier0 Evocation contextual", "upgrade_id": 14574, "name": "Evocation"},
-            {"when": "tier0 Abjuration contextual", "upgrade_id": 14575, "name": "Abjuration"},
-            {"when": "tier0 Enchantment contextual", "upgrade_id": 14576, "name": "Enchantment"},
-            {"when": "tier0 Illusion contextual", "upgrade_id": 14577, "name": "Illusion"},
+            {"when": "tier0 school choice is needed → Evocation", "upgrade_id": 14574, "name": "Evocation"},
+            {"when": "tier0 school choice is needed → Abjuration", "upgrade_id": 14575, "name": "Abjuration"},
             {
-                "when": "tier1 Mystical Mentor contextual",
+                "when": "tier0 school choice is needed → Enchantment",
+                "upgrade_id": 14576,
+                "name": "Enchantment",
+            },
+            {"when": "tier0 school choice is needed → Illusion", "upgrade_id": 14577, "name": "Illusion"},
+            {
+                "when": "tier1 support route is preferred → Mystical Mentor",
                 "upgrade_id": 14579,
                 "name": "Mystical Mentor",
             },
             {
-                "when": "tier1 Finite Fellowship contextual",
+                "when": "tier1 alternate utility route is preferred → Finite Fellowship",
                 "upgrade_id": 14580,
                 "name": "Finite Fellowship",
             },
@@ -3856,15 +3989,12 @@ RECORDS: dict[int, dict] = {
         },
         "sources": {
             "csv_default_label": "Support route",
-            "csv_label_maps_to": "Mystical Mentor",
-            "csv_advice_text": "Schools and Finite Fellowship are contextual; CSV maps Support→Mystical Mentor.",
+            "csv_label_maps_to": "Ceremorphosis",
+            "csv_advice_text": "Schools are tier0 choices; Mentor/Fellowship are tier1 support/utility routes.",
         },
-        "explanation_summary": "Safe Ceremorphosis; CSV maps Support→Mystical Mentor; schools contextual.",
-        "review_needed": True,
-        "review_reasons": [
-            "safe_default Ceremorphosis vs csv_label_maps_to Mystical Mentor",
-            "dynamic handler; multi-tier",
-        ],
+        "explanation_summary": "Safe Ceremorphosis; schools and Mentor/Fellowship stay conditional.",
+        "review_needed": False,
+        "review_reasons": [],
     },
     148: {
         "advice_model": "safe_default",
@@ -3873,22 +4003,22 @@ RECORDS: dict[int, dict] = {
         "farm_default": None,
         "conditionals": [
             {
-                "when": "tier0 Inspire: Acrobatic Assault",
+                "when": "tier0 inspire route is explicitly needed → Inspire: Acrobatic Assault",
                 "upgrade_id": 14791,
                 "name": "Inspire: Acrobatic Assault",
             },
             {
-                "when": "tier0 Inspire: Modest Might",
+                "when": "tier0 inspire route is explicitly needed → Inspire: Modest Might",
                 "upgrade_id": 14792,
                 "name": "Inspire: Modest Might",
             },
             {
-                "when": "tier0 Inspire: Fledgling Fury",
+                "when": "tier0 inspire route is explicitly needed → Inspire: Fledgling Fury",
                 "upgrade_id": 14793,
                 "name": "Inspire: Fledgling Fury",
             },
             {
-                "when": "tier1 Spotlight Episode situational",
+                "when": "tier1 alternate route is specifically desired",
                 "upgrade_id": 14797,
                 "name": "Spotlight Episode",
             },
@@ -3900,12 +4030,12 @@ RECORDS: dict[int, dict] = {
         },
         "sources": {
             "csv_default_label": "Support route",
-            "csv_label_maps_to": None,
-            "csv_advice_text": "All tier0 inspire options and Spotlight Episode are situational.",
+            "csv_label_maps_to": "Ensemble Cast",
+            "csv_advice_text": "Tier0 inspire options and Spotlight Episode are situational.",
         },
         "explanation_summary": "Safe Ensemble Cast; tier0 inspires and Spotlight Episode are situational.",
-        "review_needed": True,
-        "review_reasons": ["Support route unmapped; dynamic handler; multi-tier"],
+        "review_needed": False,
+        "review_reasons": [],
     },
     150: {
         "advice_model": "safe_default",
@@ -3914,18 +4044,22 @@ RECORDS: dict[int, dict] = {
         "farm_default": None,
         "conditionals": [
             {
-                "when": "run plan needs Immediate Infiltration",
+                "when": "run plan needs immediate infiltration",
                 "upgrade_id": 15199,
                 "name": "Immediate Infiltration",
             },
             {
-                "when": "tier1 Artificer's Arsenal by run plan",
+                "when": "tier1 run plan wants the artificer route",
                 "upgrade_id": 15201,
                 "name": "Artificer's Arsenal",
             },
-            {"when": "tier1 Spy Network by run plan", "upgrade_id": 15202, "name": "Spy Network"},
             {
-                "when": "tier1 Powerful Patronage by run plan",
+                "when": "tier1 run plan wants the spy route",
+                "upgrade_id": 15202,
+                "name": "Spy Network",
+            },
+            {
+                "when": "tier1 run plan wants the patronage route",
                 "upgrade_id": 15203,
                 "name": "Powerful Patronage",
             },
@@ -3941,8 +4075,8 @@ RECORDS: dict[int, dict] = {
             "csv_advice_text": "Immediate Infiltration and tier1 options are situational by run plan.",
         },
         "explanation_summary": "Safe Play the Long Game; Infiltration/tier1 picks by run plan.",
-        "review_needed": True,
-        "review_reasons": ["No CSV; multi-tier run-plan soft"],
+        "review_needed": False,
+        "review_reasons": [],
     },
     151: {
         "advice_model": "safe_default",
@@ -3950,15 +4084,19 @@ RECORDS: dict[int, dict] = {
         "push_default": _choice(15053, "Family of Orphans"),
         "farm_default": None,
         "conditionals": [
-            {"when": "tier0 Law's Alliance", "upgrade_id": 15052, "name": "Law's Alliance"},
-            {"when": "tier0 Call of the Wardens", "upgrade_id": 15054, "name": "Call of the Wardens"},
+            {"when": "tier0 law-route is chosen", "upgrade_id": 15052, "name": "Law's Alliance"},
             {
-                "when": "clear offensive alternative → More Damage",
+                "when": "tier0 wardens-route is chosen",
+                "upgrade_id": 15054,
+                "name": "Call of the Wardens",
+            },
+            {
+                "when": "offensive alt is explicitly desired → More Damage",
                 "upgrade_id": 15057,
                 "name": "More Damage",
             },
-            {"when": "tier1 More Bees situational", "upgrade_id": 15055, "name": "More Bees"},
-            {"when": "tier1 More Clues situational", "upgrade_id": 15056, "name": "More Clues"},
+            {"when": "tier1 bees route is needed", "upgrade_id": 15055, "name": "More Bees"},
+            {"when": "tier1 clues route is needed", "upgrade_id": 15056, "name": "More Clues"},
         ],
         "context_flags": {
             "formation_dependent": True,
@@ -3967,12 +4105,12 @@ RECORDS: dict[int, dict] = {
         },
         "sources": {
             "csv_default_label": None,
-            "csv_label_maps_to": None,
-            "csv_advice_text": "More Damage is the clear offensive alt; Bees/Clues are situational tier1.",
+            "csv_label_maps_to": "Family of Orphans",
+            "csv_advice_text": "Law/Wardens are tier0; More Damage offensive alt; Bees/Clues tier1.",
         },
-        "explanation_summary": "Safe Family of Orphans; More Damage offensive alt; Bees/Clues situational.",
-        "review_needed": True,
-        "review_reasons": ["No CSV; dynamic handler; multi-tier"],
+        "explanation_summary": "Safe Family of Orphans; Law/Wardens/Damage/Bees/Clues stay conditional.",
+        "review_needed": False,
+        "review_reasons": [],
     },
     152: {
         "advice_model": "safe_default",
@@ -3980,19 +4118,23 @@ RECORDS: dict[int, dict] = {
         "push_default": _choice(15448, "Group Charge"),
         "farm_default": None,
         "conditionals": [
-            {"when": "tier0 Stunning Strength", "upgrade_id": 15447, "name": "Stunning Strength"},
             {
-                "when": "tier1 Not So Low by progression needs",
+                "when": "tier0 strength route is explicitly chosen",
+                "upgrade_id": 15447,
+                "name": "Stunning Strength",
+            },
+            {
+                "when": "tier1 progression route is explicitly chosen → Not So Low",
                 "upgrade_id": 15449,
                 "name": "Not So Low",
             },
             {
-                "when": "tier1 Still Growing Up by progression needs",
+                "when": "tier1 progression route is explicitly chosen → Still Growing Up",
                 "upgrade_id": 15450,
                 "name": "Still Growing Up",
             },
             {
-                "when": "tier1 Strong Armed by progression needs",
+                "when": "tier1 progression route is explicitly chosen → Strong Armed",
                 "upgrade_id": 15451,
                 "name": "Strong Armed",
             },
@@ -4005,11 +4147,11 @@ RECORDS: dict[int, dict] = {
         "sources": {
             "csv_default_label": None,
             "csv_label_maps_to": None,
-            "csv_advice_text": "Tier1 options are situational by progression needs.",
+            "csv_advice_text": "Tier0 strength and tier1 progression options are situational.",
         },
-        "explanation_summary": "Safe Group Charge; tier1 picks by progression needs.",
-        "review_needed": True,
-        "review_reasons": ["No CSV; multi-tier progression soft"],
+        "explanation_summary": "Safe Group Charge; tier0 strength and tier1 progression picks stay conditional.",
+        "review_needed": False,
+        "review_reasons": [],
     },
     154: {
         "advice_model": "safe_default",
@@ -4017,8 +4159,16 @@ RECORDS: dict[int, dict] = {
         "push_default": _choice(15948, "Soul Destroyer"),
         "farm_default": None,
         "conditionals": [
-            {"when": "situational House Matron", "upgrade_id": 15946, "name": "House Matron"},
-            {"when": "situational True Soul", "upgrade_id": 15947, "name": "True Soul"},
+            {
+                "when": "situational house route is explicitly desired",
+                "upgrade_id": 15946,
+                "name": "House Matron",
+            },
+            {
+                "when": "situational true soul route is explicitly desired",
+                "upgrade_id": 15947,
+                "name": "True Soul",
+            },
         ],
         "context_flags": {
             "formation_dependent": False,
@@ -4027,12 +4177,12 @@ RECORDS: dict[int, dict] = {
         },
         "sources": {
             "csv_default_label": "Support route",
-            "csv_label_maps_to": None,
-            "csv_advice_text": "House Matron and True Soul are situational.",
+            "csv_label_maps_to": "Soul Destroyer",
+            "csv_advice_text": "House Matron and True Soul only when those routes are explicitly desired.",
         },
         "explanation_summary": "Safe Soul Destroyer; House Matron/True Soul are situational.",
-        "review_needed": True,
-        "review_reasons": ["Support route unmapped; recent champ"],
+        "review_needed": False,
+        "review_reasons": [],
     },
     155: {
         "advice_model": "safe_default",
@@ -4041,12 +4191,12 @@ RECORDS: dict[int, dict] = {
         "farm_default": None,
         "conditionals": [
             {
-                "when": "situational Glitch Form: Tabaxi Barbarian",
+                "when": "situational tabaxi barbarian form is needed",
                 "upgrade_id": 15218,
                 "name": "Glitch Form: Tabaxi Barbarian",
             },
             {
-                "when": "situational Glitch Form: Warforged Sorcerer",
+                "when": "situational warforged sorcerer form is needed",
                 "upgrade_id": 15219,
                 "name": "Glitch Form: Warforged Sorcerer",
             },
@@ -4058,12 +4208,12 @@ RECORDS: dict[int, dict] = {
         },
         "sources": {
             "csv_default_label": "Support route",
-            "csv_label_maps_to": None,
+            "csv_label_maps_to": "Glitch Form: Dwarf Monk",
             "csv_advice_text": "Tabaxi Barbarian / Warforged Sorcerer are situational forms.",
         },
         "explanation_summary": "Safe Glitch Form: Dwarf Monk; other glitch forms are situational.",
-        "review_needed": True,
-        "review_reasons": ["Support route unmapped; recent champ"],
+        "review_needed": False,
+        "review_reasons": [],
     },
     156: {
         "advice_model": "safe_default",
@@ -4102,20 +4252,28 @@ RECORDS: dict[int, dict] = {
         "push_default": _choice(16135, "Trait: Brave"),
         "farm_default": None,
         "conditionals": [
-            {"when": "tier0 Trait: Cautious contextual", "upgrade_id": 16134, "name": "Trait: Cautious"},
             {
-                "when": "tier0 Trait: Sarcastic contextual",
+                "when": "tier0 cautious trait is contextually better",
+                "upgrade_id": 16134,
+                "name": "Trait: Cautious",
+            },
+            {
+                "when": "tier0 sarcastic trait is contextually better",
                 "upgrade_id": 16136,
                 "name": "Trait: Sarcastic",
             },
             {
-                "when": "tier1 Unassuming Force contextual",
+                "when": "tier1 unassuming force is contextually better",
                 "upgrade_id": 16137,
                 "name": "Unassuming Force",
             },
-            {"when": "tier1 Youthful Valor contextual", "upgrade_id": 16138, "name": "Youthful Valor"},
             {
-                "when": "tier1 Treasure Hunters contextual",
+                "when": "tier1 youthful valor is contextually better",
+                "upgrade_id": 16138,
+                "name": "Youthful Valor",
+            },
+            {
+                "when": "tier1 treasure hunters is contextually better",
                 "upgrade_id": 16139,
                 "name": "Treasure Hunters",
             },
@@ -4131,8 +4289,8 @@ RECORDS: dict[int, dict] = {
             "csv_advice_text": "Trait and tier1 options are contextual; Brave is the stable default.",
         },
         "explanation_summary": "Safe Trait: Brave; other traits and tier1 picks are contextual.",
-        "review_needed": True,
-        "review_reasons": ["No CSV; multi-tier trait/context soft"],
+        "review_needed": False,
+        "review_reasons": [],
     },
     158: {
         "advice_model": "safe_default",
@@ -4172,12 +4330,12 @@ RECORDS: dict[int, dict] = {
         "farm_default": None,
         "conditionals": [
             {
-                "when": "contextual Volo's Guide to Spirits and Specters",
+                "when": "contextual spirits and specters guide is needed",
                 "upgrade_id": 16554,
                 "name": "Volo's Guide to Spirits and Specters",
             },
             {
-                "when": "contextual Volo's Guide to Brain-Eating Tadpoles",
+                "when": "contextual brain-eating tadpoles guide is needed",
                 "upgrade_id": 16555,
                 "name": "Volo's Guide to Brain-Eating Tadpoles",
             },
@@ -4193,8 +4351,8 @@ RECORDS: dict[int, dict] = {
             "csv_advice_text": "The other two guides are contextual and stay conditional.",
         },
         "explanation_summary": "Safe Volo's Guide to All Things Magical; other guides stay conditional.",
-        "review_needed": True,
-        "review_reasons": ["No CSV; dynamic handler; guide context soft"],
+        "review_needed": False,
+        "review_reasons": [],
     },
     160: {
         "advice_model": "safe_default",
@@ -4202,20 +4360,28 @@ RECORDS: dict[int, dict] = {
         "push_default": _choice(16543, "A Rosy Outlook"),
         "farm_default": None,
         "conditionals": [
-            {"when": "tier0 Meekly Meeting", "upgrade_id": 16541, "name": "Meekly Meeting"},
-            {"when": "tier0 Youthful Allies", "upgrade_id": 16542, "name": "Youthful Allies"},
             {
-                "when": "tier1 Frightening Strike situational",
+                "when": "tier0 meekly meeting route is explicitly chosen",
+                "upgrade_id": 16541,
+                "name": "Meekly Meeting",
+            },
+            {
+                "when": "tier0 youthful allies route is explicitly chosen",
+                "upgrade_id": 16542,
+                "name": "Youthful Allies",
+            },
+            {
+                "when": "tier1 striking route is explicitly chosen → Frightening Strike",
                 "upgrade_id": 16544,
                 "name": "Frightening Strike",
             },
             {
-                "when": "tier1 Enraging Strike situational",
+                "when": "tier1 striking route is explicitly chosen → Enraging Strike",
                 "upgrade_id": 16545,
                 "name": "Enraging Strike",
             },
             {
-                "when": "tier1 Confusing Strike situational",
+                "when": "tier1 striking route is explicitly chosen → Confusing Strike",
                 "upgrade_id": 16546,
                 "name": "Confusing Strike",
             },
@@ -4228,11 +4394,11 @@ RECORDS: dict[int, dict] = {
         "sources": {
             "csv_default_label": None,
             "csv_label_maps_to": None,
-            "csv_advice_text": "Tier1 strike options are situational; tier0 alts stay conditional too.",
+            "csv_advice_text": "Tier0 alts and tier1 strike options are situational.",
         },
         "explanation_summary": "Safe A Rosy Outlook; tier0 alts and tier1 strikes are situational.",
-        "review_needed": True,
-        "review_reasons": ["No CSV; multi-tier strike soft"],
+        "review_needed": False,
+        "review_reasons": [],
     },
     161: {
         "advice_model": "safe_default",
@@ -4264,12 +4430,12 @@ RECORDS: dict[int, dict] = {
         "farm_default": None,
         "conditionals": [
             {
-                "when": "contextual Who Else Would Save Them?",
+                "when": "contextual rescue route is needed",
                 "upgrade_id": 17048,
                 "name": "Who Else Would Save Them?",
             },
             {
-                "when": "contextual Spreading the Word",
+                "when": "contextual outreach route is needed",
                 "upgrade_id": 17050,
                 "name": "Spreading the Word",
             },
@@ -4285,8 +4451,8 @@ RECORDS: dict[int, dict] = {
             "csv_advice_text": "Who Else Would Save Them? / Spreading the Word are contextual.",
         },
         "explanation_summary": "Safe Help the Unfortunate; other options are contextual.",
-        "review_needed": True,
-        "review_reasons": ["No CSV; dynamic handler; context soft"],
+        "review_needed": False,
+        "review_reasons": [],
     },
     163: {
         "advice_model": "safe_default",
@@ -4294,10 +4460,26 @@ RECORDS: dict[int, dict] = {
         "push_default": _choice(17086, "Tactical Advantage"),
         "farm_default": None,
         "conditionals": [
-            {"when": "tier0 Heart of Heroes", "upgrade_id": 17083, "name": "Heart of Heroes"},
-            {"when": "tier0 Arrow Alliance", "upgrade_id": 17084, "name": "Arrow Alliance"},
-            {"when": "tier0 Unyielding Unity", "upgrade_id": 17085, "name": "Unyielding Unity"},
-            {"when": "tier1 Dragon Slayer", "upgrade_id": 17087, "name": "Dragon Slayer"},
+            {
+                "when": "tier0 heart route is explicitly needed",
+                "upgrade_id": 17083,
+                "name": "Heart of Heroes",
+            },
+            {
+                "when": "tier0 arrow route is explicitly needed",
+                "upgrade_id": 17084,
+                "name": "Arrow Alliance",
+            },
+            {
+                "when": "tier0 unity route is explicitly needed",
+                "upgrade_id": 17085,
+                "name": "Unyielding Unity",
+            },
+            {
+                "when": "tier1 dragon route is explicitly needed",
+                "upgrade_id": 17087,
+                "name": "Dragon Slayer",
+            },
         ],
         "context_flags": {
             "formation_dependent": False,
@@ -4310,8 +4492,8 @@ RECORDS: dict[int, dict] = {
             "csv_advice_text": "Heart/Arrow/Unity and Dragon Slayer are tier-based situational picks.",
         },
         "explanation_summary": "Safe Tactical Advantage; other tier0/tier1 picks are situational.",
-        "review_needed": True,
-        "review_reasons": ["No CSV; multi-tier situational"],
+        "review_needed": False,
+        "review_reasons": [],
     },
     # --- batch 09 remaining (final) ---
     164: {
@@ -4321,11 +4503,15 @@ RECORDS: dict[int, dict] = {
         "farm_default": None,
         "conditionals": [
             {
-                "when": "situational Eyes on the Horizon",
+                "when": "fallback/utility route is explicitly needed → Eyes on the Horizon",
                 "upgrade_id": 17322,
                 "name": "Eyes on the Horizon",
             },
-            {"when": "situational Rogues' Gallery", "upgrade_id": 17323, "name": "Rogues' Gallery"},
+            {
+                "when": "rogue-focused alternative is explicitly needed → Rogues' Gallery",
+                "upgrade_id": 17323,
+                "name": "Rogues' Gallery",
+            },
         ],
         "context_flags": {
             "formation_dependent": True,
@@ -4334,12 +4520,12 @@ RECORDS: dict[int, dict] = {
         },
         "sources": {
             "csv_default_label": None,
-            "csv_label_maps_to": None,
-            "csv_advice_text": "Eyes on the Horizon / Rogues' Gallery are situational alternatives.",
+            "csv_label_maps_to": "The Fallback Plan",
+            "csv_advice_text": "Horizon/Rogues' Gallery only when those alternatives are explicit.",
         },
-        "explanation_summary": "Safe The Fallback Plan; Horizon/Rogues' Gallery are situational.",
-        "review_needed": True,
-        "review_reasons": ["No CSV; dynamic handler present"],
+        "explanation_summary": "Safe The Fallback Plan; Horizon/Rogues' Gallery stay conditional.",
+        "review_needed": False,
+        "review_reasons": [],
     },
     165: {
         "advice_model": "safe_default",
@@ -4347,27 +4533,55 @@ RECORDS: dict[int, dict] = {
         "push_default": _choice(17495, "Bargain With Eldath"),
         "farm_default": None,
         "conditionals": [
-            {"when": "tier0 Bargain With Tyr", "upgrade_id": 17491, "name": "Bargain With Tyr"},
             {
-                "when": "tier0 Bargain With Moradin",
+                "when": "tier0 Bargain With Tyr is selected",
+                "upgrade_id": 17491,
+                "name": "Bargain With Tyr",
+            },
+            {
+                "when": "tier0 Bargain With Moradin is selected",
                 "upgrade_id": 17492,
                 "name": "Bargain With Moradin",
             },
             {
-                "when": "tier0 Bargain With Tymora",
+                "when": "tier0 Bargain With Tymora is selected",
                 "upgrade_id": 17493,
                 "name": "Bargain With Tymora",
             },
             {
-                "when": "tier0 Bargain With Mystra",
+                "when": "tier0 Bargain With Mystra is selected",
                 "upgrade_id": 17494,
                 "name": "Bargain With Mystra",
             },
-            {"when": "tier1 Dark Bargain", "upgrade_id": 17496, "name": "Dark Bargain"},
             {
-                "when": "tier1 other Bargain deity/path (duplicate names across ids)",
+                "when": "tier1 Dark Bargain is selected",
+                "upgrade_id": 17496,
+                "name": "Dark Bargain",
+            },
+            {
+                "when": "tier1 Bargain With Moradin variant is selected",
                 "upgrade_id": 17497,
                 "name": "Bargain With Moradin",
+            },
+            {
+                "when": "tier1 Bargain With Tymora variant is selected",
+                "upgrade_id": 17498,
+                "name": "Bargain With Tymora",
+            },
+            {
+                "when": "tier1 Bargain With Mystra variant is selected",
+                "upgrade_id": 17499,
+                "name": "Bargain With Mystra",
+            },
+            {
+                "when": "tier1 Bargain With Eldath variant is selected",
+                "upgrade_id": 17500,
+                "name": "Bargain With Eldath",
+            },
+            {
+                "when": "tier1 Bargain With Tyr variant is selected",
+                "upgrade_id": 17501,
+                "name": "Bargain With Tyr",
             },
         ],
         "context_flags": {
@@ -4383,7 +4597,7 @@ RECORDS: dict[int, dict] = {
         "explanation_summary": "Safe Bargain With Eldath; other Bargains/Dark Bargain stay conditional.",
         "review_needed": True,
         "review_reasons": [
-            "No CSV; tier1 duplicates option names across many upgrade ids",
+            "No CSV; tier1 still has many duplicate option names across upgrade ids",
         ],
     },
     166: {
@@ -4392,21 +4606,25 @@ RECORDS: dict[int, dict] = {
         "push_default": _choice(17679, "Ancestor's Shadow"),
         "farm_default": None,
         "conditionals": [
-            {"when": "tier0 Self Taught", "upgrade_id": 17678, "name": "Self Taught"},
             {
-                "when": "situational Lost in the Library",
+                "when": "tier0 self-taught route is intended",
+                "upgrade_id": 17678,
+                "name": "Self Taught",
+            },
+            {
+                "when": "situational library route is wanted",
                 "upgrade_id": 17680,
                 "name": "Lost in the Library",
             },
             {
-                "when": "tier1 smell/mastery route intended → Smell Mastery",
-                "upgrade_id": 17682,
-                "name": "Smell Mastery",
-            },
-            {
-                "when": "tier1 Signature Smell instead",
+                "when": "tier1 smell route is intended",
                 "upgrade_id": 17681,
                 "name": "Signature Smell",
+            },
+            {
+                "when": "tier1 mastery route is intended",
+                "upgrade_id": 17682,
+                "name": "Smell Mastery",
             },
         ],
         "context_flags": {
@@ -4417,11 +4635,11 @@ RECORDS: dict[int, dict] = {
         "sources": {
             "csv_default_label": None,
             "csv_label_maps_to": None,
-            "csv_advice_text": "Lost in the Library situational; Smell Mastery only for intended smell route.",
+            "csv_advice_text": "Self Taught/Library and Signature Smell/Smell Mastery stay conditional.",
         },
-        "explanation_summary": "Safe Ancestor's Shadow; Library situational; Smell Mastery only if intended.",
-        "review_needed": True,
-        "review_reasons": ["No CSV; dynamic handler; multi-tier smell route soft"],
+        "explanation_summary": "Safe Ancestor's Shadow; Self Taught/Library and smell routes stay conditional.",
+        "review_needed": False,
+        "review_reasons": [],
     },
     167: {
         "advice_model": "safe_default",
@@ -4470,19 +4688,19 @@ RECORDS: dict[int, dict] = {
         "push_default": _choice(17765, "Embrace the Shadow Weave"),
         "farm_default": None,
         "conditionals": [
-            {"when": "tier0 Master of Pawns contextual", "upgrade_id": 17762, "name": "Master of Pawns"},
+            {"when": "tier0 pawn route is selected", "upgrade_id": 17762, "name": "Master of Pawns"},
             {
-                "when": "tier0 Shadow Unleashed contextual",
+                "when": "tier0 unleashed route is selected",
                 "upgrade_id": 17763,
                 "name": "Shadow Unleashed",
             },
             {
-                "when": "tier1 Legacy of Illefarn contextual",
+                "when": "tier1 legacy route is selected",
                 "upgrade_id": 17764,
                 "name": "Legacy of Illefarn",
             },
             {
-                "when": "tier1 Rites of Survival contextual",
+                "when": "tier1 survival route is selected",
                 "upgrade_id": 17766,
                 "name": "Rites of Survival",
             },
@@ -4494,12 +4712,12 @@ RECORDS: dict[int, dict] = {
         },
         "sources": {
             "csv_default_label": None,
-            "csv_label_maps_to": None,
-            "csv_advice_text": "Pawns/Unleashed/Illefarn/Rites are contextual alternatives.",
+            "csv_label_maps_to": "Embrace the Shadow Weave",
+            "csv_advice_text": "Pawns/Unleashed are tier0; Illefarn/Rites are tier1 alternatives.",
         },
-        "explanation_summary": "Safe Embrace the Shadow Weave; other shadow options are contextual.",
-        "review_needed": True,
-        "review_reasons": ["No CSV; dynamic handler; multi-tier contextual"],
+        "explanation_summary": "Safe Embrace the Shadow Weave; other shadow options are tier-specific.",
+        "review_needed": False,
+        "review_reasons": [],
     },
     169: {
         "advice_model": "safe_default",
@@ -4507,15 +4725,19 @@ RECORDS: dict[int, dict] = {
         "push_default": _choice(17850, "Withering Ward"),
         "farm_default": None,
         "conditionals": [
-            {"when": "situational Witch's Switch", "upgrade_id": 17848, "name": "Witch's Switch"},
             {
-                "when": "situational League of Malevolence",
+                "when": "situational switch route is needed",
+                "upgrade_id": 17848,
+                "name": "Witch's Switch",
+            },
+            {
+                "when": "situational league route is needed",
                 "upgrade_id": 17849,
                 "name": "League of Malevolence",
             },
-            {"when": "tier1 Green Fire situational", "upgrade_id": 17851, "name": "Green Fire"},
-            {"when": "tier1 Blue Fire situational", "upgrade_id": 17852, "name": "Blue Fire"},
-            {"when": "tier1 Violet Fire situational", "upgrade_id": 17853, "name": "Violet Fire"},
+            {"when": "tier1 green fire route is needed", "upgrade_id": 17851, "name": "Green Fire"},
+            {"when": "tier1 blue fire route is needed", "upgrade_id": 17852, "name": "Blue Fire"},
+            {"when": "tier1 violet fire route is needed", "upgrade_id": 17853, "name": "Violet Fire"},
         ],
         "context_flags": {
             "formation_dependent": True,
@@ -4524,12 +4746,12 @@ RECORDS: dict[int, dict] = {
         },
         "sources": {
             "csv_default_label": None,
-            "csv_label_maps_to": None,
-            "csv_advice_text": "Witch's Switch, League of Malevolence, and fire options are situational.",
+            "csv_label_maps_to": "Withering Ward",
+            "csv_advice_text": "Switch/League are situational; Green/Blue/Violet Fire are tier1.",
         },
-        "explanation_summary": "Safe Withering Ward; Switch/League/fire options are situational.",
-        "review_needed": True,
-        "review_reasons": ["No CSV; dynamic handler; multi-tier fire soft"],
+        "explanation_summary": "Safe Withering Ward; Switch/League/fire options stay tactical swaps.",
+        "review_needed": False,
+        "review_reasons": [],
     },
     170: {
         "advice_model": "safe_default",
@@ -4618,8 +4840,16 @@ RECORDS: dict[int, dict] = {
         "push_default": _choice(18934, "Heroic Mage"),
         "farm_default": None,
         "conditionals": [
-            {"when": "situational Reclusive Mage", "upgrade_id": 18935, "name": "Reclusive Mage"},
-            {"when": "situational War Mage", "upgrade_id": 18936, "name": "War Mage"},
+            {
+                "when": "situational reclusive mage route is needed",
+                "upgrade_id": 18935,
+                "name": "Reclusive Mage",
+            },
+            {
+                "when": "situational war mage route is needed",
+                "upgrade_id": 18936,
+                "name": "War Mage",
+            },
         ],
         "context_flags": {
             "formation_dependent": True,
@@ -4632,8 +4862,8 @@ RECORDS: dict[int, dict] = {
             "csv_advice_text": "Reclusive Mage / War Mage are situational.",
         },
         "explanation_summary": "Safe Heroic Mage; Reclusive/War Mage are situational.",
-        "review_needed": True,
-        "review_reasons": ["No CSV; dynamic handler present"],
+        "review_needed": False,
+        "review_reasons": [],
     },
     174: {
         "advice_model": "safe_default",
@@ -4642,22 +4872,30 @@ RECORDS: dict[int, dict] = {
         "farm_default": None,
         "conditionals": [
             {
-                "when": "tier0 Map Collector: Pre-Cataclysm",
+                "when": "tier0 map collector pre-cataclysm route is intended",
                 "upgrade_id": 19240,
                 "name": "Map Collector: Pre-Cataclysm",
             },
             {
-                "when": "tier0 Map Collector: Time of Darkness",
+                "when": "tier0 map collector time of darkness route is intended",
                 "upgrade_id": 19241,
                 "name": "Map Collector: Time of Darkness",
             },
             {
-                "when": "tier0 Map Collector: War of the Lance",
+                "when": "tier0 map collector war of the lance route is intended",
                 "upgrade_id": 19242,
                 "name": "Map Collector: War of the Lance",
             },
-            {"when": "tier1 Small Friends situational", "upgrade_id": 19237, "name": "Small Friends"},
-            {"when": "tier1 Old Friends situational", "upgrade_id": 19239, "name": "Old Friends"},
+            {
+                "when": "tier1 small friends route is intended",
+                "upgrade_id": 19237,
+                "name": "Small Friends",
+            },
+            {
+                "when": "tier1 old friends route is intended",
+                "upgrade_id": 19239,
+                "name": "Old Friends",
+            },
         ],
         "context_flags": {
             "formation_dependent": False,
@@ -4670,8 +4908,8 @@ RECORDS: dict[int, dict] = {
             "csv_advice_text": "Map collector tier0 and Small/Old Friends are situational.",
         },
         "explanation_summary": "Safe Fast Friends; map collectors and Small/Old Friends are situational.",
-        "review_needed": True,
-        "review_reasons": ["No CSV; multi-tier map/friends soft"],
+        "review_needed": False,
+        "review_reasons": [],
     },
     175: {
         "advice_model": "safe_default",
@@ -4680,23 +4918,27 @@ RECORDS: dict[int, dict] = {
         "farm_default": None,
         "conditionals": [
             {
-                "when": "tier0 Battle Plan: Outflank",
+                "when": "tier0 outflank route is intended",
                 "upgrade_id": 19355,
                 "name": "Battle Plan: Outflank",
             },
             {
-                "when": "tier0 Battle Plan: Fortify",
+                "when": "tier0 fortify route is intended",
                 "upgrade_id": 19356,
                 "name": "Battle Plan: Fortify",
             },
-            {"when": "tier1 Lead the Attack", "upgrade_id": 19357, "name": "Lead the Attack"},
             {
-                "when": "tier1 Protect the Vulnerable",
+                "when": "tier1 attack route is intended",
+                "upgrade_id": 19357,
+                "name": "Lead the Attack",
+            },
+            {
+                "when": "tier1 protect route is intended",
                 "upgrade_id": 19358,
                 "name": "Protect the Vulnerable",
             },
             {
-                "when": "tier1 Wield the Dragonlance",
+                "when": "tier1 dragonlance route is intended",
                 "upgrade_id": 19359,
                 "name": "Wield the Dragonlance",
             },
@@ -4712,8 +4954,8 @@ RECORDS: dict[int, dict] = {
             "csv_advice_text": "Outflank/Fortify and tier1 attack/protect/Dragonlance are situational.",
         },
         "explanation_summary": "Safe Battle Plan: Charge; other plans and tier1 picks are situational.",
-        "review_needed": True,
-        "review_reasons": ["No CSV; multi-tier battle-plan soft"],
+        "review_needed": False,
+        "review_reasons": [],
     },
     176: {
         "advice_model": "safe_default",
@@ -4747,24 +4989,28 @@ RECORDS: dict[int, dict] = {
         "push_default": _choice(19702, "Endless Hunt"),
         "farm_default": None,
         "conditionals": [
-            {"when": "contextual Occult Allies", "upgrade_id": 19700, "name": "Occult Allies"},
             {
-                "when": "contextual Scholar of Dread",
+                "when": "contextual occult allies route is needed",
+                "upgrade_id": 19700,
+                "name": "Occult Allies",
+            },
+            {
+                "when": "contextual scholar of dread route is needed",
                 "upgrade_id": 19701,
                 "name": "Scholar of Dread",
             },
             {
-                "when": "tier1 Occult Aid: Cure Wounds",
+                "when": "tier1 cure wounds route is intended",
                 "upgrade_id": 19703,
                 "name": "Occult Aid: Cure Wounds",
             },
             {
-                "when": "tier1 Occult Aid: Dispel Evil",
+                "when": "tier1 dispel evil route is intended",
                 "upgrade_id": 19704,
                 "name": "Occult Aid: Dispel Evil",
             },
             {
-                "when": "tier1 Occult Aid: Sanctuary",
+                "when": "tier1 sanctuary route is intended",
                 "upgrade_id": 19705,
                 "name": "Occult Aid: Sanctuary",
             },
@@ -4780,8 +5026,8 @@ RECORDS: dict[int, dict] = {
             "csv_advice_text": "Occult Allies/Scholar and Occult Aid tier1 options are contextual.",
         },
         "explanation_summary": "Safe Endless Hunt; Allies/Scholar and Occult Aid picks are contextual.",
-        "review_needed": True,
-        "review_reasons": ["No CSV; dynamic handler; multi-tier occult soft"],
+        "review_needed": False,
+        "review_reasons": [],
     },
 }
 

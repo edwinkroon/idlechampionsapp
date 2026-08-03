@@ -14,6 +14,8 @@
       "speed_route": 12983,
       "Speed route": 12983,
       "Vanguard of the Quick": 12983,
+      "Support route": 12984,
+      "support_route": 12984,
       "Callessa's Blessed": 12984
     },
     "Hew Maan": {
@@ -34,12 +36,13 @@
       "Carnival Crew": 11301
     },
     "Strongheart": {
-      "Support route": 19733,
+      "Support route": 19734,
+      "support_route": 19734,
       "Valor's Call": 19733,
       "Honorary Member": 19734
     },
     "Astarion": {
-      "Damage route": 12493,
+      "Damage route": 12496,
       "Outflank (Top)": 12493,
       "Arcane Trickster": 12496
     },
@@ -47,16 +50,29 @@
       "Foe of Xaryxis": 11660
     },
     "Virgil": {
-      "Mood: Anxious": 9608
+      "Speed route": 9608,
+      "speed_route": 9608,
+      "Support route": 9608,
+      "Mood: Anxious": 9608,
+      "Mood: Relaxed": 9607,
+      "Mood: Determined": 9609
     },
     "Lae'zel": {
-      "Battle Master": 12119
+      "Speed route": 12119,
+      "speed_route": 12119,
+      "Support route": 12119,
+      "Battle Master": 12119,
+      "Champion": 12118,
+      "Eldritch Knight": 12120
     },
     "Shadowheart": {
-      "Find Yourself": 13281
+      "Find Yourself": 13281,
+      "Guidance": 13279,
+      "Sister of Darkness": 13280
     },
     "Gale": {
-      "Support route": 14579,
+      "Support route": 14578,
+      "support_route": 14578,
       "Mystical Mentor": 14579,
       "Ceremorphosis": 14578
     },
@@ -70,13 +86,114 @@
       "Giant Hunter": 16890
     },
     "Wyll": {
-      "Pact of the Blade": 13433
+      "Pact of the Blade": 13433,
+      "Pact of the Chain": 13434,
+      "Pact of the Tome": 13435
     },
     "Karlach": {
-      "Berserker": 13726
+      "Berserker": 13726,
+      "Wildheart": 13727,
+      "Wild Magic": 13728
+    },
+    "Vin Ursa": {
+      "Support route": 12094,
+      "support_route": 12094,
+      "Friends in High Places": 12094,
+      "Front Deck": 12090,
+      "Rear Deck": 12091,
+      "Friends in Low Places": 12092,
+      "Friends in Meh Places": 12093
+    },
+    "Certainty": {
+      "Support route": 12510,
+      "support_route": 12510,
+      "Best And The Brightest": 12510,
+      "Smooth Negotiators": 12511
+    },
+    "Jang Sao": {
+      "Moon Collector": 13263,
+      "Wisdom of the Ages": 13261,
+      "Speed of Shooting Stars": 13262,
+      "Star Caller": 13264,
+      "Night Runner": 13265
+    },
+    "Presto": {
+      "Humble Heroes": 13765,
+      "Junior Juggernauts": 13766,
+      "Magical Mastery": 13767
+    },
+    "Dynaheir": {
+      "Circle Magic": 13879,
+      "Iron Lord's Justice": 13880,
+      "Loyal Bodyguard": 13881
+    },
+    "Dark Urge": {
+      "Divine Soul": 14384,
+      "Storm Sorcery": 14382,
+      "Draconic Bloodline": 14383,
+      "Embrace the Urge": 14385,
+      "Resist the Urge": 14386
     },
     "Hank": {
-      "Tactical Advantage": 17086
+      "Tactical Advantage": 17086,
+      "Heart of Heroes": 17083,
+      "Arrow Alliance": 17084,
+      "Unyielding Unity": 17085,
+      "Dragon Slayer": 17087
+    },
+    "Diana": {
+      "Support route": 14796,
+      "support_route": 14796,
+      "Ensemble Cast": 14796,
+      "Spotlight Episode": 14797
+    },
+    "Aeon": {
+      "Play the Long Game": 15200,
+      "Immediate Infiltration": 15199,
+      "Artificer's Arsenal": 15201,
+      "Spy Network": 15202,
+      "Powerful Patronage": 15203
+    },
+    "Bobby": {
+      "Group Charge": 15448,
+      "Stunning Strength": 15447,
+      "Not So Low": 15449,
+      "Still Growing Up": 15450,
+      "Strong Armed": 15451
+    },
+    "Minthara": {
+      "Support route": 15948,
+      "support_route": 15948,
+      "Soul Destroyer": 15948,
+      "House Matron": 15946,
+      "True Soul": 15947
+    },
+    "Wren": {
+      "Support route": 15217,
+      "support_route": 15217,
+      "Glitch Form: Dwarf Monk": 15217,
+      "Glitch Form: Tabaxi Barbarian": 15218,
+      "Glitch Form: Warforged Sorcerer": 15219
+    },
+    "Eric": {
+      "Trait: Brave": 16135,
+      "Trait: Cautious": 16134,
+      "Trait: Sarcastic": 16136
+    },
+    "Volo": {
+      "Volo's Guide to All Things Magical": 16556,
+      "Volo's Guide to Spirits and Specters": 16554,
+      "Volo's Guide to Brain-Eating Tadpoles": 16555
+    },
+    "Sheila": {
+      "A Rosy Outlook": 16543,
+      "Meekly Meeting": 16541,
+      "Youthful Allies": 16542
+    },
+    "Vlithryn": {
+      "Help the Unfortunate": 17049,
+      "Who Else Would Save Them?": 17048,
+      "Spreading the Word": 17050
     },
     "Ellywick": {
       "speed_route": 15232,
@@ -105,57 +222,116 @@
       "We've Trained For This": 15041
     },
     "Selise": {
-      "Tank route": 13750,
+      "Tank route": 13751,
       "Reflective Shield": 13750,
       "Mithral Skin": 13751
     },
+    "Valentine": {
+      "Socialite gold": 8150,
+      "My Loyal Bodyguard": 8150,
+      "All Hail the God Brain": 8149,
+      "Family Business": 8151
+    },
     "Talin": {
-      "Additional Scatter Tacks": 4766
+      "Speed route": 4766,
+      "speed_route": 4766,
+      "Control route": 4767,
+      "Additional Scatter Tacks": 4766,
+      "Path Finder": 4765,
+      "Reversal of Fortunes": 4767
     },
     "Torogar": {
       "Tiamat's Rage": 4493
     },
     "Ulkoria": {
-      "Shield Guardian": 4349
+      "Magic route": 4349,
+      "Shield Guardian": 4349,
+      "Urchin Pranks": 4350
     },
     "Orkira": {
-      "Tailfeather of the Phoenix": 5577
+      "Healing route": 5577,
+      "Support route": 5577,
+      "Tailfeather of the Phoenix": 5577,
+      "Breath of the Phoenix": 5576
     },
     "Prudence": {
-      "Eldritch Torrent": 6072
+      "DPS route": 6072,
+      "Utility route": 6073,
+      "Eldritch Torrent": 6072,
+      "She Hungers": 6073
     },
     "Corazon": {
-      "Distant Crewmates": 6133
+      "Support route": 6133,
+      "support_route": 6133,
+      "Distant Crewmates": 6133,
+      "Mage Hand": 6134
     },
     "Reya": {
-      "Champions of Good": 5459
+      "Tank route": 5459,
+      "Support route": 5459,
+      "Champions of Good": 5459,
+      "Champions of Law": 5460
     },
     "NERDS": {
-      "Green Leader, Standing By": 6148
+      "Support route": 6148,
+      "support_route": 6148,
+      "Green Leader, Standing By": 6148,
+      "Orange Leader, Standing By": 6146,
+      "Red Leader, Standing By": 6147,
+      "Yellow Leader, Standing By": 6149,
+      "Pink Leader, Standing By": 6150,
+      "Purple Leader, Standing By": 6151
     },
     "Xerophon": {
+      "Support route": 6842,
+      "support_route": 6842,
       "High Charisma": 6842
     },
     "Baeloth": {
-      "Baeloth's Birthday Party": 4749
+      "Support route": 4749,
+      "support_route": 4749,
+      "Baeloth's Birthday Party": 4749,
+      "Over Excited": 4750,
+      "The Show Must Go On": 4751
     },
     "Lucius": {
-      "Dichromancy": 19253
+      "Support route": 19253,
+      "support_route": 19253,
+      "Dichromancy": 19253,
+      "Corrosion Master": 19254,
+      "Lingering Chill": 19255
     },
     "Alyndra": {
-      "Expansive Vision": 17749
+      "Support route": 17749,
+      "support_route": 17749,
+      "Expansive Vision": 17749,
+      "Extra Judgy": 17750,
+      "Heroes of the Planes": 17751
     },
     "Mehen": {
-      "Found Family": 16152
+      "Fiend route": 16152,
+      "Found Family": 16152,
+      "Fighting Force": 16150,
+      "Father Figure": 16151
     },
     "Orisha": {
-      "Blazing Soul": 4909
+      "Support route": 4909,
+      "support_route": 4909,
+      "Blazing Soul": 4909,
+      "Long Burn": 4910,
+      "Sirens' Connection": 4911,
+      "Fierce Connection": 4912
     },
     "Penelope": {
+      "Support route": 14705,
+      "support_route": 14705,
       "Everybody Gets To Be Friends": 14705
     },
     "Shaka": {
-      "Blinding Wall of Light": 13424
+      "Support route": 13424,
+      "support_route": 13424,
+      "Blinding Wall of Light": 13424,
+      "Disintegrating Wall of Light": 13425
     },
     "Celeste": {
       "War Domain": 29,
@@ -297,13 +473,166 @@
       "Modron Core Toolbox": 18167
     },
     "Dob": {
-      "Befriend Everybody!": 8745
+      "Support route": 8745,
+      "support_route": 8745,
+      "Befriend Everybody!": 8745,
+      "Befriend the Magical": 8742,
+      "Befriend the Friendly": 8743,
+      "Befriend the Quick": 8744
+    },
+    "Vi": {
+      "Support route": 12318,
+      "support_route": 12318,
+      "A Nudge In The Right Direction": 12318,
+      "Bless Their Hearts": 12316,
+      "Positive Reinforcement": 12317
+    },
+    "Tatyana": {
+      "Tank route": 7389,
+      "Support route": 7389,
+      "Best Friend Forever": 7389,
+      "Your Friends are My Friends": 7387,
+      "By My Side": 7388
+    },
+    "Gazrick": {
+      "Support route": 7539,
+      "support_route": 7539,
+      "Aim Around Armor": 7539,
+      "Genius with Gold": 7538,
+      "Finesse with Frost": 7540
+    },
+    "Dungeon Master": {
+      "Utility route": 7850,
+      "Fear Not, Champions!": 7850,
+      "Where Did He Go This Time?": 7849,
+      "Special Guest Stars": 16144
+    },
+    "Merilwen": {
+      "Gold route": 7999,
+      "Support route": 7999,
+      "Meow-il-wen": 7999,
+      "Stink Like Skunk": 7997,
+      "Treasures Her Friends": 7998
+    },
+    "Nahara": {
+      "Support route": 19724,
+      "support_route": 19724,
+      "A Barovian Bond": 19724,
+      "A Grave Experience": 19723,
+      "A Skilled Lyre": 19725
+    },
+    "Voronika": {
+      "Support routing": 15635,
+      "Support route": 15635,
+      "Embrace Evil": 15635
+    },
+    "Blooshi": {
+      "Tank route": 7525,
+      "Damage route": 7523,
+      "Charred Souls": 7525,
+      "Sliced Souls": 7523,
+      "Skewered Souls": 7524,
+      "Resilient Spirit": 7526,
+      "Wild Spirit": 7527
+    },
+    "Egbert": {
+      "Support route": 8877,
+      "support_route": 8877,
+      "Control route": 8878,
+      "Atonement Begins with an Apology": 8877
     },
     "Widdle": {
-      "Mind and Body": 6910
+      "Fast Friends": 6910,
+      "Mind and Body": 6910,
+      "Strong and Steady": 6909,
+      "Wisdom and Confidence": 6911
+    },
+    "Brig": {
+      "Support route": 6355,
+      "support_route": 6355,
+      "\"Back\"-Up Singer": 6355,
+      "Cream of the Crop": 6356
+    },
+    "D'hani": {
+      "Debuff focus": 13717,
+      "Ochre Jelly Yellow": 13717,
+      "Twig Blight Green": 13718,
+      "Frost Giant Blue": 13719
+    },
+    "Yorven": {
+      "Support route": 17071,
+      "support_route": 17071,
+      "Eldritch Claw Tattoo": 17071,
+      "Hunger For Blood": 17070,
+      "Follow The Mad Rabbit": 17072,
+      "Infectious Fury": 17073
+    },
+    "Viconia": {
+      "Support route": 9785,
+      "support_route": 9785,
+      "Begrudging Respect": 9785,
+      "Holy Power": 9784,
+      "Turn Undead": 9786
     },
     "Kent": {
-      "Potent Poison": 9356
+      "Support route": 9356,
+      "support_route": 9356,
+      "Ranged route": 9355,
+      "Potent Poison": 9356,
+      "Robust Rivals": 9355
+    },
+    "Warduke": {
+      "DPS route": 9619,
+      "Evil route": 9620,
+      "Chaos Reigns": 9619,
+      "Mercenary for Hire": 9620,
+      "League of Malevolence": 9621
+    },
+    "Imoen": {
+      "Support route": 9646,
+      "support_route": 9646,
+      "Aberration Slaying Arrows": 9646,
+      "Beast Slaying Arrows": 9643,
+      "Dragon Slaying Arrows": 9644,
+      "Monstrosity Slaying Arrows": 9645
+    },
+    "Fen": {
+      "Support route": 9762,
+      "support_route": 9762,
+      "Curse of the Dhampir": 9762,
+      "Shadows of the Underdark": 9761
+    },
+    "Uriah": {
+      "Book of Exalted Deeds": 19680,
+      "Book of Vile Darkness": 19681
+    },
+    "Solaak": {
+      "Support route": 10617,
+      "support_route": 10617,
+      "Confidant": 10617,
+      "Unwavering": 10615,
+      "Emboldened": 10616
+    },
+    "Miria": {
+      "Tank route": 10672,
+      "Utility route": 10670,
+      "Independent": 10672,
+      "Methodical": 10670,
+      "Intellectual": 10671
+    },
+    "Antrius": {
+      "Support route": 10798,
+      "support_route": 10798,
+      "Bard College": 10798,
+      "Truly Awful Stats": 10799,
+      "The \"A\" In Chaotic Is For Antrius": 10800
+    },
+    "Nixie": {
+      "Support route": 10892,
+      "support_route": 10892,
+      "Anarchy Amplified": 10892,
+      "Infernal Impact": 10890,
+      "Flawed Force": 10891
     }
   }
 }
