@@ -21,14 +21,15 @@ from ic_gamedata.advice_fingerprint import (
     party_id_from_payload,
     should_refresh_advice,
 )
+from ic_ui import theme as ui_theme
 from ic_ui.tabs.dashboard_tab import DashboardTab
+from ic_ui.theme import (
+    advisor_text_styles,
+    formation_board_stylesheet,
+    on_theme_changed,
+)
 from ic_ui.widgets.advisor_controls import AdvisorGoalContextBar
 from ic_ui.widgets.advisor_widgets import (
-    ACCENT,
-    BG_INPUT,
-    BORDER,
-    BUD_BAR,
-    FORMATION_ZONE_BG,
     FormationSeatCard,
     advisor_badge,
     advisor_card,
@@ -39,6 +40,7 @@ from ic_ui.widgets.advisor_widgets import (
     advisor_portrait,
     advisor_role_combo,
     advisor_section,
+    refresh_advisor_chrome,
 )
 from ic_ui.workers.advisor import AdvisorRunnable
 from ic_ui.workers.roster_upgrade import RosterUpgradeRunnable
@@ -83,6 +85,13 @@ class AdvisorTab(QWidget):
         self._roster_worker_signals = None
         self._seat_card_frames: dict[int, QFrame] = {}
         self._build_ui()
+        on_theme_changed(self._on_theme_changed)
+
+    def _on_theme_changed(self, _mode: str) -> None:
+        if self._last_report is not None:
+            self._render_report(self._last_report, reset_scroll=False)
+        else:
+            refresh_advisor_chrome(self)
 
     @property
     def last_party_id(self) -> int | None:
@@ -580,13 +589,13 @@ class AdvisorTab(QWidget):
         self._seat_card_frames = {}
 
         if goal == "bud" and seat_report.bud_hero_name:
-            bud_card = advisor_card(accent_bar=BUD_BAR)
+            bud_card = advisor_card(accent_bar=ui_theme.BUD_BAR)
             advisor_card_layout(bud_card).addWidget(
                 advisor_lbl(f"BUD deze run: {seat_report.bud_hero_name}", kind="subtitle")
             )
             self._layout.addWidget(bud_card)
         elif goal == "speed" and seat_report.speed_hero_name:
-            speed_card = advisor_card(accent_bar=BUD_BAR)
+            speed_card = advisor_card(accent_bar=ui_theme.BUD_BAR)
             advisor_card_layout(speed_card).addWidget(
                 advisor_lbl(f"Speed focus: {seat_report.speed_hero_name}", kind="subtitle")
             )
@@ -717,7 +726,47 @@ class AdvisorTab(QWidget):
 
     def _render_formation_visual(self, seat_report) -> None:
         advisor_section(self._layout, f"Formatie — {seat_report.formation_name}")
-        nodes = [n for n in seat_report.visual_nodes if n.hero_id is not None]
+        try:
+            from ic_gamedata.seat_advisor.role_inference import role_label
+        except ImportError:
+            role_label = lambda r: r or "?"
+
+        self._render_formation_board(
+            [n for n in seat_report.visual_nodes if n.hero_id is not None],
+            role_label=role_label,
+            intro=(
+                "Klik op een slot om naar de seat-kaart te springen. "
+                "Enemies → rechts (front = naar rechts)."
+            ),
+        )
+
+        recommended = [
+            n for n in getattr(seat_report, "recommended_visual_nodes", ()) if n.hero_id is not None
+        ]
+        if recommended:
+            self._render_formation_board(
+                recommended,
+                role_label=role_label,
+                title="Ideale formatie (owned)",
+                intro="Veilige upgrade-projectie op basis van je huidige owned champions.",
+            )
+        else:
+            hidden_reason = getattr(seat_report, "recommended_hidden_reason", None)
+            if hidden_reason:
+                card = advisor_card()
+                lyt = advisor_card_layout(card)
+                lyt.addWidget(advisor_lbl("Ideale formatie (owned)", kind="subtitle"))
+                lyt.addWidget(advisor_lbl(hidden_reason, kind="muted"))
+                self._layout.addWidget(card)
+
+    def _render_formation_board(
+        self,
+        nodes,
+        *,
+        role_label,
+        intro: str,
+        title: str | None = None,
+    ) -> None:
         if not nodes:
             card = advisor_card()
             advisor_card_layout(card).addWidget(
@@ -725,11 +774,6 @@ class AdvisorTab(QWidget):
             )
             self._layout.addWidget(card)
             return
-
-        try:
-            from ic_gamedata.seat_advisor.role_inference import role_label
-        except ImportError:
-            role_label = lambda r: r or "?"
 
         pad = 16
         card_w, card_h = 100, 58
@@ -742,13 +786,9 @@ class AdvisorTab(QWidget):
 
         shell = advisor_card()
         shell_lyt = advisor_card_layout(shell)
-        shell_lyt.addWidget(
-            advisor_lbl(
-                "Klik op een slot om naar de seat-kaart te springen. "
-                "Enemies → rechts (front = naar rechts).",
-                kind="muted",
-            )
-        )
+        if title:
+            shell_lyt.addWidget(advisor_lbl(title, kind="subtitle"))
+        shell_lyt.addWidget(advisor_lbl(intro, kind="muted"))
 
         scroll = QScrollArea()
         scroll.setWidgetResizable(False)
@@ -760,22 +800,24 @@ class AdvisorTab(QWidget):
 
         board = QWidget()
         board.setFixedSize(width, height)
-        board.setStyleSheet(
-            f"background: {BG_INPUT}; border: 1px solid {BORDER}; border-radius: 8px;"
-        )
+        board.setStyleSheet(formation_board_stylesheet())
 
         for node in nodes:
             x = int((node.x - min_x) + pad)
             y = int((node.y - min_y) + pad)
-            zone_bg = FORMATION_ZONE_BG.get(node.zone, "#333338")
-            border = "#dc2626" if node.has_issue else ("#1f6feb" if node.is_bud else "#52525b")
+            zone_bg = ui_theme.FORMATION_ZONE_BG.get(node.zone, ui_theme.BG_HOVER)
+            border = (
+                ui_theme.ISSUE_BORDER
+                if node.has_issue
+                else (ui_theme.BUD_BORDER if node.is_bud else ui_theme.BORDER_HOVER)
+            )
             role = node.effective_role or node.inferred_role or "flex"
 
             seat_frame = FormationSeatCard(node.seat, board)
             seat_frame.setGeometry(x, y, card_w, card_h)
             seat_frame.setStyleSheet(
                 f"QFrame {{ background: {zone_bg}; border: 2px solid {border}; border-radius: 8px; }}"
-                f"QFrame:hover {{ border-color: {ACCENT}; }}"
+                f"QFrame:hover {{ border-color: {ui_theme.ACCENT}; }}"
             )
             seat_frame.clicked.connect(self._highlight_seat_card)
 
@@ -785,7 +827,8 @@ class AdvisorTab(QWidget):
             seat_lyt.addWidget(advisor_lbl(f"Slot {node.seat} · {node.zone}", kind="muted"))
             name_lbl = advisor_lbl((node.hero_name or "?")[:14], kind="subtitle")
             if node.is_bud:
-                name_lbl.setStyleSheet("font-size: 13px; font-weight: 600; color: #93c5fd;")
+                name_lbl.setProperty("advisorKind", "seat_name")
+                name_lbl.setStyleSheet(advisor_text_styles()["seat_name"])
             seat_lyt.addWidget(name_lbl)
             seat_lyt.addWidget(advisor_lbl(role_label(role), kind="muted"))
 

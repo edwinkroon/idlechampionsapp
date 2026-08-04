@@ -22,8 +22,14 @@ from ic_gamedata.advice_fingerprint import (
     should_refresh_advice,
 )
 from ic_ui.tabs.dashboard_tab import DashboardTab
+from ic_ui.theme import on_theme_changed
 from ic_ui.widgets.advisor_controls import AdvisorGoalContextBar
-from ic_ui.widgets.advisor_widgets import advisor_card, advisor_card_layout, advisor_lbl
+from ic_ui.widgets.advisor_widgets import (
+    advisor_card,
+    advisor_card_layout,
+    advisor_lbl,
+    refresh_advisor_chrome,
+)
 from ic_ui.workers.specializations import SpecializationsRunnable
 
 if TYPE_CHECKING:
@@ -55,7 +61,20 @@ class SpecializationsTab(QWidget):
         self._pending_auto_refresh = False
         self._has_results = False
         self._worker_signals = None
+        self._last_report = None
+        self._last_pending_items = None
         self._build_ui()
+        on_theme_changed(self._on_theme_changed)
+
+    def _on_theme_changed(self, _mode: str) -> None:
+        if self._last_report is not None:
+            self._render_report(
+                self._last_report,
+                self._last_pending_items or (),
+                reset_scroll=False,
+            )
+        else:
+            refresh_advisor_chrome(self)
 
     @property
     def has_results(self) -> bool:
@@ -246,6 +265,8 @@ class SpecializationsTab(QWidget):
             status = f"{status} · ververst {time.strftime('%H:%M:%S')}"
         self._status.setText(status)
         reset_scroll = not auto_refresh or not self._has_results
+        self._last_report = report
+        self._last_pending_items = pending_items
         self._render_report(report, pending_items, reset_scroll=reset_scroll)
         self._schedule_pending_analysis()
 
@@ -475,16 +496,41 @@ class SpecializationsTab(QWidget):
         if report.seat_report and report.seat_report.seats:
             review_ids.update(seat.hero_id for seat in report.seat_report.seats if seat.hero_id)
         for insight in report.specialization_insights or ():
-            review_ids.add(insight.hero_id)
+            if insight.status != "bench_suggestion":
+                review_ids.add(insight.hero_id)
         self._render_review_needed(review_ids)
+
+        # Only champions currently in the formation (not bench / seat assignees).
+        formation_ids = {
+            seat.hero_id
+            for seat in (report.seat_report.seats if report.seat_report else ())
+            if seat.hero_id
+        }
+        if not formation_ids:
+            formation_ids = {
+                ins.hero_id
+                for ins in (report.specialization_insights or ())
+                if ins.status != "bench_suggestion" and ins.seat is not None
+            }
+
+        formation_pending = [
+            item
+            for item in (pending_items or ())
+            if not formation_ids or item.hero_id in formation_ids
+        ]
 
         # 1) In-game dialogs still open
         self._section("Open keuzes")
-        self._render_pending(pending_items)
+        self._render_pending(formation_pending)
 
-        insights = tuple(report.specialization_insights or ())
+        insights = tuple(
+            ins
+            for ins in (report.specialization_insights or ())
+            if ins.status != "bench_suggestion"
+            and (not formation_ids or ins.hero_id in formation_ids)
+        )
         actionable = {"mismatch", "open_tier"}
-        extras = {"bench_suggestion", "formation_synergy"}
+        extras = {"formation_synergy"}
 
         # 2) One detailed card per hero that needs a change (no summary/per-champion echo)
         actionable_insights = [ins for ins in insights if ins.status in actionable]
@@ -494,7 +540,12 @@ class SpecializationsTab(QWidget):
 
         # 3) Compact green list for specs that already match — no per-hero cards
         if report.seat_report and report.seat_report.seats:
-            ok_lines = self._summary_lines(report.seat_report.seats, statuses={"match"})
+            formation_seats = [
+                seat
+                for seat in report.seat_report.seats
+                if not formation_ids or seat.hero_id in formation_ids
+            ]
+            ok_lines = self._summary_lines(formation_seats, statuses={"match"})
             if ok_lines:
                 self._section("In orde")
                 card = advisor_card()
@@ -503,10 +554,10 @@ class SpecializationsTab(QWidget):
                     lyt.addWidget(advisor_lbl(f"· {line}", kind=kind))
                 self._layout.addWidget(card)
 
-        # 4) Bench / formation suggestions (not the same as in-formation mismatches)
+        # 4) Formation synergy for in-party champions only (no bench cards)
         extra_insights = [ins for ins in insights if ins.status in extras]
         if extra_insights:
-            self._section("Bench & formatie")
+            self._section("Formatie")
             self._insight_cards(insights, statuses=extras)
 
         if report.tips:

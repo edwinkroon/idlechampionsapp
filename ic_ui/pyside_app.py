@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+import os
 import sys
 
-from PySide6.QtCore import Signal
+from PySide6.QtCore import QProcess, QSettings, Signal
+from PySide6.QtGui import QAction, QActionGroup, QKeySequence
 from PySide6.QtWidgets import QApplication, QMainWindow, QMenu, QMenuBar, QMessageBox, QTabWidget
 
 from ic_core.game_data_service import GameDataService, SnapshotEnvelope
@@ -12,6 +14,12 @@ from ic_ui.tabs.automation_tab import AutomationTab
 from ic_ui.tabs.dashboard_tab import DashboardTab
 from ic_ui.tabs.sources_tab import SourcesTab
 from ic_ui.tabs.specializations_tab import SpecializationsTab
+from ic_ui.theme import ThemeMode, apply_theme, current_theme
+
+
+_SETTINGS_ORG = "IdleChampions"
+_SETTINGS_APP = "Companion"
+_THEME_KEY = "ui/theme"
 
 
 class IdleChampionsMainWindow(QMainWindow):
@@ -23,6 +31,7 @@ class IdleChampionsMainWindow(QMainWindow):
         self.setWindowTitle("Idle Champions")
         self.resize(980, 760)
         self._caption_refresh.connect(self._refresh_app_caption_from_snapshots)
+        self._settings = QSettings(_SETTINGS_ORG, _SETTINGS_APP)
 
         self._data = GameDataService(self)
         self._data.snapshot_updated.connect(self._on_snapshot_updated)
@@ -117,11 +126,80 @@ class IdleChampionsMainWindow(QMainWindow):
 
     def _build_menu_bar(self) -> None:
         menu_bar = QMenuBar(self)
+
+        view_menu = QMenu("Beeld", self)
+        theme_group = QActionGroup(self)
+        theme_group.setExclusive(True)
+        dark_action = QAction("Donker", self)
+        dark_action.setCheckable(True)
+        light_action = QAction("Licht", self)
+        light_action.setCheckable(True)
+        theme_group.addAction(dark_action)
+        theme_group.addAction(light_action)
+        view_menu.addAction(dark_action)
+        view_menu.addAction(light_action)
+        dark_action.triggered.connect(lambda: self._set_theme("dark"))
+        light_action.triggered.connect(lambda: self._set_theme("light"))
+        self._theme_dark_action = dark_action
+        self._theme_light_action = light_action
+        self._sync_theme_menu()
+        view_menu.addSeparator()
+        reload_action = QAction("App herladen", self)
+        reload_action.setShortcut(QKeySequence("Ctrl+R"))
+        reload_action.setToolTip("Sluit de app af en start opnieuw")
+        reload_action.triggered.connect(self._reload_app)
+        view_menu.addAction(reload_action)
+        menu_bar.addMenu(view_menu)
+
         help_menu = QMenu("Help", self)
         about_action = help_menu.addAction("Over Idle Champions App…")
         about_action.triggered.connect(self._show_about_dialog)
         menu_bar.addMenu(help_menu)
         self.setMenuBar(menu_bar)
+
+    def _sync_theme_menu(self) -> None:
+        mode = current_theme()
+        self._theme_dark_action.setChecked(mode == "dark")
+        self._theme_light_action.setChecked(mode == "light")
+
+    def _set_theme(self, mode: ThemeMode) -> None:
+        apply_theme(mode)
+        self._settings.setValue(_THEME_KEY, mode)
+        self._sync_theme_menu()
+
+    def _reload_app(self) -> None:
+        if self._automation_tab.is_running:
+            reply = QMessageBox.question(
+                self,
+                "App herladen",
+                "Automatisering draait nog. Stoppen en de app herladen?",
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                QMessageBox.StandardButton.No,
+            )
+            if reply != QMessageBox.StandardButton.Yes:
+                return
+
+        args = list(sys.argv)
+        if getattr(sys, "frozen", False):
+            program = sys.executable
+            arguments = args[1:]
+        else:
+            program = sys.executable
+            arguments = args if args else []
+        cwd = os.getcwd()
+        # Start the replacement process first so a failed relaunch still leaves
+        # the current window open.
+        if not QProcess.startDetached(program, arguments, cwd):
+            QMessageBox.warning(
+                self,
+                "App herladen",
+                "Kon de app niet opnieuw starten. Huidige sessie blijft open.",
+            )
+            return
+        self.close()
+        app = QApplication.instance()
+        if app is not None:
+            app.quit()
 
     def _show_about_dialog(self) -> None:
         try:
@@ -174,8 +252,16 @@ class IdleChampionsMainWindow(QMainWindow):
         super().closeEvent(event)
 
 
+def _load_saved_theme() -> ThemeMode:
+    settings = QSettings(_SETTINGS_ORG, _SETTINGS_APP)
+    raw = str(settings.value(_THEME_KEY, "dark") or "dark").lower()
+    return "light" if raw == "light" else "dark"
+
+
 def run_pyside_app() -> int:
     app = QApplication.instance() or QApplication(sys.argv)
+    app.setStyle("Fusion")
+    apply_theme(_load_saved_theme(), app)
     window = IdleChampionsMainWindow()
     window.show()
     return app.exec()

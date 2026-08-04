@@ -21,7 +21,8 @@ from PySide6.QtWidgets import (
 )
 
 from ic_automation import AutomationController, AutomationSettings, win_input
-from ic_ui.theme import DEFAULT_WINDOW_TITLE, FKEY_FAMILIAR_COLOR, STATUS_IDLE
+from ic_ui import theme as ui_theme
+from ic_ui.theme import DEFAULT_WINDOW_TITLE, on_theme_changed
 from ic_ui.widgets.option_visibility import bind_option_visibility
 
 
@@ -66,6 +67,7 @@ class AutomationTab(QWidget):
         self._status_timer.timeout.connect(self._poll_status)
 
         self._build_ui()
+        on_theme_changed(self._apply_local_theme)
 
     @property
     def is_running(self) -> bool:
@@ -113,7 +115,9 @@ class AutomationTab(QWidget):
         root.addWidget(self._status_label)
 
         self._focus_indicator = QLabel("● Gestopt")
-        self._focus_indicator.setStyleSheet(f"color: {STATUS_IDLE}; font-weight: bold;")
+        self._focus_indicator.setStyleSheet(
+            f"color: {ui_theme.STATUS_IDLE}; font-weight: bold;"
+        )
         root.addWidget(self._focus_indicator)
 
         tip = QLabel("Tip: houd Ctrl in of beweeg de muis over deze app om te pauzeren / te scrollen.")
@@ -128,6 +132,18 @@ class AutomationTab(QWidget):
         form_root.addStretch(1)
         scroll.setWidget(content)
         root.addWidget(scroll, stretch=1)
+
+    def _apply_local_theme(self, _mode: str = "dark") -> None:
+        if not self._running:
+            self._focus_indicator.setStyleSheet(
+                f"color: {ui_theme.STATUS_IDLE}; font-weight: bold;"
+            )
+        elif self._widgets is not None:
+            self._apply_formation_fkeys(
+                self._formation_party_id,
+                self._formation_seats or frozenset(),
+                self._familiar_level_seats,
+            )
 
     def _build_settings_group(self) -> QGroupBox:
         group = QGroupBox("Instellingen")
@@ -314,7 +330,9 @@ class AutomationTab(QWidget):
         self.running_changed.emit(running)
         if not running:
             self._focus_indicator.setText("● Gestopt")
-            self._focus_indicator.setStyleSheet(f"color: {STATUS_IDLE}; font-weight: bold;")
+            self._focus_indicator.setStyleSheet(
+                f"color: {ui_theme.STATUS_IDLE}; font-weight: bold;"
+            )
 
     def _start_automation(self) -> None:
         if win_input.gw is None:
@@ -345,31 +363,38 @@ class AutomationTab(QWidget):
 
     def _update_focus_indicator(self, text: str, kind: str) -> None:
         lower = text.lower()
+        pause_style = f"color: {ui_theme.STATUS_PAUSE}; font-weight: bold;"
         if kind == "paused" or "gepauzeerd" in lower:
             if "shift" in lower or "ctrl" in lower:
                 self._focus_indicator.setText("⏸ Gepauzeerd — Ctrl ingedrukt")
-                self._focus_indicator.setStyleSheet("color: #b45309; font-weight: bold;")
+                self._focus_indicator.setStyleSheet(pause_style)
             elif "caps" in lower:
                 self._focus_indicator.setText("⏸ Gepauzeerd — Caps Lock aan")
-                self._focus_indicator.setStyleSheet("color: #b45309; font-weight: bold;")
+                self._focus_indicator.setStyleSheet(pause_style)
             elif "muis" in lower or "hover" in lower:
                 self._focus_indicator.setText("⏸ Gepauzeerd — muis boven deze app")
-                self._focus_indicator.setStyleSheet("color: #b45309; font-weight: bold;")
+                self._focus_indicator.setStyleSheet(pause_style)
             elif "focus" in lower:
                 self._focus_indicator.setText("⏸ Gepauzeerd — helper heeft focus")
-                self._focus_indicator.setStyleSheet("color: #b45309; font-weight: bold;")
+                self._focus_indicator.setStyleSheet(pause_style)
             else:
                 self._focus_indicator.setText("⏸ Gepauzeerd")
-                self._focus_indicator.setStyleSheet("color: #b45309; font-weight: bold;")
+                self._focus_indicator.setStyleSheet(pause_style)
         elif "wacht" in lower or "focus" in lower:
             self._focus_indicator.setText("⏳ Wacht op game-focus — klik in Idle Champions")
-            self._focus_indicator.setStyleSheet("color: #1d4ed8; font-weight: bold;")
+            self._focus_indicator.setStyleSheet(
+                f"color: {ui_theme.STATUS_WAIT}; font-weight: bold;"
+            )
         elif kind == "error":
             self._focus_indicator.setText("⚠ Fout — zie status hierboven")
-            self._focus_indicator.setStyleSheet("color: #dc2626; font-weight: bold;")
+            self._focus_indicator.setStyleSheet(
+                f"color: {ui_theme.STATUS_ERROR}; font-weight: bold;"
+            )
         else:
             self._focus_indicator.setText("● Actief")
-            self._focus_indicator.setStyleSheet("color: #15803d; font-weight: bold;")
+            self._focus_indicator.setStyleSheet(
+                f"color: {ui_theme.STATUS_ACTIVE}; font-weight: bold;"
+            )
 
     def _apply_formation_fkeys(
         self,
@@ -413,9 +438,10 @@ class AutomationTab(QWidget):
             font.setBold(has_familiar)
             cb.setFont(font)
             if has_familiar:
+                familiar = ui_theme.FKEY_FAMILIAR_COLOR
                 cb.setStyleSheet(
-                    f"QCheckBox {{ color: {FKEY_FAMILIAR_COLOR}; font-weight: 600; }}"
-                    f"QCheckBox:disabled {{ color: {FKEY_FAMILIAR_COLOR}; }}"
+                    f"QCheckBox {{ color: {familiar}; font-weight: 600; }}"
+                    f"QCheckBox:disabled {{ color: {familiar}; }}"
                 )
                 cb.setChecked(False)
                 cb.setEnabled(False)

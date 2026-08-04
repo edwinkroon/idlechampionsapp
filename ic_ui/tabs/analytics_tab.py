@@ -24,8 +24,9 @@ from ic_gamedata.analytics import (
 )
 from ic_gamedata.goal_run_history_store import load_goal_run_history
 from ic_gamedata.stats import GoalRunRecord
+from ic_ui import theme as ui_theme
 from ic_ui.tabs.dashboard_tab import DashboardTab
-from ic_ui.theme import ACCENT, BUD_BAR, SUCCESS, TEXT_MUTED, TEXT_PRIMARY
+from ic_ui.theme import on_theme_changed
 
 try:
     import pyqtgraph as pg
@@ -46,7 +47,16 @@ class AnalyticsTab(QWidget):
         self._refresh_timer.setInterval(1500)
         self._refresh_timer.timeout.connect(self.refresh)
         self._build_ui()
+        on_theme_changed(self._apply_local_theme)
         QTimer.singleShot(400, self.refresh)
+
+    def _apply_local_theme(self, _mode: str = "dark") -> None:
+        self._summary.setStyleSheet(f"color: {ui_theme.TEXT_PRIMARY};")
+        self._legend.setStyleSheet(f"color: {ui_theme.TEXT_MUTED}; font-size: 11px;")
+        if self._plot is not None:
+            self._plot.setBackground(ui_theme.PLOT_BG)
+        if self._selected_party is not None:
+            self._render_party(self._selected_party)
 
     def _build_ui(self) -> None:
         root = QVBoxLayout(self)
@@ -63,7 +73,7 @@ class AnalyticsTab(QWidget):
         export_btn = QPushButton("Export CSV")
         export_btn.clicked.connect(self._export_csv)
         clear_btn = QPushButton("Wis historie")
-        clear_btn.setToolTip("Wis alle doel-run tijden voor de geselecteerde party")
+        clear_btn.setToolTip("Wis Modron-run historie voor de geselecteerde party")
         clear_btn.clicked.connect(self._clear_history)
         ctrl.addWidget(refresh_btn)
         ctrl.addWidget(export_btn)
@@ -71,22 +81,22 @@ class AnalyticsTab(QWidget):
         ctrl.addStretch(1)
         root.addLayout(ctrl)
 
-        self._summary = QLabel("Modron-doel runs verschijnen hier zodra je resets voltooit.")
+        self._summary = QLabel("Modron-runs verschijnen hier zodra je resets voltooit.")
         self._summary.setWordWrap(True)
-        self._summary.setStyleSheet(f"color: {TEXT_PRIMARY};")
+        self._summary.setStyleSheet(f"color: {ui_theme.TEXT_PRIMARY};")
         root.addWidget(self._summary)
 
         if pg is None:
             fallback = QLabel("PyQtGraph is niet geïnstalleerd. Voer uit: pip install pyqtgraph")
             fallback.setWordWrap(True)
-            fallback.setStyleSheet(f"color: {TEXT_MUTED};")
+            fallback.setStyleSheet(f"color: {ui_theme.TEXT_MUTED};")
             root.addWidget(fallback)
             self._plot = None
             self._legend = QLabel("")
         else:
             pg.setConfigOptions(antialias=True)
             self._plot = pg.PlotWidget()
-            self._plot.setBackground("#252526")
+            self._plot.setBackground(ui_theme.PLOT_BG)
             self._plot.showGrid(x=True, y=True, alpha=0.25)
             self._plot.setLabel("left", "Duur", units="min")
             self._plot.setLabel("bottom", "Run")
@@ -94,7 +104,7 @@ class AnalyticsTab(QWidget):
             root.addWidget(self._plot, stretch=1)
 
             self._legend = QLabel("")
-            self._legend.setStyleSheet(f"color: {TEXT_MUTED}; font-size: 11px;")
+            self._legend.setStyleSheet(f"color: {ui_theme.TEXT_MUTED}; font-size: 11px;")
             root.addWidget(self._legend)
 
         root.addStretch(1)
@@ -125,7 +135,7 @@ class AnalyticsTab(QWidget):
 
         if not parties:
             self._summary.setText(
-                "Nog geen Modron-doel runs opgeslagen. Voltooi een run tot je Modron-doel op het dashboard."
+                "Nog geen Modron-runs opgeslagen. Voltooi een run tot je Modron-doel op het dashboard."
             )
             if self._plot is not None:
                 self._plot.clear()
@@ -172,11 +182,11 @@ class AnalyticsTab(QWidget):
         if summary.run_count == 0:
             if summary.excluded_unreliable_count:
                 self._summary.setText(
-                    f"Party {party_index}: geen betrouwbare Modron-doel runs "
+                    f"Party {party_index}: geen betrouwbare Modron-runs "
                     f"({summary.excluded_unreliable_count} overgeslagen na party-wissel)."
                 )
             else:
-                self._summary.setText(f"Party {party_index}: nog geen voltooide Modron-doel runs.")
+                self._summary.setText(f"Party {party_index}: nog geen voltooide Modron-runs.")
             if self._plot is not None:
                 self._plot.clear()
             if hasattr(self, "_legend"):
@@ -205,13 +215,16 @@ class AnalyticsTab(QWidget):
             x=x_vals,
             height=y_vals,
             width=0.65,
-            brush=pg.mkBrush(BUD_BAR),
+            brush=pg.mkBrush(ui_theme.BUD_BAR),
         )
         self._plot.addItem(bar_item)
 
         if summary.avg_sec is not None:
             avg_min = summary.avg_sec / 60.0
-            self._plot.addLine(y=avg_min, pen=pg.mkPen(ACCENT, width=1, style=Qt.PenStyle.DashLine))
+            self._plot.addLine(
+                y=avg_min,
+                pen=pg.mkPen(ui_theme.ACCENT, width=1, style=Qt.PenStyle.DashLine),
+            )
 
         if summary.best_sec is not None:
             best_index = min(summary.points, key=lambda p: p.duration_sec).run_index
@@ -221,7 +234,7 @@ class AnalyticsTab(QWidget):
                 [best_min],
                 symbol="star",
                 size=14,
-                brush=pg.mkBrush(SUCCESS),
+                brush=pg.mkBrush(ui_theme.SUCCESS),
                 pen=pg.mkPen("#14532d"),
             )
             self._plot.addItem(best_marker)
@@ -270,13 +283,13 @@ class AnalyticsTab(QWidget):
             history = self._load_history()
             parties = party_indexes_with_history(history)
             if not parties:
-                QMessageBox.information(self, "Wis historie", "Geen doel-runs om te wissen.")
+                QMessageBox.information(self, "Wis historie", "Geen Modron-runs om te wissen.")
                 return
             party_index = parties[0]
         reply = QMessageBox.question(
             self,
             "Wis historie",
-            f"Alle opgeslagen doel-run tijden voor party {party_index} wissen?\n"
+            f"Alle opgeslagen Modron-run tijden voor party {party_index} wissen?\n"
             "Dit kan niet ongedaan worden gemaakt.",
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
             QMessageBox.StandardButton.No,

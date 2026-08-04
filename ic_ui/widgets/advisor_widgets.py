@@ -15,24 +15,25 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from ic_ui import theme as ui_theme
 from ic_ui.theme import (
-    ACCENT,
-    BG_BADGE,
-    BG_INPUT,
-    BORDER,
-    BUD_BAR,
-    DIVIDER,
-    FORMATION_ZONE_BG,
     PORTRAIT_H,
     PORTRAIT_W,
-    TEXT_BADGE,
-    TEXT_MUTED,
-    WARN_BAR,
     advisor_accent_stylesheet,
+    advisor_badge_stylesheet,
     advisor_card_stylesheet,
     advisor_text_styles,
+    apply_card_shadow,
     portrait_placeholder_stylesheet,
 )
+
+# Re-exports for callers that import tokens via this module (prefer ui_theme.* for live switch).
+ACCENT = ui_theme.ACCENT
+BG_INPUT = ui_theme.BG_INPUT
+BORDER = ui_theme.BORDER
+BUD_BAR = ui_theme.BUD_BAR
+DIVIDER = ui_theme.DIVIDER
+FORMATION_ZONE_BG = ui_theme.FORMATION_ZONE_BG
 
 
 def widget_device_pixel_ratio(widget: QWidget) -> float:
@@ -101,6 +102,7 @@ class FormationSeatCard(QFrame):
 def advisor_lbl(text: str, *, kind: str = "body") -> QLabel:
     lbl = QLabel(text)
     lbl.setWordWrap(True)
+    lbl.setProperty("advisorKind", kind)
     styles = advisor_text_styles()
     lbl.setStyleSheet(styles.get(kind, styles["body"]))
     return lbl
@@ -108,10 +110,8 @@ def advisor_lbl(text: str, *, kind: str = "body") -> QLabel:
 
 def advisor_badge(text: str) -> QLabel:
     lbl = QLabel(text)
-    lbl.setStyleSheet(
-        f"font-size: 11px; color: {TEXT_BADGE}; background: {BG_BADGE}; "
-        f"border: none; border-radius: 10px; padding: 3px 10px;"
-    )
+    lbl.setProperty("advisorBadge", True)
+    lbl.setStyleSheet(advisor_badge_stylesheet())
     return lbl
 
 
@@ -119,6 +119,7 @@ def advisor_portrait(hero_id: int, width: int = PORTRAIT_W, height: int = PORTRA
     lbl = QLabel()
     lbl.setFixedSize(width, height)
     lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
+    lbl.setProperty("advisorPortrait", True)
     lbl.setStyleSheet(portrait_placeholder_stylesheet())
     try:
         from ic_gamedata.champion_portraits import champion_portrait_path
@@ -153,7 +154,8 @@ def advisor_divider() -> QFrame:
     line = QFrame()
     line.setFrameShape(QFrame.Shape.HLine)
     line.setFixedHeight(1)
-    line.setStyleSheet(f"background: {DIVIDER}; border: none;")
+    line.setProperty("advisorDivider", True)
+    line.setStyleSheet(f"background: {ui_theme.DIVIDER}; border: none;")
     return line
 
 
@@ -170,9 +172,13 @@ def advisor_card(*, highlight: bool = False, accent_bar: str | None = None) -> Q
     card = QFrame()
     card.setObjectName("advisorCard")
     card.setFrameShape(QFrame.Shape.NoFrame)
+    card.setProperty("advisorHighlight", highlight)
+    card.setProperty("advisorAccentCustom", accent_bar is not None)
+    bar_color = accent_bar or (ui_theme.WARN_BAR if highlight else ui_theme.DIVIDER)
+    card.setProperty("advisorAccentColor", bar_color)
     card.setStyleSheet(advisor_card_stylesheet())
+    apply_card_shadow(card)
 
-    bar_color = accent_bar or (WARN_BAR if highlight else DIVIDER)
     outer = QHBoxLayout(card)
     outer.setContentsMargins(0, 0, 0, 0)
     outer.setSpacing(10)
@@ -191,12 +197,48 @@ def advisor_card(*, highlight: bool = False, accent_bar: str | None = None) -> Q
 
 def advisor_section(layout: QVBoxLayout, text: str) -> None:
     lbl = QLabel(text.upper())
+    lbl.setProperty("advisorSection", True)
     lbl.setStyleSheet(
         f"font-size: 11px; font-weight: 600; letter-spacing: 0.05em; "
-        f"color: {TEXT_MUTED}; padding: 18px 4px 6px 4px; "
+        f"color: {ui_theme.TEXT_MUTED}; padding: 18px 4px 6px 4px; "
         f"border: none; background: transparent;"
     )
     layout.addWidget(lbl)
+
+
+def refresh_advisor_chrome(root: QWidget) -> None:
+    """Re-apply advisor local styles after a theme change."""
+    styles = advisor_text_styles()
+    for lbl in root.findChildren(QLabel):
+        kind = lbl.property("advisorKind")
+        if kind:
+            lbl.setStyleSheet(styles.get(kind, styles["body"]))
+        elif lbl.property("advisorBadge"):
+            lbl.setStyleSheet(advisor_badge_stylesheet())
+        elif lbl.property("advisorPortrait"):
+            lbl.setStyleSheet(portrait_placeholder_stylesheet())
+        elif lbl.property("advisorSection"):
+            lbl.setStyleSheet(
+                f"font-size: 11px; font-weight: 600; letter-spacing: 0.05em; "
+                f"color: {ui_theme.TEXT_MUTED}; padding: 18px 4px 6px 4px; "
+                f"border: none; background: transparent;"
+            )
+    for line in root.findChildren(QFrame):
+        if line.property("advisorDivider"):
+            line.setStyleSheet(f"background: {ui_theme.DIVIDER}; border: none;")
+        if line.objectName() == "advisorCard":
+            line.setStyleSheet(advisor_card_stylesheet())
+            apply_card_shadow(line)
+            accent = line.findChild(QFrame, "advisorAccent")
+            if accent is not None:
+                if line.property("advisorAccentCustom"):
+                    color = str(line.property("advisorAccentColor") or ui_theme.DIVIDER)
+                elif line.property("advisorHighlight"):
+                    color = ui_theme.WARN_BAR
+                else:
+                    color = ui_theme.DIVIDER
+                line.setProperty("advisorAccentColor", color)
+                accent.setStyleSheet(advisor_accent_stylesheet(color))
 
 
 def advisor_role_combo(
@@ -243,4 +285,5 @@ __all__ = [
     "advisor_role_combo",
     "advisor_section",
     "fit_portrait_pixmap",
+    "refresh_advisor_chrome",
 ]

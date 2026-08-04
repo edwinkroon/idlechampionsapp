@@ -6,8 +6,9 @@ import time
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from PySide6.QtCore import QTimer, Signal
+from PySide6.QtCore import Qt, QTimer, Signal
 from PySide6.QtWidgets import (
+    QFrame,
     QGridLayout,
     QGroupBox,
     QHBoxLayout,
@@ -15,6 +16,7 @@ from PySide6.QtWidgets import (
     QMessageBox,
     QProgressBar,
     QPushButton,
+    QScrollArea,
     QSizePolicy,
     QVBoxLayout,
     QWidget,
@@ -22,8 +24,9 @@ from PySide6.QtWidgets import (
 
 from ic_core.game_state import GameStateService
 from ic_core.memory_service import MemoryReading, MemoryService
+from ic_ui import theme as ui_theme
 from ic_ui.tabs.sources_tab import SourcesTab
-from ic_ui.theme import BG_BADGE, BUD_BAR, FEAT_OWNED, TEXT_BADGE
+from ic_ui.theme import apply_card_shadow, area_progress_bar_stylesheet, on_theme_changed, status_pill_stylesheet
 
 if TYPE_CHECKING:
     from ic_core.game_data_service import GameDataService
@@ -61,6 +64,7 @@ class DashboardTab(QWidget):
         self._label_refresh_timer.setInterval(1000)
         self._label_refresh_timer.timeout.connect(self._update_labels)
         self._build_ui()
+        on_theme_changed(self._apply_local_theme)
 
     @property
     def credentials(self):
@@ -170,16 +174,29 @@ class DashboardTab(QWidget):
 
     def _build_ui(self) -> None:
         root = QVBoxLayout(self)
+        root.setContentsMargins(8, 8, 8, 8)
+        root.setSpacing(10)
 
         self._dash_parties_container = QWidget()
+        self._dash_parties_container.setSizePolicy(
+            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum
+        )
         self._dash_parties_layout = QGridLayout(self._dash_parties_container)
-        self._dash_parties_layout.setContentsMargins(0, 0, 0, 0)
-        self._dash_parties_layout.setHorizontalSpacing(12)
-        self._dash_parties_layout.setVerticalSpacing(12)
+        # Margins leave room for QGraphicsDropShadowEffect (otherwise cards clip).
+        self._dash_parties_layout.setContentsMargins(10, 10, 10, 14)
+        self._dash_parties_layout.setHorizontalSpacing(16)
+        self._dash_parties_layout.setVerticalSpacing(16)
         self._dash_parties_layout.setColumnStretch(0, 1)
         self._dash_parties_layout.setColumnStretch(1, 1)
         self._dash_party_widgets: dict[int, dict[str, QWidget]] = {}
-        root.addWidget(self._dash_parties_container, stretch=1)
+
+        parties_scroll = QScrollArea()
+        parties_scroll.setWidgetResizable(True)
+        parties_scroll.setFrameShape(QFrame.Shape.NoFrame)
+        parties_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        parties_scroll.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+        parties_scroll.setWidget(self._dash_parties_container)
+        root.addWidget(parties_scroll, stretch=1)
 
         self._dash_detail = QLabel("")
         self._dash_detail.setWordWrap(True)
@@ -203,10 +220,7 @@ class DashboardTab(QWidget):
         self._status_memory = QLabel("Memory: —")
         self._status_session = QLabel("Sessie: —")
         for pill in (self._status_api, self._status_memory, self._status_session):
-            pill.setStyleSheet(
-                f"font-size: 11px; color: {TEXT_BADGE}; background: {BG_BADGE}; "
-                f"border: none; border-radius: 10px; padding: 4px 10px;"
-            )
+            pill.setStyleSheet(status_pill_stylesheet())
             status_row.addWidget(pill)
         status_row.addStretch(1)
         root.addLayout(status_row)
@@ -217,7 +231,19 @@ class DashboardTab(QWidget):
         self._dash_status.setWordWrap(True)
         root.addWidget(self._dash_status)
 
-        root.addStretch(1)
+    def _apply_local_theme(self, _mode: str = "dark") -> None:
+        for pill in (self._status_api, self._status_memory, self._status_session):
+            pill.setStyleSheet(status_pill_stylesheet())
+        for widgets in self._dash_party_widgets.values():
+            frame = widgets.get("frame")
+            if frame is not None:
+                apply_card_shadow(frame)
+            progress_bar = widgets.get("modron_progress")
+            if progress_bar is not None and progress_bar.isVisible():
+                progress_bar.setStyleSheet(
+                    area_progress_bar_stylesheet(complete=progress_bar.value() >= 100)
+                )
+        self._schedule_label_refresh()
 
     def _init_state(self) -> None:
         self._dash_install = None
@@ -282,14 +308,6 @@ class DashboardTab(QWidget):
             payload,
             memory_modron_area=mem_modron,
         )
-
-    @staticmethod
-    def _format_gold(value) -> str:
-        try:
-            from ic_gamedata.formatting import format_gold
-        except ImportError:
-            return DashboardTab._format_number(value)
-        return format_gold(value)
 
     @staticmethod
     def _format_number(value) -> str:
@@ -571,24 +589,21 @@ class DashboardTab(QWidget):
 
         box = QGroupBox(f"Party {party_index}")
         box.setProperty("party_index", party_index)
-        box.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
+        box.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+        apply_card_shadow(box)
         layout = QVBoxLayout(box)
+        layout.setContentsMargins(12, 18, 12, 12)
+        layout.setSpacing(6)
         lbl_area = QLabel("Area: —")
         lbl_modron_progress = QLabel("")
         modron_bar = QProgressBar()
         modron_bar.setRange(0, 100)
         modron_bar.setTextVisible(False)
         modron_bar.setFixedHeight(8)
-        modron_bar.setStyleSheet(
-            f"QProgressBar {{ background: #3f3f46; border: none; border-radius: 4px; }}"
-            f"QProgressBar::chunk {{ background: {BUD_BAR}; border-radius: 4px; }}"
-        )
+        modron_bar.setStyleSheet(area_progress_bar_stylesheet())
         modron_bar.hide()
         lbl_modron_progress.hide()
         lbl_run = QLabel("Run: —")
-        lbl_gold = QLabel("Gold: —")
-        lbl_gold_gained = QLabel("Gold verdiend: —")
-        lbl_gold_rate = QLabel("Gold/kw: —")
         lbl_gems = QLabel("Gems deze run: —")
         lbl_areas_rate = QLabel("Areas/kw: —")
         goal_runs_row = QWidget()
@@ -597,10 +612,10 @@ class DashboardTab(QWidget):
         lbl_goal_runs = QLabel("")
         btn_goal_runs_clear = QPushButton("Wis")
         btn_goal_runs_clear.setFixedWidth(40)
-        btn_goal_runs_clear.setToolTip("Wis alle doel-run tijden voor deze party")
+        btn_goal_runs_clear.setToolTip("Wis Modron-run historie voor deze party")
         btn_goal_runs_expand = QPushButton("▶")
         btn_goal_runs_expand.setFixedWidth(28)
-        btn_goal_runs_expand.setToolTip("Toon eerdere doel-runs")
+        btn_goal_runs_expand.setToolTip("Toon eerdere Modron-runs")
         goal_runs_row_layout.addWidget(lbl_goal_runs, stretch=1)
         goal_runs_row_layout.addWidget(btn_goal_runs_clear)
         goal_runs_row_layout.addWidget(btn_goal_runs_expand)
@@ -615,9 +630,6 @@ class DashboardTab(QWidget):
         all_labels = (
             lbl_area,
             lbl_run,
-            lbl_gold,
-            lbl_gold_gained,
-            lbl_gold_rate,
             lbl_gems,
             lbl_areas_rate,
             lbl_patron,
@@ -633,9 +645,6 @@ class DashboardTab(QWidget):
             lbl_modron_progress,
             modron_bar,
             lbl_run,
-            lbl_gold,
-            lbl_gold_gained,
-            lbl_gold_rate,
             lbl_gems,
             lbl_areas_rate,
         ):
@@ -660,9 +669,6 @@ class DashboardTab(QWidget):
             "modron_progress_label": lbl_modron_progress,
             "modron_progress": modron_bar,
             "run": lbl_run,
-            "gold": lbl_gold,
-            "gold_gained": lbl_gold_gained,
-            "gold_rate": lbl_gold_rate,
             "gems": lbl_gems,
             "areas_rate": lbl_areas_rate,
             "goal_runs_row": goal_runs_row,
@@ -726,8 +732,8 @@ class DashboardTab(QWidget):
     def _clear_goal_runs(self, party_index: int) -> None:
         reply = QMessageBox.question(
             self,
-            "Doel-runs wissen",
-            f"Alle opgeslagen doel-run tijden voor party {party_index} wissen?\n"
+            "Modron-runs wissen",
+            f"Alle opgeslagen Modron-run tijden voor party {party_index} wissen?\n"
             "Dit kan niet ongedaan worden gemaakt.",
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
             QMessageBox.StandardButton.No,
@@ -739,7 +745,7 @@ class DashboardTab(QWidget):
         self._update_labels()
 
     def _goal_run_label_style(self, unreliable: bool) -> str:
-        color = FEAT_OWNED if unreliable else TEXT_BADGE
+        color = ui_theme.FEAT_OWNED if unreliable else ui_theme.TEXT_BADGE
         return f"color: {color};"
 
     def _apply_goal_runs(self, widgets: dict[str, QWidget], view) -> None:
@@ -800,9 +806,6 @@ class DashboardTab(QWidget):
         widgets["frame"].setTitle(view.title)
         widgets["area"].setText(view.area)
         widgets["run"].setText(view.run)
-        widgets["gold"].setText(view.gold)
-        widgets["gold_gained"].setText(view.gold_gained)
-        widgets["gold_rate"].setText(view.gold_rate)
         widgets["gems"].setText(view.gems)
         widgets["areas_rate"].setText(view.areas_rate)
         progress_bar = widgets.get("modron_progress")
@@ -810,6 +813,9 @@ class DashboardTab(QWidget):
         if progress_bar is not None and progress_label is not None:
             if view.modron_progress_pct is not None:
                 progress_bar.setValue(view.modron_progress_pct)
+                progress_bar.setStyleSheet(
+                    area_progress_bar_stylesheet(complete=view.modron_progress_pct >= 100)
+                )
                 progress_bar.show()
                 if view.modron_progress_text:
                     progress_label.setText(view.modron_progress_text)
@@ -839,7 +845,7 @@ class DashboardTab(QWidget):
         ):
             pill.setText(text)
             pill.setStyleSheet(
-                f"font-size: 11px; color: {TEXT_BADGE}; background: {BG_BADGE}; "
+                f"font-size: 11px; color: {ui_theme.TEXT_BADGE}; background: {ui_theme.BG_BADGE}; "
                 f"border-left: 4px solid {color}; border-radius: 10px; padding: 4px 10px;"
             )
 
@@ -910,7 +916,6 @@ class DashboardTab(QWidget):
                     run_sec=self._run_duration_sec(party),
                     gems=gems,
                     gem_prefix=gem_prefix,
-                    format_gold=self._format_gold,
                     format_number=self._format_number,
                     format_duration=self._format_duration,
                     format_rate_window=self._format_rate_window,
