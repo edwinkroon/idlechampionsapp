@@ -44,7 +44,12 @@ _UNHANDLED_EXPR_MARKERS = (
     "timeavailable",
     "numequipment",
     "numilevels",
-    "get_stat(",
+    # GetStat / get_stat are evaluated by _eval_atom — do not mark unknown.
+)
+
+_GETSTAT_GATE_RE = re.compile(
+    r"GetStat\s*\(\s*[`']?(\w+)[`']?\s*\)\s*(>=|<=|==|>|<)\s*(\d+)",
+    re.IGNORECASE,
 )
 
 _STANDARD_RACE_TAGS = frozenset(
@@ -201,7 +206,7 @@ def _filter_from_by_tags(tags_value: str, *, disallow: bool) -> AdventureRosterF
     raw = tags_value.strip()
     if not _SIMPLE_TAG.fullmatch(raw):
         filt.has_unknown_rules = True
-        filt.active_notes.append("Complexe tag-regel uit API (niet volledig evalueerbaar)")
+        filt.active_notes.append("Complex tag rule from API (not fully evaluable)")
         return filt
     if raw.startswith("!") or disallow:
         filt.banned_tags.add(_normalize_tag(raw))
@@ -230,6 +235,36 @@ def _filter_from_by_stat(stats_list: list[dict[str, Any]], *, disallow: bool) ->
     return filt
 
 
+def _stat_gates_from_expr(expr: str, *, source: str = "by_expr") -> list[dict[str, Any]]:
+    """Extract GetStat comparisons for structured export (not always hard mins)."""
+    cleaned = expr.strip()
+    if not cleaned:
+        return []
+    scope = "allow_expr_or_clause" if "||" in cleaned else "allow_expr"
+    if "||" not in cleaned and "&&" not in cleaned and cleaned.count("GetStat") == 1:
+        # Sole gate in the expression — still allow_expr unless also in min_stats.
+        scope = "allow_expr_sole_gate"
+    gates: list[dict[str, Any]] = []
+    for match in _GETSTAT_GATE_RE.finditer(cleaned):
+        stat_raw = match.group(1).strip().lower()
+        stat_key = _STAT_ALIASES.get(stat_raw, stat_raw)
+        value = _parse_int(match.group(3))
+        if value is None:
+            continue
+        gates.append(
+            {
+                "stat": stat_key,
+                "operator": match.group(2),
+                "value": value,
+                "scope": scope,
+                "source": source,
+                "raw_expr": cleaned,
+                "stats_basis": "character_sheet_ability_scores",
+            }
+        )
+    return gates
+
+
 def _filter_from_by_expr(expr: str, *, disallow: bool) -> AdventureRosterFilter:
     filt = AdventureRosterFilter()
     cleaned = expr.strip()
@@ -242,6 +277,19 @@ def _filter_from_by_expr(expr: str, *, disallow: bool) -> AdventureRosterFilter:
     filt.allow_exprs.append(cleaned)
     for hero_id in _extract_hero_id_equals(cleaned):
         filt.exempt_hero_ids.add(hero_id)
+    # Human-readable note for common GetStat gates (OR-clauses stay soft).
+    gates = _stat_gates_from_expr(cleaned)
+    if gates and "||" not in cleaned:
+        g0 = gates[0]
+        filt.active_notes.append(
+            f"Min. {g0['stat'].upper()} {g0['value']} (expr)"
+        )
+    elif gates:
+        g0 = gates[0]
+        filt.active_notes.append(
+            f"{g0['stat'].upper()} {g0['operator']} {g0['value']} "
+            f"of andere uitzondering (OR-expr)"
+        )
     return filt
 
 
@@ -301,7 +349,7 @@ def _filter_from_patron(payload: dict[str, Any], patron_id: int | None) -> Adven
     roster = load_patron_roster()
     if not roster:
         filt.has_unknown_rules = True
-        filt.active_notes.append("Patron-rooster ontbreekt — update config/patron_roster.json")
+        filt.active_notes.append("Patron roster missing — update config/patron_roster.json")
         return filt
 
     filt.patron_id = patron_id
@@ -324,7 +372,7 @@ def _filter_from_patron(payload: dict[str, Any], patron_id: int | None) -> Adven
             filt.patron_blocked_hero_ids.add(hero_id)
             blocked += 1
     if blocked:
-        filt.active_notes.append(f"Patron {patron_name}: {blocked} champions niet bruikbaar")
+        filt.active_notes.append(f"Patron {patron_name}: {blocked} champions unavailable")
     return filt
 
 
@@ -372,12 +420,12 @@ def _parse_restrictions_text(text: str) -> AdventureRosterFilter:
 
         if re.search(r"only champions with the support tag", lower):
             filt.required_tags.add("support")
-            filt.active_notes.append("Alleen Support-champions")
+            filt.active_notes.append("Support champions only")
             continue
 
         if re.search(r"tanking role can not be used|may not use tanking champions", lower):
             filt.banned_tags.add("tanking")
-            filt.active_notes.append("Geen tanking-champions")
+            filt.active_notes.append("No tanking champions")
             continue
 
         if match := re.search(
@@ -397,12 +445,12 @@ def _parse_restrictions_text(text: str) -> AdventureRosterFilter:
 
         if re.search(r"may only use good champions", lower):
             filt.allow_exprs.append("HasTag(`good`)")
-            filt.active_notes.append("Alleen Good-champions (+ andere uitzonderingen)")
+            filt.active_notes.append("Good champions only (+ other exceptions)")
             continue
 
         if re.search(r"positional formation abilities", lower):
             filt.has_unknown_rules = True
-            filt.active_notes.append("Alleen champions met positional abilities")
+            filt.active_notes.append("Champions with positional abilities only")
             continue
 
     return filt
@@ -532,8 +580,8 @@ def _note_from_game_change(change: dict[str, Any]) -> str | None:
             if isinstance(tags_value, str) and tags_value.strip():
                 raw = tags_value.strip()
                 if raw.startswith("!"):
-                    return f"Geen tag: {_normalize_tag(raw)}"
-                return f"Tag vereist: {raw}"
+                    return f"Missing tag: {_normalize_tag(raw)}"
+                return f"Required tag: {raw}"
         by_stat = change.get("by_stat")
         if isinstance(by_stat, dict):
             stats_list = by_stat.get("stats")
@@ -548,13 +596,23 @@ def _note_from_game_change(change: dict[str, Any]) -> str | None:
         if isinstance(by_expr, dict):
             expr = by_expr.get("expr")
             if isinstance(expr, str) and expr.strip():
-                return "Expressie-regel uit API"
+                gates = _stat_gates_from_expr(expr)
+                if gates and "||" in expr:
+                    g0 = gates[0]
+                    return (
+                        f"{g0['stat'].upper()} {g0['operator']} {g0['value']} "
+                        f"of tag-uitzondering (API OR-expr)"
+                    )
+                if gates:
+                    g0 = gates[0]
+                    return f"Min. {g0['stat'].upper()} {g0['value']} (API expr)"
+                return "Expression rule from API"
     if change_type == "disallow_crusaders":
         by_tags = change.get("by_tags")
         if isinstance(by_tags, dict):
             tags_value = by_tags.get("tags")
             if isinstance(tags_value, str) and tags_value.strip():
-                return f"Verboden tag: {tags_value.strip()}"
+                return f"Forbidden tag: {tags_value.strip()}"
     return None
 
 
@@ -571,7 +629,7 @@ def build_adventure_roster_filter(
     unavailable = _trials_unavailable_hero_ids(payload)
     if unavailable:
         filt.banned_hero_ids.update(unavailable)
-        filt.active_notes.append(f"Trials: {len(unavailable)} champions niet beschikbaar")
+        filt.active_notes.append(f"Trials: {len(unavailable)} champions unavailable")
 
     if adv is not None:
         for change in adv.get("game_changes") or []:
@@ -588,11 +646,11 @@ def build_adventure_roster_filter(
 
     if filt.required_tags and not any("tag" in note.casefold() for note in filt.active_notes):
         filt.active_notes.append(
-            "Alleen champions met tag: " + ", ".join(sorted(filt.required_tags))
+            "Champions with tag only: " + ", ".join(sorted(filt.required_tags))
         )
-    if filt.banned_tags and not any("tanking" in note.casefold() or "verboden" in note.casefold() for note in filt.active_notes):
+    if filt.banned_tags and not any("tanking" in note.casefold() or "forbidden" in note.casefold() for note in filt.active_notes):
         filt.active_notes.append(
-            "Verboden tags: " + ", ".join(sorted(filt.banned_tags))
+            "Forbidden tags: " + ", ".join(sorted(filt.banned_tags))
         )
     for stat, value in filt.min_stats:
         note = f"Min. {stat.upper()} {value}"
@@ -602,7 +660,7 @@ def build_adventure_roster_filter(
     if filt.min_stats or filt.allow_exprs:
         if not hero_ability_scores_map_from_cached_definitions() and not hero_tags_map_from_cached_definitions():
             filt.has_unknown_rules = True
-            note = "cached_definitions.json ontbreekt — download via game voor volledige check"
+            note = "cached_definitions.json missing — download via the game for a full check"
             if note not in filt.active_notes:
                 filt.active_notes.append(note)
 
@@ -898,3 +956,183 @@ def restriction_summary(roster_filter: AdventureRosterFilter | None) -> str | No
     if not unique:
         return None
     return " · ".join(unique[:4])
+
+
+def structured_stat_gates(roster_filter: AdventureRosterFilter | None) -> list[dict[str, Any]]:
+    """Hard min_stats + GetStat gates mined from allow_exprs."""
+    if roster_filter is None:
+        return []
+    gates: list[dict[str, Any]] = []
+    for stat, value in roster_filter.min_stats:
+        gates.append(
+            {
+                "stat": stat,
+                "operator": ">=",
+                "value": value,
+                "scope": "hard_min",
+                "source": "by_stat_or_text",
+                "stats_basis": "character_sheet_ability_scores",
+            }
+        )
+    for expr in roster_filter.allow_exprs:
+        gates.extend(_stat_gates_from_expr(expr))
+    return gates
+
+
+def evaluate_heroes_against_filter(
+    hero_ids: list[int] | tuple[int, ...],
+    roster_filter: AdventureRosterFilter | None,
+) -> list[dict[str, Any]]:
+    """Per-hero restriction outcome without formation-trust bypass.
+
+    Returns status: allowed | denied | unknown.
+    """
+    results: list[dict[str, Any]] = []
+    if roster_filter is None:
+        for hid in hero_ids:
+            results.append(
+                {
+                    "champion_id": hid,
+                    "status": "unknown",
+                    "reason": "Geen restrictiefilter beschikbaar.",
+                    "ability_scores": _hero_meta(hid).stats or None,
+                }
+            )
+        return results
+
+    for hid in hero_ids:
+        meta = _hero_meta(hid)
+        # Do not pass formation_hero_ids — seated ≠ proven eligible.
+        if hid in roster_filter.banned_hero_ids or hid in roster_filter.patron_blocked_hero_ids:
+            results.append(
+                {
+                    "champion_id": hid,
+                    "status": "denied",
+                    "reason": "Champion geblokkeerd door adventure/patron/trials.",
+                    "ability_scores": meta.stats or None,
+                }
+            )
+            continue
+        if hid in roster_filter.exempt_hero_ids:
+            results.append(
+                {
+                    "champion_id": hid,
+                    "status": "allowed",
+                    "reason": "Uitzondering (hero_id) in restrictieregel.",
+                    "ability_scores": meta.stats or None,
+                }
+            )
+            continue
+
+        hard_fail_reasons: list[str] = []
+        for stat, minimum in roster_filter.min_stats:
+            value = meta.stats.get(stat)
+            if value is None:
+                hard_fail_reasons.append(
+                    f"{stat.upper()} onbekend (basisscore ontbreekt); min {minimum}."
+                )
+            elif value < minimum:
+                hard_fail_reasons.append(
+                    f"{stat.upper()} {value} < min {minimum} (character_sheet basis)."
+                )
+
+        if roster_filter.banned_tags & meta.all_tags:
+            hard_fail_reasons.append(
+                "Verboden tag: "
+                + ", ".join(sorted(roster_filter.banned_tags & meta.all_tags))
+            )
+        if roster_filter.required_tags and not roster_filter.required_tags.issubset(
+            meta.all_tags
+        ):
+            missing = roster_filter.required_tags - meta.all_tags
+            hard_fail_reasons.append(
+                "Vereiste tags ontbreken: " + ", ".join(sorted(missing))
+            )
+
+        expr_status: str | None = None
+        expr_detail = None
+        if roster_filter.allow_exprs:
+            expr_results = [_eval_expr(expr, meta) for expr in roster_filter.allow_exprs]
+            if any(result is True for result in expr_results):
+                expr_status = "allowed"
+                expr_detail = "Voldoet aan allow_expr (tag/stat/OR)."
+            elif any(result is None for result in expr_results):
+                expr_status = "unknown"
+                expr_detail = "allow_expr niet volledig evalueerbaar."
+            else:
+                expr_status = "denied"
+                expr_detail = "Voldoet niet aan allow_expr."
+
+        if hard_fail_reasons and not roster_filter.allow_exprs:
+            results.append(
+                {
+                    "champion_id": hid,
+                    "status": "denied" if all(
+                        "onbekend" not in r for r in hard_fail_reasons
+                    ) else "unknown",
+                    "reason": "; ".join(hard_fail_reasons),
+                    "ability_scores": meta.stats or None,
+                }
+            )
+            continue
+
+        if roster_filter.allow_exprs:
+            if expr_status == "allowed":
+                results.append(
+                    {
+                        "champion_id": hid,
+                        "status": "allowed",
+                        "reason": expr_detail,
+                        "ability_scores": meta.stats or None,
+                        "note": (
+                            "; ".join(hard_fail_reasons)
+                            if hard_fail_reasons
+                            else None
+                        ),
+                    }
+                )
+            elif expr_status == "unknown":
+                results.append(
+                    {
+                        "champion_id": hid,
+                        "status": "unknown",
+                        "reason": expr_detail,
+                        "ability_scores": meta.stats or None,
+                    }
+                )
+            else:
+                # Denied by expr; hard min_stats alone don't apply as AND when
+                # the API rule is an OR allow_expr — report expr denial.
+                results.append(
+                    {
+                        "champion_id": hid,
+                        "status": "denied",
+                        "reason": expr_detail
+                        or "; ".join(hard_fail_reasons)
+                        or "Niet toegestaan.",
+                        "ability_scores": meta.stats or None,
+                    }
+                )
+            continue
+
+        if hard_fail_reasons:
+            results.append(
+                {
+                    "champion_id": hid,
+                    "status": "unknown"
+                    if any("onbekend" in r for r in hard_fail_reasons)
+                    else "denied",
+                    "reason": "; ".join(hard_fail_reasons),
+                    "ability_scores": meta.stats or None,
+                }
+            )
+        else:
+            results.append(
+                {
+                    "champion_id": hid,
+                    "status": "allowed",
+                    "reason": "Geen blokkerende restrictie voor deze champion.",
+                    "ability_scores": meta.stats or None,
+                }
+            )
+    return results

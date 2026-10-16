@@ -1975,6 +1975,42 @@
         "zariel": "feat",
         "elminster": "timed"
       }
+    },
+    {
+      "hero_id": 178,
+      "name": "Flint",
+      "seat": 9,
+      "patrons": {
+        "mirt": "available",
+        "vajra": "available",
+        "strahd": "unavailable",
+        "zariel": "available",
+        "elminster": "timed"
+      }
+    },
+    {
+      "hero_id": 179,
+      "name": "Caramon",
+      "seat": 3,
+      "patrons": {
+        "mirt": "available",
+        "vajra": "available",
+        "strahd": "unavailable",
+        "zariel": "available",
+        "elminster": "timed"
+      }
+    },
+    {
+      "hero_id": 180,
+      "name": "Kitiara",
+      "seat": 4,
+      "patrons": {
+        "mirt": "available",
+        "vajra": "available",
+        "strahd": "available",
+        "zariel": "available",
+        "elminster": "timed"
+      }
     }
   ]
 }

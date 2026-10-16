@@ -41,6 +41,7 @@ class AutomationWorker:
         self._next_click = 0.0
         self._last_pause_emit = 0.0
         self._last_pause_reason: str | None = None
+        self._abilities_reschedule = False
 
     def start(self) -> None:
         if self._thread and self._thread.is_alive():
@@ -55,6 +56,7 @@ class AutomationWorker:
         self._next_click = now
         self._last_pause_emit = 0.0
         self._last_pause_reason = None
+        self._abilities_reschedule = False
         self._thread = threading.Thread(target=self._run, name="ic-automation-worker", daemon=True)
         self._thread.start()
 
@@ -67,11 +69,27 @@ class AutomationWorker:
 
     def update_settings(self, settings: AutomationSettings) -> None:
         with self._lock:
+            old = self._settings
             self._settings = settings
+            if (
+                old.enable_abilities != settings.enable_abilities
+                or old.abilities_interval_sec != settings.abilities_interval_sec
+                or old.abilities_keys != settings.abilities_keys
+            ):
+                # Apply seat/interval changes on the next tick instead of waiting
+                # out the previous abilities timer (which felt like needing restart).
+                self._abilities_reschedule = True
 
     def _get_settings(self) -> AutomationSettings:
         with self._lock:
             return self._settings
+
+    def _take_abilities_reschedule(self) -> bool:
+        with self._lock:
+            if not self._abilities_reschedule:
+                return False
+            self._abilities_reschedule = False
+            return True
 
     def _emit(self, text: str, kind: str = "status") -> None:
         try:
@@ -85,19 +103,19 @@ class AutomationWorker:
             return
         self._last_pause_reason = reason
         self._last_pause_emit = now
-        self._emit(f"Status: gepauzeerd — {reason}", "paused")
+        self._emit(f"Status: paused — {reason}", "paused")
 
     def _ui_pause_reason(self, settings: AutomationSettings) -> str | None:
         """Hard pause: user is interacting with helper or holding Ctrl."""
         if win_input.caps_lock_on():
-            return "Caps Lock staat aan"
+            return "Caps Lock is on"
         if settings.pause_on_ctrl and win_input.ctrl_held():
-            return "Ctrl ingedrukt (laat los om door te gaan)"
+            return "Ctrl held (release to continue)"
         if settings.exclude_hwnd is not None:
             if settings.pause_when_over_app and win_input.cursor_over_hwnd(settings.exclude_hwnd):
-                return "muis boven helper-app"
+                return "mouse over helper app"
             if settings.pause_when_app_focused and win_input.foreground_is_hwnd(settings.exclude_hwnd):
-                return "helper-app heeft focus"
+                return "helper app has focus"
         return None
 
     def _guards_ok(self, settings: AutomationSettings, *, for_auto_click: bool = False) -> bool:
@@ -164,7 +182,7 @@ class AutomationWorker:
             # Clear pause banner when we resume.
             if self._last_pause_reason and self._ui_pause_reason(settings) is None:
                 self._last_pause_reason = None
-                self._emit("Status: actief (worker)")
+                self._emit("Status: active (worker)")
 
             if settings.enable_auto_click and now >= self._next_click:
                 cps = max(1, min(20, int(settings.auto_click_cps)))
@@ -183,24 +201,36 @@ class AutomationWorker:
                 if self._guards_ok(settings):
                     self._with_focus(settings, lambda: win_input.do_auto_progress(True))
 
+            if self._take_abilities_reschedule():
+                self._next_abilities = now
+
             if settings.enable_abilities and now >= self._next_abilities:
                 self._next_abilities = now + max(3, int(settings.abilities_interval_sec))
-                if self._guards_ok(settings):
+                keys = [
+                    key
+                    for key in ("1", "2", "3", "4", "5", "6", "7", "8", "9", "0")
+                    if key in set(settings.abilities_keys)
+                ]
+                if not keys:
+                    self._emit(
+                        "Status: abilities — no seats selected "
+                        "(check 1–0 under Special abilities)"
+                    )
+                elif self._guards_ok(settings):
                     ok = self._with_focus(
                         settings,
-                        lambda: win_input.do_abilities_cycle(
-                            ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0"], True
-                        ),
+                        lambda: win_input.do_abilities_cycle(keys, True),
                     )
                     if ok:
+                        shown = "".join(keys)
                         self._emit(
-                            f"Status: abilities → alle toetsen 1-0 verstuurd "
-                            f"(elke {settings.abilities_interval_sec}s)"
+                            f"Status: abilities → sent {shown} "
+                            f"(every {settings.abilities_interval_sec}s)"
                         )
                     elif self._ui_pause_reason(settings) is None:
                         self._emit(
-                            "Status: abilities wacht — zet focus op het spel (of zet "
-                            "'alleen bij spel-focus' uit)",
+                            "Status: abilities waiting — focus the game (or disable "
+                            "'only when game is focused')",
                             "error",
                         )
 
@@ -209,8 +239,8 @@ class AutomationWorker:
                 self._next_level = now + (0.05 if interval <= 0 else float(interval))
                 if not settings.level_champions:
                     self._emit(
-                        "Status: actief — geen seats om te levelen "
-                        "(wacht op formatie-sync, of vink F-toetsen handmatig aan)"
+                        "Status: active — no seats to level "
+                        "(formation sync pending, or check F-keys manually)"
                     )
                 elif self._guards_ok(settings):
                     champs = list(settings.level_champions)
@@ -220,8 +250,8 @@ class AutomationWorker:
 
                     if self._with_focus(settings, _level):
                         if interval <= 0:
-                            self._emit("Status: actief — level zo snel mogelijk")
+                            self._emit("Status: active — level as fast as possible")
                         else:
-                            self._emit(f"Status: actief — level elke {interval} sec")
+                            self._emit(f"Status: active — level every {interval} sec")
 
             self._stop.wait(self._tick_sec)

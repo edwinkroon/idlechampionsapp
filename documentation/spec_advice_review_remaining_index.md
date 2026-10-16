@@ -1,6 +1,6 @@
 # Spec advice review — remaining champions (not yet in advisor models)
 
-Curated models already cover 164 heroes. Remaining: **0**.
+Curated models already cover 167 heroes (incl. Kitiara / Liar's Night 2026). Remaining: **0**.
 
 Feed each batch markdown to Perplexity with the decision rule at the top of the file.
 

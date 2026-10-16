@@ -1,0 +1,349 @@
+{
+  "version": 1,
+  "notes": "BUD-relative placement. defaults.by_tag/by_role seed many champs; heroes override. Relations: adjacent, not_adjacent, adjacent_behind, adjacent_column, same_or_one_behind, hew_teamwork, same_column, ahead, behind, farthest, front, back, not_front, not_edge, graph_distance_lte/gte, carry_not_edge, carry_column_distance_lte, prefer_column, avoid/prefer_adjacent_role, adjacent_count_lt, shadowheart_dex_spread. Batches A–E.",
+  "defaults": {
+    "by_tag": {
+      "buffer": {
+        "bud_relation": "adjacent",
+        "priority": 3,
+        "headline": "{hero}: move next to BUD",
+        "detail": "{hero} (slot {seat}) is a buffer and should sit adjacent to BUD {carry} (slot {carry_seat})."
+      },
+      "debuffer": {
+        "bud_relation": "adjacent",
+        "priority": 3,
+        "headline": "{hero}: move next to BUD",
+        "detail": "{hero} (slot {seat}) debuffs best from a seat adjacent to BUD {carry} (slot {carry_seat})."
+      }
+    },
+    "by_role": {
+      "tank": {
+        "bud_relation": "front",
+        "priority": 3,
+        "headline": "{hero}: tank belongs up front",
+        "detail": "{hero} is on slot {seat} ({zone}) — put tanks on the front line."
+      }
+    }
+  },
+  "heroes": {
+    "1": {
+      "name": "Bruenor",
+      "bud_relation": "same_column",
+      "priority": 2,
+      "headline": "{hero}: same column as BUD",
+      "detail": "Bruenor should share BUD {carry}'s column (now column {carry_col}; Bruenor is column {hero_col})."
+    },
+    "2": {
+      "name": "Celeste",
+      "prefer_column": 1,
+      "priority": 2,
+      "headline": "{hero}: prefer 2nd column",
+      "detail": "Celeste is strongest in the 2nd formation column (0-based index 1); she is currently in column {hero_col}."
+    },
+    "5": {
+      "name": "Calliope",
+      "bud_relation": "graph_distance_lte",
+      "n": 2,
+      "priority": 2,
+      "headline": "{hero}: stay within 2 seats of BUD",
+      "detail": "Calliope's buff follows a 2-slot adjacent path (no jumping gaps). Distance to BUD {carry} is {distance} — move closer."
+    },
+    "44": {
+      "name": "Qillek",
+      "avoid_adjacent_role": "tank",
+      "priority": 2,
+      "headline": "{hero}: avoid adjacent tanks",
+      "detail": "Qillek should not sit next to tanks when possible — move him away from frontline tanks."
+    },
+    "51": {
+      "name": "Avren",
+      "bud_relation": "adjacent",
+      "priority": 2,
+      "headline": "{hero}: sit next to BUD",
+      "detail": "Avren should sit adjacent to BUD {carry} (slot {carry_seat}) so Mirror Images land on your carry."
+    },
+    "70": {
+      "name": "Ezmerelda",
+      "bud_relation": "same_column",
+      "priority": 2,
+      "headline": "{hero}: same column as BUD",
+      "detail": "Ezmerelda is strongest in BUD {carry}'s column when the formation allows it (BUD column {carry_col}; Ezmerelda column {hero_col})."
+    },
+    "74": {
+      "name": "Talin",
+      "bud_relation": "adjacent",
+      "priority": 2,
+      "headline": "{hero}: sit next to BUD",
+      "detail": "Talin should sit adjacent to BUD {carry} (slot {carry_seat}) when possible."
+    },
+    "77": {
+      "name": "Alyndra",
+      "bud_relation": "adjacent",
+      "priority": 2,
+      "headline": "{hero}: sit next to BUD",
+      "detail": "Alyndra should sit adjacent to BUD {carry} so Portent stays on your carry."
+    },
+    "126": {
+      "name": "Strongheart",
+      "bud_relation": "adjacent",
+      "priority": 2,
+      "headline": "{hero}: sit next to BUD",
+      "detail": "Strongheart's primary buff wants him adjacent to BUD {carry} (slot {carry_seat})."
+    },
+    "128": {
+      "name": "Lae'zel",
+      "bud_relation": "same_column",
+      "priority": 2,
+      "headline": "{hero}: same column as BUD",
+      "detail": "Lae'zel's main buff wants her in BUD {carry}'s column (BUD column {carry_col}; Lae'zel column {hero_col})."
+    },
+    "139": {
+      "name": "Thellora",
+      "bud_relation": "ahead",
+      "priority": 2,
+      "headline": "{hero}: stand in front of BUD",
+      "detail": "Thellora should sit in a column ahead of BUD {carry} (BUD column {carry_col}; Thellora column {hero_col})."
+    },
+    "170": {
+      "name": "Lark",
+      "bud_relation": "carry_not_edge",
+      "priority": 2,
+      "headline": "{hero}: keep BUD off the edges",
+      "detail": "Lark can sit anywhere, but BUD {carry} must not be in the front or back column (BUD is currently {carry_zone} / column {carry_col})."
+    },
+    "171": {
+      "name": "Anson",
+      "bud_relation": "ahead",
+      "priority": 2,
+      "headline": "{hero}: stand in front of BUD",
+      "detail": "Anson should sit in a column ahead of BUD {carry} (BUD column {carry_col}; Anson column {hero_col})."
+    },
+    "172": {
+      "name": "Kyre",
+      "bud_relation": "adjacent",
+      "priority": 2,
+      "headline": "{hero}: sit next to BUD",
+      "detail": "Kyre's main buff wants them adjacent to BUD {carry} (slot {carry_seat})."
+    },
+    "3": {
+      "name": "Nayeli",
+      "bud_relation": "ahead",
+      "priority": 2,
+      "headline": "{hero}: stand in front of BUD",
+      "detail": "Nayeli's tank buffs usually want her ahead of BUD {carry} so the party behind her is covered (BUD column {carry_col}; Nayeli column {hero_col})."
+    },
+    "11": {
+      "name": "Jamilah",
+      "prefer_adjacent_role": "tank",
+      "n": 1,
+      "priority": 2,
+      "headline": "{hero}: sit next to a tank",
+      "detail": "Jamilah's Bruiser-style setups want at least one tank adjacent to her."
+    },
+    "34": {
+      "name": "Donaar",
+      "bud_relation": "adjacent",
+      "priority": 2,
+      "headline": "{hero}: sit next to BUD",
+      "detail": "Donaar's Duel/support options want him closer to BUD {carry} (slot {carry_seat})."
+    },
+    "64": {
+      "name": "Beadle",
+      "bud_relation": "graph_distance_lte",
+      "n": 2,
+      "priority": 2,
+      "headline": "{hero}: stay within 2 seats of BUD",
+      "detail": "Beadle's main buff wants him within 2 seats of BUD {carry} (distance {distance})."
+    },
+    "80": {
+      "name": "Mehen",
+      "bud_relation": "behind",
+      "priority": 2,
+      "headline": "{hero}: stand behind BUD",
+      "detail": "Mehen is stronger the further back he sits from BUD {carry} (BUD column {carry_col}; Mehen column {hero_col})."
+    },
+    "84": {
+      "name": "Prudence",
+      "bud_relation": "adjacent_count_lt",
+      "n": 3,
+      "priority": 2,
+      "headline": "{hero}: pack more adjacents",
+      "detail": "Prudence wants as many adjacent champions as practical — she currently has {adjacent_count}."
+    },
+    "104": {
+      "name": "Voronika",
+      "bud_relation": "same_column",
+      "priority": 2,
+      "headline": "{hero}: same column as BUD",
+      "detail": "Voronika's Battle Magic should hit BUD {carry}'s column (BUD column {carry_col}; Voronika column {hero_col})."
+    },
+    "106": {
+      "name": "Blooshi",
+      "bud_relation": "not_front",
+      "priority": 2,
+      "headline": "{hero}: keep off the front line",
+      "detail": "Blooshi survives better off the front line until you deliberately tank with her (currently {zone})."
+    },
+    "151": {
+      "name": "Umberto",
+      "bud_relation": "carry_column_distance_lte",
+      "n": 2,
+      "priority": 2,
+      "headline": "{hero}: keep BUD within 2 columns",
+      "detail": "Umberto's main buff wants BUD {carry} within 2 columns (BUD column {carry_col}; Umberto column {hero_col})."
+    },
+    "162": {
+      "name": "Vlithryn",
+      "bud_relation": "behind",
+      "priority": 2,
+      "headline": "{hero}: stand behind BUD",
+      "detail": "Place Vlithryn behind BUD {carry} so her positional buffs land (BUD column {carry_col}; Vlithryn column {hero_col})."
+    },
+    "141": {
+      "name": "Shadowheart",
+      "bud_relation": "shadowheart_dex_spread",
+      "n": 2,
+      "priority": 2,
+      "headline": "{hero}: spread from highest-DEX seat",
+      "detail": "Invoke Duplicity sits on {dex_hero}. For Find Yourself, keep that seat ≥2 slots from Shadowheart (graph distance is {dex_distance})."
+    },
+    "21": {
+      "name": "Birdsong",
+      "bud_relation": "graph_distance_lte",
+      "n": 2,
+      "priority": 2,
+      "headline": "{hero}: stay within 2 seats of BUD",
+      "detail": "Birdsong buffs champions within two slots — keep BUD {carry} within distance 2 (now {distance})."
+    },
+    "38": {
+      "name": "K'thriss",
+      "bud_relation": "farthest",
+      "priority": 2,
+      "headline": "{hero}: keep BUD as far as possible",
+      "detail": "Unseen Encouragement hits the farthest champion from K'thriss — put BUD {carry} in the farthest column (BUD column {carry_col}; farthest is {farthest_col})."
+    },
+    "39": {
+      "name": "Paultin",
+      "bud_relation": "not_adjacent",
+      "priority": 2,
+      "headline": "{hero}: keep BUD off your seat edge",
+      "detail": "Magical Secrets buffs non-adjacent champions — move BUD {carry} off Paultin's adjacent seats (BUD slot {carry_seat})."
+    },
+    "49": {
+      "name": "Turiel",
+      "bud_relation": "front",
+      "priority": 2,
+      "headline": "{hero}: stay on the front line",
+      "detail": "Turiel wants the front of the formation so columns behind him stack his buff (currently {zone})."
+    },
+    "118": {
+      "name": "Fen",
+      "bud_relation": "same_column",
+      "priority": 2,
+      "headline": "{hero}: same column as BUD",
+      "detail": "Fen's column buff wants BUD {carry} in her column (BUD column {carry_col}; Fen column {hero_col})."
+    },
+    "138": {
+      "name": "Certainty",
+      "bud_relation": "behind",
+      "priority": 2,
+      "headline": "{hero}: stand behind BUD",
+      "detail": "Certainty buffs the row/column in front of her — sit behind BUD {carry} (BUD column {carry_col}; Certainty column {hero_col})."
+    },
+    "147": {
+      "name": "Gale",
+      "bud_relation": "behind",
+      "priority": 2,
+      "headline": "{hero}: stand behind BUD",
+      "detail": "Gale buffs the two columns in front of him — place him behind BUD {carry} (BUD column {carry_col}; Gale column {hero_col})."
+    },
+    "158": {
+      "name": "Kalix",
+      "bud_relation": "not_adjacent",
+      "priority": 2,
+      "headline": "{hero}: keep BUD off your seat edge",
+      "detail": "Do not put Primary DPS next to Kalix — move BUD {carry} off adjacent seats (BUD slot {carry_seat})."
+    },
+    "164": {
+      "name": "Tess",
+      "bud_relation": "ahead",
+      "priority": 2,
+      "headline": "{hero}: stand in front of BUD",
+      "detail": "Lead The Way buffs columns behind Tess — stand ahead of BUD {carry} (BUD column {carry_col}; Tess column {hero_col})."
+    },
+    "166": {
+      "name": "Cazrin",
+      "bud_relation": "behind",
+      "priority": 2,
+      "headline": "{hero}: stand behind BUD",
+      "detail": "Cazrin buffs her column and columns in front — as support, sit behind BUD {carry} (BUD column {carry_col}; Cazrin column {hero_col})."
+    },
+    "174": {
+      "name": "Tasslehoff",
+      "bud_relation": "not_adjacent",
+      "priority": 2,
+      "headline": "{hero}: keep BUD off your seat edge",
+      "detail": "Never put your DPS adjacent to Tasslehoff — move BUD {carry} off adjacent seats (BUD slot {carry_seat})."
+    },
+    "59": {
+      "name": "Melf",
+      "bud_relation": "graph_distance_lte",
+      "n": 3,
+      "priority": 2,
+      "headline": "{hero}: stay within 3 seats of BUD",
+      "detail": "Melf's buff reaches at most 3 seats — distance to BUD {carry} is {distance}. Sit mid-formation and as far as that range allows.",
+      "also": [
+        {
+          "when": "not_edge",
+          "priority": 3,
+          "headline": "{hero}: prefer a mid column",
+          "detail": "Melf should avoid the front/back edge so his range can stretch toward BUD (currently {zone})."
+        }
+      ]
+    },
+    "73": {
+      "name": "Baeloth",
+      "bud_relation": "adjacent_column",
+      "priority": 2,
+      "headline": "{hero}: BUD in an adjacent column",
+      "detail": "Morbid Excitement buffs the columns ahead and behind Baeloth — put BUD {carry} one column away (BUD column {carry_col}; Baeloth column {hero_col})."
+    },
+    "75": {
+      "name": "Hew Maan",
+      "bud_relation": "hew_teamwork",
+      "priority": 2,
+      "headline": "{hero}: keep BUD within Teamwork range",
+      "detail": "Teamwork X is {teamwork_x} for this {formation_columns}-column formation — BUD {carry} is {column_distance} columns away (BUD column {carry_col}; Hew Maan column {hero_col})."
+    },
+    "143": {
+      "name": "Karlach",
+      "bud_relation": "same_or_one_behind",
+      "priority": 2,
+      "headline": "{hero}: BUD in your column or the one behind",
+      "detail": "Karlach buffs her column and the column behind — put BUD {carry} there (BUD column {carry_col}; Karlach column {hero_col})."
+    },
+    "176": {
+      "name": "Trixie",
+      "bud_relation": "adjacent_behind",
+      "priority": 2,
+      "headline": "{hero}: keep BUD adjacent behind you",
+      "detail": "Trixie spreads from the adjacent seats behind her — place BUD {carry} adjacent and rear-er (BUD slot {carry_seat} / column {carry_col})."
+    },
+    "180": {
+      "name": "Kitiara",
+      "bud_relation": "farthest",
+      "priority": 1,
+      "headline": "{hero}: keep BUD as far as possible",
+      "detail": "Merciless Resolve wants BUD {carry} in the farthest column from Kitiara. BUD is column {carry_col}; farthest from Kitiara is column {farthest_col}.",
+      "also": [
+        {
+          "when": "adjacent_count_lt",
+          "n": 2,
+          "priority": 2,
+          "headline": "{hero}: pack more adjacents",
+          "detail": "Kitiara stacks Merciless Resolve per adjacent champion — she only has {adjacent_count} neighbor(s)."
+        }
+      ]
+    }
+  }
+}

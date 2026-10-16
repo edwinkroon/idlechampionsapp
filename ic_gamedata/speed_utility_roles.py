@@ -1,4 +1,4 @@
-"""Utility champion roles inside speed-focused formations (gems, modron parts)."""
+"""Utility champion roles inside speed-focused formations (gems, scavenger loot)."""
 
 from __future__ import annotations
 
@@ -8,21 +8,38 @@ from ic_gamedata.champion_role_advice import get_role_advice
 from ic_gamedata.party_advisor import FormationHero, GoalMode, _is_speed
 from ic_gamedata.seat_advisor.models import SeatRole
 from ic_gamedata.specialization_data import (
+    ScavengerAbility,
     hero_ability_scores_map_from_cached_definitions,
     hero_age_map_from_cached_definitions,
     hero_attack_types_map_from_cached_definitions,
+    scavenger_abilities_from_cached_definitions,
+    scavenger_hero_ids_from_cached_definitions,
 )
 
-SpeedUtilityRole = Literal["gold", "modron"]
+SpeedUtilityRole = Literal["gold", "scavenger"]
 
-# Champions with boss-kill scavenger abilities used in speed/modron farming.
-MODRON_SCAVENGER_HERO_IDS = frozenset({144})  # Presto
+# Auto-detected scavenger slot in speed formations (not every scavenger champion).
+AUTO_SCAVENGER_HERO_IDS = frozenset({144})  # Presto
 
-_PRESTO_SPECS: tuple[tuple[str, int], ...] = (
-    ("Humble Heroes", 13765),
-    ("Junior Juggernauts", 13766),
-    ("Magical Mastery", 13767),
-)
+# Backward-compatible alias for older imports/tests.
+MODRON_SCAVENGER_HERO_IDS = AUTO_SCAVENGER_HERO_IDS
+
+
+def scavenger_hero_ids() -> frozenset[int]:
+    return scavenger_hero_ids_from_cached_definitions()
+
+
+# Backward-compatible alias; prefer scavenger_hero_ids().
+SCAVENGER_HERO_IDS = scavenger_hero_ids()
+
+
+def list_scavenger_champions() -> tuple[ScavengerAbility, ...]:
+    return scavenger_abilities_from_cached_definitions()
+
+
+def is_scavenger_champion(hero: FormationHero | int) -> bool:
+    hero_id = hero if isinstance(hero, int) else hero.hero_id
+    return hero_id in scavenger_hero_ids()
 
 
 def is_gold_utility_in_speed_team(hero: FormationHero, goal: GoalMode) -> bool:
@@ -33,16 +50,29 @@ def is_gold_utility_in_speed_team(hero: FormationHero, goal: GoalMode) -> bool:
     return "gold" in hero.roles or "gold" in hero.tags
 
 
-def is_modron_utility_in_speed_team(hero: FormationHero, goal: GoalMode) -> bool:
-    return goal == "speed" and hero.hero_id in MODRON_SCAVENGER_HERO_IDS
+def is_scavenger_utility_in_speed_team(hero: FormationHero, goal: GoalMode) -> bool:
+    return goal == "speed" and hero.hero_id in AUTO_SCAVENGER_HERO_IDS
 
 
 def speed_utility_role(hero: FormationHero, goal: GoalMode) -> SpeedUtilityRole | None:
-    if is_modron_utility_in_speed_team(hero, goal):
-        return "modron"
+    if is_scavenger_utility_in_speed_team(hero, goal):
+        return "scavenger"
     if is_gold_utility_in_speed_team(hero, goal):
         return "gold"
     return None
+
+
+def speed_utility_for_effective_role(
+    hero: FormationHero,
+    goal: GoalMode,
+    effective_role: SeatRole,
+) -> SpeedUtilityRole | None:
+    utility = speed_utility_role(hero, goal)
+    if utility is None and goal == "speed" and effective_role == "scavenger":
+        if is_scavenger_champion(hero):
+            return "scavenger"
+        return None
+    return utility
 
 
 def infer_speed_utility_seat_role(hero: FormationHero, goal: GoalMode) -> SeatRole | None:
@@ -55,13 +85,13 @@ def infer_speed_utility_seat_role(hero: FormationHero, goal: GoalMode) -> SeatRo
 def speed_utility_role_label(role: SpeedUtilityRole) -> str:
     if role == "gold":
         return "Gem / gold utility"
-    return "Modron utility"
+    return "Scavenger utility"
 
 
 def speed_utility_relevance_reason(utility: SpeedUtilityRole) -> str:
     if utility == "gold":
-        return "Gem-slot in speed-team (geen speed-champion)"
-    return "Modron scavenger in speed-team"
+        return "Gem slot in speed team (no speed champion)"
+    return "Scavenger in speed team"
 
 
 def _presto_spec_counts(formation: tuple[FormationHero, ...]) -> dict[str, int]:
@@ -99,10 +129,10 @@ def recommended_spec_for_speed_utility(
             return " / ".join(advice.specialization_names)
         return None
 
-    if utility == "modron":
-        if hero.hero_id in MODRON_SCAVENGER_HERO_IDS:
+    if utility == "scavenger":
+        if hero.hero_id in AUTO_SCAVENGER_HERO_IDS:
             return best_presto_spec_for_party(formation)
-        advice = get_role_advice(hero.hero_id, "modron")
+        advice = get_role_advice(hero.hero_id, "scavenger")
         if advice is not None and advice.specialization_names:
             return " / ".join(advice.specialization_names)
         return None
@@ -115,7 +145,7 @@ def recommended_feats_for_speed_utility(hero_id: int, utility: SpeedUtilityRole)
     advice = get_role_advice(hero_id, role)
     if advice is not None and advice.feats:
         return advice.feats
-    if utility == "modron":
+    if utility == "scavenger" and hero_id in AUTO_SCAVENGER_HERO_IDS:
         return ("Morning Lineup", "DM's Chosen", "Room to Breathe", "Pocus Imferium")
     if utility == "gold":
         return ("Transmute Gems",)

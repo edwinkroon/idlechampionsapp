@@ -44,7 +44,7 @@ class _MemoryReadRunnable(QRunnable):
                     None,
                     None,
                     None,
-                    "ic_reader niet beschikbaar (pip install psutil)",
+                    "ic_reader unavailable (pip install psutil)",
                     error="ic_reader missing",
                 )
             )
@@ -76,7 +76,7 @@ class _MemoryReadRunnable(QRunnable):
                 parts.append(f"area={area} ({area_id or '?'}, {area_conf:.1f})")
             if gems is not None:
                 parts.append(f"gems={gems} ({gems_id or '?'}, {gems_conf:.1f})")
-            detail = "memory: " + " · ".join(parts) if parts else "memory: geen offsets/data"
+            detail = "memory: " + " · ".join(parts) if parts else "memory: no offsets/data"
             self.signals.done.emit(MemoryReading(area, gems, modron, detail))
         except Exception as exc:
             self.signals.done.emit(

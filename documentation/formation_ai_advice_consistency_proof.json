@@ -1,0 +1,651 @@
+{
+  "schema_version": "1.6",
+  "live_party_snapshot_available": false,
+  "fixture_kind": "synthetic_defines_only",
+  "input_fingerprint": "8cbb64c5f0ecc050",
+  "input_fingerprint_covers": [
+    2573,
+    2414,
+    2488,
+    2392,
+    2450,
+    2448,
+    2596
+  ],
+  "sizes": {
+    "advice_chars": 15025,
+    "advice_bytes": 15029,
+    "export_internal_chars": 15607,
+    "clipboard_markdown_chars": 16697,
+    "section_chars": {
+      "meta": 195,
+      "goal": 261,
+      "formation": 1126,
+      "effects": 10094,
+      "champions": 2077,
+      "readiness": 365,
+      "notes": 831
+    },
+    "effect_definition_count": 7,
+    "effect_instance_count": 7,
+    "largest_effects": [
+      {
+        "ref": "a3763f04e6",
+        "chars": 1990,
+        "text": "After the King of Shadows enters Phase Two, his health is increased by 1% for ea"
+      },
+      {
+        "ref": "a1070f8556",
+        "chars": 1966,
+        "text": "The King of Shadows increases the damage of himself and Champions in the two col"
+      },
+      {
+        "ref": "0e9cea9111",
+        "chars": 1684,
+        "text": "All Champions with magic base attacks deal an additional 5 seconds of BUD-based "
+      },
+      {
+        "ref": "8c2287a29b",
+        "chars": 1605,
+        "text": "Champions that attack a stunned enemy have a 20% additively increased chance to "
+      },
+      {
+        "ref": "797aae60d9",
+        "chars": 1064,
+        "text": "Skylla creates a twisting pattern of colors above the enemies for 15 seconds. Al"
+      },
+      {
+        "ref": "bf53ae09dd",
+        "chars": 853,
+        "text": "Cazrin increases the damage of all Champions in her column (including herself) a"
+      },
+      {
+        "ref": "81ffcfa104",
+        "chars": 833,
+        "text": "Donaar increases the damage of Champions in the same column and the column(s) be"
+      }
+    ]
+  },
+  "note_on_before_after": "No frozen live Cazrin party snapshot was available, so this is not a live before/after measurement. Sizes are for the synthetic defines fixture after the consistency fix. Duplicate canonical fields (value+values, effect_scope+semantics.scope, targets+semantics.recipients) are removed in the advice projection.",
+  "corrected_examples": {
+    "Lead By Example": {
+      "mechanical_text": "Donaar increases the damage of Champions in the same column and the column(s) behind him by 100%.",
+      "scope": "positional",
+      "semantics_scope": "positional",
+      "recipients": {
+        "targets": [
+          "col_and_behind"
+        ]
+      },
+      "position_source": {
+        "kind": "owner",
+        "owner": "Donaar",
+        "position_status": "formation_seat"
+      },
+      "subeffects": [
+        {
+          "id": "sub_1",
+          "effect_key_index": 1,
+          "effect_key": "hero_dps_multiplier_mult",
+          "operation": "hero_dps_multiplier_mult",
+          "parameters": [
+            {
+              "name": "damage",
+              "value": 100.0,
+              "meaning": "percent",
+              "unit": "percent",
+              "value_basis": "definition_base",
+              "status": "known"
+            }
+          ],
+          "recipients": {
+            "targets": [
+              "col_and_behind"
+            ]
+          },
+          "stacking": {
+            "mode": "multiplicative",
+            "status": "known"
+          }
+        }
+      ],
+      "projected_value": {
+        "name": "damage",
+        "value": 100.0,
+        "meaning": "percent",
+        "unit": "percent",
+        "value_basis": "definition_base",
+        "status": "known",
+        "effect_key": "hero_dps_multiplier_mult"
+      },
+      "projected_values": null
+    },
+    "Sunny Disposition": {
+      "mechanical_text": "Cazrin increases the damage of all Champions in her column (including herself) and the columns in front of her by 100%.",
+      "scope": "positional",
+      "semantics_scope": "positional",
+      "recipients": {
+        "targets": [
+          "col_and_ahead"
+        ]
+      },
+      "position_source": {
+        "kind": "owner",
+        "owner": "Cazrin",
+        "position_status": "formation_seat"
+      },
+      "subeffects": [
+        {
+          "id": "sub_1",
+          "effect_key_index": 1,
+          "effect_key": "hero_dps_multiplier_mult",
+          "operation": "hero_dps_multiplier_mult",
+          "parameters": [
+            {
+              "name": "damage",
+              "value": 100.0,
+              "meaning": "percent",
+              "unit": "percent",
+              "value_basis": "definition_base",
+              "status": "known"
+            }
+          ],
+          "recipients": {
+            "targets": [
+              "col_and_ahead"
+            ]
+          },
+          "stacking": {
+            "mode": "multiplicative",
+            "status": "known"
+          }
+        }
+      ],
+      "projected_value": {
+        "name": "damage",
+        "value": 100.0,
+        "meaning": "percent",
+        "unit": "percent",
+        "value_basis": "definition_base",
+        "status": "known",
+        "effect_key": "hero_dps_multiplier_mult"
+      },
+      "projected_values": null
+    },
+    "Hypnotic Pattern": {
+      "mechanical_text": "Skylla creates a twisting pattern of colors above the enemies for 15 seconds. All enemies take 5 seconds of BUD-based damage when hit by any Champion for the duration. Additionally, all enemies, including any that spawn, are Stunned for the duration or until they take damage, whichever is shorter.",
+      "scope": "global",
+      "semantics_scope": "global",
+      "recipients": {
+        "targets": [
+          "all"
+        ]
+      },
+      "position_source": null,
+      "subeffects": [
+        {
+          "id": "sub_3",
+          "effect_key_index": 3,
+          "effect_key": "base_attack_deal_bonus_damage",
+          "operation": "base_attack_deal_bonus_damage",
+          "parameters": [
+            {
+              "name": "additional_bud_damage",
+              "value": 5.0,
+              "meaning": "seconds_of_bud",
+              "unit": "seconds_of_bud",
+              "value_basis": "definition_base",
+              "status": "known"
+            }
+          ],
+          "recipients": {
+            "targets": [
+              "all"
+            ]
+          },
+          "stacking": {
+            "mode": "unknown",
+            "status": "unknown"
+          }
+        }
+      ],
+      "projected_value": {
+        "name": "additional_bud_damage",
+        "value": 5.0,
+        "meaning": "seconds_of_bud",
+        "unit": "seconds_of_bud",
+        "value_basis": "definition_base",
+        "status": "known",
+        "effect_key": "base_attack_deal_bonus_damage"
+      },
+      "projected_values": null
+    },
+    "Dark Bargain (magic)": {
+      "mechanical_text": "All Champions with magic base attacks deal an additional 5 seconds of BUD-based damage with each attack, but all Champions without a magic base attack no longer deal any damage with their base attacks.",
+      "scope": "filtered",
+      "semantics_scope": "filtered",
+      "recipients": null,
+      "position_source": null,
+      "subeffects": [
+        {
+          "id": "sub_1",
+          "effect_key_index": 1,
+          "effect_key": "base_attack_deal_bonus_damage",
+          "operation": "base_attack_deal_bonus_damage",
+          "parameters": [
+            {
+              "name": "additional_bud_damage",
+              "value": 5.0,
+              "meaning": "seconds_of_bud",
+              "unit": "seconds_of_bud",
+              "value_basis": "definition_base",
+              "status": "known"
+            }
+          ],
+          "recipients": {
+            "targets": [
+              "all"
+            ],
+            "filter": {
+              "expressions": [
+                "has_base_attack_dmg_type_magic"
+              ],
+              "tags": null,
+              "requires_magic_attack": true,
+              "combine": "and"
+            }
+          },
+          "stacking": {
+            "mode": "unknown",
+            "status": "unknown"
+          }
+        },
+        {
+          "id": "sub_2",
+          "effect_key_index": 2,
+          "effect_key": "hero_dps_multiplier_reduce",
+          "operation": "hero_dps_multiplier_reduce",
+          "parameters": [
+            {
+              "name": "damage_reduction",
+              "value": 100.0,
+              "meaning": "percent",
+              "unit": "percent",
+              "value_basis": "definition_base",
+              "status": "known"
+            }
+          ],
+          "recipients": {
+            "targets": [
+              "all"
+            ],
+            "filter": {
+              "expressions": [
+                "!has_base_attack_dmg_type_magic"
+              ],
+              "tags": null,
+              "requires_magic_attack": false,
+              "combine": "and"
+            }
+          },
+          "stacking": {
+            "mode": "unknown",
+            "status": "unknown"
+          }
+        }
+      ],
+      "projected_value": null,
+      "projected_values": [
+        {
+          "name": "additional_bud_damage",
+          "value": 5.0,
+          "meaning": "seconds_of_bud",
+          "unit": "seconds_of_bud",
+          "value_basis": "definition_base",
+          "status": "known",
+          "effect_key": "base_attack_deal_bonus_damage"
+        },
+        {
+          "name": "damage_reduction",
+          "value": 100.0,
+          "meaning": "percent",
+          "unit": "percent",
+          "value_basis": "definition_base",
+          "status": "known",
+          "effect_key": "hero_dps_multiplier_reduce"
+        }
+      ]
+    },
+    "Phase Two: The Warden": {
+      "mechanical_text": "After the King of Shadows enters Phase Two, his health is increased by 1% for each Toughness stack he collected, stacking additively. He also increases the health of all other Champions by 25% of his max health, and healing effects on all Champions are increased by 25%.",
+      "scope": "mixed",
+      "semantics_scope": "mixed",
+      "recipients": null,
+      "position_source": null,
+      "subeffects": [
+        {
+          "id": "sub_2",
+          "effect_key_index": 2,
+          "effect_key": "health_mult",
+          "operation": "health_mult",
+          "parameters": [
+            {
+              "name": "health",
+              "value": 1.0,
+              "meaning": "percent",
+              "unit": "percent",
+              "value_basis": "definition_base",
+              "status": "known"
+            }
+          ],
+          "recipients": {
+            "targets": [
+              "self"
+            ]
+          },
+          "stacking": {
+            "mode": "additive",
+            "status": "known"
+          }
+        },
+        {
+          "id": "sub_3",
+          "effect_key_index": 3,
+          "effect_key": "increase_health_by_source_percent",
+          "operation": "increase_health_by_source_percent",
+          "parameters": [
+            {
+              "name": "health",
+              "value": 25.0,
+              "meaning": "percent",
+              "unit": "percent",
+              "value_basis": "definition_base",
+              "status": "known"
+            }
+          ],
+          "recipients": {
+            "targets": [
+              "other"
+            ]
+          },
+          "stacking": {
+            "mode": "unknown",
+            "status": "unknown"
+          }
+        },
+        {
+          "id": "sub_4",
+          "effect_key_index": 4,
+          "effect_key": "global_healing_mult",
+          "operation": "global_healing_mult",
+          "parameters": [
+            {
+              "name": "healing",
+              "value": 25.0,
+              "meaning": "percent",
+              "unit": "percent",
+              "value_basis": "definition_base",
+              "status": "known"
+            }
+          ],
+          "recipients": {
+            "targets": [
+              "all"
+            ]
+          },
+          "stacking": {
+            "mode": "multiplicative",
+            "status": "known"
+          }
+        }
+      ],
+      "projected_value": null,
+      "projected_values": [
+        {
+          "name": "health",
+          "value": 1.0,
+          "meaning": "percent",
+          "unit": "percent",
+          "value_basis": "definition_base",
+          "status": "known",
+          "effect_key": "health_mult"
+        },
+        {
+          "name": "health",
+          "value": 25.0,
+          "meaning": "percent",
+          "unit": "percent",
+          "value_basis": "definition_base",
+          "status": "known",
+          "effect_key": "increase_health_by_source_percent"
+        },
+        {
+          "name": "healing",
+          "value": 25.0,
+          "meaning": "percent",
+          "unit": "percent",
+          "value_basis": "definition_base",
+          "status": "known",
+          "effect_key": "global_healing_mult"
+        }
+      ]
+    },
+    "Power of the King": {
+      "mechanical_text": "The King of Shadows increases the damage of himself and Champions in the two columns behind him by $king_of_shadows_power_king (onbekend)%. This is increased by 250% each time the King of Shadows' max health is doubled, stacking multiplicatively.",
+      "scope": "positional",
+      "semantics_scope": "positional",
+      "recipients": {
+        "targets": [
+          "self_and_prev_two_col"
+        ]
+      },
+      "position_source": {
+        "kind": "owner",
+        "owner": "King of Shadows",
+        "position_status": "formation_seat"
+      },
+      "subeffects": [
+        {
+          "id": "sub_1",
+          "effect_key_index": 1,
+          "effect_key": "potk_dps_buff_pre_amount",
+          "operation": "potk_dps_buff_pre_amount",
+          "parameters": [
+            {
+              "name": "amount",
+              "value": 100.0,
+              "meaning": "percent",
+              "unit": "percent",
+              "value_basis": "definition_base",
+              "status": "known"
+            }
+          ],
+          "stacking": {
+            "mode": "unknown",
+            "status": "unknown"
+          }
+        },
+        {
+          "id": "sub_2",
+          "effect_key_index": 2,
+          "effect_key": "hero_dps_multiplier_mult",
+          "operation": "hero_dps_multiplier_mult",
+          "parameters": [
+            {
+              "name": "damage",
+              "value": null,
+              "meaning": "percent",
+              "unit": "percent",
+              "value_basis": "computed",
+              "status": "computed_unknown"
+            }
+          ],
+          "recipients": {
+            "targets": [
+              "self_and_prev_two_col"
+            ]
+          },
+          "stacking": {
+            "mode": "multiplicative",
+            "status": "known"
+          }
+        },
+        {
+          "id": "sub_3",
+          "effect_key_index": 3,
+          "effect_key": "potk_buff_upgrade_pre_stack",
+          "operation": "potk_buff_upgrade_pre_stack",
+          "stacking": {
+            "mode": "unknown",
+            "status": "unknown"
+          }
+        },
+        {
+          "id": "sub_4",
+          "effect_key_index": 4,
+          "effect_key": "buff_upgrade",
+          "operation": "buff_upgrade",
+          "parameters": [
+            {
+              "name": "modifier",
+              "value": null,
+              "meaning": "percent",
+              "unit": "percent",
+              "value_basis": "computed",
+              "status": "computed_unknown"
+            }
+          ],
+          "stacking": {
+            "mode": "multiplicative",
+            "status": "known"
+          }
+        }
+      ],
+      "projected_value": null,
+      "projected_values": [
+        {
+          "name": "amount",
+          "value": 100.0,
+          "meaning": "percent",
+          "unit": "percent",
+          "value_basis": "definition_base",
+          "status": "known",
+          "effect_key": "potk_dps_buff_pre_amount"
+        },
+        {
+          "name": "damage",
+          "meaning": "percent",
+          "unit": "percent",
+          "value_basis": "computed",
+          "status": "computed_unknown",
+          "effect_key": "hero_dps_multiplier_mult"
+        }
+      ]
+    },
+    "Flawless Strike": {
+      "mechanical_text": "Champions that attack a stunned enemy have a 20% additively increased chance to critically hit that enemy and deal 400% more critical damage.",
+      "scope": "global",
+      "semantics_scope": "global",
+      "recipients": {
+        "targets": [
+          "all"
+        ]
+      },
+      "position_source": null,
+      "subeffects": [
+        {
+          "id": "sub_1",
+          "effect_key_index": 1,
+          "effect_key": "if_stunned_buff_base_crit_chance_add",
+          "operation": "if_stunned_buff_base_crit_chance_add",
+          "parameters": [
+            {
+              "name": "crit_chance",
+              "value": 20.0,
+              "meaning": "percent",
+              "unit": "percent",
+              "value_basis": "definition_base",
+              "status": "known"
+            }
+          ],
+          "recipients": {
+            "targets": [
+              "all"
+            ]
+          },
+          "activation_conditions": {
+            "kind": "target_enemy_stunned",
+            "status": "known",
+            "note": "Applies when the attacked enemy is stunned."
+          },
+          "stacking": {
+            "mode": "unknown",
+            "status": "unknown"
+          }
+        },
+        {
+          "id": "sub_2",
+          "effect_key_index": 2,
+          "effect_key": "increase_crit_damage_when_monster_stunned",
+          "operation": "increase_crit_damage_when_monster_stunned",
+          "parameters": [
+            {
+              "name": "crit_damage",
+              "value": 400.0,
+              "meaning": "percent",
+              "unit": "percent",
+              "value_basis": "definition_base",
+              "status": "known"
+            }
+          ],
+          "recipients": {
+            "targets": [
+              "all"
+            ]
+          },
+          "activation_conditions": {
+            "kind": "target_enemy_stunned",
+            "status": "known",
+            "note": "Applies when the attacked enemy is stunned."
+          },
+          "stacking": {
+            "mode": "unknown",
+            "status": "unknown"
+          }
+        }
+      ],
+      "projected_value": null,
+      "projected_values": [
+        {
+          "name": "crit_chance",
+          "value": 20.0,
+          "meaning": "percent",
+          "unit": "percent",
+          "value_basis": "definition_base",
+          "status": "known",
+          "effect_key": "if_stunned_buff_base_crit_chance_add"
+        },
+        {
+          "name": "crit_damage",
+          "value": 400.0,
+          "meaning": "percent",
+          "unit": "percent",
+          "value_basis": "definition_base",
+          "status": "known",
+          "effect_key": "increase_crit_damage_when_monster_stunned"
+        }
+      ]
+    }
+  },
+  "remaining_unknowns": [
+    "Live party positions/feats/equipment not frozen — placement comparisons incomplete.",
+    "apply_effects_at_stacks threshold numeric value remains partial.",
+    "Uggie companion seat position_status remains unknown.",
+    "Power of the King computed hero_dps amount remains computed_unknown."
+  ],
+  "verified_extra_cases": [
+    "Umberto Protective Presence: health share → other, healing → all (mixed).",
+    "Anson Got Your Back: health share → other, healing → all (mixed)."
+  ],
+  "semantic_conflicts": []
+}

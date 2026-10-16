@@ -20,6 +20,26 @@ RARITY_LEGENDARY = 5
 RARITY_LABEL = {4: "epic", 5: "legendary", 6: "shiny legendary"}
 
 
+def _legendary_slots(details: dict) -> set[tuple[int, int]]:
+    """Slots already forged to legendary (API keeps rarity=epic)."""
+    legendary = details.get("legendary_details")
+    if not isinstance(legendary, dict):
+        return set()
+    items = legendary.get("legendary_items")
+    if not isinstance(items, dict):
+        return set()
+    out: set[tuple[int, int]] = set()
+    for hero_raw, slots in items.items():
+        hero_id = _parse_int(hero_raw)
+        if hero_id is None or not isinstance(slots, dict):
+            continue
+        for slot_raw in slots:
+            slot_id = _parse_int(slot_raw)
+            if slot_id is not None:
+                out.add((hero_id, slot_id))
+    return out
+
+
 def main() -> None:
     champs = json.loads((ROOT / "config/champions.json").read_text(encoding="utf-8"))
     install = find_game_install()
@@ -32,6 +52,7 @@ def main() -> None:
 
     details = payload["details"]
     best = _best_loot_by_hero_slot(details.get("loot", []))
+    already_legendary = _legendary_slots(details)
     heroes = details.get("heroes", [])
     owned = {int(h["hero_id"]): h for h in heroes if h.get("owned")}
 
@@ -119,7 +140,8 @@ def main() -> None:
     candidates: list[dict] = []
     for (hid, slot), item in best.items():
         rarity = _parse_int(item.get("rarity")) or 0
-        if rarity != RARITY_EPIC:
+        # Forge keeps rarity at epic; skip slots present in legendary_details.
+        if rarity != RARITY_EPIC or (hid, slot) in already_legendary:
             continue
 
         enchant = _parse_int(item.get("enchant")) or 0
@@ -150,12 +172,8 @@ def main() -> None:
 
     print(f"Snapshot: {detail}")
     epic_count = len(candidates)
-    leg_count = sum(
-        1
-        for item in best.values()
-        if (_parse_int(item.get("rarity")) or 0) >= RARITY_LEGENDARY
-    )
-    print(f"Epic slots (upgradebaar): {epic_count} | Al legendary+: {leg_count}")
+    leg_count = len(already_legendary)
+    print(f"Epic slots (upgradeable): {epic_count} | Already legendary: {leg_count}")
 
     # Max 2 slots per champion for a useful top 10 spread.
     per_hero: dict[int, int] = {}
@@ -172,7 +190,9 @@ def main() -> None:
     print("\n=== Top 10 legendary upgrades (epic -> legendary) ===")
     for index, row in enumerate(top, 1):
         notes: list[str] = []
-        if row["gild"] >= 1:
+        if row["gild"] >= 2:
+            notes.append("golden")
+        elif row["gild"] >= 1:
             notes.append("shiny")
         if row["pigment"]:
             notes.append(f"pigment={row['pigment']}")

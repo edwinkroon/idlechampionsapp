@@ -53,6 +53,10 @@ def analyze_party(
     include_formation: bool = True,
 ) -> AdvisorReport:
     """Build advisor report from raw getuserdetails JSON."""
+    from ic_gamedata.advice_goals import scoring_lane
+
+    # Keep the user-facing goal on the report; score with the existing lane mapping.
+    score_goal: GoalMode = scoring_lane(str(goal))  # type: ignore[assignment]
     instance = _active_game_instance(payload) or {}
     details = payload.get("details") if isinstance(payload.get("details"), dict) else {}
 
@@ -85,7 +89,7 @@ def analyze_party(
     adventure_buff_note = _human_buff_note(global_mult)
     improvements = _build_improvements(
         formation,
-        goal=goal,
+        goal=score_goal,
         context=context,
         owned=owned,
         modifiers=modifiers,
@@ -98,7 +102,7 @@ def analyze_party(
         formation_insights = build_formation_insights(
             payload,
             formation,
-            goal=goal,
+            goal=score_goal,
             context=context,
             roster_filter=roster_filter,
         )
@@ -109,7 +113,7 @@ def analyze_party(
 
     tips = _formation_tips(
         formation,
-        goal=goal,
+        goal=score_goal,
         context=context,
         owned=owned,
         modifiers=modifiers,
@@ -132,14 +136,14 @@ def analyze_party(
         specialization_insights = build_specialization_insights(
             payload,
             formation,
-            goal=goal,
+            goal=score_goal,
             context=context,
             roster_filter=roster_filter,
         )
         spec_tips = party_specialization_composition_tips(
             formation,
             specialization_insights,
-            goal=goal,
+            goal=score_goal,
             context=context,
             owned=owned,
         )
@@ -158,7 +162,7 @@ def analyze_party(
         seat_report = build_seat_advisor_report(
             payload,
             formation,
-            goal=goal,
+            goal=score_goal,
             context=context,
             formation_insights=formation_insights,
             specialization_insights=specialization_insights,
@@ -171,22 +175,25 @@ def analyze_party(
     )
 
     main_name = (_resolve_bud_hero(formation) or formation[0]).name if formation else None
-    if goal == "bud":
+    from ic_gamedata.party_advisor_models import goal_label as _goal_label
+
+    lane = score_goal
+    if lane == "bud":
         summary = (
-            f"BUD-advies — {adventure_name}: focus op {main_name}."
+            f"{_goal_label(goal)} — {adventure_name}: focus on {main_name}."
             if main_name
-            else f"BUD-advies — {adventure_name}."
+            else f"{_goal_label(goal)} — {adventure_name}."
         )
-    elif goal == "speed":
+    elif lane == "speed":
         speed_name = (_resolve_speed_hero(formation) or (formation[0] if formation else None))
         speed_label = speed_name.name if speed_name is not None else None
         summary = (
-            f"Speed-advies — {adventure_name}: focus op {speed_label}."
+            f"{_goal_label(goal)} — {adventure_name}: focus on {speed_label}."
             if speed_label
-            else f"Speed-advies — {adventure_name}."
+            else f"{_goal_label(goal)} — {adventure_name}."
         )
     else:
-        summary = f"Gold-advies — {adventure_name}."
+        summary = f"{_goal_label(goal)} — {adventure_name}."
 
     return AdvisorReport(
         goal=goal,
@@ -245,13 +252,13 @@ def format_report(report: AdvisorReport) -> str:
     lines = [
         report.summary,
         "",
-        f"Doel: {goal_label_text}   ·   Context: {context_labels.get(report.context, report.context)}",
+        f"Goal: {goal_label_text}   ·   Context: {context_labels.get(report.context, report.context)}",
         f"Adventure: {report.adventure_name}",
     ]
     if report.gold_growth_rate is not None and report.goal == "gold":
         lines.append(f"Gold scaling adventure: {report.gold_growth_rate:.2f}×")
     if report.adventure_restrictions_note:
-        lines.append(f"Champion-beperkingen: {report.adventure_restrictions_note}")
+        lines.append(f"Champion restrictions: {report.adventure_restrictions_note}")
 
     lines.extend(["", "Party", "-" * 40])
     for item in _global_improvements(report.improvements):
@@ -260,7 +267,7 @@ def format_report(report: AdvisorReport) -> str:
         lines.append("")
 
     if not report.formation_heroes:
-        lines.append("  Geen champions in actieve slots.")
+        lines.append("  No champions in active slots.")
     else:
         main_id = None
         bud = _resolve_bud_hero(report.formation_heroes)
@@ -271,7 +278,7 @@ def format_report(report: AdvisorReport) -> str:
             if hero.hero_id == main_id:
                 notes.append("main focus")
             if hero.is_top_damage:
-                notes.append("hardste hit")
+                notes.append("hardest hit")
             note_text = f" · {' · '.join(notes)}" if notes else ""
             lines.append(
                 f"{hero.name} · {_seat_text(hero.seat)} · {hero.role_label} · {hero.gear_label}{note_text}"
@@ -290,17 +297,17 @@ def format_report(report: AdvisorReport) -> str:
             lines.append("")
 
     if report.specialization_insights:
-        lines.extend(["Specialization & formatie", "-" * 40])
+        lines.extend(["Specialization & formation", "-" * 40])
         for insight in report.specialization_insights:
             seat = _seat_text(insight.seat)
             lines.append(f"[{insight.priority}] {insight.headline} ({seat})")
             lines.append(f"    {insight.detail}")
             if insight.rule_source_type == "heuristic":
-                lines.append("    (generieke placeholder-regel)")
+                lines.append("    (generic placeholder rule)")
             lines.append("")
 
     if report.formation_insights:
-        lines.extend(["Formatie & posities", "-" * 40])
+        lines.extend(["Formation & positions", "-" * 40])
         for insight in report.formation_insights:
             seat = _seat_text(insight.seat)
             extra = ""
@@ -311,7 +318,7 @@ def format_report(report: AdvisorReport) -> str:
             lines.append(f"[{insight.priority}] {insight.headline} ({seat}{extra})")
             lines.append(f"    {insight.detail}")
             if insight.rule_source_type == "heuristic":
-                lines.append("    (heuristiek)")
+                lines.append("    (heuristic)")
             lines.append("")
 
     if report.tips:

@@ -3,8 +3,12 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from PySide6.QtCore import QObject, QRunnable, Signal
+
+if TYPE_CHECKING:
+    from ic_gamedata.log_tailer import WebRequestLogTailer
 
 
 class ApiFetchSignals(QObject):
@@ -12,7 +16,7 @@ class ApiFetchSignals(QObject):
 
 
 class ApiFetchRunnable(QRunnable):
-    """Background getuserdetails + log merge (no shared log tailer)."""
+    """Background getuserdetails + incremental log merge."""
 
     def __init__(
         self,
@@ -21,12 +25,14 @@ class ApiFetchRunnable(QRunnable):
         *,
         generation: int,
         signals: ApiFetchSignals,
+        tailer: WebRequestLogTailer | None = None,
     ) -> None:
         super().__init__()
         self.signals = signals
         self._credentials = credentials
         self._log_path = log_path
         self._generation = generation
+        self._tailer = tailer
 
     def run(self) -> None:
         try:
@@ -40,7 +46,7 @@ class ApiFetchRunnable(QRunnable):
             credentials, payload, api_snap, snap, err, api_detail = fetch_merged_snapshot(
                 self._credentials,
                 self._log_path,
-                None,
+                self._tailer,
             )
             self.signals.done.emit(
                 {

@@ -8,22 +8,34 @@ from ic_gamedata.log_parser import GameSnapshot, parse_web_request_log, read_lat
 
 
 class WebRequestLogTailer:
-    """Poll a growing log file and emit new snapshots."""
+    """Poll a growing log file and emit new snapshots.
+
+    ``bootstrap()`` does one full-file read; later ``poll()`` only reads appended
+    bytes. ``last_snapshot`` always holds the newest known progress snapshot.
+    """
 
     def __init__(self, path: Path) -> None:
         self.path = path
         self._offset = 0
         self._carry = ""
+        self.last_snapshot: GameSnapshot | None = None
 
     def bootstrap(self) -> GameSnapshot | None:
         """Load latest snapshot and mark file as fully read."""
         snap = read_latest_snapshot(self.path)
+        self.last_snapshot = snap
         try:
             self._offset = self.path.stat().st_size
         except OSError:
             self._offset = 0
         self._carry = ""
         return snap
+
+    def reset(self) -> None:
+        """Forget offset/carry after truncation or path change."""
+        self._offset = 0
+        self._carry = ""
+        self.last_snapshot = None
 
     def poll(self) -> GameSnapshot | None:
         """Read appended bytes since last poll; return newest snapshot if any."""
@@ -58,4 +70,5 @@ class WebRequestLogTailer:
             return None
 
         self._carry = ""
-        return snapshots[-1]
+        self.last_snapshot = snapshots[-1]
+        return self.last_snapshot

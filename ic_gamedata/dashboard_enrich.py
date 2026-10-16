@@ -7,6 +7,46 @@ from dataclasses import replace
 from ic_gamedata.log_parser import PartySnapshot
 
 
+def memory_gems_look_stale_after_reset(
+    *,
+    memory_gems: int | None,
+    api_gems: int | None,
+    area: int | None,
+) -> bool:
+    """True when memory still holds pre-reset gems while the API already reset."""
+    return (
+        memory_gems is not None
+        and api_gems is not None
+        and area is not None
+        and area < 40
+        and memory_gems > api_gems + 50
+    )
+
+
+def resolve_dashboard_gems(
+    *,
+    is_active: bool,
+    memory_gems: int | None,
+    api_gems: int | None,
+    tracked_gems: int | None,
+    tracked_estimated: bool,
+    area: int | None,
+) -> tuple[int | None, str]:
+    """Pick the gems value shown on a party tile.
+
+    Priority: validated live memory → tracker (``~`` when estimated) → raw API.
+    """
+    if is_active and memory_gems_look_stale_after_reset(
+        memory_gems=memory_gems, api_gems=api_gems, area=area
+    ):
+        memory_gems = None
+    if is_active and memory_gems is not None:
+        return memory_gems, ""
+    if tracked_gems is not None:
+        return tracked_gems, "~" if tracked_estimated else ""
+    return api_gems, ""
+
+
 def _merge_optional_briv_stacks(
     api_stacks: int | None,
     tracked_stacks: int | None,
@@ -72,6 +112,11 @@ def enrich_party_for_dashboard(
             modron_area_goal=api_party.modron_area_goal
             if api_party.modron_area_goal is not None
             else tracked.modron_area_goal,
+            modron_set_area_goal_enabled=(
+                api_party.modron_set_area_goal_enabled
+                if api_party.modron_set_area_goal_enabled is not None
+                else tracked.modron_set_area_goal_enabled
+            ),
             adventure_area_goal=api_party.adventure_area_goal
             if api_party.adventure_area_goal is not None
             else tracked.adventure_area_goal,
@@ -114,11 +159,11 @@ def enrich_party_for_dashboard(
         clear_stale_memory_gems
         and is_active
         and api_party is not None
-        and api_party.gems_this_reset is not None
-        and memory_gems is not None
-        and api_party.current_area is not None
-        and api_party.current_area < 40
-        and memory_gems > api_party.gems_this_reset + 50
+        and memory_gems_look_stale_after_reset(
+            memory_gems=memory_gems,
+            api_gems=api_party.gems_this_reset,
+            area=api_party.current_area,
+        )
     ):
         cleared_memory = True
         memory_gems = None

@@ -100,6 +100,9 @@ class Win32MemoryReader(MemoryReader):
             )
         return buffer.raw
 
+    def read_uint64(self, address: int) -> int:
+        return struct.unpack("<Q", self.read_bytes(address, 8))[0]
+
 
 class MockMemoryReader(MemoryReader):
     """In-memory fake address space for unit tests."""

@@ -13,7 +13,19 @@ from ic_core.api_fetch_worker import ApiFetchRunnable, ApiFetchSignals
 from ic_gamedata.advice_fingerprint import advice_fingerprint, party_id_from_payload
 from ic_gamedata.credential_cache import CredentialCache
 from ic_gamedata.credentials import GameCredentials
+from ic_gamedata.log_activity import new_log_bytes_are_relevant
+from ic_gamedata.log_tailer import WebRequestLogTailer
 from ic_gamedata.payload_quality import PayloadQuality, assess_payload_quality
+
+
+def _looks_like_auth_failure(err: str) -> bool:
+    low = err.casefold()
+    return (
+        "success=false" in low
+        or "credentials expired" in low
+        or "unauthorized" in low
+        or "invalid hash" in low
+    )
 
 # Slow heartbeat keeps data fresh when the game is quiet.
 _BASE_POLL_MS = 30000
@@ -74,6 +86,7 @@ class GameDataService(QObject):
         super().__init__(parent)
         self._credentials: GameCredentials | None = None
         self._log_path: Path | None = None
+        self._log_tailer: WebRequestLogTailer | None = None
         self._cred_cache = CredentialCache()
         self._version = 0
         self._latest: SnapshotEnvelope | None = None
@@ -144,6 +157,11 @@ class GameDataService(QObject):
             self._deferred_change_timer.stop()
             # Seed baseline so the first probe does not treat an existing log as "new".
             self._peek_log_stat(update=True)
+            self._log_tailer = None
+            if log_path is not None:
+                # One full read here; later polls only consume appended bytes.
+                self._log_tailer = WebRequestLogTailer(log_path)
+                self._log_tailer.bootstrap()
         if credentials is not None:
             self._credentials = credentials
         elif log_path is not None:
@@ -166,10 +184,18 @@ class GameDataService(QObject):
         self._deferred_change_timer.stop()
         self._watchdog.stop()
 
-    def refresh_credentials(self) -> bool:
+    def refresh_credentials(self, *, force: bool = False) -> bool:
+        """Refresh credentials from the log.
+
+        By default uses ``CredentialCache`` (re-reads only when mtime/size
+        changes). Pass ``force=True`` to invalidate the cache first — e.g.
+        Dashboard "Opnieuw zoeken". Never clear on every advisor click: a full
+        ``webRequestLog`` scan on the UI thread freezes Verversen/Analyseren.
+        """
         if self._log_path is None:
             return self._credentials is not None
-        self._cred_cache.clear()
+        if force:
+            self._cred_cache.clear()
         creds = self._cred_cache.get(self._log_path)
         if creds is not None:
             self._credentials = creds
@@ -207,7 +233,14 @@ class GameDataService(QObject):
             return
         if key == self._log_stat_key:
             return
+        old_size = self._log_stat_key[1]
+        new_size = key[1]
         self._log_stat_key = key
+        # Ignore chest/shop/noise appends — only poll for party/auth-bearing calls.
+        if self._log_path is not None and not new_log_bytes_are_relevant(
+            self._log_path, old_size, new_size
+        ):
+            return
         self._request_change_poll()
 
     def _request_change_poll(self) -> None:
@@ -268,7 +301,7 @@ class GameDataService(QObject):
             if fresh is not None:
                 self._credentials = fresh
         if self._credentials is None:
-            self._note_failure("Geen API-credentials.")
+            self._note_failure("No API credentials.")
             self._drain_pending_after_failure()
             return
 
@@ -282,13 +315,14 @@ class GameDataService(QObject):
             self._log_path,
             generation=generation,
             signals=self._signals,
+            tailer=self._log_tailer,
         )
         QThreadPool.globalInstance().start(worker)
 
     def _cache_age_text(self) -> str:
         if self._last_success_at is None:
-            return "geen eerdere succesvolle poll"
-        return f"cache {_format_cache_age(time.time() - self._last_success_at)} oud"
+            return "no previous successful poll"
+        return f"cache {_format_cache_age(time.time() - self._last_success_at)} old"
 
     def _note_failure(self, err: str) -> None:
         self._consecutive_failures += 1
@@ -374,13 +408,19 @@ class GameDataService(QObject):
         api_snap = result.get("api_snap")
         # Soft failure: HTTP ok path returned error string and no usable payload
         if payload is None and api_snap is None and api_err:
-            self._note_failure(str(api_err))
+            err_text = str(api_err)
+            if _looks_like_auth_failure(err_text):
+                self._refresh_credentials_after_auth_failure()
+            self._note_failure(err_text)
             self._drain_pending()
             return
 
         credentials = result.get("credentials")
         if credentials is not None:
             self._credentials = credentials
+        if api_err and _looks_like_auth_failure(str(api_err)):
+            # Partial/soft auth failure while still publishing — refresh for next poll.
+            self._refresh_credentials_after_auth_failure()
 
         self._consecutive_failures = 0
         self._apply_poll_backoff()
@@ -420,6 +460,15 @@ class GameDataService(QObject):
         self._latest = envelope
         self.snapshot_updated.emit(envelope)
         self._drain_pending()
+
+    def _refresh_credentials_after_auth_failure(self) -> None:
+        """Force a log re-scan so a new instance_key/hash can recover the next poll."""
+        if self._log_path is None:
+            return
+        self._cred_cache.clear()
+        fresh = self._cred_cache.get(self._log_path)
+        if fresh is not None:
+            self._credentials = fresh
 
     def _drain_pending_after_failure(self) -> None:
         self._pending_force.clear()

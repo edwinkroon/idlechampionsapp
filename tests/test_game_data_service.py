@@ -22,7 +22,14 @@ from ic_gamedata.credentials import GameCredentials
 from ic_core.game_data_service import GameDataService, SnapshotEnvelope
 
 
-def _payload(*, party: int = 1, formation: list | None = None, adventure: int = 14, levels: dict[int, int] | None = None) -> dict:
+def _payload(
+    *,
+    party: int = 1,
+    formation: list | None = None,
+    adventure: int = 14,
+    levels: dict[int, int] | None = None,
+    highest_damage_hero_id: int | None = None,
+) -> dict:
     heroes = [
         {
             "hero_id": 164,
@@ -39,6 +46,9 @@ def _payload(*, party: int = 1, formation: list | None = None, adventure: int = 
             "active_feats": [],
         },
     ]
+    stats: dict = {}
+    if highest_damage_hero_id is not None:
+        stats["this_reset_highest_damage_dealt_hero_id"] = highest_damage_hero_id
     return {
         "details": {
             "active_game_instance_id": party,
@@ -48,6 +58,7 @@ def _payload(*, party: int = 1, formation: list | None = None, adventure: int = 
                     "current_adventure_id": adventure,
                     "hero_in_seats": {"8": 164, "9": 168},
                     "formation": formation if formation is not None else [164, 168, -1],
+                    "stats": stats,
                 }
             ],
             "heroes": heroes,
@@ -75,6 +86,29 @@ class AdviceFingerprintTests(unittest.TestCase):
         unlocked = advice_fingerprint(_payload(levels={164: 50, 168: 40}))
         self.assertIsNotNone(low)
         self.assertNotEqual(low, unlocked)
+
+    def test_highest_damage_hero_changes_fingerprint(self) -> None:
+        """Carry identity must invalidate advice even when seats stay the same."""
+        early = advice_fingerprint(_payload())
+        with_carry = advice_fingerprint(_payload(highest_damage_hero_id=164))
+        switched = advice_fingerprint(_payload(highest_damage_hero_id=168))
+        self.assertIsNotNone(early)
+        self.assertNotEqual(early, with_carry)
+        self.assertNotEqual(with_carry, switched)
+
+    def test_formation_ilvl_bucket_changes_fingerprint(self) -> None:
+        """Meaningful gear upgrades invalidate advice; tiny ticks in-bucket do not."""
+        base = _payload()
+        base["details"]["loot"] = [
+            {"hero_id": 164, "slot_id": 1, "enchant": 99},
+            {"hero_id": 168, "slot_id": 1, "enchant": 99},
+        ]
+        upgraded = json.loads(json.dumps(base))
+        upgraded["details"]["loot"][0]["enchant"] = 199  # ilvl 200 → next bucket
+        same_bucket = json.loads(json.dumps(base))
+        same_bucket["details"]["loot"][0]["enchant"] = 150  # ilvl 151 → same bucket
+        self.assertNotEqual(advice_fingerprint(base), advice_fingerprint(upgraded))
+        self.assertEqual(advice_fingerprint(base), advice_fingerprint(same_bucket))
 
     def test_empty_formation_does_not_lock_fingerprint(self) -> None:
         fp = advice_fingerprint(_payload())
@@ -193,7 +227,26 @@ class GameDataServiceTests(unittest.TestCase):
         self.assertIn("advisor", received[0].force_consumers)
         self.assertIsNotNone(received[0].advice_fp)
 
-    def test_log_probe_triggers_change_poll(self) -> None:
+    def test_refresh_credentials_reuses_cache_unless_forced(self) -> None:
+        """Regression: Verversen/Analyseren must not full-scan the log every click."""
+        svc = GameDataService()
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "webRequestLog.txt"
+            path.write_text("stub", encoding="utf-8")
+            svc.configure(log_path=path)
+            creds = GameCredentials("https://x/", "1", "h")
+            with mock.patch(
+                "ic_gamedata.credential_cache.extract_credentials_from_log",
+                return_value=creds,
+            ) as extract:
+                # configure() may have cached a failed parse of the stub log.
+                svc._cred_cache.clear()
+                self.assertTrue(svc.refresh_credentials())
+                self.assertTrue(svc.refresh_credentials())
+                self.assertEqual(extract.call_count, 1)
+                self.assertTrue(svc.refresh_credentials(force=True))
+                self.assertEqual(extract.call_count, 2)
+                self.assertIs(svc.credentials, creds)
         svc = GameDataService()
         svc._credentials = GameCredentials("https://x/", "1", "h")
         with tempfile.TemporaryDirectory() as tmp:
@@ -204,7 +257,14 @@ class GameDataServiceTests(unittest.TestCase):
             with mock.patch.object(svc, "request_poll") as poll:
                 svc._on_log_probe()
                 poll.assert_not_called()
-                path.write_text("v2-changed", encoding="utf-8")
+                # Irrelevant growth (no call=getuserdetails) must not stampede the API.
+                path.write_text("v2-noise-only", encoding="utf-8")
+                svc._on_log_probe()
+                poll.assert_not_called()
+                path.write_text(
+                    "v3\nhttps://x/~idledragons/post.php?call=getuserdetails&user_id=1\n{}",
+                    encoding="utf-8",
+                )
                 svc._on_log_probe()
                 poll.assert_called_once_with(reason="log_change", auto_refresh=True)
 

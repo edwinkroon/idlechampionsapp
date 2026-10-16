@@ -4,10 +4,12 @@ from __future__ import annotations
 
 import unittest
 
+from ic_gamedata.log_parser import GameSnapshot, PartySnapshot
 from ic_gamedata.party_display import (
     format_area_line,
     format_buff_remaining,
     party_tile_title,
+    refresh_snapshot_from_payload,
     summarize_active_buffs,
 )
 
@@ -85,6 +87,72 @@ class PartyDisplayTests(unittest.TestCase):
         self.assertEqual(len(lines), 4)
         self.assertTrue(all(line.startswith("· ") for line in lines[1:]))
         self.assertTrue(all("rest" in line for line in lines[1:]))
+
+    def test_refresh_snapshot_updates_active_adventure(self) -> None:
+        """Caption/dashboard must follow live adventure after a party swap."""
+        stale = GameSnapshot(
+            api_call="getuserdetails",
+            active_party_index=1,
+            parties=(
+                PartySnapshot(
+                    party_index=1,
+                    adventure_id=100,
+                    current_area=50,
+                    gold=1.0,
+                    gold_gained=1.0,
+                    gems_this_reset=0,
+                    boss_kills_this_reset=0,
+                    monster_kills=0,
+                    boss_kills=0,
+                    is_active=True,
+                ),
+                PartySnapshot(
+                    party_index=2,
+                    adventure_id=200,
+                    current_area=10,
+                    gold=1.0,
+                    gold_gained=1.0,
+                    gems_this_reset=0,
+                    boss_kills_this_reset=0,
+                    monster_kills=0,
+                    boss_kills=0,
+                    is_active=False,
+                ),
+            ),
+            current_area=50,
+            gold=1.0,
+            gold_gained=1.0,
+            gems_this_reset=0,
+            monster_kills=0,
+            boss_kills=0,
+        )
+        payload = {
+            "details": {
+                "active_game_instance_id": 2,
+                "current_adventure_id": 999,
+                "game_instances": [
+                    {
+                        "game_instance_id": 1,
+                        "current_adventure_id": 100,
+                        "current_area": 50,
+                        "stats": {},
+                    },
+                    {
+                        "game_instance_id": 2,
+                        "current_adventure_id": 321,
+                        "current_area": 12,
+                        "stats": {},
+                    },
+                ],
+            }
+        }
+        refreshed = refresh_snapshot_from_payload(stale, payload)
+        self.assertEqual(refreshed.active_party_index, 2)
+        by_id = {p.party_index: p for p in refreshed.parties}
+        self.assertFalse(by_id[1].is_active)
+        self.assertTrue(by_id[2].is_active)
+        self.assertEqual(by_id[2].adventure_id, 321)
+        self.assertEqual(by_id[2].current_area, 12)
 
 
 if __name__ == "__main__":

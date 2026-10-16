@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass
 
-from PySide6.QtCore import QTimer, Signal
+from PySide6.QtCore import Qt, QSettings, QTimer, Signal
 from PySide6.QtWidgets import (
     QCheckBox,
     QFormLayout,
+    QFrame,
     QGridLayout,
     QGroupBox,
     QHBoxLayout,
@@ -16,14 +18,45 @@ from PySide6.QtWidgets import (
     QMessageBox,
     QPushButton,
     QScrollArea,
+    QSizePolicy,
     QVBoxLayout,
     QWidget,
 )
 
 from ic_automation import AutomationController, AutomationSettings, win_input
 from ic_ui import theme as ui_theme
-from ic_ui.theme import DEFAULT_WINDOW_TITLE, on_theme_changed
+from ic_ui.theme import (
+    DEFAULT_WINDOW_TITLE,
+    apply_button_icon,
+    on_theme_changed,
+    status_pill_dot_stylesheet,
+    style_danger_button,
+    style_default_button,
+    style_primary_button,
+)
 from ic_ui.widgets.option_visibility import bind_option_visibility
+
+_SETTINGS_ORG = "IdleChampions"
+_SETTINGS_APP = "Companion"
+_SETTINGS_PREFIX = "automation/"
+_ABILITY_HOTKEYS: tuple[str, ...] = ("1", "2", "3", "4", "5", "6", "7", "8", "9", "0")
+
+
+def classify_automation_indicator(text: str, kind: str) -> str:
+    """Map a worker status line to paused | wait_focus | error | active."""
+    lower = text.lower()
+    if kind == "paused" or "paused" in lower or "gepauzeerd" in lower:
+        return "paused"
+    # Only real game-focus waits — not "waiting for formation sync".
+    if (
+        "focus the game" in lower
+        or "waiting for game focus" in lower
+        or "wacht op game focus" in lower
+    ):
+        return "wait_focus"
+    if kind == "error":
+        return "error"
+    return "active"
 
 
 @dataclass
@@ -36,12 +69,9 @@ class AutomationWidgets:
     grave_interval_sec: QLineEdit
     abilities_enabled: QCheckBox
     abilities_interval_sec: QLineEdit
+    abilities_keys: dict[str, QCheckBox]
     auto_click_enabled: QCheckBox
     auto_click_cps: QLineEdit
-    hover_gate: QCheckBox
-    pause_ctrl: QCheckBox
-    pause_over_app: QCheckBox
-    prefer_game_focus: QCheckBox
     level_fkeys: dict[int, QCheckBox]
 
 
@@ -49,29 +79,56 @@ class AutomationTab(QWidget):
     """Auto-level, auto-progress, and related game input automation."""
 
     running_changed = Signal(bool)
+    indicator_changed = Signal(str)  # "off" | "on" | "paused"
     api_poll_requested = Signal()
 
     def __init__(self, parent: QWidget | None = None) -> None:
         super().__init__(parent)
         self._running = False
+        self._paused = False
+        self._indicator_state = "off"
         self._automation = AutomationController()
         self._formation_seats: frozenset[int] | None = None
         self._formation_party_id: int | None = None
         self._familiar_level_seats: frozenset[int] = frozenset()
+        self._abilities_keys_by_party: dict[int, tuple[str, ...]] = {}
         self._formation_poll_tick = 0
         self._last_payload: dict | None = None
         self._widgets: AutomationWidgets | None = None
+        self._settings = QSettings(_SETTINGS_ORG, _SETTINGS_APP)
+        self._persist_timer = QTimer(self)
+        self._persist_timer.setSingleShot(True)
+        self._persist_timer.setInterval(400)
+        self._persist_timer.timeout.connect(self._save_settings)
 
         self._status_timer = QTimer(self)
         self._status_timer.setInterval(250)
         self._status_timer.timeout.connect(self._poll_status)
 
         self._build_ui()
+        self._load_settings()
+        self._connect_persist_signals()
         on_theme_changed(self._apply_local_theme)
 
     @property
     def is_running(self) -> bool:
         return self._running
+
+    @property
+    def indicator_state(self) -> str:
+        return self._indicator_state
+
+    def _sync_indicator_state(self) -> None:
+        if not self._running:
+            state = "off"
+        elif self._paused:
+            state = "paused"
+        else:
+            state = "on"
+        if state == self._indicator_state:
+            return
+        self._indicator_state = state
+        self.indicator_changed.emit(state)
 
     def set_formation_payload(self, payload: dict | None) -> None:
         self._last_payload = payload
@@ -87,7 +144,9 @@ class AutomationTab(QWidget):
             return
         party_id, seats = active_formation_seats(payload)
         familiar_seats = familiar_level_seats(payload)
+        self._switch_ability_keys_for_party(party_id)
         self._apply_formation_fkeys(party_id, seats, familiar_seats)
+        self._apply_ability_key_labels(payload)
 
     def stop(self) -> None:
         if not self._running:
@@ -95,49 +154,92 @@ class AutomationTab(QWidget):
         self._automation.stop()
         self._status_timer.stop()
         self._set_running_ui(False)
-        self._status_label.setText("Status: gestopt")
+        self._status_label.setText("Status: stopped")
+        self._save_settings()
 
     def _build_ui(self) -> None:
         root = QVBoxLayout(self)
+        root.setContentsMargins(8, 8, 8, 8)
+        root.setSpacing(10)
 
         button_row = QHBoxLayout()
         self._btn_start = QPushButton("Start")
+        style_primary_button(self._btn_start)
+        apply_button_icon(self._btn_start, "start")
+        self._btn_start.setToolTip("Start automation with the current settings")
         self._btn_start.clicked.connect(self._start_automation)
         self._btn_stop = QPushButton("Stop")
+        style_default_button(self._btn_stop)
+        apply_button_icon(self._btn_stop, "stop")
         self._btn_stop.setEnabled(False)
+        self._btn_stop.setToolTip("Stop all automation actions")
         self._btn_stop.clicked.connect(self.stop)
         button_row.addWidget(self._btn_start)
         button_row.addWidget(self._btn_stop)
         button_row.addStretch(1)
         root.addLayout(button_row)
 
-        self._status_label = QLabel("Status: gestopt")
+        self._status_label = QLabel("Status: stopped")
         root.addWidget(self._status_label)
 
-        self._focus_indicator = QLabel("● Gestopt")
-        self._focus_indicator.setStyleSheet(
-            f"color: {ui_theme.STATUS_IDLE}; font-weight: bold;"
-        )
-        root.addWidget(self._focus_indicator)
+        indicator_row = QHBoxLayout()
+        indicator_row.setContentsMargins(0, 0, 0, 0)
+        indicator_row.setSpacing(8)
+        self._focus_dot = QLabel()
+        self._focus_dot.setFixedSize(8, 8)
+        self._focus_label = QLabel("Stopped")
+        self._focus_label.setStyleSheet(f"color: {ui_theme.STATUS_IDLE}; font-weight: bold;")
+        indicator_row.addWidget(self._focus_dot, alignment=Qt.AlignmentFlag.AlignVCenter)
+        indicator_row.addWidget(self._focus_label, stretch=1)
+        root.addLayout(indicator_row)
+        self._set_focus_indicator(ui_theme.STATUS_IDLE, "Stopped")
 
-        tip = QLabel("Tip: houd Ctrl in of beweeg de muis over deze app om te pauzeren / te scrollen.")
+        tip = QLabel(
+            "Safety (always on): only active with the mouse over the game and Idle Champions "
+            "in the foreground. Hold Ctrl or move over this app to pause. "
+            "Settings are saved automatically."
+        )
         tip.setWordWrap(True)
+        tip.setStyleSheet(f"color: {ui_theme.TEXT_MUTED};")
         root.addWidget(tip)
+
+        # Same rounded panel language as Dashboard partiesPanel.
+        scroll_host = QWidget()
+        scroll_host.setObjectName("partiesScrollHost")
+        scroll_host.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+        scroll_host.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, False)
+        host_layout = QVBoxLayout(scroll_host)
+        host_layout.setContentsMargins(0, 0, 0, 0)
+        host_layout.setSpacing(0)
+        host_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+
+        panel = QFrame()
+        panel.setObjectName("partiesPanel")
+        panel.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
+        panel.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Maximum)
+        form_root = QVBoxLayout(panel)
+        form_root.setContentsMargins(20, 20, 20, 20)
+        form_root.setSpacing(12)
+        form_root.addWidget(self._build_level_group())
+        form_root.addWidget(self._build_actions_group())
+        host_layout.addWidget(panel, 0, Qt.AlignmentFlag.AlignTop)
+        host_layout.addStretch(1)
 
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
-        content = QWidget()
-        form_root = QVBoxLayout(content)
-        form_root.addWidget(self._build_settings_group())
-        form_root.addStretch(1)
-        scroll.setWidget(content)
+        scroll.setFrameShape(QFrame.Shape.NoFrame)
+        scroll.setStyleSheet(
+            "QScrollArea { background: transparent; border: none; }"
+            "QScrollArea > QWidget > QWidget { background: transparent; }"
+        )
+        scroll.setAlignment(Qt.AlignmentFlag.AlignTop)
+        scroll.setWidget(scroll_host)
         root.addWidget(scroll, stretch=1)
+        self._finish_widgets()
 
     def _apply_local_theme(self, _mode: str = "dark") -> None:
         if not self._running:
-            self._focus_indicator.setStyleSheet(
-                f"color: {ui_theme.STATUS_IDLE}; font-weight: bold;"
-            )
+            self._set_focus_indicator(ui_theme.STATUS_IDLE, "Stopped")
         elif self._widgets is not None:
             self._apply_formation_fkeys(
                 self._formation_party_id,
@@ -145,47 +247,85 @@ class AutomationTab(QWidget):
                 self._familiar_level_seats,
             )
 
-    def _build_settings_group(self) -> QGroupBox:
-        group = QGroupBox("Instellingen")
+    def _build_level_group(self) -> QGroupBox:
+        group = QGroupBox("Leveling")
         outer = QVBoxLayout(group)
+        outer.setSpacing(10)
 
-        level_enabled = QCheckBox("Auto levelen (F12 aflopend naar F1)")
+        level_enabled = QCheckBox("Auto level (F12 down to F1)")
         level_enabled.setChecked(True)
         outer.addWidget(level_enabled)
 
         level_options = QWidget()
         level_options_layout = QVBoxLayout(level_options)
         level_options_layout.setContentsMargins(0, 0, 0, 0)
+        level_options_layout.setSpacing(8)
         level_interval_sec = QLineEdit("0")
         row = QFormLayout()
-        row.addRow("Level-interval (seconden, 0 = zo snel mogelijk):", level_interval_sec)
+        row.setSpacing(8)
+        row.addRow("Level interval (seconds, 0 = as fast as possible):", level_interval_sec)
         level_options_layout.addLayout(row)
 
-        fkeys_box = QGroupBox("F-toetsen bij levelen (alleen bij handmatige keuze)")
-        fkeys_grid = QGridLayout(fkeys_box)
+        limit_level_to_formation = QCheckBox("Limit leveling to active formation (auto-sync)")
+        limit_level_to_formation.setChecked(True)
+        limit_level_to_formation.toggled.connect(self._on_level_scope_changed)
+        level_options_layout.addWidget(limit_level_to_formation)
+
+        fkey_formation_label = QLabel(
+            "All seats in the active formation (F-key checkboxes are ignored)."
+        )
+        fkey_formation_label.setWordWrap(True)
+        level_options_layout.addWidget(fkey_formation_label)
+
+        fkeys_box = QGroupBox("F-keys while leveling (manual selection only)")
+        fkeys_outer = QVBoxLayout(fkeys_box)
+        fkeys_outer.setSpacing(8)
+        fkeys_grid = QGridLayout()
+        fkeys_grid.setHorizontalSpacing(6)
+        fkeys_grid.setVerticalSpacing(6)
+        fkeys_grid.setContentsMargins(0, 0, 0, 0)
+        for col in range(4):
+            fkeys_grid.setColumnStretch(col, 0)
+        fkeys_grid.setColumnStretch(4, 1)
         fkeys: dict[int, QCheckBox] = {}
         for i in range(1, 13):
             cb = QCheckBox(f"F{i}")
             cb.setChecked(False)
             fkeys[i] = cb
-            fkeys_grid.addWidget(cb, (i - 1) // 4, (i - 1) % 4)
-        fkey_formation_label = QLabel("Alle seats in de actieve formatie (F-vinkjes worden genegeerd).")
-        fkey_formation_label.setWordWrap(True)
-        limit_level_to_formation = QCheckBox("Beperk levelen tot actieve formatie (auto-sync)")
-        limit_level_to_formation.setChecked(True)
-        limit_level_to_formation.toggled.connect(self._on_level_scope_changed)
-        level_options_layout.addWidget(limit_level_to_formation)
-        level_options_layout.addWidget(fkey_formation_label)
+            fkeys_grid.addWidget(cb, (i - 1) // 4, (i - 1) % 4, Qt.AlignmentFlag.AlignLeft)
+        btn_select_all = QPushButton("Select all")
+        btn_select_all.setObjectName("compactBtn")
+        apply_button_icon(btn_select_all, "select_all", size=16)
+        btn_select_all.setToolTip("Enable all available F-keys")
+        btn_select_all.clicked.connect(self._select_all_level_fkeys)
+        # Same row as F9–F12, right-aligned in the stretch column.
+        fkeys_grid.addWidget(
+            btn_select_all,
+            2,
+            4,
+            Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter,
+        )
+        fkeys_outer.addLayout(fkeys_grid)
         level_options_layout.addWidget(fkeys_box)
-        # Formatie-modus staat standaard aan: F-vinkjes zijn dan niet van toepassing.
         fkeys_box.setEnabled(False)
         self._fkeys_box = fkeys_box
         self._fkey_formation_label = fkey_formation_label
         self._limit_level_to_formation = limit_level_to_formation
+        self._btn_select_all_fkeys = btn_select_all
         outer.addWidget(level_options)
         bind_option_visibility(level_enabled, level_options)
 
-        auto_progress_enabled = QCheckBox("Auto progress (toets G) automatisch")
+        self._w_level_enabled = level_enabled
+        self._w_level_interval = level_interval_sec
+        self._w_level_fkeys = fkeys
+        return group
+
+    def _build_actions_group(self) -> QGroupBox:
+        group = QGroupBox("Progress & abilities")
+        outer = QVBoxLayout(group)
+        outer.setSpacing(10)
+
+        auto_progress_enabled = QCheckBox("Auto progress (G key) automatically")
         auto_progress_enabled.setChecked(False)
         outer.addWidget(auto_progress_enabled)
         auto_progress_options = QWidget()
@@ -193,12 +333,12 @@ class AutomationTab(QWidget):
         auto_progress_options_layout.setContentsMargins(0, 0, 0, 0)
         auto_progress_interval_sec = QLineEdit("180")
         row = QFormLayout()
-        row.addRow("Auto progress-interval (seconden):", auto_progress_interval_sec)
+        row.addRow("Auto progress interval (seconds):", auto_progress_interval_sec)
         auto_progress_options_layout.addLayout(row)
         outer.addWidget(auto_progress_options)
         bind_option_visibility(auto_progress_enabled, auto_progress_options)
 
-        grave_enabled = QCheckBox("Backtick (`) automatisch")
+        grave_enabled = QCheckBox("Backtick (`) automatically")
         grave_enabled.setChecked(False)
         outer.addWidget(grave_enabled)
         grave_options = QWidget()
@@ -206,25 +346,51 @@ class AutomationTab(QWidget):
         grave_options_layout.setContentsMargins(0, 0, 0, 0)
         grave_interval_sec = QLineEdit("3")
         row = QFormLayout()
-        row.addRow("Backtick-interval (seconden):", grave_interval_sec)
+        row.addRow("Backtick interval (seconds):", grave_interval_sec)
         grave_options_layout.addLayout(row)
         outer.addWidget(grave_options)
         bind_option_visibility(grave_enabled, grave_options)
 
-        abilities_enabled = QCheckBox("Special abilities automatisch (timer-modus)")
+        abilities_enabled = QCheckBox("Special abilities automatically (timer mode)")
         abilities_enabled.setChecked(True)
         outer.addWidget(abilities_enabled)
         abilities_options = QWidget()
         abilities_options_layout = QVBoxLayout(abilities_options)
         abilities_options_layout.setContentsMargins(0, 0, 0, 0)
+        abilities_options_layout.setSpacing(8)
         abilities_interval_sec = QLineEdit("10")
         row = QFormLayout()
-        row.addRow("Abilities-interval (seconden):", abilities_interval_sec)
+        row.addRow("Abilities interval (seconds):", abilities_interval_sec)
         abilities_options_layout.addLayout(row)
+
+        abilities_keys_label = QLabel("Ultimates in the formation (hotkeys 1–0):")
+        abilities_keys_label.setWordWrap(True)
+        abilities_options_layout.addWidget(abilities_keys_label)
+        abilities_keys_grid = QGridLayout()
+        abilities_keys_grid.setHorizontalSpacing(12)
+        abilities_keys_grid.setVerticalSpacing(4)
+        abilities_keys_grid.setContentsMargins(0, 0, 0, 0)
+        abilities_keys_grid.setColumnStretch(0, 1)
+        abilities_keys_grid.setColumnStretch(1, 1)
+        abilities_keys: dict[str, QCheckBox] = {}
+        for index, key in enumerate(_ABILITY_HOTKEYS):
+            cb = QCheckBox(key)
+            cb.setChecked(True)
+            cb.setStyleSheet(
+                f"QCheckBox {{ font-size: 11px; color: {ui_theme.TEXT_BODY}; }}"
+                f"QCheckBox:disabled {{ color: {ui_theme.TEXT_MUTED}; }}"
+            )
+            abilities_keys[key] = cb
+            abilities_keys_grid.addWidget(
+                cb, index // 2, index % 2, Qt.AlignmentFlag.AlignLeft
+            )
+        abilities_options_layout.addLayout(abilities_keys_grid)
         outer.addWidget(abilities_options)
         bind_option_visibility(abilities_enabled, abilities_options)
 
-        auto_click_enabled = QCheckBox("Muisklik click damage (linkerklik als muis boven spelvenster)")
+        auto_click_enabled = QCheckBox(
+            "Mouse click damage (left click when mouse is over the game window)"
+        )
         auto_click_enabled.setChecked(False)
         outer.addWidget(auto_click_enabled)
         auto_click_options = QWidget()
@@ -232,46 +398,241 @@ class AutomationTab(QWidget):
         auto_click_options_layout.setContentsMargins(0, 0, 0, 0)
         auto_click_cps = QLineEdit("10")
         row = QFormLayout()
-        row.addRow("Klikken per seconde:", auto_click_cps)
+        row.addRow("Clicks per second:", auto_click_cps)
         auto_click_options_layout.addLayout(row)
         outer.addWidget(auto_click_options)
         bind_option_visibility(auto_click_enabled, auto_click_options)
 
-        hover_gate = QCheckBox("Alleen automatiseren als muis boven spelvenster staat")
-        hover_gate.setChecked(True)
-        pause_ctrl = QCheckBox("Pauzeer automatisering terwijl Ctrl ingedrukt is (aanbevolen)")
-        pause_ctrl.setChecked(True)
-        pause_over_app = QCheckBox(
-            "Pauzeer als muis boven deze app staat of deze app focus heeft (aanbevolen)"
-        )
-        pause_over_app.setChecked(True)
-        prefer_game_focus = QCheckBox(
-            "Geen focus stelen: alleen toetsen sturen als Idle Champions al actief is"
-        )
-        prefer_game_focus.setChecked(True)
-        outer.addWidget(hover_gate)
-        outer.addWidget(pause_ctrl)
-        outer.addWidget(pause_over_app)
-        outer.addWidget(prefer_game_focus)
-
-        self._widgets = AutomationWidgets(
-            level_enabled=level_enabled,
-            level_interval_sec=level_interval_sec,
-            auto_progress_enabled=auto_progress_enabled,
-            auto_progress_interval_sec=auto_progress_interval_sec,
-            grave_enabled=grave_enabled,
-            grave_interval_sec=grave_interval_sec,
-            abilities_enabled=abilities_enabled,
-            abilities_interval_sec=abilities_interval_sec,
-            auto_click_enabled=auto_click_enabled,
-            auto_click_cps=auto_click_cps,
-            hover_gate=hover_gate,
-            pause_ctrl=pause_ctrl,
-            pause_over_app=pause_over_app,
-            prefer_game_focus=prefer_game_focus,
-            level_fkeys=fkeys,
-        )
+        self._w_auto_progress_enabled = auto_progress_enabled
+        self._w_auto_progress_interval = auto_progress_interval_sec
+        self._w_grave_enabled = grave_enabled
+        self._w_grave_interval = grave_interval_sec
+        self._w_abilities_enabled = abilities_enabled
+        self._w_abilities_interval = abilities_interval_sec
+        self._w_abilities_keys = abilities_keys
+        self._w_auto_click_enabled = auto_click_enabled
+        self._w_auto_click_cps = auto_click_cps
         return group
+
+    def _finish_widgets(self) -> None:
+        self._widgets = AutomationWidgets(
+            level_enabled=self._w_level_enabled,
+            level_interval_sec=self._w_level_interval,
+            auto_progress_enabled=self._w_auto_progress_enabled,
+            auto_progress_interval_sec=self._w_auto_progress_interval,
+            grave_enabled=self._w_grave_enabled,
+            grave_interval_sec=self._w_grave_interval,
+            abilities_enabled=self._w_abilities_enabled,
+            abilities_interval_sec=self._w_abilities_interval,
+            abilities_keys=self._w_abilities_keys,
+            auto_click_enabled=self._w_auto_click_enabled,
+            auto_click_cps=self._w_auto_click_cps,
+            level_fkeys=self._w_level_fkeys,
+        )
+
+    def _connect_persist_signals(self) -> None:
+        if self._widgets is None:
+            return
+        w = self._widgets
+        for cb in (
+            w.level_enabled,
+            w.auto_progress_enabled,
+            w.grave_enabled,
+            w.abilities_enabled,
+            w.auto_click_enabled,
+            self._limit_level_to_formation,
+            *w.level_fkeys.values(),
+            *w.abilities_keys.values(),
+        ):
+            cb.toggled.connect(self._schedule_save_settings)
+        for line in (
+            w.level_interval_sec,
+            w.auto_progress_interval_sec,
+            w.grave_interval_sec,
+            w.abilities_interval_sec,
+            w.auto_click_cps,
+        ):
+            line.textChanged.connect(self._schedule_save_settings)
+        w.abilities_enabled.toggled.connect(self._on_abilities_enabled_toggled)
+        for cb in w.abilities_keys.values():
+            cb.toggled.connect(self._on_ability_key_toggled)
+        w.abilities_interval_sec.textChanged.connect(self._push_live_settings)
+
+    def _schedule_save_settings(self, *_args) -> None:
+        self._persist_timer.start()
+
+    def _ability_keys_selection(self) -> tuple[str, ...]:
+        w = self._widgets
+        assert w is not None
+        return tuple(key for key in _ABILITY_HOTKEYS if w.abilities_keys[key].isChecked())
+
+    def _ability_keys_to_fire(self) -> tuple[str, ...]:
+        """Checked hotkeys whose champion is actually in the formation."""
+        w = self._widgets
+        assert w is not None
+        return tuple(
+            key
+            for key in _ABILITY_HOTKEYS
+            if w.abilities_keys[key].isChecked() and w.abilities_keys[key].isEnabled()
+        )
+
+    def _set_ability_keys_selection(self, keys: tuple[str, ...]) -> None:
+        if self._widgets is None:
+            return
+        selected = set(keys)
+        for key, cb in self._widgets.abilities_keys.items():
+            cb.blockSignals(True)
+            cb.setChecked(key in selected)
+            cb.blockSignals(False)
+
+    def _remember_ability_keys_for_party(self, party_id: int | None) -> None:
+        if party_id is None or self._widgets is None:
+            return
+        self._abilities_keys_by_party[party_id] = self._ability_keys_selection()
+
+    def _restore_ability_keys_for_party(self, party_id: int | None) -> None:
+        if party_id is None or self._widgets is None:
+            return
+        keys = self._abilities_keys_by_party.get(party_id)
+        if keys is None:
+            # Unknown party: default to all seats selected.
+            keys = _ABILITY_HOTKEYS
+            self._abilities_keys_by_party[party_id] = keys
+        self._set_ability_keys_selection(keys)
+
+    def _switch_ability_keys_for_party(self, party_id: int | None) -> None:
+        if party_id == self._formation_party_id:
+            return
+        if self._formation_party_id is None and party_id is not None:
+            # First known party after startup: keep current UI (legacy) as its memory.
+            if party_id not in self._abilities_keys_by_party:
+                self._remember_ability_keys_for_party(party_id)
+            else:
+                self._restore_ability_keys_for_party(party_id)
+        else:
+            self._remember_ability_keys_for_party(self._formation_party_id)
+            self._restore_ability_keys_for_party(party_id)
+        self._schedule_save_settings()
+        self._push_live_settings()
+
+    def _load_abilities_keys_by_party(self) -> None:
+        raw = self._settings.value(f"{_SETTINGS_PREFIX}abilities_keys_by_party", "")
+        text = str(raw or "").strip()
+        if not text:
+            return
+        try:
+            data = json.loads(text)
+        except (TypeError, json.JSONDecodeError):
+            return
+        if not isinstance(data, dict):
+            return
+        loaded: dict[int, tuple[str, ...]] = {}
+        for party_raw, keys_raw in data.items():
+            try:
+                party_id = int(party_raw)
+            except (TypeError, ValueError):
+                continue
+            if not isinstance(keys_raw, list):
+                continue
+            keys = tuple(
+                key for key in _ABILITY_HOTKEYS if str(key) in {str(item) for item in keys_raw}
+            )
+            loaded[party_id] = keys
+        self._abilities_keys_by_party = loaded
+
+    def _save_abilities_keys_by_party(self) -> None:
+        self._remember_ability_keys_for_party(self._formation_party_id)
+        payload = {
+            str(party_id): list(keys)
+            for party_id, keys in sorted(self._abilities_keys_by_party.items())
+        }
+        self._settings.setValue(
+            f"{_SETTINGS_PREFIX}abilities_keys_by_party",
+            json.dumps(payload, separators=(",", ":")),
+        )
+
+    def _on_abilities_enabled_toggled(self, checked: bool) -> None:
+        """Turning special abilities back on selects every seat again."""
+        if checked and self._widgets is not None:
+            self._set_ability_keys_selection(_ABILITY_HOTKEYS)
+            self._remember_ability_keys_for_party(self._formation_party_id)
+            self._schedule_save_settings()
+        self._push_live_settings()
+
+    def _on_ability_key_toggled(self, *_args) -> None:
+        self._remember_ability_keys_for_party(self._formation_party_id)
+        self._schedule_save_settings()
+        self._push_live_settings()
+
+    def _push_live_settings(self, *_args) -> None:
+        """Push ability seat/interval changes to the worker without restarting."""
+        if not self._running or self._widgets is None:
+            return
+        self._automation.update_settings(self._build_settings_snapshot())
+
+    def _load_settings(self) -> None:
+        if self._widgets is None:
+            return
+        w = self._widgets
+        s = self._settings
+
+        def _bool(key: str, default: bool) -> bool:
+            return bool(s.value(f"{_SETTINGS_PREFIX}{key}", default, type=bool))
+
+        def _text(key: str, default: str) -> str:
+            return str(s.value(f"{_SETTINGS_PREFIX}{key}", default) or default)
+
+        w.level_enabled.setChecked(_bool("level_enabled", True))
+        w.level_interval_sec.setText(_text("level_interval_sec", "0"))
+        self._limit_level_to_formation.setChecked(_bool("limit_level_to_formation", True))
+        w.auto_progress_enabled.setChecked(_bool("auto_progress_enabled", False))
+        w.auto_progress_interval_sec.setText(_text("auto_progress_interval_sec", "180"))
+        w.grave_enabled.setChecked(_bool("grave_enabled", False))
+        w.grave_interval_sec.setText(_text("grave_interval_sec", "3"))
+        w.abilities_enabled.setChecked(_bool("abilities_enabled", True))
+        w.abilities_interval_sec.setText(_text("abilities_interval_sec", "10"))
+        self._load_abilities_keys_by_party()
+        for key, cb in w.abilities_keys.items():
+            cb.setChecked(_bool(f"ability_key_{key}", True))
+        w.auto_click_enabled.setChecked(_bool("auto_click_enabled", False))
+        w.auto_click_cps.setText(_text("auto_click_cps", "10"))
+        for i, cb in w.level_fkeys.items():
+            cb.setChecked(_bool(f"fkey_{i}", False))
+        self._on_level_scope_changed(self._limit_level_to_formation.isChecked())
+
+    def _save_settings(self) -> None:
+        if self._widgets is None:
+            return
+        w = self._widgets
+        s = self._settings
+        s.setValue(f"{_SETTINGS_PREFIX}level_enabled", w.level_enabled.isChecked())
+        s.setValue(f"{_SETTINGS_PREFIX}level_interval_sec", w.level_interval_sec.text())
+        s.setValue(
+            f"{_SETTINGS_PREFIX}limit_level_to_formation",
+            self._limit_level_to_formation.isChecked(),
+        )
+        s.setValue(
+            f"{_SETTINGS_PREFIX}auto_progress_enabled", w.auto_progress_enabled.isChecked()
+        )
+        s.setValue(
+            f"{_SETTINGS_PREFIX}auto_progress_interval_sec",
+            w.auto_progress_interval_sec.text(),
+        )
+        s.setValue(f"{_SETTINGS_PREFIX}grave_enabled", w.grave_enabled.isChecked())
+        s.setValue(f"{_SETTINGS_PREFIX}grave_interval_sec", w.grave_interval_sec.text())
+        s.setValue(f"{_SETTINGS_PREFIX}abilities_enabled", w.abilities_enabled.isChecked())
+        s.setValue(
+            f"{_SETTINGS_PREFIX}abilities_interval_sec", w.abilities_interval_sec.text()
+        )
+        self._save_abilities_keys_by_party()
+        for key, cb in w.abilities_keys.items():
+            s.setValue(f"{_SETTINGS_PREFIX}ability_key_{key}", cb.isChecked())
+        s.setValue(f"{_SETTINGS_PREFIX}auto_click_enabled", w.auto_click_enabled.isChecked())
+        s.setValue(f"{_SETTINGS_PREFIX}auto_click_cps", w.auto_click_cps.text())
+        for i, cb in w.level_fkeys.items():
+            s.setValue(f"{_SETTINGS_PREFIX}fkey_{i}", cb.isChecked())
+        if not self._running:
+            self._status_label.setText("Status: stopped · settings saved")
 
     @staticmethod
     def _to_int(line: QLineEdit, default: int) -> int:
@@ -280,14 +641,26 @@ class AutomationTab(QWidget):
         except ValueError:
             return default
 
+    def _on_level_scope_changed(self, checked: bool) -> None:
+        self._fkeys_box.setEnabled(not checked)
+        if self._last_payload is not None:
+            self.sync_fkeys_from_payload(self._last_payload)
+        self._schedule_save_settings()
+
+    def _select_all_level_fkeys(self) -> None:
+        if self._widgets is None or not self._fkeys_box.isEnabled():
+            return
+        for cb in self._widgets.level_fkeys.values():
+            if cb.isEnabled():
+                cb.setChecked(True)
+        self._schedule_save_settings()
+
     def _build_settings_snapshot(self) -> AutomationSettings:
         w = self._widgets
         assert w is not None
         # Actieve-formatie modus: alle formatie-seats, F-vinkjes negeren.
         if self._limit_level_to_formation.isChecked() and self._formation_seats:
-            selected = tuple(
-                i for i in range(12, 0, -1) if i in self._formation_seats
-            )
+            selected = tuple(i for i in range(12, 0, -1) if i in self._formation_seats)
         else:
             selected = tuple(
                 i
@@ -299,7 +672,7 @@ class AutomationTab(QWidget):
         window = self.window()
         hwnd = int(window.winId()) if window is not None else 0
         exclude_hwnd = win_input.toplevel_hwnd(hwnd)
-        pause_app = w.pause_over_app.isChecked()
+        # Safety flags stay at AutomationSettings defaults (always on, not configurable).
         return AutomationSettings(
             window_title=DEFAULT_WINDOW_TITLE,
             exclude_hwnd=exclude_hwnd,
@@ -313,40 +686,42 @@ class AutomationTab(QWidget):
             grave_interval_sec=max(1, self._to_int(w.grave_interval_sec, 3)),
             enable_abilities=w.abilities_enabled.isChecked(),
             abilities_interval_sec=max(3, self._to_int(w.abilities_interval_sec, 10)),
+            abilities_keys=self._ability_keys_to_fire(),
             enable_auto_click=w.auto_click_enabled.isChecked(),
             auto_click_cps=max(1, min(20, self._to_int(w.auto_click_cps, 10))),
-            hover_gate=w.hover_gate.isChecked(),
-            restore_focus=True,
-            pause_on_ctrl=w.pause_ctrl.isChecked(),
-            pause_when_over_app=pause_app,
-            pause_when_app_focused=pause_app,
-            prefer_game_already_focused=w.prefer_game_focus.isChecked(),
         )
 
     def _set_running_ui(self, running: bool) -> None:
         self._running = running
+        if not running:
+            self._paused = False
         self._btn_start.setEnabled(not running)
         self._btn_stop.setEnabled(running)
+        if running:
+            style_default_button(self._btn_start)
+            style_danger_button(self._btn_stop)
+        else:
+            style_primary_button(self._btn_start)
+            style_default_button(self._btn_stop)
         self.running_changed.emit(running)
+        self._sync_indicator_state()
         if not running:
-            self._focus_indicator.setText("● Gestopt")
-            self._focus_indicator.setStyleSheet(
-                f"color: {ui_theme.STATUS_IDLE}; font-weight: bold;"
-            )
+            self._set_focus_indicator(ui_theme.STATUS_IDLE, "Stopped")
 
     def _start_automation(self) -> None:
         if win_input.gw is None:
             QMessageBox.warning(
                 self,
-                "Ontbrekende dependency",
-                "pygetwindow ontbreekt. Installeer dependencies via requirements.txt.",
+                "Missing dependency",
+                "pygetwindow is missing. Install dependencies via requirements.txt.",
             )
             return
         self.api_poll_requested.emit()
+        self._save_settings()
         settings = self._build_settings_snapshot()
         self._automation.start(settings)
         self._set_running_ui(True)
-        self._status_label.setText("Status: actief (worker)")
+        self._status_label.setText("Status: active (worker)")
         self._status_timer.start()
 
     def _poll_status(self) -> None:
@@ -361,40 +736,68 @@ class AutomationTab(QWidget):
             self._status_label.setText(event.text)
             self._update_focus_indicator(event.text, event.kind)
 
+    def _set_focus_indicator(self, color: str, text: str) -> None:
+        self._focus_dot.setStyleSheet(status_pill_dot_stylesheet(color))
+        self._focus_label.setText(text)
+        self._focus_label.setStyleSheet(f"color: {color}; font-weight: bold;")
+
     def _update_focus_indicator(self, text: str, kind: str) -> None:
         lower = text.lower()
-        pause_style = f"color: {ui_theme.STATUS_PAUSE}; font-weight: bold;"
-        if kind == "paused" or "gepauzeerd" in lower:
+        state = classify_automation_indicator(text, kind)
+        paused = state == "paused"
+        if paused:
+            color = ui_theme.STATUS_PAUSE
             if "shift" in lower or "ctrl" in lower:
-                self._focus_indicator.setText("⏸ Gepauzeerd — Ctrl ingedrukt")
-                self._focus_indicator.setStyleSheet(pause_style)
+                label = "Paused — Ctrl held"
             elif "caps" in lower:
-                self._focus_indicator.setText("⏸ Gepauzeerd — Caps Lock aan")
-                self._focus_indicator.setStyleSheet(pause_style)
-            elif "muis" in lower or "hover" in lower:
-                self._focus_indicator.setText("⏸ Gepauzeerd — muis boven deze app")
-                self._focus_indicator.setStyleSheet(pause_style)
-            elif "focus" in lower:
-                self._focus_indicator.setText("⏸ Gepauzeerd — helper heeft focus")
-                self._focus_indicator.setStyleSheet(pause_style)
+                label = "Paused — Caps Lock on"
+            elif "mouse" in lower or "muis" in lower or "hover" in lower:
+                label = "Paused — mouse over this app"
+            elif "focus" in lower or "helper" in lower:
+                label = "Paused — helper has focus"
             else:
-                self._focus_indicator.setText("⏸ Gepauzeerd")
-                self._focus_indicator.setStyleSheet(pause_style)
-        elif "wacht" in lower or "focus" in lower:
-            self._focus_indicator.setText("⏳ Wacht op game-focus — klik in Idle Champions")
-            self._focus_indicator.setStyleSheet(
-                f"color: {ui_theme.STATUS_WAIT}; font-weight: bold;"
+                label = "Paused"
+            self._set_focus_indicator(color, label)
+        elif state == "wait_focus":
+            self._set_focus_indicator(
+                ui_theme.STATUS_WAIT,
+                "Waiting for game focus — click in Idle Champions",
             )
-        elif kind == "error":
-            self._focus_indicator.setText("⚠ Fout — zie status hierboven")
-            self._focus_indicator.setStyleSheet(
-                f"color: {ui_theme.STATUS_ERROR}; font-weight: bold;"
-            )
+        elif state == "error":
+            self._set_focus_indicator(ui_theme.STATUS_ERROR, "Error — see status above")
         else:
-            self._focus_indicator.setText("● Actief")
-            self._focus_indicator.setStyleSheet(
-                f"color: {ui_theme.STATUS_ACTIVE}; font-weight: bold;"
-            )
+            self._set_focus_indicator(ui_theme.STATUS_ACTIVE, "Active")
+        self._paused = paused
+        self._sync_indicator_state()
+
+    def _apply_ability_key_labels(self, payload: dict | None) -> None:
+        if self._widgets is None:
+            return
+        labels: dict[str, str] = {}
+        active_keys: set[str] | None = None
+        if payload is not None:
+            try:
+                from ic_gamedata.ability_cooldowns import (
+                    ability_hotkey_labels,
+                    formation_ability_keys,
+                )
+            except ImportError:
+                ability_hotkey_labels = None
+            else:
+                labels = ability_hotkey_labels(payload)
+                active_keys = set(formation_ability_keys(payload))
+        for key, cb in self._widgets.abilities_keys.items():
+            in_formation = active_keys is None or key in active_keys
+            detail = labels.get(key) or ""
+            cb.setText(f"{key}  {detail}".rstrip() if detail else key)
+            cb.setEnabled(in_formation)
+            if detail:
+                tip = f"Hotkey {key}: {detail}"
+            elif in_formation:
+                tip = f"Hotkey {key} (empty seat)"
+            else:
+                tip = f"Hotkey {key}: no champion in the formation on this seat"
+            cb.setToolTip(tip)
 
     def _apply_formation_fkeys(
         self,
@@ -408,18 +811,17 @@ class AutomationTab(QWidget):
             return
         w = self._widgets
         limit_to_formation = self._limit_level_to_formation.isChecked()
-        # In formatie-modus sturen we alle seats; F-vinkjes zijn alleen informatief.
         self._fkeys_box.setEnabled(not limit_to_formation)
         party_changed = party_id != self._formation_party_id
         if not seats:
-            party_txt = f"party {party_id}" if party_id is not None else "actieve party"
+            party_txt = f"party {party_id}" if party_id is not None else "active party"
             if limit_to_formation:
                 self._fkey_formation_label.setText(
-                    f"Formatie {party_txt}: geen seats gevonden — wacht op API-sync."
+                    f"Formation {party_txt}: no seats found — waiting for API sync."
                 )
             else:
                 self._fkey_formation_label.setText(
-                    f"Formatie {party_txt}: geen seats gevonden — handmatig aanvinken."
+                    f"Formation {party_txt}: no seats found — check F-keys manually."
                 )
             if party_changed:
                 self._formation_party_id = party_id
@@ -439,6 +841,7 @@ class AutomationTab(QWidget):
             cb.setFont(font)
             if has_familiar:
                 familiar = ui_theme.FKEY_FAMILIAR_COLOR
+                cb.setToolTip("Familiar on this seat — F-key leveling skipped")
                 cb.setStyleSheet(
                     f"QCheckBox {{ color: {familiar}; font-weight: 600; }}"
                     f"QCheckBox:disabled {{ color: {familiar}; }}"
@@ -446,46 +849,22 @@ class AutomationTab(QWidget):
                 cb.setChecked(False)
                 cb.setEnabled(False)
             else:
+                cb.setToolTip("")
                 cb.setStyleSheet("")
                 cb.setEnabled(not limit_to_formation)
                 if limit_to_formation:
                     cb.setChecked(i in seats)
         seat_list = ", ".join(f"F{s}" for s in sorted(seats))
-        party_txt = f"party {party_id}" if party_id is not None else "actieve party"
+        party_txt = f"party {party_id}" if party_id is not None else "active party"
         blocked = sorted(seats & familiar_seats)
-        levelable = sorted(seats - familiar_seats)
-        if blocked and not levelable:
-            suffix = (
-                f" — familiar op alle formatie-seats ({', '.join(f'F{s}' for s in blocked)}); "
-                "geen F-toetsen nodig"
-            )
-        elif blocked:
-            blocked_txt = ", ".join(f"F{s}" for s in blocked)
-            suffix = f" — familiar op {blocked_txt} (groen, geen F-level)"
-        else:
-            suffix = ""
         if limit_to_formation:
-            mode_txt = "alle actieve formatie-champs (F-vinkjes genegeerd)"
-        else:
-            mode_txt = "handmatige F-keuzes toegestaan"
-        self._fkey_formation_label.setText(
-            f"Formatie {party_txt}: {seat_list}{suffix} — {mode_txt}"
-        )
-
-    def _on_level_scope_changed(self) -> None:
-        limit_to_formation = self._limit_level_to_formation.isChecked()
-        self._fkeys_box.setEnabled(not limit_to_formation)
-        if self._formation_seats:
-            self._apply_formation_fkeys(
-                self._formation_party_id,
-                self._formation_seats,
-                self._familiar_level_seats,
-            )
-        elif limit_to_formation:
+            extra = ""
+            if blocked:
+                extra = f" · familiars not leveled: {', '.join(f'F{s}' for s in blocked)}"
             self._fkey_formation_label.setText(
-                "Alle seats in de actieve formatie (F-vinkjes worden genegeerd)."
+                f"Formation {party_txt}: leveling {seat_list}{extra}."
             )
         else:
             self._fkey_formation_label.setText(
-                "Handmatige F-keuzes: vink aan welke seats je wilt levelen."
+                f"Formation {party_txt} detected ({seat_list}) — manual F-key selection active."
             )

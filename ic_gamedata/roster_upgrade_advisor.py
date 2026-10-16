@@ -107,19 +107,9 @@ class _OwnedChamp:
 
 @lru_cache(maxsize=1)
 def _hero_seat_id_map() -> dict[int, int]:
-    from ic_gamedata.specialization_data import cached_definitions_data
+    from ic_gamedata.specialization_data import hero_seat_id_map_from_cached_definitions
 
-    out: dict[int, int] = {}
-    data = cached_definitions_data()
-    for hero in data.get("hero_defines") or []:
-        if not isinstance(hero, dict):
-            continue
-        hero_id = _parse_int(hero.get("id"))
-        seat_id = _parse_int(hero.get("seat_id"))
-        if hero_id is None or seat_id is None or seat_id <= 0:
-            continue
-        out[hero_id] = seat_id
-    return out
+    return hero_seat_id_map_from_cached_definitions()
 
 
 def _seat_zone(seat: int | None) -> str:
@@ -133,7 +123,12 @@ def _seat_zone(seat: int | None) -> str:
     return "mid"
 
 
-def _hero_tags_roles_fit(roles: tuple[str, ...], tags: tuple[str, ...], role: SeatRole) -> bool:
+def _hero_tags_roles_fit(
+    hero_id: int,
+    roles: tuple[str, ...],
+    tags: tuple[str, ...],
+    role: SeatRole,
+) -> bool:
     role_set = set(roles)
     tag_set = set(tags)
     if role == "bud":
@@ -152,12 +147,19 @@ def _hero_tags_roles_fit(roles: tuple[str, ...], tags: tuple[str, ...], role: Se
         return "gold" in role_set or "gold" in tag_set
     if role == "speed":
         return "speed" in tag_set
-    if role == "modron":
-        return False
+    if role == "scavenger":
+        from ic_gamedata.speed_utility_roles import scavenger_hero_ids
+
+        return hero_id in scavenger_hero_ids()
     return True
 
 
-def _fit_score(roles: tuple[str, ...], tags: tuple[str, ...], role: SeatRole) -> float:
+def _fit_score(
+    hero_id: int,
+    roles: tuple[str, ...],
+    tags: tuple[str, ...],
+    role: SeatRole,
+) -> float:
     role_set = set(roles)
     tag_set = set(tags)
     if role == "bud":
@@ -180,6 +182,10 @@ def _fit_score(roles: tuple[str, ...], tags: tuple[str, ...], role: SeatRole) ->
         return 3.0 if ("gold" in role_set or "gold" in tag_set) else 0.0
     if role == "speed":
         return 3.0 if "speed" in tag_set else 0.0
+    if role == "scavenger":
+        from ic_gamedata.speed_utility_roles import scavenger_hero_ids
+
+        return 3.0 if hero_id in scavenger_hero_ids() else 0.0
     return 0.5
 
 
@@ -259,11 +265,11 @@ def _suggestion(
     bud_ratio: float | None = None,
 ) -> RosterUpgradeSuggestion:
     if replace is None:
-        title = f"Zet {candidate.name} in (seat {candidate.seat_id})"
+        title = f"Add {candidate.name} (seat {candidate.seat_id})"
     elif same_seat_swap:
-        title = f"Vervang {replace.name} door {candidate.name}"
+        title = f"Replace {replace.name} with {candidate.name}"
     else:
-        title = f"Zet {candidate.name} in · bench {replace.name}"
+        title = f"Add {candidate.name} · bench {replace.name}"
     return RosterUpgradeSuggestion(
         candidate_hero_id=candidate.hero_id,
         candidate_name=candidate.name,
@@ -347,9 +353,9 @@ def _enrich_bud_proxy(
     ratio = bud_proxy_ratio(before, after_proxy)
     why = suggestion.why
     if meaningful_bud_ratio(ratio) and ratio >= 1.0:
-        why = f"{why} BUD-proxy: {format_bud_ratio(ratio)} t.o.v. huidige party."
+        why = f"{why} BUD proxy: {format_bud_ratio(ratio)} vs current party."
     elif meaningful_bud_ratio(ratio) and ratio < 1.0:
-        why = f"{why} BUD-proxy: {format_bud_ratio(ratio)} — rol/seat kan toch beter passen."
+        why = f"{why} BUD proxy: {format_bud_ratio(ratio)} — role/seat may still fit better."
     return dc_replace(
         suggestion,
         why=why,
@@ -473,15 +479,15 @@ def suggest_roster_upgrades(
             for champ in bench
             if champ.hero_id not in used_candidates
             and champ.seat_id not in used_bring_in_seats
-            and _hero_tags_roles_fit(champ.roles, champ.tags, role)
+            and _hero_tags_roles_fit(champ.hero_id, champ.roles, champ.tags, role)
         ]
         if not candidates:
             continue
-        candidates.sort(key=lambda c: (_fit_score(c.roles, c.tags, role), c.ilvl), reverse=True)
+        candidates.sort(key=lambda c: (_fit_score(c.hero_id, c.roles, c.tags, role), c.ilvl), reverse=True)
         candidate = candidates[0]
         assert candidate.seat_id is not None
         occupant = _same_seat_occupant(candidate, formation_by_seat)
-        role_nl = role_label(role)
+        role_display = role_label(role)
 
         if occupant is not None:
             if occupant.hero_id in protected or occupant.hero_id in used_replace:
@@ -500,13 +506,13 @@ def suggest_roster_upgrades(
             ):
                 continue
             why = (
-                f"Je party mist een duidelijke {role_nl.lower()}. "
-                f"{candidate.name} (seat {candidate.seat_id}) past bij die rol en vervangt "
-                f"{occupant.name} op dezelfde seat"
+                f"Your party is missing a clear {role_display.lower()}. "
+                f"{candidate.name} (seat {candidate.seat_id}) fits that role and replaces "
+                f"{occupant.name} on the same seat"
                 + (f" (ilvl {candidate.ilvl} vs {occupant.ilvl})" if candidate.ilvl or occupant.ilvl else "")
                 + "."
             )
-            score = 2000 + _fit_score(candidate.roles, candidate.tags, role) * 100 + candidate.ilvl
+            score = 2000 + _fit_score(candidate.hero_id, candidate.roles, candidate.tags, role) * 100 + candidate.ilvl
             _add(
                 _suggestion(
                     candidate=candidate,
@@ -529,21 +535,21 @@ def suggest_roster_upgrades(
             continue
         bench_target = _pick_bench_target()
         why_parts = [
-            f"Je party mist een duidelijke {role_nl.lower()}.",
-            f"{candidate.name} (seat {candidate.seat_id}) past bij die rol"
+            f"Your party is missing a clear {role_display.lower()}.",
+            f"{candidate.name} (seat {candidate.seat_id}) fits that role"
             + (f" (ilvl {candidate.ilvl})" if candidate.ilvl else "")
-            + " en die seat zit nog niet in de formatie.",
+            + " and that seat is not in the formation yet.",
         ]
         if bench_target is not None:
             why_parts.append(
-                f"Om ruimte te maken kun je {bench_target.name} "
-                f"(seat {bench_target.seat}) benchen — niet omdat {candidate.name} "
-                f"die seat overneemt, maar omdat er maar één champion per seat mee kan."
+                f"To make room, you can bench {bench_target.name} "
+                f"(seat {bench_target.seat}) — not because {candidate.name} "
+                f"takes that seat, but because only one champion per seat can be active."
             )
         overlap = _affiliation_overlap(candidate.tags, party_tags)
         if overlap:
-            why_parts.append("Extra synergie via gedeelde affiliatie: " + ", ".join(overlap) + ".")
-        score = 1900 + _fit_score(candidate.roles, candidate.tags, role) * 100 + candidate.ilvl
+            why_parts.append("Extra synergy via shared affiliation: " + ", ".join(overlap) + ".")
+        score = 1900 + _fit_score(candidate.hero_id, candidate.roles, candidate.tags, role) * 100 + candidate.ilvl
         _add(
             _suggestion(
                 candidate=candidate,
@@ -583,20 +589,20 @@ def suggest_roster_upgrades(
             for champ in bench
             if champ.hero_id not in used_candidates
             and champ.seat_id == hero.seat
-            and _hero_tags_roles_fit(champ.roles, champ.tags, role)
+            and _hero_tags_roles_fit(champ.hero_id, champ.roles, champ.tags, role)
         ]
         if not candidates:
             continue
-        candidates.sort(key=lambda c: (_fit_score(c.roles, c.tags, role), c.ilvl), reverse=True)
+        candidates.sort(key=lambda c: (_fit_score(c.hero_id, c.roles, c.tags, role), c.ilvl), reverse=True)
         candidate = candidates[0]
-        role_nl = role_label(role)
+        role_display = role_label(role)
         why = (
-            f"{hero.name} (seat {hero.seat}) past slecht bij de {role_nl.lower()}-rol die deze "
-            f"positie nu vraagt. {candidate.name} is een owned alternatief op dezelfde seat"
+            f"{hero.name} (seat {hero.seat}) fits poorly for the {role_display.lower()} role this "
+            f"position needs. {candidate.name} is an owned alternative on the same seat"
             + (f" (ilvl {candidate.ilvl} vs {hero.ilvl})" if candidate.ilvl or hero.ilvl else "")
             + "."
         )
-        score = 1500 + _fit_score(candidate.roles, candidate.tags, role) * 80 + candidate.ilvl
+        score = 1500 + _fit_score(candidate.hero_id, candidate.roles, candidate.tags, role) * 80 + candidate.ilvl
         _add(
             _suggestion(
                 candidate=candidate,
@@ -630,12 +636,12 @@ def suggest_roster_upgrades(
         if role == "flex":
             if not (goal == "gold" and role_fits_champion(hero, "gold")):
                 role = "support" if "support" in hero.roles else ("tank" if "tank" in hero.roles else "flex")
-        current_fit = _fit_score(hero.roles, hero.tags, role)
+        current_fit = _fit_score(hero.hero_id, hero.roles, hero.tags, role)
         candidates = []
         for champ in bench:
             if champ.hero_id in used_candidates or champ.seat_id != hero.seat:
                 continue
-            fit = _fit_score(champ.roles, champ.tags, role)
+            fit = _fit_score(champ.hero_id, champ.roles, champ.tags, role)
             if fit <= 0 and role != "flex":
                 continue
             # Keep multi-role DPS carries (e.g. King of Shadows) over gold supports
@@ -667,24 +673,24 @@ def suggest_roster_upgrades(
         if not candidates:
             continue
         candidates.sort(
-            key=lambda c: (_fit_score(c.roles, c.tags, role), c.ilvl - hero.ilvl, c.ilvl),
+            key=lambda c: (_fit_score(c.hero_id, c.roles, c.tags, role), c.ilvl - hero.ilvl, c.ilvl),
             reverse=True,
         )
         candidate = candidates[0]
-        role_nl = role_label(role)
+        role_display = role_label(role)
         ilvl_bit = ""
         if candidate.ilvl or hero.ilvl:
             ilvl_bit = f" Gear: {candidate.name} ilvl {candidate.ilvl} vs {hero.name} ilvl {hero.ilvl}."
         why = (
-            f"Beide zijn seat {hero.seat}-champions. {candidate.name} lijkt een sterkere owned "
-            f"optie dan {hero.name} voor de {role_nl.lower()}-rol.{ilvl_bit}"
+            f"Both are seat {hero.seat} champions. {candidate.name} looks like a stronger owned "
+            f"option than {hero.name} for the {role_display.lower()} role.{ilvl_bit}"
         )
         overlap = _affiliation_overlap(candidate.tags, party_tags)
         if overlap:
-            why += " Affiliatie-overlap met de party: " + ", ".join(overlap) + "."
+            why += " Affiliation overlap with the party: " + ", ".join(overlap) + "."
         score = (
             900
-            + _fit_score(candidate.roles, candidate.tags, role) * 50
+            + _fit_score(candidate.hero_id, candidate.roles, candidate.tags, role) * 50
             + max(0, candidate.ilvl - hero.ilvl)
             + candidate.ilvl * 0.1
         )
@@ -717,11 +723,11 @@ def suggest_roster_upgrades(
         if shared_count < 2:
             continue
         role: SeatRole = "support"
-        if _hero_tags_roles_fit(champ.roles, champ.tags, "buffer"):
+        if _hero_tags_roles_fit(champ.hero_id, champ.roles, champ.tags, "buffer"):
             role = "buffer"
-        elif _hero_tags_roles_fit(champ.roles, champ.tags, "debuffer"):
+        elif _hero_tags_roles_fit(champ.hero_id, champ.roles, champ.tags, "debuffer"):
             role = "debuffer"
-        elif _hero_tags_roles_fit(champ.roles, champ.tags, "tank"):
+        elif _hero_tags_roles_fit(champ.hero_id, champ.roles, champ.tags, "tank"):
             role = "tank"
         elif "dps" in champ.roles:
             role = "flex"
@@ -729,9 +735,9 @@ def suggest_roster_upgrades(
         if bench_target is None:
             continue
         why = (
-            f"{champ.name} (seat {champ.seat_id}) deelt affiliatie ({', '.join(overlap)}) met "
-            f"{shared_count} champions in je party. Die seat zit nog niet in de formatie; "
-            f"bench {bench_target.name} (seat {bench_target.seat}) om ruimte te maken."
+            f"{champ.name} (seat {champ.seat_id}) shares affiliation ({', '.join(overlap)}) with "
+            f"{shared_count} champions in your party. That seat is not in the formation yet; "
+            f"bench {bench_target.name} (seat {bench_target.seat}) to make room."
         )
         score = 500 + shared_count * 40 + champ.ilvl * 0.05
         _add(

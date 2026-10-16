@@ -1,6 +1,26 @@
 {
+  "6": {
+    "bud": "buffer"
+  },
+  "8": {
+    "gold": "bud",
+    "bud": "bud"
+  },
+  "15": {
+    "bud": "bud"
+  },
+  "22": {
+    "bud": "bud"
+  },
+  "26": {
+    "bud": "buffer"
+  },
   "34": {
     "bud": "debuffer"
+  },
+  "54": {
+    "speed": "bud",
+    "bud": "bud"
   },
   "58": {
     "bud": "speed"
@@ -11,25 +31,82 @@
   "66": {
     "bud": "tank"
   },
+  "72": {
+    "gold": "bud"
+  },
   "75": {
     "bud": "speed"
   },
+  "83": {
+    "speed": "gold"
+  },
+  "97": {
+    "bud": "healer"
+  },
+  "128": {
+    "bud": "buffer"
+  },
   "139": {
     "bud": "support"
+  },
+  "143": {
+    "gold": "bud"
   },
   "148": {
     "bud": "debuffer"
   },
   "151": {
-    "bud": "debuffer"
+    "bud": "tank",
+    "gold": "tank",
+    "speed": "tank"
+  },
+  "152": {
+    "gold": "tank"
   },
   "153": {
     "bud": "bud"
   },
+  "156": {
+    "gold": "healer"
+  },
+  "157": {
+    "bud": "tank"
+  },
+  "159": {
+    "gold": "debuffer"
+  },
+  "163": {
+    "speed": "scavenger"
+  },
+  "164": {
+    "bud": "buffer"
+  },
+  "165": {
+    "bud": "buffer"
+  },
   "166": {
-    "bud": "bud"
+    "bud": "bud",
+    "gold": "bud"
+  },
+  "168": {
+    "bud": "tank"
+  },
+  "169": {
+    "bud": "support"
+  },
+  "170": {
+    "bud": "support"
   },
   "175": {
     "bud": "tank"
+  },
+  "178": {
+    "bud": "tank",
+    "gold": "gold",
+    "speed": "tank"
+  },
+  "179": {
+    "bud": "buffer",
+    "speed": "buffer"
   }
 }

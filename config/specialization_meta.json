@@ -1,28 +1,90 @@
 {
   "version": 1,
   "defaults": {
-    "2": [29],
-    "3": [43],
-    "5": [75],
-    "9": [140],
-    "10": [145],
-    "13": [391],
-    "26": [12211],
-    "62": [8754],
-    "91": [6909],
-    "128": [12119],
-    "129": [12493, 12497],
-    "142": [13433],
-    "147": [14576, 14580],
-    "149": [15031],
-    "169": [17850, 17851],
-    "173": [18935],
-    "174": [19242, 19239],
-    "164": [17321],
-    "168": [17762, 17765],
-    "151": [15053],
-    "166": [17679, 17682],
-    "23": [12292]
+    "2": [
+      29
+    ],
+    "3": [
+      43
+    ],
+    "5": [
+      75
+    ],
+    "9": [
+      140
+    ],
+    "10": [
+      145
+    ],
+    "13": [
+      391
+    ],
+    "26": [
+      12211
+    ],
+    "62": [
+      8754
+    ],
+    "91": [
+      6909
+    ],
+    "128": [
+      12119
+    ],
+    "129": [
+      12493,
+      12497
+    ],
+    "142": [
+      13433
+    ],
+    "147": [
+      14576,
+      14580
+    ],
+    "149": [
+      15031
+    ],
+    "169": [
+      17850,
+      17851
+    ],
+    "173": [
+      18935
+    ],
+    "174": [
+      19242,
+      19239
+    ],
+    "164": [
+      17321
+    ],
+    "168": [
+      17762,
+      17765
+    ],
+    "151": [
+      15053
+    ],
+    "166": [
+      17679,
+      17682
+    ],
+    "61": [
+      9714,
+      9718
+    ],
+    "23": [
+      12292
+    ],
+    "178": [
+      20134,
+      20138
+    ],
+    "179": [
+      20178,
+      20181
+    ]
   },
   "notes": {
     "2": "Celeste: War Domain",
@@ -47,5 +109,8 @@
     "168": "King of Shadows: Master of Pawns + Embrace the Shadow Weave (dynamic override)",
     "151": "Umberto: tier0 qualified × pct (Lawful/Unaffiliated/Ranger-Druid); tier1 More Damage (More Bees if solo front tank)",
     "166": "Cazrin: tier0 Self Taught vs Ancestor's Shadow (qualified stacks); tier1 Signature Smell if BUD else Smell Mastery",
+    "61": "Jaheira: tier0 Class Act by most class-tag targets in formation; tier1 Hunter - Nature default",
+    "178": "Flint: tier0 qualified stacks (Fatherly/HotL/dwarf); tier1 Foe Breaker push, Craft Maker gold, Life Taker if BUD",
+    "179": "Caramon: Raise Spirits + Allies combo that stacks most on BUD (often Overwatch + Sympathetic Allies)"
   }
 }

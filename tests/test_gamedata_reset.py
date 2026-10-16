@@ -373,7 +373,7 @@ class GoalRunHistoryTests(_IsolatedGoalRunHistoryTestCase):
         )
         self.assertEqual(
             display.summary,
-            "Laatste doel-run: 12:34 · 4200 gems (Modron-doel 300)",
+            "Last Modron run: 12:34 · 4200 gems (goal 300)",
         )
         self.assertFalse(display.summary_unreliable)
         self.assertEqual(display.extra, (("2. 13:32 · 3900 gems", True),))
@@ -389,18 +389,34 @@ class GoalRunHistoryTests(_IsolatedGoalRunHistoryTestCase):
             area_goal=200,
             format_duration=lambda sec: "2:00",
         )
-        self.assertEqual(display.summary, "Laatste doel-run: 2:00 (Modron-doel 200)")
+        self.assertEqual(display.summary, "Last Modron run: 2:00 (goal 200)")
         self.assertNotIn("gems", display.summary or "")
 
     def test_format_goal_run_history_placeholder_when_empty(self) -> None:
         display = format_goal_run_history(
             (),
             area_goal=275,
+            area_goal_enabled=True,
             format_duration=lambda sec: str(sec),
         )
         self.assertIn("275", display.summary or "")
-        self.assertIn("nog geen voltooide run", display.summary or "")
+        self.assertIn("no completed run yet", display.summary or "")
         self.assertNotIn("geschat", display.summary or "")
+        self.assertEqual(display.extra, ())
+
+    def test_format_goal_run_history_hidden_when_area_goal_disabled(self) -> None:
+        from ic_gamedata.stats import GoalRunRecord
+
+        history = (
+            GoalRunRecord(duration_sec=120.0, area_goal=200, peak_area=200, recorded_at=0.0),
+        )
+        display = format_goal_run_history(
+            history,
+            area_goal=200,
+            area_goal_enabled=False,
+            format_duration=lambda sec: "2:00",
+        )
+        self.assertIsNone(display.summary)
         self.assertEqual(display.extra, ())
 
 class GoalRunPersistenceTests(_IsolatedGoalRunHistoryTestCase):

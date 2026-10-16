@@ -76,10 +76,10 @@ def role_fits_champion(hero: FormationHero, role: SeatRole) -> bool:
         return "support" in hero.roles
     if role == "gold":
         return "gold" in hero.roles or "gold" in hero.tags
-    if role == "modron":
-        from ic_gamedata.speed_utility_roles import MODRON_SCAVENGER_HERO_IDS
+    if role == "scavenger":
+        from ic_gamedata.speed_utility_roles import is_scavenger_champion
 
-        return hero.hero_id in MODRON_SCAVENGER_HERO_IDS
+        return is_scavenger_champion(hero)
     if role == "speed":
         return _is_speed(hero)
     return True
@@ -94,7 +94,7 @@ def role_label(role: SeatRole) -> str:
         "support": "Support",
         "healer": "Healer",
         "gold": "Gem / gold",
-        "modron": "Modron scavenger",
+        "scavenger": "Scavenger",
         "speed": "Speed",
         "flex": "Flex",
     }

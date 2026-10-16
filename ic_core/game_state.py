@@ -95,7 +95,7 @@ class GameStateService(QObject):
             self.last_api_snap = effective_api
         if snap is not None:
             self.last_update = time.time()
-            # Always feed the session tracker from API polls so Modron doel-runs
+            # Always feed the session tracker from API polls so Modron-runs
             # are measured even if the dashboard "session" toggle lagged.
             self.load_tracker()
             if self.tracker is not None:
@@ -142,36 +142,36 @@ class GameStateService(QObject):
 
         detail_l = (self.api_detail or "").lower()
         if not credentials_ok:
-            api_text, api_color = "API: geen credentials", WARN
-        elif "timeout" in detail_l or "netwerkfout" in detail_l or "cache" in detail_l:
+            api_text, api_color = "API: no credentials", WARN
+        elif "timeout" in detail_l or "network error" in detail_l or "cache" in detail_l:
             api_text, api_color = f"API: {self.api_detail}", WARN
-        elif "success=false" in detail_l or "credentials verlopen" in detail_l:
+        elif "success=false" in detail_l or "credentials expired" in detail_l:
             api_text, api_color = f"API: {self.api_detail}", WARN
-        elif "formation" in detail_l or "formatie" in detail_l or "in_seat" in detail_l:
+        elif "formation" in detail_l or "in_seat" in detail_l:
             api_text, api_color = f"API: {self.api_detail}", WARN
         elif "ok" in detail_l or "log" in detail_l:
             api_text, api_color = f"API: {self.api_detail or 'ok'}", SUCCESS
         elif self.api_detail:
             api_text, api_color = f"API: {self.api_detail}", WARN
         else:
-            api_text, api_color = "API: wachten…", STATUS_IDLE
+            api_text, api_color = "API: waiting…", STATUS_IDLE
 
-        if "niet beschikbaar" in self.memory_detail.lower() or "geen offsets" in self.memory_detail.lower():
+        if "not available" in self.memory_detail.lower() or "no offsets" in self.memory_detail.lower():
             mem_text, mem_color = "Memory: offline", WARN
         elif self.memory_area is not None or self.memory_gems is not None:
             mem_text, mem_color = "Memory: live", SUCCESS
         elif self.memory_detail:
-            mem_text, mem_color = "Memory: geen data", STATUS_IDLE
+            mem_text, mem_color = "Memory: no data", STATUS_IDLE
         else:
             mem_text, mem_color = "Memory: —", STATUS_IDLE
 
         if active:
             if self.last_update is not None:
                 age = max(0, int(time.time() - self.last_update))
-                session_text, session_color = f"Sessie: actief ({age}s)", SUCCESS
+                session_text, session_color = f"Session: active ({age}s)", SUCCESS
             else:
-                session_text, session_color = "Sessie: actief", SUCCESS
+                session_text, session_color = "Session: active", SUCCESS
         else:
-            session_text, session_color = "Sessie: gestopt", STATUS_IDLE
+            session_text, session_color = "Session: stopped", STATUS_IDLE
 
         return api_text, api_color, mem_text, mem_color, session_text, session_color

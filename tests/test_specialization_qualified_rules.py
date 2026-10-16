@@ -149,6 +149,48 @@ class SpecializationQualifiedRulesTests(unittest.TestCase):
         # Self Taught: 166 + 3 melee/ranged = 4; Ancestor's Shadow: 166 only = 1
         self.assertEqual(cazrin_t0[0].desired_upgrade_id, 17678)
 
+    def test_bobby_prefers_strong_armed_when_strength_matches_lead(self) -> None:
+        party = {152, 901, 902, 903, 904, 905, 906}
+        fake_scores = {
+            152: {"str": 16, "dex": 14, "con": 14, "int": 10, "wis": 10, "cha": 10},  # 74
+            901: {"str": 14, "dex": 14, "con": 14, "int": 12, "wis": 12, "cha": 12},  # 78
+            902: {"str": 15, "dex": 14, "con": 14, "int": 12, "wis": 12, "cha": 12},  # 79
+            903: {"str": 18, "dex": 12, "con": 14, "int": 12, "wis": 12, "cha": 12},  # 80
+            904: {"str": 17, "dex": 13, "con": 14, "int": 12, "wis": 12, "cha": 12},  # 80
+            905: {"str": 15, "dex": 14, "con": 14, "int": 12, "wis": 12, "cha": 12},  # 79
+            906: {"str": 16, "dex": 14, "con": 14, "int": 12, "wis": 12, "cha": 12},  # 80
+        }
+        fake_ages = {
+            152: 24,
+            901: 19,
+            902: 20,
+            903: 18,
+            904: 30,
+            905: 28,
+            906: 32,
+        }
+        known = [
+            SpecializationOption(15447, "Stunning Strength", 110, 0),
+            SpecializationOption(15448, "Group Charge", 110, 0),
+            SpecializationOption(15449, "Not So Low", 250, 1),
+            SpecializationOption(15450, "Still Growing Up", 250, 1),
+            SpecializationOption(15451, "Strong Armed", 250, 1),
+        ]
+        with (
+            patch(
+                "ic_gamedata.specialization_engine._hero_ability_scores_map_from_cached_definitions",
+                return_value=fake_scores,
+            ),
+            patch(
+                "ic_gamedata.specialization_engine._hero_age_map_from_cached_definitions",
+                return_value=fake_ages,
+            ),
+        ):
+            ids, reason = dynamic_default_ids(152, party, known_options=known)
+        self.assertEqual(ids, [15448, 15451])
+        self.assertIn("6 qualified", reason)
+        self.assertIn("Strong Armed", reason)
+
     def test_audit_marks_generic_batch_heroes_handled(self) -> None:
         generic_ids = generic_qualified_stack_hero_ids(
             exclude_hero_ids={151, 159, 162, 164, 168}

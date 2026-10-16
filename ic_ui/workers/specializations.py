@@ -36,7 +36,7 @@ class SpecializationsRunnable(QRunnable):
                 pending_specializations,
             )
         except ImportError as exc:
-            self.signals.error.emit(f"Importfout: {exc}")
+            self.signals.error.emit(f"Import error: {exc}")
             return
 
         try:
@@ -55,7 +55,7 @@ class SpecializationsRunnable(QRunnable):
                 run_goal=advisor_run_goal(self._goal, self._context),
             )
         except Exception as exc:
-            self.signals.error.emit(f"Analysefout: {exc}")
+            self.signals.error.emit(f"Analysis error: {exc}")
             return
 
         self.signals.done.emit((self._payload, report, pending, self._err))

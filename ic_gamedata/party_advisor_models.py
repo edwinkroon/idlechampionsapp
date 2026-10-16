@@ -5,18 +5,40 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Literal
 
-GoalMode = Literal["bud", "gold", "speed"]
+# User-facing goals (preferred) plus legacy technical lanes still accepted
+# by scoring helpers via ``scoring_lane()``.
+GoalMode = Literal[
+    "push",
+    "quest_clear",
+    "gem_farm",
+    "favor_farm",
+    "custom_task",
+    "bud",
+    "gold",
+    "speed",
+]
 ContextMode = Literal["campaign", "events", "push", "modron"]
 
 GOAL_LABELS: dict[str, str] = {
+    "push": "Push",
+    "quest_clear": "Quest / variant voltooien",
+    "gem_farm": "Gems verzamelen",
+    "favor_farm": "Favor verzamelen",
+    "custom_task": "Specifieke taak",
+    # Legacy labels (migration / scoring only).
     "bud": "BUD / damage",
     "gold": "Gold income",
     "speed": "Speed / areas",
 }
 
 
-def goal_label(goal: GoalMode) -> str:
-    return GOAL_LABELS.get(goal, goal)
+def goal_label(goal: GoalMode | str) -> str:
+    try:
+        from ic_gamedata.advice_goals import goal_label as _central_label
+
+        return _central_label(str(goal))
+    except Exception:
+        return GOAL_LABELS.get(str(goal), str(goal))
 
 
 @dataclass(frozen=True)

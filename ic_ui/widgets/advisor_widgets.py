@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from PySide6.QtCore import Qt, Signal
-from PySide6.QtGui import QPixmap
+from PySide6.QtGui import QPainter, QPainterPath, QPixmap
 from PySide6.QtWidgets import (
     QApplication,
     QComboBox,
@@ -11,6 +11,8 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QPushButton,
+    QScrollArea,
+    QSizePolicy,
     QVBoxLayout,
     QWidget,
 )
@@ -21,10 +23,14 @@ from ic_ui.theme import (
     PORTRAIT_W,
     advisor_accent_stylesheet,
     advisor_badge_stylesheet,
+    advisor_bud_pill_stylesheet,
     advisor_card_stylesheet,
+    advisor_speed_pill_stylesheet,
     advisor_text_styles,
     apply_card_shadow,
+    formation_board_stylesheet,
     portrait_placeholder_stylesheet,
+    status_pill_dot_stylesheet,
 )
 
 # Re-exports for callers that import tokens via this module (prefer ui_theme.* for live switch).
@@ -85,18 +91,160 @@ def fit_portrait_pixmap(source: QPixmap, width: int, height: int, device_pixel_r
     return fitted
 
 
+def rounded_portrait_pixmap(
+    source: QPixmap,
+    width: int,
+    height: int,
+    device_pixel_ratio: float,
+    *,
+    radius: float = 10.0,
+) -> QPixmap:
+    """Center-crop and clip to a rounded rect (stylesheets don't clip pixmaps)."""
+    fitted = fit_portrait_pixmap(source, width, height, device_pixel_ratio)
+    target_w = max(1, int(width * device_pixel_ratio))
+    target_h = max(1, int(height * device_pixel_ratio))
+    r = max(1.0, radius * device_pixel_ratio)
+    result = QPixmap(target_w, target_h)
+    result.fill(Qt.GlobalColor.transparent)
+    painter = QPainter(result)
+    painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
+    painter.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform, True)
+    path = QPainterPath()
+    path.addRoundedRect(0, 0, target_w, target_h, r, r)
+    painter.setClipPath(path)
+    painter.drawPixmap(0, 0, fitted)
+    painter.end()
+    result.setDevicePixelRatio(device_pixel_ratio)
+    return result
+
+
+def circular_portrait_pixmap(
+    source: QPixmap, size: int, device_pixel_ratio: float
+) -> QPixmap:
+    """Backward-compatible alias: soft-rounded square portrait."""
+    return rounded_portrait_pixmap(source, size, size, device_pixel_ratio)
+
+
 class FormationSeatCard(QFrame):
     clicked = Signal(int)
 
-    def __init__(self, seat: int, parent: QWidget | None = None) -> None:
+    def __init__(
+        self,
+        seat: int,
+        parent: QWidget | None = None,
+        *,
+        clickable: bool = True,
+    ) -> None:
         super().__init__(parent)
         self._seat = seat
-        self.setCursor(Qt.CursorShape.PointingHandCursor)
+        self._clickable = clickable
+        if clickable:
+            self.setCursor(Qt.CursorShape.PointingHandCursor)
 
     def mousePressEvent(self, event) -> None:
-        if event.button() == Qt.MouseButton.LeftButton:
+        if self._clickable and event.button() == Qt.MouseButton.LeftButton:
             self.clicked.emit(self._seat)
         super().mousePressEvent(event)
+
+
+def add_formation_board(
+    layout: QVBoxLayout,
+    nodes,
+    *,
+    role_label,
+    intro: str,
+    title: str | None = None,
+    on_seat_clicked=None,
+    node_caption=None,
+    node_subcaption=None,
+) -> None:
+    """Render a formation grid board into ``layout`` (active or recommended).
+
+    ``node_caption(node)`` / ``node_subcaption(node)`` override the default
+    ``Slot {seat} · {zone}`` header when provided (e.g. AI preview separates
+    physical position from champion F-seat).
+    """
+    if not nodes:
+        card = advisor_card()
+        advisor_card_layout(card).addWidget(
+            advisor_lbl("No formation positions available.", kind="muted")
+        )
+        layout.addWidget(card)
+        return
+
+    pad = 16
+    card_w, card_h = (112, 72) if node_caption is not None else (100, 58)
+    min_x = min(n.x for n in nodes)
+    min_y = min(n.y for n in nodes)
+    width = int(max(n.x for n in nodes) - min_x + card_w + pad * 2)
+    height = int(max(n.y for n in nodes) - min_y + card_h + pad * 2)
+    height = max(180, min(height, 520))
+    width = max(320, width)
+
+    shell = advisor_card()
+    shell_lyt = advisor_card_layout(shell)
+    if title:
+        shell_lyt.addWidget(advisor_lbl(title, kind="subtitle"))
+    shell_lyt.addWidget(advisor_lbl(intro, kind="muted"))
+
+    scroll = QScrollArea()
+    scroll.setWidgetResizable(False)
+    scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+    scroll.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+    scroll.setFrameShape(QFrame.Shape.NoFrame)
+    scroll.setFixedHeight(height)
+    scroll.setStyleSheet("QScrollArea { background: transparent; border: none; }")
+
+    board = QWidget()
+    board.setFixedSize(width, height)
+    board.setStyleSheet(formation_board_stylesheet())
+
+    clickable = on_seat_clicked is not None
+    for node in nodes:
+        x = int((node.x - min_x) + pad)
+        y = int((node.y - min_y) + pad)
+        zone_bg = ui_theme.FORMATION_ZONE_BG.get(node.zone, ui_theme.BG_HOVER)
+        border = (
+            ui_theme.ISSUE_BORDER
+            if node.has_issue
+            else (ui_theme.BUD_BORDER if node.is_bud else ui_theme.BORDER_HOVER)
+        )
+        role = node.effective_role or node.inferred_role or "flex"
+
+        seat_frame = FormationSeatCard(node.seat, board, clickable=clickable)
+        seat_frame.setGeometry(x, y, card_w, card_h)
+        hover = (
+            f"QFrame:hover {{ border-color: {ui_theme.ACCENT}; }}" if clickable else ""
+        )
+        seat_frame.setStyleSheet(
+            f"QFrame {{ background: {zone_bg}; border: 1px solid {border}; border-radius: 8px; }}"
+            f"{hover}"
+        )
+        if on_seat_clicked is not None:
+            seat_frame.clicked.connect(on_seat_clicked)
+
+        seat_lyt = QVBoxLayout(seat_frame)
+        seat_lyt.setContentsMargins(6, 4, 6, 4)
+        seat_lyt.setSpacing(2)
+        if node_caption is not None:
+            caption = str(node_caption(node) or "")
+        else:
+            caption = f"Slot {node.seat} · {node.zone}"
+        seat_lyt.addWidget(advisor_lbl(caption, kind="muted"))
+        if node_subcaption is not None:
+            sub = str(node_subcaption(node) or "")
+            if sub:
+                seat_lyt.addWidget(advisor_lbl(sub, kind="muted"))
+        name_lbl = advisor_lbl((node.hero_name or "?")[:14], kind="subtitle")
+        if node.is_bud:
+            name_lbl.setProperty("advisorKind", "seat_name")
+            name_lbl.setStyleSheet(advisor_text_styles()["seat_name"])
+        seat_lyt.addWidget(name_lbl)
+        seat_lyt.addWidget(advisor_lbl(role_label(role), kind="muted"))
+
+    scroll.setWidget(board)
+    shell_lyt.addWidget(scroll)
+    layout.addWidget(shell)
 
 
 def advisor_lbl(text: str, *, kind: str = "body") -> QLabel:
@@ -112,6 +260,17 @@ def advisor_badge(text: str) -> QLabel:
     lbl = QLabel(text)
     lbl.setProperty("advisorBadge", True)
     lbl.setStyleSheet(advisor_badge_stylesheet())
+    return lbl
+
+
+def advisor_tag_pill(text: str, *, kind: str = "bud") -> QLabel:
+    """Compact pill for BUD / Speed focus on seat cards."""
+    lbl = QLabel(text)
+    lbl.setProperty("advisorTagPill", kind)
+    if kind == "speed":
+        lbl.setStyleSheet(advisor_speed_pill_stylesheet())
+    else:
+        lbl.setStyleSheet(advisor_bud_pill_stylesheet())
     return lbl
 
 
@@ -131,7 +290,11 @@ def advisor_portrait(hero_id: int, width: int = PORTRAIT_W, height: int = PORTRA
     source = QPixmap(str(path))
     if source.isNull():
         return lbl
-    lbl.setPixmap(fit_portrait_pixmap(source, width, height, widget_device_pixel_ratio(lbl)))
+    lbl.setPixmap(
+        rounded_portrait_pixmap(
+            source, width, height, widget_device_pixel_ratio(lbl)
+        )
+    )
     return lbl
 
 
@@ -146,6 +309,8 @@ def advisor_link_btn(text: str, url: str) -> QPushButton:
     btn = QPushButton(text)
     btn.setObjectName("linkBtn")
     btn.setCursor(Qt.CursorShape.PointingHandCursor)
+    btn.setFlat(True)
+    btn.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Fixed)
     btn.clicked.connect(lambda _c=False, u=url: advisor_open_url(u))
     return btn
 
@@ -159,51 +324,136 @@ def advisor_divider() -> QFrame:
     return line
 
 
-def advisor_card_layout(card: QFrame) -> QVBoxLayout:
+def advisor_card_layout(card: QFrame, *, compact: bool = False) -> QVBoxLayout:
     body = card.findChild(QWidget, "advisorCardBody")
     target = body if body is not None else card
     lyt = QVBoxLayout(target)
-    lyt.setContentsMargins(0, 14, 16, 14)
-    lyt.setSpacing(8)
+    if compact:
+        # Slightly less bottom than top: last widgets (labels/buttons) already
+        # carry font descent / button padding, which otherwise looks heavier.
+        lyt.setContentsMargins(0, 8, 12, 6)
+        lyt.setSpacing(4)
+    else:
+        lyt.setContentsMargins(0, 14, 16, 10)
+        lyt.setSpacing(8)
     return lyt
 
 
-def advisor_card(*, highlight: bool = False, accent_bar: str | None = None) -> QFrame:
+def advisor_status_dot(color: str) -> QLabel:
+    """Small status circle (same language as dashboard status pills)."""
+    dot = QLabel()
+    dot.setFixedSize(8, 8)
+    dot.setProperty("advisorStatusDot", True)
+    dot.setProperty("advisorStatusDotColor", color)
+    dot.setStyleSheet(status_pill_dot_stylesheet(color))
+    return dot
+
+
+def advisor_card(
+    *,
+    highlight: bool = False,
+    accent_bar: str | None = None,
+    compact: bool = False,
+    show_accent: bool = True,
+) -> QFrame:
     card = QFrame()
     card.setObjectName("advisorCard")
     card.setFrameShape(QFrame.Shape.NoFrame)
     card.setProperty("advisorHighlight", highlight)
     card.setProperty("advisorAccentCustom", accent_bar is not None)
+    card.setProperty("advisorCompact", compact)
+    card.setProperty("advisorShowAccent", show_accent)
     bar_color = accent_bar or (ui_theme.WARN_BAR if highlight else ui_theme.DIVIDER)
     card.setProperty("advisorAccentColor", bar_color)
     card.setStyleSheet(advisor_card_stylesheet())
-    apply_card_shadow(card)
+    apply_card_shadow(card, soft=compact)
 
     outer = QHBoxLayout(card)
     outer.setContentsMargins(0, 0, 0, 0)
-    outer.setSpacing(10)
+    outer.setSpacing(8 if compact else 10)
 
-    accent = QFrame()
-    accent.setObjectName("advisorAccent")
-    accent.setStyleSheet(advisor_accent_stylesheet(bar_color))
-    outer.addWidget(accent)
+    if show_accent:
+        accent = QFrame()
+        accent.setObjectName("advisorAccent")
+        accent.setStyleSheet(advisor_accent_stylesheet(bar_color))
+        outer.addWidget(accent)
+    else:
+        # Keep left padding similar to accent + spacing when the bar is omitted.
+        outer.setContentsMargins(12 if compact else 16, 0, 0, 0)
 
     body = QWidget()
     body.setObjectName("advisorCardBody")
-    body.setStyleSheet("background: transparent; border: none;")
+    # Scope to this widget only — unscoped `border: none` wipes child QComboBox borders.
+    body.setStyleSheet("QWidget#advisorCardBody { background: transparent; border: none; }")
     outer.addWidget(body, stretch=1)
     return card
 
 
+def clear_advisor_layout(layout: QVBoxLayout) -> None:
+    """Remove all items from an advisor results layout without leaving ghosts.
+
+    ``QLayout.takeAt`` detaches widgets from the layout but leaves them as
+    children of the parent. Calling only ``deleteLater`` keeps those orphans
+    painted until the next event-loop tick — status/tips look refreshed while
+    the champ overview still shows the previous party.
+    """
+    while layout.count() > 0:
+        item = layout.takeAt(0)
+        widget = item.widget()
+        if widget is not None:
+            widget.hide()
+            widget.setParent(None)
+            widget.deleteLater()
+
+
 def advisor_section(layout: QVBoxLayout, text: str) -> None:
-    lbl = QLabel(text.upper())
+    lbl = QLabel(text)
     lbl.setProperty("advisorSection", True)
     lbl.setStyleSheet(
-        f"font-size: 11px; font-weight: 600; letter-spacing: 0.05em; "
-        f"color: {ui_theme.TEXT_MUTED}; padding: 18px 4px 6px 4px; "
+        f"font-size: 11px; font-weight: 600; letter-spacing: 0.04em; "
+        f"color: {ui_theme.TEXT_MUTED}; padding: 14px 4px 4px 4px; "
         f"border: none; background: transparent;"
     )
     layout.addWidget(lbl)
+
+
+def add_next_actions_section(layout: QVBoxLayout, actions: object) -> None:
+    """Render ranked next actions (replaces separate tip/insight card lists)."""
+    items = tuple(actions or ())
+    if not items:
+        return
+    advisor_section(layout, "Volgende acties")
+    for index, action in enumerate(items, start=1):
+        headline = getattr(action, "headline", None) or "Action"
+        detail = getattr(action, "detail", None) or ""
+        card = advisor_card(highlight=index == 1)
+        lyt = advisor_card_layout(card)
+        lyt.addWidget(advisor_lbl(f"{index}. {headline}", kind="subtitle"))
+        if detail:
+            lyt.addWidget(advisor_lbl(detail, kind="body"))
+        layout.addWidget(card)
+
+
+def add_gear_investment_section(layout: QVBoxLayout, advice: object | None) -> None:
+    """Show which current-party champion should get item levels first."""
+    if advice is None:
+        return
+    name = getattr(advice, "hero_name", None)
+    if not name:
+        return
+    seat = getattr(advice, "seat", None)
+    ilvl = getattr(advice, "ilvl", 0)
+    reason = getattr(advice, "reason", "") or ""
+    seat_bit = f" · seat {seat}" if seat is not None else ""
+    advisor_section(layout, "Gear investment")
+    card = advisor_card(highlight=True)
+    lyt = advisor_card_layout(card)
+    lyt.addWidget(
+        advisor_lbl(f"Invest item levels first in {name}{seat_bit} (ilvl {ilvl})", kind="subtitle")
+    )
+    if reason:
+        lyt.addWidget(advisor_lbl(f"Why: {reason}", kind="body"))
+    layout.addWidget(card)
 
 
 def refresh_advisor_chrome(root: QWidget) -> None:
@@ -215,20 +465,34 @@ def refresh_advisor_chrome(root: QWidget) -> None:
             lbl.setStyleSheet(styles.get(kind, styles["body"]))
         elif lbl.property("advisorBadge"):
             lbl.setStyleSheet(advisor_badge_stylesheet())
+        elif lbl.property("advisorTagPill"):
+            kind = str(lbl.property("advisorTagPill") or "bud")
+            if kind == "speed":
+                lbl.setStyleSheet(advisor_speed_pill_stylesheet())
+            else:
+                lbl.setStyleSheet(advisor_bud_pill_stylesheet())
         elif lbl.property("advisorPortrait"):
             lbl.setStyleSheet(portrait_placeholder_stylesheet())
         elif lbl.property("advisorSection"):
             lbl.setStyleSheet(
-                f"font-size: 11px; font-weight: 600; letter-spacing: 0.05em; "
-                f"color: {ui_theme.TEXT_MUTED}; padding: 18px 4px 6px 4px; "
+                f"font-size: 11px; font-weight: 600; letter-spacing: 0.04em; "
+                f"color: {ui_theme.TEXT_MUTED}; padding: 14px 4px 4px 4px; "
                 f"border: none; background: transparent;"
             )
+        elif lbl.property("advisorStatusDot"):
+            color = str(lbl.property("advisorStatusDotColor") or ui_theme.TEXT_MUTED)
+            lbl.setStyleSheet(status_pill_dot_stylesheet(color))
     for line in root.findChildren(QFrame):
         if line.property("advisorDivider"):
             line.setStyleSheet(f"background: {ui_theme.DIVIDER}; border: none;")
         if line.objectName() == "advisorCard":
             line.setStyleSheet(advisor_card_stylesheet())
             apply_card_shadow(line)
+            body = line.findChild(QWidget, "advisorCardBody")
+            if body is not None:
+                body.setStyleSheet(
+                    "QWidget#advisorCardBody { background: transparent; border: none; }"
+                )
             accent = line.findChild(QFrame, "advisorAccent")
             if accent is not None:
                 if line.property("advisorAccentCustom"):
@@ -248,6 +512,13 @@ def advisor_role_combo(
     on_role_selected,
 ) -> tuple[QComboBox, str]:
     role_combo = QComboBox()
+    role_combo.setObjectName("advisorRoleCombo")
+    role_combo.setCursor(Qt.CursorShape.PointingHandCursor)
+    role_combo.setToolTip("Choose the role for this seat")
+    role_combo.setSizeAdjustPolicy(
+        QComboBox.SizeAdjustPolicy.AdjustToMinimumContentsLengthWithIcon
+    )
+    role_combo.setMinimumContentsLength(8)
     for role in standard_roles:
         role_combo.addItem(role_label(role), role)
     cur_role = seat.effective_role or ""
@@ -257,9 +528,9 @@ def advisor_role_combo(
     inferred = role_label(seat.inferred_role)
     chosen = role_label(seat.chosen_role) if seat.chosen_role else None
     if chosen and seat.chosen_role != seat.inferred_role:
-        hint = f"Voorgesteld: {inferred} · Jouw keuze: {chosen}"
+        hint = f"Suggested: {inferred} · Your pick: {chosen}"
     else:
-        hint = f"Voorgesteld: {inferred}"
+        hint = f"Suggested: {inferred}"
     role_combo.currentIndexChanged.connect(
         lambda _i, hid=seat.hero_id, cb=role_combo: on_role_selected(hid, cb.currentData())
     )
@@ -274,7 +545,9 @@ __all__ = [
     "DIVIDER",
     "FORMATION_ZONE_BG",
     "FormationSeatCard",
+    "add_formation_board",
     "advisor_badge",
+    "advisor_tag_pill",
     "advisor_card",
     "advisor_card_layout",
     "advisor_divider",
@@ -284,6 +557,10 @@ __all__ = [
     "advisor_portrait",
     "advisor_role_combo",
     "advisor_section",
+    "advisor_status_dot",
+    "clear_advisor_layout",
+    "circular_portrait_pixmap",
+    "rounded_portrait_pixmap",
     "fit_portrait_pixmap",
     "refresh_advisor_chrome",
 ]

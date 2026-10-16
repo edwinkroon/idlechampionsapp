@@ -110,12 +110,12 @@ class SpecializationsTests(unittest.TestCase):
                 options=(SpecializationOption(1001, "A", 50, 0),),
                 desired_upgrade_id=None,
                 desired_option_index=None,
-                reason="geen regel",
-                rationale="Geen regel",
+                reason="no rule",
+                rationale="No rule",
             )
         ]
         text = format_specialization_advice({}, pending)
-        self.assertEqual(text, "Geen specialization-advies nodig.")
+        self.assertEqual(text, "No specialization advice needed.")
 
     def test_detects_pending_tier_when_level_is_high_enough(self) -> None:
         payload = json.loads(json.dumps(self.payload))
@@ -142,6 +142,76 @@ class SpecializationsTests(unittest.TestCase):
         self.assertEqual(item.desired_upgrade_id, 14578)
         self.assertEqual(item.desired_option_index, 0)
         self.assertEqual([opt.upgrade_id for opt in item.options], [14578, 14579, 14580])
+
+    def test_nordom_dynamic_rule_overrides_authored_csv_default(self) -> None:
+        payload = json.loads(json.dumps(self.payload))
+        details = payload["details"]
+        details["active_game_instance_id"] = 1
+        details["stats"] = {"GrandTourBaseAdventuresCompleted": 50}
+        details["modron_saves"] = [{"level": 20}]
+        inst = next(i for i in details["game_instances"] if int(i["game_instance_id"]) == 1)
+        inst["hero_in_seats"] = {"1": 100}
+        inst["stats"] = {"GrandTourBaseAdventuresCompleted": 50}
+        inst["formation"] = [100, -1, -1, -1, -1, -1, -1, -1, -1, -1]
+        details["heroes"] = [
+            {
+                "hero_id": 100,
+                "game_instance_id": 1,
+                "in_seat": 1,
+                "level": 300,
+                "specialization_choices": [],
+                "upgrades": [],
+            }
+        ]
+
+        pending = pending_specializations(payload, self.rules)
+        self.assertEqual(len(pending), 1)
+        self.assertEqual(pending[0].desired_upgrade_id, 18166)
+
+    def test_presto_dynamic_rule_overrides_authored_csv_default(self) -> None:
+        payload = json.loads(json.dumps(self.payload))
+        details = payload["details"]
+        details["active_game_instance_id"] = 1
+        inst = next(i for i in details["game_instances"] if int(i["game_instance_id"]) == 1)
+        inst["hero_in_seats"] = {"1": 144, "2": 901, "3": 902, "4": 903}
+        inst["formation"] = [144, 901, 902, 903, -1, -1, -1, -1, -1, -1]
+        details["heroes"] = [
+            {
+                "hero_id": 144,
+                "game_instance_id": 1,
+                "in_seat": 1,
+                "level": 300,
+                "specialization_choices": [],
+                "upgrades": [],
+            }
+        ]
+        with (
+            patch(
+                "ic_gamedata.specialization_engine._hero_ability_scores_map_from_cached_definitions",
+                return_value={
+                    144: {"str": 12, "dex": 12, "con": 12, "int": 16, "wis": 14, "cha": 16},
+                    901: {"str": 10, "dex": 12, "con": 12, "int": 16, "wis": 14, "cha": 16},
+                    902: {"str": 11, "dex": 12, "con": 12, "int": 16, "wis": 14, "cha": 16},
+                    903: {"str": 12, "dex": 12, "con": 12, "int": 12, "wis": 15, "cha": 15},
+                },
+            ),
+            patch(
+                "ic_gamedata.specialization_engine._hero_age_map_from_cached_definitions",
+                return_value={144: 30, 901: 30, 902: 30, 903: 19},
+            ),
+            patch(
+                "ic_gamedata.specialization_engine._hero_attack_types_map_from_cached_definitions",
+                return_value={
+                    144: frozenset({"melee"}),
+                    901: frozenset({"magic"}),
+                    902: frozenset({"magic"}),
+                    903: frozenset({"melee"}),
+                },
+            ),
+        ):
+            pending = pending_specializations(payload, self.rules)
+        self.assertEqual(len(pending), 1)
+        self.assertEqual(pending[0].desired_upgrade_id, 13767)
 
     def test_missing_rule_uses_baseline_choice_when_options_exist(self) -> None:
         payload = json.loads(json.dumps(self.payload))
@@ -170,8 +240,9 @@ class SpecializationsTests(unittest.TestCase):
         ]
         pending = pending_specializations(payload, rules)
         self.assertEqual(len(pending), 1)
-        self.assertEqual(pending[0].desired_upgrade_id, 1001)
-        self.assertIn("basis-regel", pending[0].rationale)
+        self.assertIsNone(pending[0].desired_upgrade_id)
+        self.assertEqual(pending[0].reason, "insufficient data")
+        self.assertIn("insufficient data", pending[0].rationale)
 
     def test_cached_definitions_fallback_detects_pending_specialization(self) -> None:
         payload = json.loads(json.dumps(self.payload))
@@ -270,6 +341,72 @@ class SpecializationsTests(unittest.TestCase):
         evelyn = next(item for item in pending if item.hero_id == 26)
         self.assertEqual(evelyn.desired_upgrade_id, 12210)
 
+    def test_valentine_prefers_bodyguard_when_tatyana_present(self) -> None:
+        payload = json.loads(json.dumps(self.payload))
+        payload["details"]["active_game_instance_id"] = 1
+        inst = next(i for i in payload["details"]["game_instances"] if int(i["game_instance_id"]) == 1)
+        inst["hero_in_seats"] = {"1": 103, "2": 97}
+        payload["details"]["heroes"] = [
+            {
+                "hero_id": 103,
+                "game_instance_id": 1,
+                "in_seat": 1,
+                "level": 300,
+                "specialization_choices": [],
+                "upgrades": [],
+            },
+            {
+                "hero_id": 97,
+                "game_instance_id": 1,
+                "in_seat": 2,
+                "level": 300,
+                "specialization_choices": [],
+                "upgrades": [],
+            },
+        ]
+        payload["defines"]["upgrade_defines"] = []
+        fallback = {
+            103: [
+                SpecializationOption(8149, "All Hail the God Brain", 300, 0),
+                SpecializationOption(8150, "My Loyal Bodyguard", 300, 0),
+                SpecializationOption(8151, "Family Business", 300, 0),
+            ]
+        }
+        with patch("ic_gamedata.specializations._choices_from_cached_definitions", return_value=fallback):
+            pending = pending_specializations(payload, self.rules)
+        valentine = next(item for item in pending if item.hero_id == 103)
+        self.assertEqual(valentine.desired_upgrade_id, 8150)
+        self.assertIn("Tatyana", valentine.rationale)
+
+    def test_valentine_prefers_god_brain_without_tatyana(self) -> None:
+        payload = json.loads(json.dumps(self.payload))
+        payload["details"]["active_game_instance_id"] = 1
+        inst = next(i for i in payload["details"]["game_instances"] if int(i["game_instance_id"]) == 1)
+        inst["hero_in_seats"] = {"1": 103}
+        payload["details"]["heroes"] = [
+            {
+                "hero_id": 103,
+                "game_instance_id": 1,
+                "in_seat": 1,
+                "level": 300,
+                "specialization_choices": [],
+                "upgrades": [],
+            }
+        ]
+        payload["defines"]["upgrade_defines"] = []
+        fallback = {
+            103: [
+                SpecializationOption(8149, "All Hail the God Brain", 300, 0),
+                SpecializationOption(8150, "My Loyal Bodyguard", 300, 0),
+                SpecializationOption(8151, "Family Business", 300, 0),
+            ]
+        }
+        with patch("ic_gamedata.specializations._choices_from_cached_definitions", return_value=fallback):
+            pending = pending_specializations(payload, self.rules)
+        valentine = next(item for item in pending if item.hero_id == 103)
+        self.assertEqual(valentine.desired_upgrade_id, 8149)
+        self.assertIn("no Tatyana", valentine.rationale)
+
     def test_evelyn_prefers_lathanders_allies_with_affiliation_team(self) -> None:
         payload = json.loads(json.dumps(self.payload))
         payload["details"]["active_game_instance_id"] = 1
@@ -328,7 +465,7 @@ class SpecializationsTests(unittest.TestCase):
         self.assertEqual(pending[0].desired_upgrade_id, 7)
         self.assertEqual(pending[0].data_source_version, "v2_full")
         self.assertEqual(pending[0].rule_source_type, "authored")
-        self.assertIn("csv-regel", pending[0].rationale)
+        self.assertIn("csv rule", pending[0].rationale)
 
     def test_wyll_prefers_tome_for_magic_heavy_party(self) -> None:
         payload = json.loads(json.dumps(self.payload))
@@ -633,6 +770,63 @@ class SpecializationsTests(unittest.TestCase):
         self.assertEqual(pending[0].desired_option_index, 2)
         self.assertIn("More Damage", pending[0].rationale)
 
+    def test_jaheira_prefers_class_act_with_most_formation_targets(self) -> None:
+        payload = json.loads(json.dumps(self.payload))
+        payload["details"]["active_game_instance_id"] = 1
+        inst = next(i for i in payload["details"]["game_instances"] if int(i["game_instance_id"]) == 1)
+        # 6 bruisers, 2 spellslingers, 3 hybrids, 1 Baldur's Gate
+        bruisers = (901, 902, 903, 904, 905, 906)
+        spellslingers = (907, 908)
+        hybrids = (909, 910, 911)
+        baldurs_gate = (912,)
+        inst["hero_in_seats"] = {
+            str(seat): hid
+            for seat, hid in enumerate(
+                [*bruisers, *spellslingers, *hybrids, *baldurs_gate, 61],
+                start=1,
+            )
+        }
+        payload["details"]["heroes"] = [
+            {
+                "hero_id": 61,
+                "game_instance_id": 1,
+                "in_seat": 13,
+                "level": 200,
+                "specialization_choices": [],
+                "upgrades": [],
+            }
+        ]
+        payload["defines"]["upgrade_defines"] = []
+        fallback = {
+            61: [
+                SpecializationOption(9714, "Class Act - Spellslingers", 30, 0),
+                SpecializationOption(9715, "Class Act - Bruisers", 30, 0),
+                SpecializationOption(9716, "Class Act - Hybrids", 30, 0),
+                SpecializationOption(9717, "Class Act - Baldur's Gate", 30, 0),
+            ]
+        }
+        fake_tags = {
+            61: ("buffer", "druid"),
+            **{hid: ("fighter",) for hid in bruisers},
+            **{hid: ("wizard",) for hid in spellslingers},
+            **{hid: ("paladin",) for hid in hybrids},
+            **{baldurs_gate[0]: ("baldursgate",)},
+        }
+        with (
+            patch("ic_gamedata.specializations._choices_from_cached_definitions", return_value=fallback),
+            patch("ic_gamedata.specialization_engine._hero_tags_map_from_cached_definitions", return_value=fake_tags),
+            patch("ic_gamedata.adventure_restrictions.hero_tags_map_from_cached_definitions", return_value=fake_tags),
+        ):
+            pending = pending_specializations(payload, self.rules)
+        jaheira = [
+            item
+            for item in pending
+            if item.hero_id == 61 and item.options and item.options[0].tier_index == 0
+        ]
+        self.assertEqual(len(jaheira), 1)
+        self.assertEqual(jaheira[0].desired_upgrade_id, 9715)
+        self.assertIn("Bruisers", jaheira[0].rationale)
+
     def test_cazrin_prefers_ancestors_shadow_with_good_and_fallback_party(self) -> None:
         payload = json.loads(json.dumps(self.payload))
         payload["details"]["active_game_instance_id"] = 1
@@ -749,6 +943,122 @@ class SpecializationsTests(unittest.TestCase):
         )
         self.assertEqual(tier1.desired_upgrade_id, 17681)
         self.assertIn("Signature Smell", tier1.rationale)
+
+    def test_cazrin_signature_smell_when_bud_without_reset_top_damage_id(self) -> None:
+        """BUD detection must not rely on this_reset_highest_damage_dealt_hero_id alone."""
+        payload = json.loads(json.dumps(self.payload))
+        payload["details"]["active_game_instance_id"] = 1
+        inst = next(i for i in payload["details"]["game_instances"] if int(i["game_instance_id"]) == 1)
+        inst["hero_in_seats"] = {"10": 166, "1": 147}
+        inst["stats"] = {
+            "this_reset_highest_damage_dealt_hero_id": 0,
+            "champion_166_base_damage_this_reset": 5e12,
+            "champion_166_ultimate_damage_this_reset": 8e12,
+            "champion_147_base_damage_this_reset": 1e12,
+            "champion_147_ultimate_damage_this_reset": 2e12,
+        }
+        payload["details"]["heroes"] = [
+            {
+                "hero_id": 166,
+                "game_instance_id": 1,
+                "in_seat": 10,
+                "level": 250,
+                "specialization_choices": [17679],
+                "upgrades": [17679],
+            },
+            {
+                "hero_id": 147,
+                "game_instance_id": 1,
+                "in_seat": 1,
+                "level": 250,
+                "specialization_choices": [],
+                "upgrades": [],
+            },
+        ]
+        payload["defines"]["upgrade_defines"] = []
+        fallback = {
+            166: [
+                SpecializationOption(17678, "Self Taught", 180, 0),
+                SpecializationOption(17679, "Ancestor's Shadow", 180, 0),
+                SpecializationOption(17680, "Lost in the Library", 180, 0),
+                SpecializationOption(17681, "Signature Smell", 240, 1),
+                SpecializationOption(17682, "Smell Mastery", 240, 1),
+            ]
+        }
+        with patch("ic_gamedata.specializations._choices_from_cached_definitions", return_value=fallback):
+            pending = pending_specializations(payload, self.rules, run_goal="bud")
+        tier1 = next(
+            item for item in pending if item.hero_id == 166 and item.options[0].tier_index == 1
+        )
+        self.assertEqual(tier1.desired_upgrade_id, 17681)
+        self.assertIn("Signature Smell", tier1.rationale)
+
+    def test_omin_uses_dynamic_support_choice_outside_gold_farm(self) -> None:
+        payload = json.loads(json.dumps(self.payload))
+        payload["details"]["active_game_instance_id"] = 1
+        inst = next(i for i in payload["details"]["game_instances"] if int(i["game_instance_id"]) == 1)
+        inst["hero_in_seats"] = {"3": 65, "2": 20, "4": 157, "5": 103}
+        inst["stats"] = {"this_reset_highest_damage_dealt_hero_id": 15}
+        payload["details"]["heroes"] = [
+            {
+                "hero_id": 65,
+                "game_instance_id": 1,
+                "in_seat": 3,
+                "level": 250,
+                "specialization_choices": [],
+                "upgrades": [],
+            },
+            {
+                "hero_id": 20,
+                "game_instance_id": 1,
+                "in_seat": 2,
+                "level": 250,
+                "specialization_choices": [],
+                "upgrades": [],
+            },
+            {
+                "hero_id": 157,
+                "game_instance_id": 1,
+                "in_seat": 4,
+                "level": 250,
+                "specialization_choices": [],
+                "upgrades": [],
+            },
+            {
+                "hero_id": 103,
+                "game_instance_id": 1,
+                "in_seat": 5,
+                "level": 250,
+                "specialization_choices": [],
+                "upgrades": [],
+            },
+        ]
+        fallback = {
+            65: [
+                SpecializationOption(12304, "Form Ranks", 180, 0),
+                SpecializationOption(12305, "Favored Friends", 180, 0),
+                SpecializationOption(12306, "Long Term Investments", 180, 0),
+            ]
+        }
+        fake_tags = {
+            20: ("cteam",),
+            65: (),
+            103: (),
+            157: (),
+        }
+        with (
+            patch("ic_gamedata.specializations._choices_from_cached_definitions", return_value=fallback),
+            patch("ic_gamedata.specialization_engine._hero_tags_map_from_cached_definitions", return_value=fake_tags),
+        ):
+            pending = pending_specializations(
+                payload,
+                self.rules,
+                context="campaign",
+                run_goal="generic_progression",
+            )
+        omin = next(item for item in pending if item.hero_id == 65)
+        self.assertEqual(omin.desired_upgrade_id, 12304)
+        self.assertIn("Form Ranks", omin.rationale)
 
     def test_beadle_prefers_premium_gear_with_high_ilvl_formation(self) -> None:
         payload = json.loads(json.dumps(self.payload))
@@ -1068,7 +1378,8 @@ class SpecializationsTests(unittest.TestCase):
         with patch("ic_gamedata.specializations._choices_from_cached_definitions", return_value=fallback):
             pending = pending_specializations(payload, self.rules)
         self.assertEqual(len(pending), 2)
-        self.assertEqual([item.desired_upgrade_id for item in pending], [12493, 12495])
+        # Tier0 from authored CSV (Outflank Top); tier1 from safe/bud default (Arcane Trickster).
+        self.assertEqual([item.desired_upgrade_id for item in pending], [12493, 12496])
         self.assertEqual(pending[0].data_source_version, "v2_full")
         self.assertEqual(pending[0].rule_source_type, "authored")
 
@@ -1100,7 +1411,7 @@ class SpecializationsTests(unittest.TestCase):
             pending = pending_specializations(payload, rules)
         self.assertEqual(len(pending), 1)
         self.assertEqual(pending[0].desired_upgrade_id, 4002)
-        self.assertIn("basis-regel", pending[0].rationale)
+        self.assertIn("baseline rule", pending[0].rationale)
 
     def test_skylla_prefers_league_with_multiple_evil_champions(self) -> None:
         payload = json.loads(json.dumps(self.payload))
@@ -1507,6 +1818,64 @@ class SpecializationsTests(unittest.TestCase):
         self.assertIn(173, party2_ids)
         self.assertNotIn(173, party1_ids)
 
+    def test_pending_specializations_ignore_benched_seat_assignees(self) -> None:
+        """hero_in_seats can list bench assignees; only live formation should pending."""
+        payload = json.loads(json.dumps(self.payload))
+        details = payload["details"]
+        details["active_game_instance_id"] = 1
+        inst = next(i for i in details["game_instances"] if int(i["game_instance_id"]) == 1)
+        # 26 is assigned to a seat but not on the live board; 147+62 are on the board.
+        inst["hero_in_seats"] = {"1": 147, "2": 26, "3": 62}
+        inst["formation"] = [147, 62, -1, -1, -1, -1, -1, -1, -1, -1]
+        details["heroes"] = [
+            {
+                "hero_id": 147,
+                "game_instance_id": 1,
+                "in_seat": 1,
+                "level": 300,
+                "specialization_choices": [14576],
+                "upgrades": [],
+            },
+            {
+                "hero_id": 62,
+                "game_instance_id": 1,
+                "in_seat": 1,
+                "level": 300,
+                "specialization_choices": [],
+                "upgrades": [],
+            },
+            {
+                "hero_id": 26,
+                "game_instance_id": 1,
+                "in_seat": 0,
+                "level": 300,
+                "specialization_choices": [],
+                "upgrades": [],
+            },
+        ]
+        payload["defines"]["upgrade_defines"] = []
+        fallback = {
+            147: [
+                SpecializationOption(14578, "Ceremorphosis", 200, 1),
+                SpecializationOption(14579, "Mystical Mentor", 200, 1),
+                SpecializationOption(14580, "Finite Fellowship", 200, 1),
+            ],
+            62: [
+                SpecializationOption(8753, "New Recruits", 300, 0),
+                SpecializationOption(8754, "Tight Knit", 300, 0),
+            ],
+            26: [
+                SpecializationOption(12210, "Fighting Style: Protection", 240, 0),
+                SpecializationOption(12211, "Compel Duel", 240, 0),
+                SpecializationOption(12212, "Lathander's Allies", 240, 0),
+            ],
+        }
+        with patch("ic_gamedata.specializations._choices_from_cached_definitions", return_value=fallback):
+            pending = pending_specializations(payload, self.rules)
+        hero_ids = {item.hero_id for item in pending}
+        self.assertTrue({147, 62} & hero_ids)
+        self.assertNotIn(26, hero_ids)
+
     def _van_richten_options(self) -> list[SpecializationOption]:
         return [
             SpecializationOption(19700, "Occult Allies", 120, 0),
@@ -1709,6 +2078,26 @@ class SpecializationsTests(unittest.TestCase):
         )
         self.assertEqual(chosen, [15041])
         self.assertNotIn("evil champions", reason)
+
+    def test_smart_defaults_skip_unknown_tier_instead_of_first_option(self) -> None:
+        from ic_gamedata.specialization_engine import (
+            EMPTY_FORMATION_METRICS,
+            smart_defaults_from_options,
+        )
+
+        options = [
+            SpecializationOption(20177, "Raise Spirits: Encirclement", 20, 0),
+            SpecializationOption(20178, "Raise Spirits: Overwatch", 20, 0),
+            SpecializationOption(20179, "Raise Spirits: Spearhead", 20, 0),
+        ]
+        chosen, reason = smart_defaults_from_options(
+            99999,
+            options,
+            EMPTY_FORMATION_METRICS,
+            preferred_ids=[],
+        )
+        self.assertEqual(chosen, [])
+        self.assertIn("insufficient data", reason)
 
     def test_ezmerelda_support_route_maps_to_trained(self) -> None:
         from ic_gamedata.specialization_rules.route_mapper import (

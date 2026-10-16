@@ -8,7 +8,12 @@ import json
 import unittest
 from pathlib import Path
 
-from ic_gamedata.ability_cooldowns import ability_status, ready_ability_keys
+from ic_gamedata.ability_cooldowns import (
+    ability_hotkey_labels,
+    ability_status,
+    formation_ability_keys,
+    ready_ability_keys,
+)
 
 
 class AbilityCooldownTests(unittest.TestCase):
@@ -53,7 +58,7 @@ class AbilityCooldownTests(unittest.TestCase):
 
         self.assertNotIn("4", keys)
 
-        self.assertIn("4: onbekend", status)
+        self.assertIn("4: unknown", status)
 
 
 
@@ -77,9 +82,9 @@ class AbilityCooldownTests(unittest.TestCase):
 
         self.assertNotIn("2", keys)
 
-        self.assertIn("1: onbekend", status)
+        self.assertIn("1: unknown", status)
 
-        self.assertIn("2: onbekend", status)
+        self.assertIn("2: unknown", status)
 
 
 
@@ -91,7 +96,7 @@ class AbilityCooldownTests(unittest.TestCase):
 
         self.assertIn("2: 35s", status)
 
-        self.assertIn("3: klaar", status)
+        self.assertIn("3: ready", status)
 
         self.assertNotIn("1", keys)
 
@@ -135,8 +140,58 @@ class AbilityCooldownTests(unittest.TestCase):
 
         self.assertEqual(ability_status({})[0], [])
 
+    def test_hotkey_labels_include_champion_and_ultimate(self) -> None:
+        labels = ability_hotkey_labels(self.payload)
+        self.assertIn("1", labels)
+        self.assertIn("2", labels)
+        self.assertTrue(labels["1"].startswith("Gale - "))
+        self.assertIn("Gale", labels["1"].split(" - ", 1)[-1])
+        self.assertTrue(labels["2"].startswith("Raistlin - "))
+        self.assertNotIn("11", labels)  # seats 11-12 have no number hotkey
 
+    def test_fallbacks_hotkey_label_uses_call_uggie(self) -> None:
+        payload = json.loads(json.dumps(self.payload))
+        inst = next(
+            i for i in payload["details"]["game_instances"] if int(i["game_instance_id"]) == 1
+        )
+        # Tess permanent seat is 8.
+        inst["hero_in_seats"]["8"] = 164
+        labels = ability_hotkey_labels(payload)
+        self.assertEqual(labels.get("8"), "Tess - Call Uggie")
 
+    def test_hotkeys_follow_live_formation_not_benched_seats(self) -> None:
+        """hero_in_seats can list the first 10 seat holders; only the board can ult."""
+        payload = {
+            "details": {
+                "active_game_instance_id": 1,
+                "game_instances": [
+                    {
+                        "game_instance_id": 1,
+                        "hero_in_seats": {
+                            "1": 171,  # Anson, benched
+                            "2": 34,  # Donaar, benched
+                            "3": 179,  # Caramon, benched
+                            "4": 169,  # Skylla, benched
+                            "5": 172,  # Kyre, benched (Briv's seat number)
+                            "6": 6,  # Asharra, benched
+                            "7": 151,  # Umberto, benched
+                            "8": 164,  # Tess, on the board
+                            "9": 178,  # Flint, benched
+                            "10": 166,  # Cazrin, benched
+                        },
+                        "formation": [147, 58, 164, -1, -1],
+                    }
+                ],
+                "heroes": [],
+            }
+        }
+        labels = ability_hotkey_labels(payload)
+        self.assertEqual(set(labels), {"1", "5", "8"})
+        self.assertTrue(labels["1"].startswith("Gale - "))
+        self.assertTrue(labels["5"].startswith("Briv - "))
+        self.assertTrue(labels["8"].startswith("Tess - "))
+        self.assertEqual(formation_ability_keys(payload), ["1", "5", "8"])
+        self.assertEqual(set(ready_ability_keys(payload)), {"1", "5", "8"})
 
 
 if __name__ == "__main__":

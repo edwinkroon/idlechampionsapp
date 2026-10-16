@@ -23,9 +23,6 @@ class PartyTileView:
     title: str
     area: str
     run: str
-    gold: str
-    gold_gained: str
-    gold_rate: str
     gems: str
     areas_rate: str
     patron: str | None
@@ -39,14 +36,43 @@ class PartyTileView:
     modron_progress_text: str | None = None
 
 
+def _progress_pct(current_area: int, goal: int) -> int:
+    return min(100, max(0, int(100 * current_area / goal)))
+
+
 def modron_area_progress(
     current_area: int | None,
     modron_goal: int | None,
 ) -> tuple[int | None, str | None]:
     if current_area is None or modron_goal is None or modron_goal <= 0:
         return None, None
-    pct = min(100, max(0, int(100 * current_area / modron_goal)))
-    return pct, f"Modron: {current_area} / {modron_goal}"
+    return (
+        _progress_pct(current_area, modron_goal),
+        f"Modron: {current_area} / {modron_goal}",
+    )
+
+
+def area_goal_progress(
+    current_area: int | None,
+    *,
+    modron_goal: int | None = None,
+    modron_goal_enabled: bool = False,
+    adventure_goal: int | None = None,
+) -> tuple[int | None, str | None]:
+    """Progress bar for Modron Set Area Goal, else adventure completion goal."""
+    if current_area is None:
+        return None, None
+    if modron_goal_enabled and modron_goal is not None and modron_goal > 0:
+        return (
+            _progress_pct(current_area, modron_goal),
+            f"Modron: {current_area} / {modron_goal}",
+        )
+    if adventure_goal is not None and adventure_goal > 0:
+        return (
+            _progress_pct(current_area, adventure_goal),
+            f"Adventure: {current_area} / {adventure_goal}",
+        )
+    return None, None
 
 
 def _goal_run_gems_suffix(gems_earned: int | None) -> str:
@@ -59,12 +85,15 @@ def format_goal_run_history(
     history: tuple[GoalRunRecord, ...],
     *,
     area_goal: int | None,
+    area_goal_enabled: bool = True,
     format_duration: Callable[[float | None], str],
 ) -> GoalRunHistoryDisplay:
+    if not area_goal_enabled:
+        return GoalRunHistoryDisplay(summary=None, summary_unreliable=False, extra=())
     if not history:
         if area_goal is not None and area_goal > 0:
             return GoalRunHistoryDisplay(
-                summary=f"Doel-run: — (nog geen voltooide run, Modron-doel {area_goal})",
+                summary=f"Modron run: — (no completed run yet, goal {area_goal})",
                 summary_unreliable=False,
                 extra=(),
             )
@@ -72,8 +101,8 @@ def format_goal_run_history(
     goal = area_goal if area_goal is not None and area_goal > 0 else history[0].area_goal
     latest = history[0]
     summary = (
-        f"Laatste doel-run: {format_duration(latest.duration_sec)}"
-        f"{_goal_run_gems_suffix(latest.gems_earned)} (Modron-doel {goal})"
+        f"Last Modron run: {format_duration(latest.duration_sec)}"
+        f"{_goal_run_gems_suffix(latest.gems_earned)} (goal {goal})"
     )
     extra = tuple(
         (
@@ -99,7 +128,6 @@ def build_party_tile_view(
     run_sec: float | None,
     gems: int | None,
     gem_prefix: str,
-    format_gold: Callable[[Any], str],
     format_number: Callable[[Any], str],
     format_duration: Callable[[float | None], str],
     format_rate_window: Callable[[float | None], str],
@@ -108,21 +136,12 @@ def build_party_tile_view(
     reset_note = f" · {ps.reset_count}× Modron" if ps is not None and ps.reset_count else ""
     window_note = format_rate_window(ps.rate_window_sec if ps is not None else None)
 
-    if ps is not None and ps.gold_per_quarter is not None:
-        gold_rate = f"{format_gold(ps.gold_per_quarter)} gold/kw ({window_note}{reset_note})"
-    elif ps is not None:
-        gold_rate = f"gold/kw: — ({window_note}{reset_note})"
-    else:
-        gold_rate = "gold/kw: wachten op meting…"
-
     if ps is not None and ps.areas_per_quarter is not None:
         areas_rate = f"{format_number(ps.areas_per_quarter)} areas/kw ({window_note}{reset_note})"
     elif ps is not None:
         areas_rate = f"areas/kw: — ({window_note}{reset_note})"
     else:
-        areas_rate = "areas/kw: wachten op meting…"
-
-    gold_gained_val = party.gold_gained
+        areas_rate = "areas/qtr: waiting for measurement…"
 
     patron = format_patron_line(party.patron_id, party.patron_tier)
     briv = None
@@ -143,6 +162,8 @@ def build_party_tile_view(
     milestone = party.adventure_area_goal
     if ps is not None and ps.adventure_area_goal is not None:
         milestone = ps.adventure_area_goal
+    modron_enabled = party.modron_set_area_goal_enabled is True
+    display_modron_goal = modron_goal if modron_enabled else None
     history = (
         goal_run_history
         if goal_run_history is not None
@@ -151,9 +172,15 @@ def build_party_tile_view(
     goal_display = format_goal_run_history(
         history,
         area_goal=modron_goal,
+        area_goal_enabled=modron_enabled,
         format_duration=format_duration,
     )
-    progress_pct, progress_text = modron_area_progress(party.current_area, modron_goal)
+    progress_pct, progress_text = area_goal_progress(
+        party.current_area,
+        modron_goal=modron_goal,
+        modron_goal_enabled=modron_enabled,
+        adventure_goal=milestone,
+    )
 
     return PartyTileView(
         title=party_tile_title(
@@ -165,14 +192,11 @@ def build_party_tile_view(
         area=format_area_line(
             party.current_area,
             party.highest_area,
-            modron_area_goal=modron_goal,
-            area_goal=milestone if milestone != modron_goal else None,
+            modron_area_goal=display_modron_goal,
+            area_goal=milestone if milestone != display_modron_goal else None,
         ),
         run=f"Run: {format_duration(run_sec) if run_sec is not None else '—'}",
-        gold=f"Gold: {format_gold(party.gold)}",
-        gold_gained=f"Gold verdiend: {format_gold(gold_gained_val)}",
-        gold_rate=gold_rate,
-        gems=f"Gems deze run: {gem_prefix}{gems if gems is not None else '—'}",
+        gems=f"Gems this run: {gem_prefix}{gems if gems is not None else '—'}",
         areas_rate=areas_rate,
         patron=patron,
         briv=briv,

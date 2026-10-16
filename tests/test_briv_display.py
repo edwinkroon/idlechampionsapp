@@ -42,6 +42,27 @@ class BrivDisplayTests(unittest.TestCase):
         self.assertFalse(extras["briv_in_formation"])
         self.assertIsNone(extras["briv_sprint_stacks"])
 
+    def test_briv_from_seats_when_formation_grid_sparse(self) -> None:
+        """API often returns a 1-slot formation while hero_in_seats still has Briv."""
+        instance = {
+            "game_instance_id": 1,
+            "formation": [-1, -1, -1, 147, -1, -1, -1, -1, -1],
+            "hero_in_seats": {
+                "1": 147,
+                "5": 58,
+                "4": 4,
+                "6": 6,
+            },
+            "stats": {
+                "briv_sprint_stacks": "16372",
+                "briv_steelbones_stacks": "125000",
+            },
+        }
+        extras = parse_instance_extras(instance, None, party_index=1)
+        self.assertTrue(extras["briv_in_formation"])
+        self.assertEqual(extras["briv_sprint_stacks"], 16372)
+        self.assertEqual(extras["briv_steelbones_stacks"], 125000)
+
     def test_briv_not_detected_from_shared_roster_game_instance_zero(self) -> None:
         instance = {
             "game_instance_id": 1,
@@ -138,6 +159,9 @@ class BrivDisplayTests(unittest.TestCase):
                 "game_instances": [
                     {
                         "game_instance_id": 1,
+                        # Other party still has Briv — account value mirrors them.
+                        "formation": [58, 1, 2],
+                        "hero_in_seats": {"1": 58},
                         "stats": {"briv_sprint_stacks": "48"},
                     },
                     instance,
@@ -147,6 +171,40 @@ class BrivDisplayTests(unittest.TestCase):
         }
         extras = parse_instance_extras(instance, payload, party_index=2)
         self.assertIsNone(extras["briv_sprint_stacks"])
+
+    def test_briv_stacks_uses_account_when_other_party_only_mirrors_stats(self) -> None:
+        """Regression: non-Briv parties often copy the same briv_* stats — still show stacks."""
+        instance = {
+            "game_instance_id": 2,
+            "formation": [58],
+            "hero_in_seats": {"1": 58},
+            "stats": {},
+        }
+        payload = {
+            "details": {
+                "active_game_instance_id": 2,
+                "stats": {
+                    "briv_sprint_stacks": "16372",
+                    "briv_steelbones_stacks": "125000",
+                },
+                "game_instances": [
+                    {
+                        "game_instance_id": 1,
+                        "formation": [147, 43, 4],
+                        "hero_in_seats": {"1": 147},
+                        "stats": {
+                            "briv_sprint_stacks": "16372",
+                            "briv_steelbones_stacks": "125000",
+                        },
+                    },
+                    instance,
+                ],
+            }
+        }
+        extras = parse_instance_extras(instance, payload, party_index=2)
+        self.assertTrue(extras["briv_in_formation"])
+        self.assertEqual(extras["briv_sprint_stacks"], 16372)
+        self.assertEqual(extras["briv_steelbones_stacks"], 125000)
 
 
 if __name__ == "__main__":

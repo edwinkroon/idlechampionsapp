@@ -23,8 +23,10 @@ def _hero_in_formation(
 ) -> bool:
     """True when the hero is on the live formation board for this party.
 
-    Prefer ``formation`` over stale ``hero_in_seats`` / saved loadouts. Do not
-    treat ``formation_saves_v2`` as currently deployed.
+    Prefer a populated ``formation`` grid over stale ``hero_in_seats`` / saved
+    loadouts. A sparse grid (0–1 champions) is common while the API is mid-update
+    and must not block seat / heroes fallbacks — otherwise Briv stacks stay empty.
+    Do not treat ``formation_saves_v2`` as currently deployed.
     """
     formation_ids: list[int] = []
     formation = instance.get("formation")
@@ -33,8 +35,11 @@ def _hero_in_formation(
             hid = _parse_int(raw)
             if hid is not None and hid > 0:
                 formation_ids.append(hid)
-    if formation_ids:
+    # Match formation_seats: only trust the grid when it looks populated.
+    if len(formation_ids) >= 2:
         return hero_id in formation_ids
+    if hero_id in formation_ids:
+        return True
 
     seats = instance.get("hero_in_seats")
     if isinstance(seats, dict):
@@ -90,7 +95,12 @@ def _account_briv_stat_matches_other_party(
     account_stacks: int,
     stat_key: str,
 ) -> bool:
-    """True when account stacks equal another party's instance value (likely stale)."""
+    """True when account stacks still mirror another *Briv* party's instance value.
+
+    Many payloads copy the same briv_* counters onto every game_instance.stats
+    even when that party has no Briv — those must not block the account fallback
+    for the active Briv party.
+    """
     details = payload.get("details")
     if not isinstance(details, dict):
         return False
@@ -102,6 +112,8 @@ def _account_briv_stat_matches_other_party(
             continue
         gid = _parse_int(inst.get("game_instance_id"))
         if gid is None or gid == party_index:
+            continue
+        if not _hero_in_formation(inst, BRIV_HERO_ID, payload, party_index=gid):
             continue
         other_stats = inst.get("stats")
         if not isinstance(other_stats, dict):
@@ -285,9 +297,9 @@ def format_area_line(
     else:
         base = f"Area: {cur}"
     if modron_area_goal is not None and modron_area_goal > 0:
-        return f"{base} · Modron-doel {modron_area_goal}"
+        return f"{base} · Modron goal {modron_area_goal}"
     if area_goal is not None and area_goal > 0:
-        return f"{base} · milestone {area_goal}"
+        return f"{base} · Adventure goal {area_goal}"
     return base
 
 
@@ -332,7 +344,22 @@ def refresh_party_from_payload(
         party_index=party.party_index,
         memory_modron_area=memory_modron_area,
     )
-    return replace(party, **extras)
+    details = payload.get("details") if isinstance(payload, dict) else None
+    active_id = (
+        _parse_int(details.get("active_game_instance_id"))
+        if isinstance(details, dict)
+        else None
+    )
+    adventure_id = _parse_int(instance.get("current_adventure_id"))
+    if adventure_id is None and isinstance(details, dict):
+        adventure_id = _parse_int(details.get("current_adventure_id"))
+    return replace(
+        party,
+        adventure_id=adventure_id,
+        current_area=_parse_int(instance.get("current_area")),
+        is_active=active_id is not None and party.party_index == active_id,
+        **extras,
+    )
 
 
 def refresh_snapshot_from_payload(
@@ -348,15 +375,23 @@ def refresh_snapshot_from_payload(
 
     if not isinstance(snapshot, GameSnapshot) or not isinstance(payload, dict):
         return snapshot
+    details = payload.get("details")
+    active_id = (
+        _parse_int(details.get("active_game_instance_id"))
+        if isinstance(details, dict)
+        else snapshot.active_party_index
+    )
     parties = tuple(
         refresh_party_from_payload(
             party,
             payload,
-            memory_modron_area=memory_modron_area if party.is_active else None,
+            memory_modron_area=memory_modron_area if (
+                active_id is not None and party.party_index == active_id
+            ) else None,
         )
         for party in snapshot.parties
     )
-    return replace(snapshot, parties=parties)
+    return replace(snapshot, parties=parties, active_party_index=active_id)
 
 
 def refresh_party_buff_text(party, payload: dict[str, Any] | None):
@@ -400,7 +435,10 @@ def parse_instance_extras(
         party_index=party_index,
         briv_in=briv_in,
     )
-    from ic_gamedata.modron_area_goal import resolve_modron_area_goal
+    from ic_gamedata.modron_area_goal import (
+        resolve_modron_area_goal,
+        resolve_modron_set_area_goal_enabled,
+    )
 
     modron_area_goal = resolve_modron_area_goal(
         instance,
@@ -408,10 +446,15 @@ def parse_instance_extras(
         party_index=party_index,
         memory_modron_area=memory_modron_area,
     )
+    modron_set_area_goal_enabled = resolve_modron_set_area_goal_enabled(
+        payload,
+        party_index=party_index,
+    )
     return {
         "highest_area": _parse_int(instance.get("highest_area")),
         "adventure_area_goal": _parse_int(stats.get("adventure_area_goal")),
         "modron_area_goal": modron_area_goal,
+        "modron_set_area_goal_enabled": modron_set_area_goal_enabled,
         "custom_name": custom_name,
         "patron_id": _parse_int(instance.get("current_patron_id")),
         "patron_tier": _parse_int(instance.get("current_patron_tier")),

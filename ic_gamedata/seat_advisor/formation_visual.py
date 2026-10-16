@@ -47,7 +47,11 @@ def _seat_by_hero(instance: dict[str, Any]) -> dict[int, int]:
 
 
 def _formation_grid_hero_ids(instance: dict[str, Any], payload: dict[str, Any]) -> list[int]:
-    """Hero IDs per formation grid index — prefer the densest live/save/details grid."""
+    """Hero IDs per formation grid index — live board first, saves only as fallback.
+
+    Never prefer a denser ``formation_saves_v2`` over the live grid: that showed
+    a different team than the active party on the Formatie tab.
+    """
 
     def _ids(raw: Any) -> list[int]:
         if not isinstance(raw, list):
@@ -61,16 +65,16 @@ def _formation_grid_hero_ids(instance: dict[str, Any], payload: dict[str, Any]) 
     def _filled(grid: list[int]) -> int:
         return sum(1 for hero_id in grid if hero_id > 0)
 
-    candidates: list[list[int]] = []
     live = _ids(instance.get("formation"))
-    if live:
-        candidates.append(live)
+    if _filled(live):
+        return live
 
     details = payload.get("details") if isinstance(payload.get("details"), dict) else {}
     details_live = _ids(details.get("formation"))
-    if details_live:
-        candidates.append(details_live)
+    if _filled(details_live):
+        return details_live
 
+    candidates: list[list[int]] = []
     saves = instance.get("formation_saves_v2")
     if not isinstance(saves, list) or not saves:
         saves = details.get("formation_saves_v2")
@@ -79,7 +83,7 @@ def _formation_grid_hero_ids(instance: dict[str, Any], payload: dict[str, Any]) 
             if not isinstance(save, dict):
                 continue
             grid = _ids(save.get("formation"))
-            if grid:
+            if _filled(grid):
                 candidates.append(grid)
 
     if not candidates:
@@ -197,6 +201,47 @@ def _unique_grid_xy(index: int) -> tuple[float, float]:
     return float(col) * _CARD_GAP_X, float(row) * _CARD_GAP_Y
 
 
+def _seat_map_for_visual(
+    instance: dict[str, Any],
+    payload: dict[str, Any],
+    formation_seats: dict[int, int] | None,
+) -> dict[int, int]:
+    """hero_id → seat for the board we should draw.
+
+    ``formation_seats`` from Party Advisor is authoritative (live party only).
+    Otherwise use ``hero_in_seats`` filtered to the live formation grid / active
+    seats — raw ``hero_in_seats`` can still list benched seat holders.
+    """
+    if formation_seats:
+        return {
+            hero_id: seat
+            for hero_id, seat in formation_seats.items()
+            if hero_id > 0 and 1 <= seat <= 12
+        }
+
+    seat_by_hero = _seat_by_hero(instance)
+    live_ids = {hid for hid in _formation_grid_hero_ids(instance, payload) if hid > 0}
+    if live_ids:
+        filtered = {
+            hero_id: seat
+            for hero_id, seat in seat_by_hero.items()
+            if hero_id in live_ids
+        }
+        if filtered:
+            return filtered
+
+    _active_id, active_seats = active_formation_seats(payload)
+    if active_seats:
+        filtered = {
+            hero_id: seat
+            for hero_id, seat in seat_by_hero.items()
+            if seat in active_seats
+        }
+        if filtered:
+            return filtered
+    return seat_by_hero
+
+
 def build_visual_nodes(
     payload: dict[str, Any],
     adventure_id: int | None,
@@ -208,17 +253,14 @@ def build_visual_nodes(
     """
     Build visual seat nodes.
 
-    formation_seats: optional hero_id → seat from Party Advisor formation
-    (used when instance.hero_in_seats is missing/empty on live API).
+    formation_seats: optional hero_id → seat from Party Advisor formation.
+    When provided it is the full live (or projected) party — not merged with
+    stale ``hero_in_seats`` bench assignees.
     """
     formation_name, nodes = load_formation_graph(payload, adventure_id)
     _ = formation_name
     instance = _active_instance(payload) or {}
-    seat_by_hero = _seat_by_hero(instance)
-    if formation_seats:
-        for hero_id, seat in formation_seats.items():
-            if hero_id > 0 and 1 <= seat <= 12:
-                seat_by_hero.setdefault(hero_id, seat)
+    seat_by_hero = _seat_map_for_visual(instance, payload, formation_seats)
     hero_by_seat = {seat: hid for hid, seat in seat_by_hero.items()}
     formation_ids = _formation_grid_hero_ids(instance, payload)
     _active_id, active_seats = active_formation_seats(payload)

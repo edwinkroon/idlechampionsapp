@@ -3,12 +3,30 @@
 from __future__ import annotations
 
 import json
+import re
 import sys
+from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
 from ic_gamedata.parsing import parse_int as _parse_int
+
+_SCAVENGER_LOOT_RE = re.compile(
+    r"(?:uncover|discover)\s+(.+?)\s+with each defeated boss",
+    re.IGNORECASE,
+)
+
+# Used when cached_definitions.json is unavailable (tests / fresh install).
+_FALLBACK_SCAVENGER_ABILITIES: tuple[tuple[int, str, str, int | None, str], ...] = (
+    (126, "Strongheart", "Event Token Scavenger", 20, "Event Tokens"),
+    (144, "Presto", "Component Scavenger", 1200, "Modron Component pieces"),
+    (148, "Diana", "Electrum Chest Scavenger", 200, "Electrum Chests"),
+    (152, "Bobby", "Scales of Tiamat Scavenger", 160, "Scales of Tiamat"),
+    (157, "Eric", "Corrupted Gem Scavenger", 410, "Corrupted Gems"),
+    (160, "Sheila", "Potion Reagent Scavenger", 130, "Potion Reagents"),
+    (163, "Hank", "Time Gate Piece Scavenger", 140, "Time Gate Pieces"),
+)
 
 
 def _config_base() -> Path:
@@ -89,6 +107,24 @@ def hero_name_map_from_cached_definitions() -> dict[int, str]:
         if hero_id is None or not isinstance(name, str) or not name.strip():
             continue
         out[hero_id] = name.strip()
+    return out
+
+
+@lru_cache(maxsize=1)
+def hero_seat_id_map_from_cached_definitions() -> dict[int, int]:
+    """Permanent F-key seat (1–12) per champion from hero_defines.seat_id."""
+    heroes = cached_definitions_data().get("hero_defines")
+    if not isinstance(heroes, list):
+        return {}
+    out: dict[int, int] = {}
+    for item in heroes:
+        if not isinstance(item, dict):
+            continue
+        hero_id = _parse_int(item.get("id"))
+        seat_id = _parse_int(item.get("seat_id"))
+        if hero_id is None or seat_id is None or not (1 <= seat_id <= 12):
+            continue
+        out[hero_id] = seat_id
     return out
 
 
@@ -236,3 +272,68 @@ def hero_age_map_from_cached_definitions() -> dict[int, int]:
             continue
         out[hero_id] = age
     return out
+
+
+@dataclass(frozen=True)
+class ScavengerAbility:
+    hero_id: int
+    hero_name: str
+    ability_name: str
+    required_level: int | None
+    loot: str
+    tip_text: str
+
+
+def _loot_label_from_scavenger_upgrade(ability_name: str, tip_text: str) -> str:
+    match = _SCAVENGER_LOOT_RE.search(tip_text)
+    if match:
+        return match.group(1).strip().rstrip(".")
+    if ability_name.casefold().endswith(" scavenger"):
+        return ability_name[: -len(" Scavenger")].strip()
+    return ability_name.strip()
+
+
+@lru_cache(maxsize=1)
+def scavenger_abilities_from_cached_definitions() -> tuple[ScavengerAbility, ...]:
+    names = hero_name_map_from_cached_definitions()
+    upgrades = cached_definitions_data().get("upgrade_defines")
+    found: list[ScavengerAbility] = []
+    if isinstance(upgrades, list):
+        for upgrade in upgrades:
+            if not isinstance(upgrade, dict):
+                continue
+            ability_name = str(upgrade.get("name") or "").strip()
+            if "scavenger" not in ability_name.casefold():
+                continue
+            hero_id = _parse_int(upgrade.get("hero_id"))
+            if hero_id is None:
+                continue
+            tip_text = str(upgrade.get("tip_text") or upgrade.get("description") or "").strip()
+            found.append(
+                ScavengerAbility(
+                    hero_id=hero_id,
+                    hero_name=names.get(hero_id, f"Hero {hero_id}"),
+                    ability_name=ability_name,
+                    required_level=_parse_int(upgrade.get("required_level")),
+                    loot=_loot_label_from_scavenger_upgrade(ability_name, tip_text),
+                    tip_text=tip_text,
+                )
+            )
+    if found:
+        return tuple(sorted(found, key=lambda row: (row.hero_name.casefold(), row.ability_name)))
+    return tuple(
+        ScavengerAbility(
+            hero_id=hero_id,
+            hero_name=hero_name,
+            ability_name=ability_name,
+            required_level=required_level,
+            loot=loot,
+            tip_text="",
+        )
+        for hero_id, hero_name, ability_name, required_level, loot in _FALLBACK_SCAVENGER_ABILITIES
+    )
+
+
+@lru_cache(maxsize=1)
+def scavenger_hero_ids_from_cached_definitions() -> frozenset[int]:
+    return frozenset(ability.hero_id for ability in scavenger_abilities_from_cached_definitions())

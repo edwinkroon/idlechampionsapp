@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import unittest
 
+from ic_gamedata.dashboard_enrich import resolve_dashboard_gems
 from ic_gamedata.log_parser import (
     PartySnapshot,
     merge_party_snapshots,
@@ -88,6 +89,14 @@ class MergeSnapshotTests(unittest.TestCase):
         self.assertEqual(merged.current_area, 246)
         self.assertEqual(merged.gems_this_reset, 100)
 
+    def test_merge_ignores_high_log_gems_when_log_area_lags(self) -> None:
+        """Stale log rows can keep a high gem counter from earlier in the run."""
+        api_party = _party(1, area=500, gems=200)
+        log_party = _party(1, area=120, gems=8000)
+        merged = merge_party_snapshots(api_party, log_party)
+        self.assertEqual(merged.current_area, 500)
+        self.assertEqual(merged.gems_this_reset, 200)
+
     def test_merge_keeps_primary_is_active_not_log_or(self) -> None:
         api_party = _party(1, area=200, gems=100)
         api_party = PartySnapshot(
@@ -138,6 +147,32 @@ class MergeSnapshotTests(unittest.TestCase):
         self.assertEqual(merged.gems_this_reset, 130)
 
 
+class DashboardGemsResolveTests(unittest.TestCase):
+    def test_prefers_memory_when_fresh(self) -> None:
+        gems, prefix = resolve_dashboard_gems(
+            is_active=True,
+            memory_gems=150,
+            api_gems=120,
+            tracked_gems=130,
+            tracked_estimated=True,
+            area=200,
+        )
+        self.assertEqual(gems, 150)
+        self.assertEqual(prefix, "")
+
+    def test_drops_stale_memory_after_reset(self) -> None:
+        gems, prefix = resolve_dashboard_gems(
+            is_active=True,
+            memory_gems=5000,
+            api_gems=10,
+            tracked_gems=10,
+            tracked_estimated=False,
+            area=5,
+        )
+        self.assertEqual(gems, 10)
+        self.assertEqual(prefix, "")
+
+
 class BossKillExtrapolationTests(unittest.TestCase):
     def test_extrapolates_when_gems_stall(self) -> None:
         prev = _party(1, gems=100, boss_kills=10)
@@ -168,7 +203,37 @@ class BossKillExtrapolationTests(unittest.TestCase):
         self.assertGreater(gems or 0, 2614)
         self.assertTrue(estimated)
 
-    def test_tracker_uses_boss_kill_fallback(self) -> None:
+    def test_tracker_uses_learned_boss_rate_not_default(self) -> None:
+        from ic_gamedata.log_parser import GameSnapshot
+
+        def _snap(party: PartySnapshot) -> GameSnapshot:
+            return GameSnapshot(
+                api_call="getuserdetails",
+                active_party_index=party.party_index,
+                parties=(party,),
+                current_area=party.current_area,
+                gold=party.gold,
+                gold_gained=party.gold_gained,
+                gems_this_reset=party.gems_this_reset,
+                monster_kills=party.monster_kills,
+                boss_kills=party.boss_kills,
+            )
+
+        tracker = StatsTracker()
+        tracker.add_snapshot(_snap(_party(1, gems=100, boss_kills=10)))
+        # Real gem increase teaches gems/boss = 10.
+        tracker.add_snapshot(_snap(_party(1, gems=120, boss_kills=12)))
+        # API stalls; two more bosses → +20 from the learned rate.
+        tracker.add_snapshot(_snap(_party(1, gems=120, boss_kills=14)))
+
+        stats = tracker.compute()
+        self.assertIsNotNone(stats)
+        assert stats is not None
+        self.assertAlmostEqual(stats.parties[0].gems_gained or 0, 40.0)
+        self.assertTrue(stats.parties[0].gems_estimated)
+
+    def test_tracker_does_not_invent_gems_without_learned_rate(self) -> None:
+        """Default 7 gems/boss used to inflate Dashboard while the API lagged."""
         from ic_gamedata.log_parser import GameSnapshot
 
         def _snap(party: PartySnapshot) -> GameSnapshot:
@@ -191,7 +256,8 @@ class BossKillExtrapolationTests(unittest.TestCase):
         stats = tracker.compute()
         self.assertIsNotNone(stats)
         assert stats is not None
-        self.assertAlmostEqual(stats.parties[0].gems_gained or 0, 14.0)
+        self.assertEqual(stats.parties[0].gems_this_reset, 100)
+        self.assertFalse(stats.parties[0].gems_estimated)
 
     def test_gem_rate_not_tied_to_area_when_api_gems_stall(self) -> None:
         """Area-based gem estimates must not make gems/kw equal areas/kw."""

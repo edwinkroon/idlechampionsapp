@@ -60,7 +60,7 @@ def find_process(
             "psutil is required for process discovery. Install with: pip install psutil"
         ) from exc
 
-    names = {n.lower() for n in (executable_names or ("IdleChampions.exe",))}
+    names = {n.lower() for n in (executable_names or ("IdleDragons.exe", "IdleChampions.exe"))}
     matches: list[ProcessInfo] = []
     for proc in psutil.process_iter(["pid", "name", "exe"]):
         try:

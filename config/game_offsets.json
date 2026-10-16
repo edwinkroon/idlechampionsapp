@@ -2,7 +2,7 @@
   "version": "0.1.0",
   "game_version_note": "Copy from game_offsets.example.json and fill verified offsets for your game build.",
   "process": {
-    "executable_names": ["IdleChampions.exe"],
+    "executable_names": ["IdleDragons.exe", "IdleChampions.exe"],
     "modules": ["GameAssembly.dll", "UnityPlayer.dll"]
   },
   "values": {

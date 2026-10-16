@@ -33,6 +33,7 @@ class PartySnapshot:
     highest_area: int | None = None
     adventure_area_goal: int | None = None
     modron_area_goal: int | None = None
+    modron_set_area_goal_enabled: bool | None = None
     custom_name: str | None = None
     patron_id: int | None = None
     patron_tier: int | None = None
@@ -115,6 +116,7 @@ def _party_from_instance(
         highest_area=extras["highest_area"],
         adventure_area_goal=extras["adventure_area_goal"],
         modron_area_goal=extras["modron_area_goal"],
+        modron_set_area_goal_enabled=extras["modron_set_area_goal_enabled"],
         custom_name=extras["custom_name"],
         patron_id=extras["patron_id"],
         patron_tier=extras["patron_tier"],
@@ -170,7 +172,19 @@ def merge_party_snapshots(primary: PartySnapshot, secondary: PartySnapshot) -> P
     )
 
     gems = primary.gems_this_reset
-    if not api_reset_ahead and secondary.gems_this_reset is not None:
+    # Prefer higher log gems when the API counter stalls — but only if the log
+    # area is not far behind the live API area (that usually means a stale log
+    # row from an earlier stretch of the run, which can carry an inflated gem count).
+    log_area_near_api = (
+        secondary.current_area is None
+        or primary.current_area is None
+        or secondary.current_area + 2 >= primary.current_area
+    )
+    if (
+        not api_reset_ahead
+        and log_area_near_api
+        and secondary.gems_this_reset is not None
+    ):
         if gems is None or secondary.gems_this_reset > gems:
             gems = secondary.gems_this_reset
 
@@ -236,6 +250,11 @@ def merge_party_snapshots(primary: PartySnapshot, secondary: PartySnapshot) -> P
         if primary.modron_area_goal is not None
         else secondary.modron_area_goal
     )
+    modron_set_area_goal_enabled = (
+        primary.modron_set_area_goal_enabled
+        if primary.modron_set_area_goal_enabled is not None
+        else secondary.modron_set_area_goal_enabled
+    )
 
     return PartySnapshot(
         party_index=primary.party_index,
@@ -253,6 +272,7 @@ def merge_party_snapshots(primary: PartySnapshot, secondary: PartySnapshot) -> P
         highest_area=highest_area,
         adventure_area_goal=adventure_area_goal,
         modron_area_goal=modron_area_goal,
+        modron_set_area_goal_enabled=modron_set_area_goal_enabled,
         custom_name=_pick_str(primary.custom_name, secondary.custom_name),
         patron_id=primary.patron_id if primary.patron_id is not None else secondary.patron_id,
         patron_tier=primary.patron_tier if primary.patron_tier is not None else secondary.patron_tier,

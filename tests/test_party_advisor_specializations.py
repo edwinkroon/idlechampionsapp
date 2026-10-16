@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 from ic_gamedata.party_advisor import analyze_party, format_report
 from ic_gamedata.party_advisor_specializations import (
@@ -144,7 +145,7 @@ class PartyAdvisorSpecializationTests(unittest.TestCase):
             }
         )
         text = format_report(report)
-        self.assertIn("Specialization & formatie", text)
+        self.assertIn("Specialization & formation", text)
         self.assertIn("Briv", text)
 
     def test_spec_summary_for_hero_open_tier(self) -> None:
@@ -177,6 +178,8 @@ class PartyAdvisorSpecializationTests(unittest.TestCase):
                 context="campaign",
             )
             self.assertLessEqual(len(insights), 5)
+            in_party = {hero.hero_id for hero in report.formation_heroes}
+            self.assertTrue(all(insight.hero_id in in_party for insight in insights))
 
     def test_modron_report_can_include_speed_composition_tip(self) -> None:
         report = analyze_party(
@@ -261,14 +264,14 @@ class PartyAdvisorSpecializationTests(unittest.TestCase):
             ),
             desired_upgrade_id=None,
             desired_option_index=None,
-            reason="geen regel",
-            rationale="Geen specialization-regel gevonden voor deze champion.",
+            reason="no rule",
+            rationale="No specialization rule found for this champion.",
         )
         insight = _open_tier_insight(pending_item, run_goal="generic_progression")
         self.assertIsNotNone(insight)
         assert insight is not None
         self.assertEqual(insight.status, "open_tier")
-        self.assertIn("nog geen vaste keuze", insight.recommended_label)
+        self.assertIn("(no fixed choice yet)", insight.recommended_label)
 
     def test_recommended_spec_for_goal_speed_thellora(self) -> None:
         from ic_gamedata.party_advisor_specializations import (
@@ -286,7 +289,18 @@ class PartyAdvisorSpecializationTests(unittest.TestCase):
         )
         options = known.get(thellora_id, [])
         formation = (
-            type("FH", (), {"hero_id": thellora_id, "name": "Thellora", "seat": 1})(),
+            type(
+                "FH",
+                (),
+                {
+                    "hero_id": thellora_id,
+                    "name": "Thellora",
+                    "seat": 1,
+                    "is_top_damage": False,
+                    "roles": ("support",),
+                    "tags": ("speed",),
+                },
+            )(),
         )
         formation_ctx = _formation_context_from_payload(payload, formation)
         spec = recommended_spec_for_goal(
@@ -299,7 +313,7 @@ class PartyAdvisorSpecializationTests(unittest.TestCase):
             context="campaign",
             formation_ctx=formation_ctx,
         )
-        self.assertEqual(spec, "Vanguard of the Quick")
+        self.assertEqual(spec, "Defender of the Meek")
 
     def test_resolve_spec_display_status_multi_tier_match(self) -> None:
         from ic_gamedata.party_advisor_specializations import resolve_spec_display_status
@@ -344,6 +358,93 @@ class PartyAdvisorSpecializationTests(unittest.TestCase):
         self.assertNotIn(147, heroes2)
         self.assertIn(173, heroes2)
         self.assertNotIn(173, heroes1)
+
+    def test_post_choice_spec_matches_open_choice_advice_for_tess(self) -> None:
+        """Post-choice labels must use the same pipeline as pending_specializations."""
+        from ic_gamedata.party_advisor_specializations import (
+            _formation_context_from_payload,
+            recommended_spec_for_goal,
+        )
+        from ic_gamedata.specialization_models import SpecializationOption
+        from ic_gamedata.specializations import load_specialization_rules, pending_specializations
+
+        rules = load_specialization_rules()
+        payload = json.loads(json.dumps(self.payload))
+        payload["details"]["active_game_instance_id"] = 1
+        inst = next(
+            i for i in payload["details"]["game_instances"] if int(i["game_instance_id"]) == 1
+        )
+        inst["hero_in_seats"] = {"1": 164, **{str(seat): 900 + seat for seat in range(2, 11)}}
+        payload["details"]["heroes"] = [
+            {
+                "hero_id": 164,
+                "game_instance_id": 1,
+                "in_seat": 1,
+                "level": 300,
+                "specialization_choices": [17321],
+                "upgrades": [17321],
+            }
+        ]
+        payload["defines"]["upgrade_defines"] = []
+        fallback = {
+            164: [
+                SpecializationOption(17321, "The Fallback Plan", 150, 0),
+                SpecializationOption(17322, "Eyes on the Horizon", 150, 0),
+                SpecializationOption(17323, "Rogues' Gallery", 150, 0),
+            ]
+        }
+        fake_tags = {164: ("fallbacks", "rogue"), 910: ("companion",)}
+        fake_types = {164: frozenset({"ranged"}), 903: frozenset({"ranged"})}
+        for seat in range(2, 10):
+            hero_id = 900 + seat
+            fake_tags[hero_id] = ("unaffiliated",)
+            fake_types.setdefault(hero_id, frozenset({"melee"}))
+        fake_tags[902] = ("unaffiliated", "rogue")
+
+        with (
+            patch("ic_gamedata.specializations._choices_from_cached_definitions", return_value=fallback),
+            patch("ic_gamedata.specialization_engine._hero_tags_map_from_cached_definitions", return_value=fake_tags),
+            patch("ic_gamedata.specialization_engine._hero_attack_types_map_from_cached_definitions", return_value=fake_types),
+            patch("ic_gamedata.specialization_engine._hero_tags_map_from_champion_config", return_value={}),
+        ):
+            pending = pending_specializations(payload, rules, context="campaign")
+            self.assertEqual(len(pending), 0)
+
+            payload["details"]["heroes"][0]["specialization_choices"] = []
+            payload["details"]["heroes"][0]["upgrades"] = []
+            open_pending = pending_specializations(payload, rules, context="campaign")
+            self.assertEqual(len(open_pending), 1)
+            self.assertIsNotNone(open_pending[0].desired_option_index)
+            pending_choice = open_pending[0].options[open_pending[0].desired_option_index].name
+
+            formation = (
+                type(
+                    "FH",
+                    (),
+                    {
+                        "hero_id": 164,
+                        "name": "Tess",
+                        "seat": 1,
+                        "is_top_damage": False,
+                        "roles": ("support",),
+                        "tags": ("buffer",),
+                    },
+                )(),
+            )
+            formation_ctx = _formation_context_from_payload(payload, formation)
+            post_choice = recommended_spec_for_goal(
+                payload,
+                164,
+                "Tess",
+                1,
+                fallback[164],
+                goal="bud",
+                context="campaign",
+                formation_ctx=formation_ctx,
+                hero=formation[0],
+                formation=formation,
+            )
+            self.assertEqual(post_choice, pending_choice)
 
 
 if __name__ == "__main__":

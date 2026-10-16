@@ -29,8 +29,9 @@ _UI_FONT_CANDIDATES = (
 _resolved_ui_font: str | None = None
 
 # --- Layout (theme-independent) ---
-PORTRAIT_W = 52
-PORTRAIT_H = 72
+# Square so circular masks stay round (was 52×72 rectangle).
+PORTRAIT_W = 56
+PORTRAIT_H = 56
 
 _ThemeCallback = Callable[[ThemeMode], None]
 _theme_listeners: list[_ThemeCallback] = []
@@ -65,6 +66,8 @@ _DARK: dict[str, object] = {
     "STATUS_WAIT": "#93c5fd",
     "STATUS_ERROR": "#fca5a5",
     "STATUS_ACTIVE": "#86efac",
+    "DANGER": "#dc2626",
+    "DANGER_HOVER": "#ef4444",
     "BORDER": "#3f3f46",
     "BORDER_HOVER": "#52525b",
     "DIVIDER": "#3f3f46",
@@ -111,6 +114,8 @@ _LIGHT: dict[str, object] = {
     "STATUS_WAIT": "#1d4ed8",
     "STATUS_ERROR": "#b91c1c",
     "STATUS_ACTIVE": "#166534",
+    "DANGER": "#b91c1c",
+    "DANGER_HOVER": "#dc2626",
     "BORDER": "#e2e8f0",
     "BORDER_HOVER": "#cbd5e1",
     "DIVIDER": "#e2e8f0",
@@ -159,6 +164,8 @@ STATUS_PAUSE = str(_DARK["STATUS_PAUSE"])
 STATUS_WAIT = str(_DARK["STATUS_WAIT"])
 STATUS_ERROR = str(_DARK["STATUS_ERROR"])
 STATUS_ACTIVE = str(_DARK["STATUS_ACTIVE"])
+DANGER = str(_DARK["DANGER"])
+DANGER_HOVER = str(_DARK["DANGER_HOVER"])
 BORDER = str(_DARK["BORDER"])
 BORDER_HOVER = str(_DARK["BORDER_HOVER"])
 DIVIDER = str(_DARK["DIVIDER"])
@@ -239,6 +246,7 @@ def _apply_tokens(mode: ThemeMode) -> None:
     global TEXT_PRIMARY, TEXT_BODY, TEXT_MUTED, TEXT_BADGE
     global ACCENT, ACCENT_HOVER, WARN, WARN_BAR, SUCCESS, FEAT_OWNED, FEAT_MISSING
     global STATUS_IDLE, STATUS_PAUSE, STATUS_WAIT, STATUS_ERROR, STATUS_ACTIVE
+    global DANGER, DANGER_HOVER
     global BORDER, BORDER_HOVER, DIVIDER, BUD_BAR, PORTRAIT_BG
     global SEAT_NAME, ISSUE_BORDER, BUD_BORDER, PLOT_BG, SHADOW_COLOR, SHADOW_ALPHA
     global FORMATION_ZONE_BG, _current_theme
@@ -271,6 +279,8 @@ def _apply_tokens(mode: ThemeMode) -> None:
     STATUS_WAIT = str(palette["STATUS_WAIT"])
     STATUS_ERROR = str(palette["STATUS_ERROR"])
     STATUS_ACTIVE = str(palette["STATUS_ACTIVE"])
+    DANGER = str(palette["DANGER"])
+    DANGER_HOVER = str(palette["DANGER_HOVER"])
     BORDER = str(palette["BORDER"])
     BORDER_HOVER = str(palette["BORDER_HOVER"])
     DIVIDER = str(palette["DIVIDER"])
@@ -309,8 +319,8 @@ def apply_app_font(app: QApplication | None = None) -> QFont:
     font = QFont(family)
     font.setStyleHint(QFont.StyleHint.SansSerif)
     font.setHintingPreference(QFont.HintingPreference.PreferFullHinting)
-    # ~13px body; Variable Text is tuned for UI at this size.
-    font.setPointSize(10)
+    # ~14px body for readability on dashboard density.
+    font.setPointSize(11)
     if target is not None:
         target.setFont(font)
     return font
@@ -330,6 +340,12 @@ def apply_theme(mode: ThemeMode, app: QApplication | None = None) -> None:
             callback(mode)
         except Exception:
             pass
+    if target is not None:
+        for widget in target.topLevelWidgets():
+            try:
+                refresh_button_icons(widget)
+            except Exception:
+                pass
 
 
 def card_background_qss() -> str:
@@ -339,15 +355,97 @@ def card_background_qss() -> str:
     )
 
 
-def apply_card_shadow(widget: QWidget, *, blur: float = 18.0, y_offset: float = 3.0) -> None:
+def apply_card_shadow(
+    widget: QWidget,
+    *,
+    blur: float = 18.0,
+    y_offset: float = 3.0,
+    soft: bool = False,
+) -> None:
     """Attach a soft drop shadow suitable for cards."""
     effect = QGraphicsDropShadowEffect(widget)
     color = QColor(SHADOW_COLOR)
-    color.setAlpha(SHADOW_ALPHA)
+    alpha = max(24, SHADOW_ALPHA // 2) if soft else SHADOW_ALPHA
+    color.setAlpha(alpha)
     effect.setColor(color)
-    effect.setBlurRadius(blur)
-    effect.setOffset(0, y_offset)
+    effect.setBlurRadius(12.0 if soft else blur)
+    effect.setOffset(0, 2.0 if soft else y_offset)
     widget.setGraphicsEffect(effect)
+
+
+def style_primary_button(button: QWidget) -> None:
+    """Mark a button as the primary CTA (accent fill via global QSS)."""
+    button.setObjectName("primaryBtn")
+    button.setStyleSheet("")
+    button.style().unpolish(button)
+    button.style().polish(button)
+    _refresh_button_icon(button)
+
+
+def style_danger_button(button: QWidget) -> None:
+    """Mark a button as a destructive/stop action."""
+    button.setObjectName("dangerBtn")
+    button.setStyleSheet("")
+    button.style().unpolish(button)
+    button.style().polish(button)
+    _refresh_button_icon(button)
+
+
+def style_default_button(button: QWidget) -> None:
+    """Clear primary/danger role so the button uses the neutral QPushButton style."""
+    button.setObjectName("")
+    button.setStyleSheet("")
+    button.style().unpolish(button)
+    button.style().polish(button)
+    _refresh_button_icon(button)
+
+
+def _button_icon_color(button: QWidget) -> str:
+    name = str(button.objectName() or "")
+    if name in {"primaryBtn", "dangerBtn"}:
+        return "#ffffff"
+    return TEXT_PRIMARY
+
+
+def _refresh_button_icon(button: QWidget) -> None:
+    kind = button.property("buttonIconKind")
+    if not kind:
+        return
+    size = button.property("buttonIconSize")
+    apply_button_icon(button, str(kind), size=int(size or 18))
+
+
+def apply_button_icon(button: QWidget, kind: str, *, size: int = 18) -> None:
+    """Attach a modern line icon (``start``, ``stop``, ``refresh``, …)."""
+    from PySide6.QtCore import QSize
+    from PySide6.QtWidgets import QApplication
+
+    from ic_ui.button_icons import button_icon
+
+    set_icon = getattr(button, "setIcon", None)
+    set_icon_size = getattr(button, "setIconSize", None)
+    if not callable(set_icon) or not callable(set_icon_size):
+        return
+    button.setProperty("buttonIconKind", kind)
+    button.setProperty("buttonIconSize", size)
+    dpr = 2.0
+    try:
+        dpr = float(button.devicePixelRatioF() or 2.0)
+    except Exception:
+        screen = QApplication.primaryScreen()
+        if screen is not None:
+            dpr = float(screen.devicePixelRatio() or 2.0)
+    set_icon(button_icon(kind, _button_icon_color(button), size=size, dpr=max(dpr, 1.5)))
+    set_icon_size(QSize(size, size))
+
+
+def refresh_button_icons(root: QWidget) -> None:
+    """Re-tint icons after a theme switch."""
+    from PySide6.QtWidgets import QPushButton
+
+    for btn in root.findChildren(QPushButton):
+        if btn.property("buttonIconKind"):
+            _refresh_button_icon(btn)
 
 
 def _assets_dir() -> Path:
@@ -399,16 +497,47 @@ def _write_radio_checked_png(path: Path) -> None:
     image.save(str(path), "PNG")
 
 
-def _indicator_image_urls() -> tuple[str, str]:
-    """Checked checkbox / radio indicator images for QSS (white glyph on accent fill)."""
+def _write_combo_down_arrow_png(path: Path, color: str) -> None:
+    """Small chevron for QComboBox — native arrow disappears once QSS is applied."""
+    from PySide6.QtCore import QPointF, Qt
+    from PySide6.QtGui import QBrush, QImage, QPainter, QPolygonF
+
+    image = QImage(24, 24, QImage.Format.Format_ARGB32)
+    image.fill(Qt.GlobalColor.transparent)
+    painter = QPainter(image)
+    painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+    painter.setPen(Qt.PenStyle.NoPen)
+    painter.setBrush(QBrush(QColor(color)))
+    painter.drawPolygon(
+        QPolygonF(
+            [
+                QPointF(6, 9),
+                QPointF(18, 9),
+                QPointF(12, 16),
+            ]
+        )
+    )
+    painter.end()
+    image.save(str(path), "PNG")
+
+
+def _indicator_image_urls() -> tuple[str, str, str]:
+    """Checked checkbox / radio / combo-arrow images for QSS."""
     assets = _assets_dir()
     check_path = assets / "checkbox_checked.png"
     radio_path = assets / "radio_checked.png"
+    arrow_path = assets / "combo_down_arrow.png"
     if not check_path.exists():
         _write_checkbox_checked_png(check_path)
     if not radio_path.exists():
         _write_radio_checked_png(radio_path)
-    return _qss_image_url(check_path), _qss_image_url(radio_path)
+    # Always rewrite: arrow color follows the active theme's muted text.
+    _write_combo_down_arrow_png(arrow_path, TEXT_MUTED)
+    return (
+        _qss_image_url(check_path),
+        _qss_image_url(radio_path),
+        _qss_image_url(arrow_path),
+    )
 
 
 def global_app_stylesheet() -> str:
@@ -417,7 +546,7 @@ def global_app_stylesheet() -> str:
         f"stop:0 {BG_PAGE_TOP}, stop:1 {BG_PAGE_BOTTOM})"
     )
     card_bg = card_background_qss()
-    check_img, radio_img = _indicator_image_urls()
+    check_img, radio_img, combo_arrow = _indicator_image_urls()
     font_family = resolve_ui_font_family()
     return f"""
 QMainWindow, QDialog {{
@@ -427,7 +556,7 @@ QMainWindow, QDialog {{
 QWidget {{
   color: {TEXT_PRIMARY};
   font-family: "{font_family}";
-  font-size: 13px;
+  font-size: 14px;
 }}
 QTabWidget::pane {{
   border: 1px solid {BORDER};
@@ -443,14 +572,15 @@ QTabBar::tab {{
   border-bottom: none;
   border-top-left-radius: 8px;
   border-top-right-radius: 8px;
-  padding: 8px 16px;
+  padding: 8px 14px;
   margin-right: 4px;
-  min-width: 72px;
+  min-width: 64px;
 }}
 QTabBar::tab:selected {{
   background: {BG_TAB_SELECTED};
   color: {TEXT_PRIMARY};
   font-weight: 600;
+  border-bottom: 1px solid {ACCENT};
 }}
 QTabBar::tab:hover:!selected {{
   background: {BG_HOVER};
@@ -463,6 +593,19 @@ QGroupBox {{
   margin-top: 14px;
   padding: 14px 12px 12px 12px;
   font-weight: 600;
+}}
+QGroupBox#partyCard,
+QGroupBox#activePartyCard {{
+  padding: 10px 12px 10px 12px;
+  margin-top: 12px;
+}}
+QGroupBox#activePartyCard {{
+  border: 1px solid {ACCENT};
+}}
+QFrame#partiesPanel {{
+  background: {BG_INPUT};
+  border: 1px solid {BORDER};
+  border-radius: 16px;
 }}
 QGroupBox::title {{
   subcontrol-origin: margin;
@@ -477,8 +620,20 @@ QPushButton {{
   color: {TEXT_PRIMARY};
   border: 1px solid {BORDER};
   border-radius: 8px;
-  padding: 6px 14px;
-  min-height: 26px;
+  padding: 6px 14px 6px 10px;
+  min-height: 28px;
+}}
+QPushButton#compactBtn {{
+  padding: 2px 8px;
+  min-height: 22px;
+  max-height: 24px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+}}
+QPushButton#compactBtn:hover {{
+  background: {BG_HOVER};
+  border-color: {BORDER_HOVER};
 }}
 QPushButton:hover {{
   background: {BG_HOVER};
@@ -489,7 +644,56 @@ QPushButton:pressed {{
 }}
 QPushButton:disabled {{
   color: {TEXT_MUTED};
-  background: {BG_TAB};
+  background: {BG_BADGE};
+  border-color: {BORDER};
+}}
+QPushButton:focus, QComboBox:focus, QLineEdit:focus, QCheckBox:focus, QTabBar::tab:focus {{
+  outline: none;
+  border: 1px solid {ACCENT};
+}}
+QCheckBox:focus {{
+  border: none;
+  color: {TEXT_PRIMARY};
+}}
+QPushButton#primaryBtn {{
+  background: {ACCENT};
+  color: #ffffff;
+  border: 1px solid {ACCENT};
+  font-weight: 600;
+}}
+QPushButton#primaryBtn:hover {{
+  background: {ACCENT_HOVER};
+  border-color: {ACCENT_HOVER};
+  color: #ffffff;
+}}
+QPushButton#primaryBtn:pressed {{
+  background: {ACCENT};
+}}
+QPushButton#primaryBtn:disabled {{
+  background: {BG_BADGE};
+  color: {TEXT_MUTED};
+  border-color: {BORDER};
+  font-weight: 500;
+}}
+QPushButton#dangerBtn {{
+  background: {DANGER};
+  color: #ffffff;
+  border: 1px solid {DANGER};
+  font-weight: 600;
+}}
+QPushButton#dangerBtn:hover {{
+  background: {DANGER_HOVER};
+  border-color: {DANGER_HOVER};
+  color: #ffffff;
+}}
+QPushButton#dangerBtn:pressed {{
+  background: {DANGER};
+}}
+QPushButton#dangerBtn:disabled {{
+  background: {BG_BADGE};
+  color: {TEXT_MUTED};
+  border-color: {BORDER};
+  font-weight: 500;
 }}
 QComboBox, QLineEdit, QSpinBox, QDoubleSpinBox {{
   background: {BG_INPUT};
@@ -499,12 +703,22 @@ QComboBox, QLineEdit, QSpinBox, QDoubleSpinBox {{
   padding: 4px 10px;
   min-height: 26px;
 }}
+QComboBox {{
+  padding-right: 28px;
+}}
 QComboBox:hover, QLineEdit:hover, QSpinBox:hover, QDoubleSpinBox:hover {{
   border-color: {BORDER_HOVER};
 }}
 QComboBox::drop-down {{
   border: none;
   width: 22px;
+  subcontrol-origin: padding;
+  subcontrol-position: center right;
+}}
+QComboBox::down-arrow {{
+  image: url("{combo_arrow}");
+  width: 12px;
+  height: 12px;
 }}
 QComboBox QAbstractItemView {{
   background: {BG_CARD};
@@ -516,6 +730,8 @@ QComboBox QAbstractItemView {{
 QCheckBox, QRadioButton {{
   color: {TEXT_BODY};
   spacing: 8px;
+  min-height: 24px;
+  padding: 2px 0;
 }}
 QCheckBox::indicator {{
   width: 16px;
@@ -648,6 +864,9 @@ QToolTip {{
 
 
 def advisor_card_stylesheet() -> str:
+    arrow_path = _assets_dir() / "combo_down_arrow.png"
+    _write_combo_down_arrow_png(arrow_path, TEXT_MUTED)
+    combo_arrow = _qss_image_url(arrow_path)
     return f"""
 QFrame#advisorCard {{
   background: {card_background_qss()};
@@ -656,8 +875,8 @@ QFrame#advisorCard {{
 }}
 QFrame#advisorAccent {{
   border: none;
-  min-width: 2px;
-  max-width: 2px;
+  min-width: 1px;
+  max-width: 1px;
   margin: 14px 0 14px 16px;
   border-radius: 1px;
 }}
@@ -668,29 +887,57 @@ QFrame#advisorCard QLabel {{
   padding: 0;
   margin: 0;
 }}
-QFrame#advisorCard QComboBox {{
+QFrame#advisorCard QComboBox,
+QFrame#advisorCard QComboBox#advisorRoleCombo {{
   border: 1px solid {BORDER};
-  border-radius: 6px;
-  padding: 4px 10px;
+  border-radius: 8px;
+  padding: 4px 28px 4px 10px;
   background: {BG_INPUT};
   color: {TEXT_PRIMARY};
   min-height: 26px;
+  min-width: 72px;
+  max-width: 108px;
 }}
-QFrame#advisorCard QComboBox:hover {{
-  border-color: {BORDER_HOVER};
+QFrame#advisorCard QComboBox:hover,
+QFrame#advisorCard QComboBox#advisorRoleCombo:hover {{
+  border: 1px solid {BORDER};
+  background: {BG_HOVER};
+}}
+QFrame#advisorCard QComboBox:on,
+QFrame#advisorCard QComboBox#advisorRoleCombo:on {{
+  border: 1px solid {BORDER};
+}}
+QFrame#advisorCard QComboBox:focus,
+QFrame#advisorCard QComboBox#advisorRoleCombo:focus {{
+  border: 1px solid {BORDER};
+  outline: none;
+}}
+QFrame#advisorCard QComboBox::drop-down,
+QFrame#advisorCard QComboBox#advisorRoleCombo::drop-down {{
+  border: none;
+  background: transparent;
+  width: 22px;
+}}
+QFrame#advisorCard QComboBox::down-arrow,
+QFrame#advisorCard QComboBox#advisorRoleCombo::down-arrow {{
+  image: url("{combo_arrow}");
+  width: 12px;
+  height: 12px;
 }}
 QFrame#advisorCard QPushButton#linkBtn {{
-  border: 1px solid {BORDER};
-  border-radius: 6px;
-  background: {BG_INPUT};
-  color: {TEXT_BADGE};
-  padding: 4px 12px;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  color: {TEXT_MUTED};
+  padding: 0;
+  margin: 0;
   font-size: 12px;
+  text-align: left;
 }}
 QFrame#advisorCard QPushButton#linkBtn:hover {{
-  background: {BG_HOVER};
-  border-color: {BORDER_HOVER};
-  color: {TEXT_PRIMARY};
+  background: transparent;
+  border: none;
+  color: {ACCENT};
 }}
 QFrame#advisorCard QPushButton#featToggle {{
   border: none;
@@ -740,16 +987,49 @@ def advisor_badge_stylesheet() -> str:
     )
 
 
-def status_pill_stylesheet() -> str:
+def advisor_bud_pill_stylesheet() -> str:
     return (
-        f"font-size: 11px; color: {TEXT_BADGE}; background: {BG_BADGE}; "
-        f"border: none; border-radius: 10px; padding: 4px 10px;"
+        f"font-size: 11px; font-weight: 600; letter-spacing: 0.04em; "
+        f"color: #ffffff; background: {BUD_BAR}; "
+        "border: none; border-radius: 10px; padding: 3px 10px;"
+    )
+
+
+def advisor_speed_pill_stylesheet() -> str:
+    return (
+        f"font-size: 11px; font-weight: 600; letter-spacing: 0.04em; "
+        f"color: #ffffff; background: {ACCENT}; "
+        "border: none; border-radius: 10px; padding: 3px 10px;"
+    )
+
+
+def status_pill_stylesheet() -> str:
+    return f"""
+QFrame#statusPill {{
+  background: {BG_BADGE};
+  border: none;
+  border-radius: 10px;
+}}
+QFrame#statusPill QLabel#statusPillText {{
+  font-size: 11px;
+  color: {TEXT_BADGE};
+  background: transparent;
+  border: none;
+  padding: 0;
+}}
+"""
+
+
+def status_pill_dot_stylesheet(color: str) -> str:
+    return (
+        f"background: {color}; border: none; border-radius: 4px; min-width: 8px; max-width: 8px; "
+        f"min-height: 8px; max-height: 8px;"
     )
 
 
 def portrait_placeholder_stylesheet() -> str:
     return (
-        f"background: {PORTRAIT_BG}; border: 1px solid {DIVIDER}; border-radius: 6px;"
+        f"background: {PORTRAIT_BG}; border: 1px solid {DIVIDER}; border-radius: 10px;"
     )
 
 

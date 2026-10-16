@@ -3,12 +3,15 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Literal
+from typing import TYPE_CHECKING, Literal
 
 InsightType = Literal["placement", "swap", "bench", "warning"]
 RuleSourceType = Literal["authored", "heuristic", "handler"]
 DataSourceVersion = Literal["formation_rules_v1", "handler"]
 Zone = Literal["front", "mid", "back"]
+
+if TYPE_CHECKING:
+    from ic_gamedata.party_advisor_models import FormationHero
 
 
 @dataclass(frozen=True)
@@ -40,6 +43,7 @@ class FormationLayoutContext:
     formation_capacity: int | None
     owned_hero_ids: frozenset[int]
     allowed_bench_ids: frozenset[int]
+    formation: tuple[FormationHero, ...] = ()
 
     def seat_of(self, hero_id: int) -> int | None:
         return self.seat_by_hero.get(hero_id)
@@ -60,7 +64,13 @@ class FormationLayoutContext:
         return self.zone_of_seat(seat)
 
     def adjacent_seats(self, seat: int) -> frozenset[int]:
-        return self.topology.seat_adjacency.get(seat, frozenset())
+        adj = self.topology.seat_adjacency.get(seat)
+        if adj:
+            return adj
+        # Incomplete adventure maps: fall back to standard diamond (matches bud_proxy).
+        from ic_gamedata.bud_proxy import _DEFAULT_ADJACENCY
+
+        return _DEFAULT_ADJACENCY.get(seat, frozenset())
 
     def is_adjacent(self, hero_a: int, hero_b: int) -> bool:
         seat_a = self.seat_of(hero_a)
@@ -119,3 +129,4 @@ class FormationInsight:
     data_source_version: DataSourceVersion
     confidence: int
     rule_id: str = ""
+    bud_ratio: float | None = None

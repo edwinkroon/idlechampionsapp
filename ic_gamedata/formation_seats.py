@@ -41,8 +41,33 @@ def _seat_by_hero(instance: dict[str, Any]) -> dict[int, int]:
     return mapping
 
 
+def _definition_seat_by_hero() -> dict[int, int]:
+    """Permanent seat_id from cached hero_defines (Idle Champions F1–F12)."""
+    try:
+        from ic_gamedata.specialization_data import hero_seat_id_map_from_cached_definitions
+    except ImportError:
+        return {}
+    return hero_seat_id_map_from_cached_definitions()
+
+
+def _resolve_seat(hero_id: int, seat_by_hero: dict[int, int], defs: dict[int, int]) -> int | None:
+    seat = seat_by_hero.get(hero_id)
+    if seat is not None and 1 <= seat <= 12:
+        return seat
+    seat = defs.get(hero_id)
+    if seat is not None and 1 <= seat <= 12:
+        return seat
+    return None
+
+
 def _seats_from_hero_ids(hero_ids: list[int], seat_by_hero: dict[int, int]) -> set[int]:
-    return {seat_by_hero[hid] for hid in hero_ids if hid in seat_by_hero}
+    defs = _definition_seat_by_hero()
+    seats: set[int] = set()
+    for hid in hero_ids:
+        seat = _resolve_seat(hid, seat_by_hero, defs)
+        if seat is not None:
+            seats.add(seat)
+    return seats
 
 
 def _formation_hero_ids(formation: Any) -> list[int]:
@@ -85,6 +110,7 @@ def _in_seat_seats(
     active_id: int | None,
     seat_by_hero: dict[int, int],
 ) -> set[int]:
+    defs = _definition_seat_by_hero()
     seats: set[int] = set()
     for hero in details.get("heroes") or []:
         if not isinstance(hero, dict):
@@ -97,7 +123,7 @@ def _in_seat_seats(
             continue
         if not _hero_belongs_to_party(game_id, active_id):
             continue
-        seat = seat_by_hero.get(hero_id)
+        seat = _resolve_seat(hero_id, seat_by_hero, defs)
         if seat is not None:
             seats.add(seat)
     return seats
@@ -127,6 +153,10 @@ def active_formation_seats(payload: dict[str, Any]) -> tuple[int | None, frozens
     Prefer the live formation grid (who's on the board). ``hero_in_seats`` can still
     list benched seat holders; ``in_seat`` with game_instance_id 0 is noisy across
     parties — only use those as fallbacks when the grid is empty/sparse.
+
+    Seat numbers come from ``hero_in_seats`` when present, otherwise from each
+    champion's permanent ``seat_id`` in cached definitions — so a stale/sparse
+    seat map cannot collapse a full board down to a single F-key.
     """
     details = payload.get("details")
     if not isinstance(details, dict):
@@ -137,6 +167,7 @@ def active_formation_seats(payload: dict[str, Any]) -> tuple[int | None, frozens
         return active_id, frozenset()
 
     seat_by_hero = _seat_by_hero(instance)
+    grid_ids = live_formation_hero_ids(payload)
     formation_seats = _formation_grid_seats(instance, details, seat_by_hero)
     # 1) Live formation grid — authoritative for F-key leveling
     if len(formation_seats) >= 2:
@@ -147,28 +178,38 @@ def active_formation_seats(payload: dict[str, Any]) -> tuple[int | None, frozens
     if len(seats) >= 2:
         return active_id, frozenset(sorted(seats))
 
-    if formation_seats:
+    # Sparse live board (0–1 heroes): accept a single mapped seat, then broader fallbacks.
+    # Never treat a singleton mapped seat as final when the grid itself has ≥2 heroes —
+    # that used to leave automation/advisor stuck on F1 only.
+    if len(grid_ids) <= 1:
+        if formation_seats:
+            return active_id, frozenset(sorted(formation_seats))
+        if seats:
+            return active_id, frozenset(sorted(seats))
+
+        # 3) Formation save — only when live data is missing
+        saves = instance.get("formation_saves_v2")
+        if not isinstance(saves, list) or not saves:
+            saves = details.get("formation_saves_v2")
+        if isinstance(saves, list):
+            for save in saves:
+                if not isinstance(save, dict):
+                    continue
+                found = _seats_from_hero_ids(
+                    _formation_hero_ids(save.get("formation")), seat_by_hero
+                )
+                if found:
+                    return active_id, frozenset(sorted(found))
+
+        # 4) Last resort: all seats listed for this party instance
+        if seat_by_hero:
+            return active_id, frozenset(sorted(seat_by_hero.values()))
+
+    elif formation_seats:
+        # Rich grid but only one seat resolved — still better than empty.
         return active_id, frozenset(sorted(formation_seats))
-    if seats:
+    elif seats:
         return active_id, frozenset(sorted(seats))
-
-    # 3) Formation save — only when live data is missing
-    saves = instance.get("formation_saves_v2")
-    if not isinstance(saves, list) or not saves:
-        saves = details.get("formation_saves_v2")
-    if isinstance(saves, list):
-        for save in saves:
-            if not isinstance(save, dict):
-                continue
-            found = _seats_from_hero_ids(
-                _formation_hero_ids(save.get("formation")), seat_by_hero
-            )
-            if found:
-                return active_id, frozenset(sorted(found))
-
-    # 4) Last resort: all seats listed for this party instance
-    if seat_by_hero:
-        return active_id, frozenset(sorted(seat_by_hero.values()))
 
     return active_id, frozenset()
 
@@ -191,12 +232,15 @@ def formation_layout_fingerprint(
         return None
 
     seat_by_hero = _seat_by_hero(instance)
+    defs = _definition_seat_by_hero()
     hero_ids = _formation_hero_ids(instance.get("formation"))
     if not hero_ids:
         hero_ids = _formation_hero_ids(details.get("formation"))
 
     if hero_ids:
-        pairs = [(seat_by_hero.get(hid, 0), hid) for hid in hero_ids]
+        pairs = [
+            (_resolve_seat(hid, seat_by_hero, defs) or 0, hid) for hid in hero_ids
+        ]
         return tuple(sorted(pairs))
 
     pairs = []
@@ -211,5 +255,5 @@ def formation_layout_fingerprint(
             continue
         if not _hero_belongs_to_party(game_id, active_id):
             continue
-        pairs.append((seat_by_hero.get(hero_id, 0), hero_id))
+        pairs.append((_resolve_seat(hero_id, seat_by_hero, defs) or 0, hero_id))
     return tuple(sorted(pairs))

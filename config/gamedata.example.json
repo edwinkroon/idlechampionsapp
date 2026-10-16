@@ -3,5 +3,5 @@
   "party_modron_goals": {
     "1": 225
   },
-  "notes": "Optional manual override. install_path: leave empty for auto-detect. party_modron_goals: Modron Set Area Goal per party slot (overrides API milestone fields like adventure_area_goal)."
+  "notes": "Optional manual override. install_path: leave empty for auto-detect. party_modron_goals: fallback Modron Set Area Goal per party when modron_saves is missing (live API wins when present)."
 }

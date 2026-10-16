@@ -49,7 +49,7 @@ def assess_payload_quality(payload: dict[str, Any] | None) -> PayloadQuality:
             has_formation_grid=False,
             formation_hero_count=0,
             formation_source="none",
-            warnings=("Geen API-payload — laatste bekende data wordt gebruikt indien beschikbaar.",),
+            warnings=("No API payload — last known data is used when available.",),
         )
 
     details = payload.get("details")
@@ -60,7 +60,7 @@ def assess_payload_quality(payload: dict[str, Any] | None) -> PayloadQuality:
             has_formation_grid=False,
             formation_hero_count=0,
             formation_source="none",
-            warnings=("Payload zonder details-blok.",),
+            warnings=("Payload without details block.",),
         )
 
     active_id = _parse_int(details.get("active_game_instance_id"))
@@ -76,7 +76,7 @@ def assess_payload_quality(payload: dict[str, Any] | None) -> PayloadQuality:
 
     warnings: list[str] = []
     if instance is None:
-        warnings.append("Geen actieve party-instance in payload.")
+        warnings.append("No active party instance in payload.")
         return PayloadQuality(
             has_payload=True,
             has_active_instance=False,
@@ -113,13 +113,13 @@ def assess_payload_quality(payload: dict[str, Any] | None) -> PayloadQuality:
             source = "in_seat"
             count = in_seat_count
             warnings.append(
-                "Live formation-grid ontbreekt — party afgeleid uit in_seat (kan achterlopen)."
+                "Live formation grid missing — party inferred from in_seat (may lag)."
             )
         elif seat_holders >= 1:
             source = "hero_in_seats"
             count = seat_holders
             warnings.append(
-                "Live formation-grid ontbreekt — hero_in_seats kan gebenchte champions bevatten."
+                "Live formation grid missing — hero_in_seats may include benched champions."
             )
         else:
             saves = instance.get("formation_saves_v2")
@@ -133,11 +133,11 @@ def assess_payload_quality(payload: dict[str, Any] | None) -> PayloadQuality:
             if save_count:
                 source = "saves"
                 count = save_count
-                warnings.append("Geen live formatie — fallback op opgeslagen formation save.")
+                warnings.append("No live formation — falling back to saved formation save.")
             else:
                 source = "none"
                 count = 0
-                warnings.append("Geen formatie-data in payload.")
+                warnings.append("No formation data in payload.")
 
     return PayloadQuality(
         has_payload=True,

@@ -9,6 +9,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 from ic_gamedata.adventure_restrictions import (
+    AdventureRosterFilter,
     build_adventure_roster_filter,
     is_hero_allowed,
 )
@@ -71,6 +72,30 @@ class SeatAdvisorTests(unittest.TestCase):
         priorities = [seat.priority for seat in seats]
         self.assertEqual(priorities, sorted(priorities))
 
+    def test_bud_seats_keep_best_spec_without_match_insights(self) -> None:
+        """Regression: Specializations tab only showed role-guide matches.
+
+        Match insights are omitted on purpose; BUD/campaign must still resolve
+        best_spec so every formation seat can appear in In orde / Actie nodig.
+        """
+        report = analyze_party(
+            self.payload,
+            goal="bud",
+            context="campaign",
+            include_specializations=True,
+            include_formation=False,
+        )
+        self.assertIsNotNone(report.seat_report)
+        assert report.seat_report is not None
+        self.assertGreaterEqual(len(report.formation_heroes), 5)
+        self.assertEqual(len(report.seat_report.seats), len(report.formation_heroes))
+        with_spec = [s for s in report.seat_report.seats if s.best_spec]
+        # Most formation heroes should get a recommendation; requiring only
+        # role-guide specialization_names previously left ~2 visible.
+        self.assertGreaterEqual(len(with_spec), max(3, len(report.seat_report.seats) // 2))
+        for seat in with_spec:
+            self.assertIn(seat.spec_status, {"match", "mismatch", "pending"})
+
     def test_role_preferences_persist_per_goal(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             prefs_path = Path(tmp) / "champion_role_preferences.json"
@@ -121,7 +146,7 @@ class SeatAdvisorTests(unittest.TestCase):
         formation_ids = frozenset({1})
         self.assertTrue(is_hero_allowed(1, roster_filter, formation_hero_ids=formation_ids))
         self.assertFalse(is_hero_allowed(1, roster_filter))
-        self.assertNotEqual(bruenor.relevance_reason, "Niet toegestaan op adventure/patron")
+        self.assertNotEqual(bruenor.relevance_reason, "Not allowed on adventure/patron")
 
 
     def test_formation_visual_positions_do_not_overlap(self) -> None:
@@ -159,7 +184,61 @@ class SeatAdvisorTests(unittest.TestCase):
         assert report.seat_report is not None
         nodes = [n for n in report.seat_report.visual_nodes if n.hero_id is not None]
         self.assertGreaterEqual(len(nodes), 10)
-        self.assertNotIn("Geen formatie-posities", report.seat_report.html_grid)
+        self.assertNotIn("No formation positions", report.seat_report.html_grid)
+
+    def test_formation_visual_matches_live_grid_not_saves_or_bench(self) -> None:
+        """Formatie tab must show the live board, not denser saves / benched seats."""
+        live = [139, 91, 59, 113, 43, -1, -1, -1, -1]
+        payload = {
+            "details": {
+                "active_game_instance_id": 1,
+                "current_adventure_id": 1,
+                "game_instances": [
+                    {
+                        "game_instance_id": 1,
+                        "hero_in_seats": {
+                            "1": 139,
+                            "2": 91,
+                            "3": 59,
+                            "4": 113,
+                            "5": 43,
+                            # Benched seat-holders still listed — must not appear.
+                            "6": 6,
+                            "7": 7,
+                            "8": 8,
+                            "9": 9,
+                            "10": 10,
+                            "11": 11,
+                            "12": 12,
+                        },
+                        "formation": live,
+                        "formation_saves_v2": [
+                            {
+                                "name": "gemfarm",
+                                "formation": [58, 1, 2, 3, 4, 5, 6, 7, 8],
+                            }
+                        ],
+                        "stats": {},
+                    }
+                ],
+                "heroes": [
+                    {"hero_id": hid, "owned": 1, "level": 100, "game_instance_id": 1, "in_seat": 1}
+                    for hid in (
+                        list(range(1, 13))
+                        + [139, 91, 59, 113, 43, 58]
+                    )
+                ],
+            }
+        }
+        report = analyze_party(payload, goal="bud", context="campaign", include_formation=True)
+        self.assertIsNotNone(report.seat_report)
+        assert report.seat_report is not None
+        node_ids = {n.hero_id for n in report.seat_report.visual_nodes if n.hero_id is not None}
+        self.assertEqual(node_ids, {139, 91, 59, 113, 43})
+        formation_ids = {h.hero_id for h in report.formation_heroes}
+        self.assertEqual(formation_ids, {139, 91, 59, 113, 43})
+        self.assertNotIn(58, node_ids)
+        self.assertNotIn(1, node_ids)
 
     def test_formation_visual_uses_formation_seats_when_api_grid_missing(self) -> None:
         payload = json.loads(
@@ -227,7 +306,7 @@ class SeatAdvisorTests(unittest.TestCase):
         assert seat_report is not None
         nodes = [n for n in seat_report.visual_nodes if n.hero_id is not None]
         self.assertEqual({n.seat for n in nodes}, {1, 5})
-        self.assertNotIn("Geen formatie-posities", seat_report.html_grid)
+        self.assertNotIn("No formation positions", seat_report.html_grid)
 
     def test_role_advice_differs_for_nayeli_tank_vs_support(self) -> None:
         from ic_gamedata.champion_role_advice import clear_role_advice_cache, get_role_advice
@@ -309,6 +388,221 @@ class SeatAdvisorTests(unittest.TestCase):
         self.assertTrue(seat.recommended_feats)
         self.assertTrue(seat.advice_source_url.startswith("https://"))
         self.assertTrue(seat.formation_advice)
+
+    def test_seat_report_includes_recommended_visual_nodes_for_owned_upgrades(self) -> None:
+        formation = (
+            _hero(3, "Nayeli", 3, roles=("tank", "support"), tags=("buffer",)),
+            _hero(147, "Azaka", 9, roles=("dps",), is_top_damage=True),
+        )
+        with patch(
+            "ic_gamedata.roster_upgrade_advisor.suggest_roster_upgrades",
+            return_value=(
+                type(
+                    "Suggestion",
+                    (),
+                    {
+                        "candidate_hero_id": 43,
+                        "candidate_name": "Spurt",
+                        "candidate_seat": 3,
+                        "replace_hero_id": 3,
+                        "replace_name": "Nayeli",
+                        "replace_seat": 3,
+                        "same_seat_swap": True,
+                    },
+                )(),
+            ),
+        ):
+            seat_report = build_seat_advisor_report(
+                self.payload,
+                formation,
+                goal="bud",
+                context="campaign",
+            )
+        self.assertIsNotNone(seat_report)
+        assert seat_report is not None
+        nodes = [n for n in seat_report.recommended_visual_nodes if n.hero_id is not None]
+        self.assertTrue(nodes)
+        self.assertIn(43, {n.hero_id for n in nodes})
+        self.assertNotIn(3, {n.hero_id for n in nodes})
+
+    def test_recommended_visual_nodes_hidden_when_restrictions_are_uncertain(self) -> None:
+        formation = (
+            _hero(3, "Nayeli", 3, roles=("tank", "support"), tags=("buffer",)),
+            _hero(147, "Azaka", 9, roles=("dps",), is_top_damage=True),
+        )
+        with patch(
+            "ic_gamedata.roster_upgrade_advisor.suggest_roster_upgrades",
+            return_value=(
+                type(
+                    "Suggestion",
+                    (),
+                    {
+                        "candidate_hero_id": 43,
+                        "candidate_name": "Spurt",
+                        "candidate_seat": 3,
+                        "replace_hero_id": 3,
+                        "replace_name": "Nayeli",
+                        "replace_seat": 3,
+                        "same_seat_swap": True,
+                    },
+                )(),
+            ),
+        ):
+            seat_report = build_seat_advisor_report(
+                self.payload,
+                formation,
+                goal="bud",
+                context="campaign",
+                roster_filter=AdventureRosterFilter(has_unknown_rules=True),
+            )
+        self.assertIsNotNone(seat_report)
+        assert seat_report is not None
+        self.assertEqual(seat_report.recommended_visual_nodes, ())
+        self.assertIn("restrictions", seat_report.recommended_hidden_reason or "")
+
+    def test_recommended_visual_nodes_shown_when_patron_rules_allow_candidate(self) -> None:
+        formation = (
+            _hero(3, "Nayeli", 3, roles=("tank", "support"), tags=("buffer",)),
+            _hero(147, "Azaka", 9, roles=("dps",), is_top_damage=True),
+        )
+        with patch(
+            "ic_gamedata.roster_upgrade_advisor.suggest_roster_upgrades",
+            return_value=(
+                type(
+                    "Suggestion",
+                    (),
+                    {
+                        "candidate_hero_id": 43,
+                        "candidate_name": "Spurt",
+                        "candidate_seat": 3,
+                        "replace_hero_id": 3,
+                        "replace_name": "Nayeli",
+                        "replace_seat": 3,
+                        "same_seat_swap": True,
+                    },
+                )(),
+            ),
+        ):
+            seat_report = build_seat_advisor_report(
+                self.payload,
+                formation,
+                goal="bud",
+                context="campaign",
+                roster_filter=AdventureRosterFilter(patron_id=2),
+            )
+        self.assertIsNotNone(seat_report)
+        assert seat_report is not None
+        self.assertIsNone(seat_report.recommended_hidden_reason)
+        self.assertTrue(
+            any(n.hero_id == 43 for n in seat_report.recommended_visual_nodes),
+            msg=seat_report.recommended_visual_nodes,
+        )
+
+    def test_recommended_visual_nodes_skip_disallowed_candidates(self) -> None:
+        formation = (
+            _hero(3, "Nayeli", 3, roles=("tank", "support"), tags=("buffer",)),
+            _hero(147, "Azaka", 9, roles=("dps",), is_top_damage=True),
+        )
+        with patch(
+            "ic_gamedata.roster_upgrade_advisor.suggest_roster_upgrades",
+            return_value=(
+                type(
+                    "Suggestion",
+                    (),
+                    {
+                        "candidate_hero_id": 43,
+                        "candidate_name": "Spurt",
+                        "candidate_seat": 3,
+                        "replace_hero_id": 3,
+                        "replace_name": "Nayeli",
+                        "replace_seat": 3,
+                        "same_seat_swap": True,
+                    },
+                )(),
+            ),
+        ):
+            seat_report = build_seat_advisor_report(
+                self.payload,
+                formation,
+                goal="bud",
+                context="campaign",
+                roster_filter=AdventureRosterFilter(
+                    patron_id=2,
+                    banned_hero_ids={43},
+                ),
+            )
+        self.assertIsNotNone(seat_report)
+        assert seat_report is not None
+        self.assertFalse(any(n.hero_id == 43 for n in seat_report.recommended_visual_nodes))
+
+    def test_seat_report_resolves_seat_when_formation_hero_seat_missing(self) -> None:
+        """Champ overview must not stay empty when only permanent seat_id is known."""
+        formation = (
+            FormationHero(
+                hero_id=139,
+                name="Thellora",
+                seat=None,
+                level=100,
+                gear_score=10.0,
+                ilvl=100,
+                ilvl_pct_vs_avg=0.0,
+                gear_rank=1,
+                gear_rank_total=1,
+                gear_pct_of_best=100.0,
+                gear_label="ilvl 100",
+                role_label="Dps",
+                roles=("dps",),
+                tags=(),
+                highest_damage=1e12,
+                active_feats=1,
+                is_top_damage=True,
+            ),
+        )
+        seat_report = build_seat_advisor_report(
+            self.payload,
+            formation,
+            goal="bud",
+            context="campaign",
+        )
+        self.assertIsNotNone(seat_report)
+        assert seat_report is not None
+        self.assertEqual(len(seat_report.seats), 1)
+        self.assertEqual(seat_report.seats[0].hero_id, 139)
+        self.assertEqual(seat_report.seats[0].seat, 1)
+
+    def test_recommended_visual_nodes_recheck_candidate_against_current_roster_filter(self) -> None:
+        formation = (
+            _hero(3, "Nayeli", 3, roles=("tank", "support"), tags=("buffer",)),
+            _hero(147, "Azaka", 9, roles=("dps",), is_top_damage=True),
+        )
+        with patch(
+            "ic_gamedata.roster_upgrade_advisor.suggest_roster_upgrades",
+            return_value=(
+                type(
+                    "Suggestion",
+                    (),
+                    {
+                        "candidate_hero_id": 43,
+                        "candidate_name": "Spurt",
+                        "candidate_seat": 3,
+                        "replace_hero_id": 3,
+                        "replace_name": "Nayeli",
+                        "replace_seat": 3,
+                        "same_seat_swap": True,
+                    },
+                )(),
+            ),
+        ):
+            seat_report = build_seat_advisor_report(
+                self.payload,
+                formation,
+                goal="bud",
+                context="campaign",
+                roster_filter=AdventureRosterFilter(banned_hero_ids={43}),
+            )
+        self.assertIsNotNone(seat_report)
+        assert seat_report is not None
+        self.assertEqual(seat_report.recommended_visual_nodes, ())
 
 
 if __name__ == "__main__":

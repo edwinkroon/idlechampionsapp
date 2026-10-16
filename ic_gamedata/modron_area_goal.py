@@ -73,34 +73,76 @@ def _area_goal_from_save(save: dict[str, Any]) -> int | None:
     return None
 
 
-def modron_area_goal_from_modron_saves(
+def _set_area_goal_enabled_from_save(save: dict[str, Any]) -> bool | None:
+    properties = save.get("properties")
+    if not isinstance(properties, dict):
+        return None
+    toggles = properties.get("toggle_preferences")
+    if not isinstance(toggles, dict):
+        return None
+    reset = toggles.get("reset")
+    if isinstance(reset, bool):
+        return reset
+    if isinstance(reset, str):
+        lowered = reset.strip().lower()
+        if lowered in ("true", "1", "yes"):
+            return True
+        if lowered in ("false", "0", "no"):
+            return False
+    return None
+
+
+def _modron_save_for_party(
     payload: dict[str, Any] | None,
     *,
-    party_index: int | None = None,
-) -> int | None:
+    party_index: int | None,
+) -> dict[str, Any] | None:
     if not isinstance(payload, dict):
         return None
     details = payload.get("details")
     if not isinstance(details, dict):
         return None
     saves = _iter_modron_saves(details.get("modron_saves"))
-    if not saves:
+    if not saves or party_index is None:
         return None
-
-    # Prefer the core assigned to this party (instance_id == game_instance_id).
-    if party_index is not None:
-        for save in saves:
-            instance_id = _parse_int(save.get("instance_id"))
-            if instance_id == party_index:
-                goal = _area_goal_from_save(save)
-                if goal is not None:
-                    return goal
-
     for save in saves:
+        instance_id = _parse_int(save.get("instance_id"))
+        if instance_id == party_index:
+            return save
+    return None
+
+
+def modron_area_goal_from_modron_saves(
+    payload: dict[str, Any] | None,
+    *,
+    party_index: int | None = None,
+) -> int | None:
+    save = _modron_save_for_party(payload, party_index=party_index)
+    if save is not None:
+        goal = _area_goal_from_save(save)
+        if goal is not None:
+            return goal
+    if not isinstance(payload, dict):
+        return None
+    details = payload.get("details")
+    if not isinstance(details, dict):
+        return None
+    for save in _iter_modron_saves(details.get("modron_saves")):
         goal = _area_goal_from_save(save)
         if goal is not None:
             return goal
     return None
+
+
+def modron_set_area_goal_enabled_from_modron_saves(
+    payload: dict[str, Any] | None,
+    *,
+    party_index: int | None = None,
+) -> bool | None:
+    save = _modron_save_for_party(payload, party_index=party_index)
+    if save is None:
+        return None
+    return _set_area_goal_enabled_from_save(save)
 
 
 def modron_area_goal_from_instance(instance: dict[str, Any]) -> int | None:
@@ -136,14 +178,12 @@ def resolve_modron_area_goal(
     """
     Return the Modron \"Set Area Goal\" reset level for one party.
 
-    Priority: config override → live memory → modron_saves / instance fields.
+    Priority: live memory → modron_saves / instance fields → config override.
     Does not use stats.adventure_area_goal — that field is often a patron/adventure
     milestone (e.g. 275) rather than your Modron reset (e.g. 225).
+    Manual party_modron_goals in gamedata.json is only a fallback when the API
+    does not expose a Modron goal for that party.
     """
-    if party_index is not None:
-        override = party_modron_goal_override(party_index)
-        if override is not None:
-            return override
     if memory_modron_area is not None and memory_modron_area > 0:
         return memory_modron_area
     if isinstance(instance, dict):
@@ -153,4 +193,17 @@ def resolve_modron_area_goal(
     goal = modron_area_goal_from_modron_saves(payload, party_index=party_index)
     if goal is not None:
         return goal
+    if party_index is not None:
+        override = party_modron_goal_override(party_index)
+        if override is not None:
+            return override
     return None
+
+
+def resolve_modron_set_area_goal_enabled(
+    payload: dict[str, Any] | None,
+    *,
+    party_index: int | None,
+) -> bool | None:
+    """True when Modron \"Set Area Goal\" automation is enabled for this party's core."""
+    return modron_set_area_goal_enabled_from_modron_saves(payload, party_index=party_index)

@@ -6359,20 +6359,22 @@
     },
     "51": {
       "name": "Avren",
-      "source": "Gaarawarr",
-      "source_url": "https://www.reddit.com/r/idlechampions/comments/vz2vn9/year_3_champion_guide_avren_the_the_halfelf/",
-      "source_date": "2022-07-14",
+      "source": "CNE Liar's Night rebalance + prior Gaarawarr",
+      "source_url": "http://www.codenameentertainment.com/?page=idle_champions&post_id=1972",
+      "source_date": "2026-10-07",
       "guide_id": "vz2vn9",
-      "guide_title": "Year 3 Champion Guide: Avren, the the Half-elf Warlock/Sorcerer",
+      "guide_title": "Avren Liar's Night rebalance (alignment Mirror Focus x2)",
       "roles": {
         "support": {
           "specializations": [
-            "Empowered Mirrors"
+            "Mirror Focus (Good)",
+            "Mirror Focus (Chaotic)"
           ],
           "specialization_ids": [
-            3099
+            20700,
+            20705
           ],
-          "formation": "Always match this Spec to your Primary DPS and, if possible, place Avren next to them and other Champions of the same alignment around him for the maximum bonus.",
+          "formation": "Pick Mirror Focus on the Good/Evil axis and the Law/Chaos axis for the alignments with the most champions (ideally covering your Primary DPS). Dual-qualified champions get Mirror Images first. Place Avren next to your DPS when possible.",
           "feats": [
             "Blinding Reflection",
             "Two-Headed Coin"
@@ -6380,12 +6382,14 @@
         },
         "buffer": {
           "specializations": [
-            "Empowered Mirrors"
+            "Mirror Focus (Good)",
+            "Mirror Focus (Chaotic)"
           ],
           "specialization_ids": [
-            3099
+            20700,
+            20705
           ],
-          "formation": "Always match this Spec to your Primary DPS and, if possible, place Avren next to them and other Champions of the same alignment around him for the maximum bonus.",
+          "formation": "Pick Mirror Focus on the Good/Evil axis and the Law/Chaos axis for the alignments with the most champions (ideally covering your Primary DPS). Dual-qualified champions get Mirror Images first. Place Avren next to your DPS when possible.",
           "feats": [
             "Blinding Reflection",
             "Two-Headed Coin"
@@ -6393,12 +6397,14 @@
         },
         "tank": {
           "specializations": [
-            "Empowered Mirrors"
+            "Mirror Focus (Good)",
+            "Mirror Focus (Chaotic)"
           ],
           "specialization_ids": [
-            3099
+            20700,
+            20705
           ],
-          "formation": "Always match this Spec to your Primary DPS and, if possible, place Avren next to them and other Champions of the same alignment around him for the maximum bonus.",
+          "formation": "Pick Mirror Focus on the Good/Evil axis and the Law/Chaos axis for the alignments with the most champions (ideally covering your Primary DPS). Dual-qualified champions get Mirror Images first. Place Avren next to your DPS when possible.",
           "feats": [
             "Blinding Reflection",
             "Two-Headed Coin"
@@ -6406,12 +6412,14 @@
         },
         "healer": {
           "specializations": [
-            "Empowered Mirrors"
+            "Mirror Focus (Good)",
+            "Mirror Focus (Chaotic)"
           ],
           "specialization_ids": [
-            3099
+            20700,
+            20705
           ],
-          "formation": "Always match this Spec to your Primary DPS and, if possible, place Avren next to them and other Champions of the same alignment around him for the maximum bonus.",
+          "formation": "Pick Mirror Focus on the Good/Evil axis and the Law/Chaos axis for the alignments with the most champions (ideally covering your Primary DPS). Dual-qualified champions get Mirror Images first. Place Avren next to your DPS when possible.",
           "feats": [
             "Blinding Reflection",
             "Two-Headed Coin"
@@ -6419,12 +6427,14 @@
         },
         "debuffer": {
           "specializations": [
-            "Empowered Mirrors"
+            "Mirror Focus (Good)",
+            "Mirror Focus (Chaotic)"
           ],
           "specialization_ids": [
-            3099
+            20700,
+            20705
           ],
-          "formation": "Always match this Spec to your Primary DPS and, if possible, place Avren next to them and other Champions of the same alignment around him for the maximum bonus.",
+          "formation": "Pick Mirror Focus on the Good/Evil axis and the Law/Chaos axis for the alignments with the most champions (ideally covering your Primary DPS). Dual-qualified champions get Mirror Images first. Place Avren next to your DPS when possible.",
           "feats": [
             "Blinding Reflection",
             "Two-Headed Coin"
@@ -6432,12 +6442,14 @@
         },
         "flex": {
           "specializations": [
-            "Empowered Mirrors"
+            "Mirror Focus (Good)",
+            "Mirror Focus (Chaotic)"
           ],
           "specialization_ids": [
-            3099
+            20700,
+            20705
           ],
-          "formation": "Always match this Spec to your Primary DPS and, if possible, place Avren next to them and other Champions of the same alignment around him for the maximum bonus.",
+          "formation": "Pick Mirror Focus on the Good/Evil axis and the Law/Chaos axis for the alignments with the most champions (ideally covering your Primary DPS). Dual-qualified champions get Mirror Images first. Place Avren next to your DPS when possible.",
           "feats": [
             "Blinding Reflection",
             "Two-Headed Coin"
@@ -6445,12 +6457,14 @@
         },
         "bud": {
           "specializations": [
-            "Empowered Mirrors"
+            "Mirror Focus (Good)",
+            "Mirror Focus (Chaotic)"
           ],
           "specialization_ids": [
-            3099
+            20700,
+            20705
           ],
-          "formation": "Always match this Spec to your Primary DPS and, if possible, place Avren next to them and other Champions of the same alignment around him for the maximum bonus.",
+          "formation": "Pick Mirror Focus on the Good/Evil axis and the Law/Chaos axis for the alignments with the most champions (ideally covering your Primary DPS). Dual-qualified champions get Mirror Images first. Place Avren next to your DPS when possible.",
           "feats": [
             "Blinding Reflection",
             "Two-Headed Coin"
@@ -6458,12 +6472,14 @@
         },
         "gold": {
           "specializations": [
-            "Empowered Mirrors"
+            "Mirror Focus (Good)",
+            "Mirror Focus (Chaotic)"
           ],
           "specialization_ids": [
-            3099
+            20700,
+            20705
           ],
-          "formation": "Always match this Spec to your Primary DPS and, if possible, place Avren next to them and other Champions of the same alignment around him for the maximum bonus.",
+          "formation": "Pick Mirror Focus on the Good/Evil axis and the Law/Chaos axis for the alignments with the most champions (ideally covering your Primary DPS). Dual-qualified champions get Mirror Images first. Place Avren next to your DPS when possible.",
           "feats": [
             "Blinding Reflection",
             "Two-Headed Coin"
@@ -6471,12 +6487,14 @@
         },
         "speed": {
           "specializations": [
-            "Empowered Mirrors"
+            "Mirror Focus (Good)",
+            "Mirror Focus (Chaotic)"
           ],
           "specialization_ids": [
-            3099
+            20700,
+            20705
           ],
-          "formation": "Always match this Spec to your Primary DPS and, if possible, place Avren next to them and other Champions of the same alignment around him for the maximum bonus.",
+          "formation": "Pick Mirror Focus on the Good/Evil axis and the Law/Chaos axis for the alignments with the most champions (ideally covering your Primary DPS). Dual-qualified champions get Mirror Images first. Place Avren next to your DPS when possible.",
           "feats": []
         }
       }
@@ -11355,9 +11373,9 @@
     },
     "90": {
       "name": "Brig",
-      "source": "Gaarawarr",
-      "source_url": "https://www.reddit.com/r/idlechampions/comments/y7s8dd/year_five_champion_guide_brig_hellclaw_the_human/",
-      "source_date": "2022-10-19",
+      "source": "CNE Liar's Night rebalance + prior Gaarawarr",
+      "source_url": "http://www.codenameentertainment.com/?page=idle_champions&post_id=1972",
+      "source_date": "2026-10-07",
       "guide_id": "y7s8dd",
       "guide_title": "Year Five Champion Guide - Brig Hellclaw, the Human Bard/Rogue",
       "roles": {
@@ -11366,7 +11384,7 @@
             "\"Back\"-Up Singer"
           ],
           "specialization_ids": [
-            6355
+            20713
           ],
           "formation": "",
           "feats": [
@@ -11379,7 +11397,7 @@
             "\"Back\"-Up Singer"
           ],
           "specialization_ids": [
-            6355
+            20713
           ],
           "formation": "",
           "feats": [
@@ -11392,7 +11410,7 @@
             "\"Back\"-Up Singer"
           ],
           "specialization_ids": [
-            6355
+            20713
           ],
           "formation": "",
           "feats": [
@@ -11405,7 +11423,7 @@
             "\"Back\"-Up Singer"
           ],
           "specialization_ids": [
-            6355
+            20713
           ],
           "formation": "",
           "feats": [
@@ -11418,7 +11436,7 @@
             "\"Back\"-Up Singer"
           ],
           "specialization_ids": [
-            6355
+            20713
           ],
           "formation": "",
           "feats": [
@@ -11431,7 +11449,7 @@
             "\"Back\"-Up Singer"
           ],
           "specialization_ids": [
-            6355
+            20713
           ],
           "formation": "",
           "feats": [
@@ -11444,7 +11462,7 @@
             "\"Back\"-Up Singer"
           ],
           "specialization_ids": [
-            6355
+            20713
           ],
           "formation": "",
           "feats": [
@@ -11457,7 +11475,7 @@
             "\"Back\"-Up Singer"
           ],
           "specialization_ids": [
-            6355
+            20713
           ],
           "formation": "",
           "feats": [
@@ -11470,7 +11488,7 @@
             "\"Back\"-Up Singer"
           ],
           "specialization_ids": [
-            6355
+            20713
           ],
           "formation": "",
           "feats": []
@@ -13302,20 +13320,20 @@
     },
     "105": {
       "name": "Dob",
-      "source": "Gaarawarr",
-      "source_url": "https://www.reddit.com/r/idlechampions/comments/wwvc7i/year_5_champion_guide_dob_the_halforc_bard/",
-      "source_date": "2022-08-24",
+      "source": "CNE Liar's Night rebalance + prior Gaarawarr",
+      "source_url": "http://www.codenameentertainment.com/?page=idle_champions&post_id=1972",
+      "source_date": "2026-10-07",
       "guide_id": "wwvc7i",
-      "guide_title": "Year 5 Champion Guide - Dob, the Half-Orc Bard",
+      "guide_title": "Dob Liar's Night rebalance (3 Befriend specs)",
       "roles": {
         "support": {
           "specializations": [
-            "Befriend Everybody!"
+            "Befriend the Magical"
           ],
           "specialization_ids": [
-            8745
+            20926
           ],
-          "formation": "",
+          "formation": "Befriend Everybody is now the base ability I Have Friends Everywhere. Pick Magical / Friendly / Quick for the Oxventure-or-filter group with the most champions.",
           "feats": [
             "Strike Up the Band",
             "A Dark Horse"
@@ -13323,12 +13341,12 @@
         },
         "buffer": {
           "specializations": [
-            "Befriend Everybody!"
+            "Befriend the Magical"
           ],
           "specialization_ids": [
-            8745
+            20926
           ],
-          "formation": "",
+          "formation": "Befriend Everybody is now the base ability I Have Friends Everywhere. Pick Magical / Friendly / Quick for the Oxventure-or-filter group with the most champions.",
           "feats": [
             "Strike Up the Band",
             "A Dark Horse"
@@ -13336,12 +13354,12 @@
         },
         "tank": {
           "specializations": [
-            "Befriend Everybody!"
+            "Befriend the Magical"
           ],
           "specialization_ids": [
-            8745
+            20926
           ],
-          "formation": "",
+          "formation": "Befriend Everybody is now the base ability I Have Friends Everywhere. Pick Magical / Friendly / Quick for the Oxventure-or-filter group with the most champions.",
           "feats": [
             "Strike Up the Band",
             "A Dark Horse"
@@ -13349,12 +13367,12 @@
         },
         "healer": {
           "specializations": [
-            "Befriend Everybody!"
+            "Befriend the Magical"
           ],
           "specialization_ids": [
-            8745
+            20926
           ],
-          "formation": "",
+          "formation": "Befriend Everybody is now the base ability I Have Friends Everywhere. Pick Magical / Friendly / Quick for the Oxventure-or-filter group with the most champions.",
           "feats": [
             "Strike Up the Band",
             "A Dark Horse"
@@ -13362,12 +13380,12 @@
         },
         "debuffer": {
           "specializations": [
-            "Befriend Everybody!"
+            "Befriend the Magical"
           ],
           "specialization_ids": [
-            8745
+            20926
           ],
-          "formation": "",
+          "formation": "Befriend Everybody is now the base ability I Have Friends Everywhere. Pick Magical / Friendly / Quick for the Oxventure-or-filter group with the most champions.",
           "feats": [
             "Strike Up the Band",
             "A Dark Horse"
@@ -13375,12 +13393,12 @@
         },
         "flex": {
           "specializations": [
-            "Befriend Everybody!"
+            "Befriend the Magical"
           ],
           "specialization_ids": [
-            8745
+            20926
           ],
-          "formation": "",
+          "formation": "Befriend Everybody is now the base ability I Have Friends Everywhere. Pick Magical / Friendly / Quick for the Oxventure-or-filter group with the most champions.",
           "feats": [
             "Strike Up the Band",
             "A Dark Horse"
@@ -13388,12 +13406,12 @@
         },
         "bud": {
           "specializations": [
-            "Befriend Everybody!"
+            "Befriend the Magical"
           ],
           "specialization_ids": [
-            8745
+            20926
           ],
-          "formation": "",
+          "formation": "Befriend Everybody is now the base ability I Have Friends Everywhere. Pick Magical / Friendly / Quick for the Oxventure-or-filter group with the most champions.",
           "feats": [
             "Strike Up the Band",
             "A Dark Horse"
@@ -13401,12 +13419,12 @@
         },
         "gold": {
           "specializations": [
-            "Befriend Everybody!"
+            "Befriend the Magical"
           ],
           "specialization_ids": [
-            8745
+            20926
           ],
-          "formation": "",
+          "formation": "Befriend Everybody is now the base ability I Have Friends Everywhere. Pick Magical / Friendly / Quick for the Oxventure-or-filter group with the most champions.",
           "feats": [
             "Strike Up the Band",
             "A Dark Horse"
@@ -13414,12 +13432,12 @@
         },
         "speed": {
           "specializations": [
-            "Befriend Everybody!"
+            "Befriend the Magical"
           ],
           "specialization_ids": [
-            8745
+            20926
           ],
-          "formation": "",
+          "formation": "Befriend Everybody is now the base ability I Have Friends Everywhere. Pick Magical / Friendly / Quick for the Oxventure-or-filter group with the most champions.",
           "feats": []
         }
       }
@@ -16801,7 +16819,7 @@
           "formation": "",
           "feats": []
         },
-        "modron": {
+        "scavenger": {
           "specializations": [
             "Humble Heroes"
           ],
@@ -21264,14 +21282,521 @@
           "feats": []
         }
       }
+    },
+    "178": {
+      "name": "Flint",
+      "source": "CNE Spotlight + specializations.json",
+      "source_url": "http://www.codenameentertainment.com/?page=idle_champions",
+      "source_date": "2026-08-05",
+      "guide_id": null,
+      "guide_title": "Idle Champion Spotlight: Flint Fireforge",
+      "roles": {
+        "support": {
+          "specializations": [
+            "Fatherly Advice",
+            "Forged in War",
+            "Blood of Reorx",
+            "Foe Breaker"
+          ],
+          "specialization_ids": [
+            20134,
+            20138
+          ],
+          "formation": "Maximize adjacent Champions for Forged Bonds stacks, and keep your Primary DPS in Flint's column or the column behind him. Avoid moving him mid-area — Initiative/Follow-Through stacks reset when he is moved.",
+          "feats": [
+            "Proven Bond",
+            "Stubborn Bond",
+            "Curmudgeonly Bond",
+            "Wizened Elder",
+            "Unyielding Initiative",
+            "Saved Place"
+          ]
+        },
+        "buffer": {
+          "specializations": [
+            "Fatherly Advice",
+            "Forged in War",
+            "Blood of Reorx",
+            "Foe Breaker"
+          ],
+          "specialization_ids": [
+            20134,
+            20138
+          ],
+          "formation": "Maximize adjacent Champions for Forged Bonds stacks, and keep your Primary DPS in Flint's column or the column behind him. Avoid moving him mid-area — Initiative/Follow-Through stacks reset when he is moved.",
+          "feats": [
+            "Proven Bond",
+            "Stubborn Bond",
+            "Curmudgeonly Bond",
+            "Wizened Elder",
+            "Unyielding Initiative",
+            "Saved Place"
+          ]
+        },
+        "tank": {
+          "specializations": [
+            "Fatherly Advice",
+            "Forged in War",
+            "Blood of Reorx",
+            "Foe Breaker"
+          ],
+          "specialization_ids": [
+            20134,
+            20138
+          ],
+          "formation": "Place Flint where he can tank while still adjacent to as many Champions as possible. Stubborn Determination reduces party damage taken from Forged Bonds stacks (caps at 90%). Keep DPS in his column or the column behind him.",
+          "feats": [
+            "Sentinel",
+            "Calm Under Pressure",
+            "Resilient",
+            "Proven Bond",
+            "Stubborn Bond",
+            "Curmudgeonly Bond"
+          ]
+        },
+        "healer": {
+          "specializations": [
+            "Fatherly Advice",
+            "Forged in War",
+            "Blood of Reorx",
+            "Foe Breaker"
+          ],
+          "specialization_ids": [
+            20134,
+            20138
+          ],
+          "formation": "Maximize adjacent Champions for Forged Bonds stacks, and keep your Primary DPS in Flint's column or the column behind him. Avoid moving him mid-area — Initiative/Follow-Through stacks reset when he is moved.",
+          "feats": [
+            "Proven Bond",
+            "Stubborn Bond",
+            "Curmudgeonly Bond",
+            "Wizened Elder",
+            "Unyielding Initiative",
+            "Saved Place"
+          ]
+        },
+        "debuffer": {
+          "specializations": [
+            "Fatherly Advice",
+            "Forged in War",
+            "Blood of Reorx",
+            "Foe Breaker"
+          ],
+          "specialization_ids": [
+            20134,
+            20138
+          ],
+          "formation": "Maximize adjacent Champions for Forged Bonds stacks, and keep your Primary DPS in Flint's column or the column behind him. Avoid moving him mid-area — Initiative/Follow-Through stacks reset when he is moved.",
+          "feats": [
+            "Proven Bond",
+            "Stubborn Bond",
+            "Curmudgeonly Bond",
+            "Wizened Elder",
+            "Unyielding Initiative",
+            "Saved Place"
+          ]
+        },
+        "flex": {
+          "specializations": [
+            "Fatherly Advice",
+            "Forged in War",
+            "Blood of Reorx",
+            "Life Taker"
+          ],
+          "specialization_ids": [
+            20134,
+            20139
+          ],
+          "formation": "Life Taker makes Flint a DPS: his own damage scales with Forged Bonds stacks and his attack gains a small cleave. Still maximize adjacents — his personal damage and party buff both use those stacks.",
+          "feats": [
+            "Proven Bond",
+            "Stubborn Bond",
+            "Curmudgeonly Bond",
+            "Wizened Elder",
+            "Unyielding Initiative",
+            "Saved Place"
+          ]
+        },
+        "bud": {
+          "specializations": [
+            "Fatherly Advice",
+            "Forged in War",
+            "Blood of Reorx",
+            "Foe Breaker"
+          ],
+          "specialization_ids": [
+            20134,
+            20138
+          ],
+          "formation": "Maximize adjacent Champions for Forged Bonds stacks, and keep your Primary DPS in Flint's column or the column behind him. Avoid moving him mid-area — Initiative/Follow-Through stacks reset when he is moved.",
+          "feats": [
+            "Proven Bond",
+            "Stubborn Bond",
+            "Curmudgeonly Bond",
+            "Wizened Elder",
+            "Unyielding Initiative",
+            "Saved Place"
+          ]
+        },
+        "gold": {
+          "specializations": [
+            "Fatherly Advice",
+            "Forged in War",
+            "Blood of Reorx",
+            "Craft Maker"
+          ],
+          "specialization_ids": [
+            20134,
+            20137
+          ],
+          "formation": "Same placement as support (max adjacents; DPS in column/behind). Pick Craft Maker on tier 2 so Gold Find scales with enemy max HP magnitude.",
+          "feats": [
+            "Proven Bond",
+            "Stubborn Bond",
+            "Curmudgeonly Bond",
+            "Wizened Elder",
+            "Inspiring Leader"
+          ]
+        },
+        "speed": {
+          "specializations": [
+            "Fatherly Advice",
+            "Forged in War",
+            "Blood of Reorx",
+            "Foe Breaker"
+          ],
+          "specialization_ids": [
+            20134,
+            20138
+          ],
+          "formation": "Maximize adjacent Champions for Forged Bonds stacks, and keep your Primary DPS in Flint's column or the column behind him. Avoid moving him mid-area — Initiative/Follow-Through stacks reset when he is moved.",
+          "feats": []
+        }
+      }
+    },
+    "179": {
+      "name": "Caramon",
+      "source": "CNE Spotlight",
+      "source_url": "http://www.codenameentertainment.com/?page=idle_champions&post_id=1963",
+      "source_date": "2026-09-02",
+      "guide_id": null,
+      "guide_title": "Idle Champion Spotlight: Caramon Majere",
+      "roles": {
+        "support": {
+          "specializations": [
+            "Raise Spirits: Overwatch",
+            "Sympathetic Allies"
+          ],
+          "specialization_ids": [
+            20178,
+            20181
+          ],
+          "formation": "Raise Spirits emanates from Caramon and each recruited ally, stacking on anyone hit multiple times. Score the geometry (Encirclement / Overwatch / Spearhead) together with the ally group (tanks / Good / STR≥16) by how often your Primary DPS is hit — Overwatch + Sympathetic Allies is often stronger than Encirclement + Staunch Allies.",
+          "feats": [
+            "Battle Cry",
+            "His Brother's Sword",
+            "His Brother's Strength",
+            "His Own Path",
+            "Taunt"
+          ]
+        },
+        "buffer": {
+          "specializations": [
+            "Raise Spirits: Overwatch",
+            "Sympathetic Allies"
+          ],
+          "specialization_ids": [
+            20178,
+            20181
+          ],
+          "formation": "Raise Spirits emanates from Caramon and each recruited ally, stacking on anyone hit multiple times. Score the geometry together with the ally group by how often your Primary DPS is hit — Overwatch + Sympathetic Allies is often stronger than Encirclement + Staunch Allies.",
+          "feats": [
+            "Battle Cry",
+            "His Brother's Sword",
+            "His Brother's Strength",
+            "His Own Path",
+            "Taunt"
+          ]
+        },
+        "tank": {
+          "specializations": [
+            "Raise Spirits: Overwatch",
+            "Sympathetic Allies"
+          ],
+          "specialization_ids": [
+            20178,
+            20181
+          ],
+          "formation": "Tank up front if needed, but still pick Raise Spirits + Allies by stacks on the BUD, not by Caramon's own adjacency. Close Ranks stacks when he is attacked. Protect the Weak also stacks per Raise Spirits hit.",
+          "feats": [
+            "Taunt",
+            "Resilient",
+            "Calm Under Pressure",
+            "Entrenched",
+            "Battle Cry"
+          ]
+        },
+        "healer": {
+          "specializations": [
+            "Raise Spirits: Overwatch",
+            "Sympathetic Allies"
+          ],
+          "specialization_ids": [
+            20178,
+            20181
+          ],
+          "formation": "Raise Spirits emanates from Caramon and each recruited ally, stacking on anyone hit multiple times. Pick the combo that covers your Primary DPS most often.",
+          "feats": [
+            "Battle Cry",
+            "His Brother's Sword",
+            "His Brother's Strength",
+            "His Own Path"
+          ]
+        },
+        "debuffer": {
+          "specializations": [
+            "Raise Spirits: Overwatch",
+            "Sympathetic Allies"
+          ],
+          "specialization_ids": [
+            20178,
+            20181
+          ],
+          "formation": "Raise Spirits emanates from Caramon and each recruited ally, stacking on anyone hit multiple times. Pick the combo that covers your Primary DPS most often.",
+          "feats": [
+            "Battle Cry",
+            "His Brother's Sword",
+            "His Brother's Strength",
+            "His Own Path"
+          ]
+        },
+        "flex": {
+          "specializations": [
+            "Raise Spirits: Overwatch",
+            "Sympathetic Allies"
+          ],
+          "specialization_ids": [
+            20178,
+            20181
+          ],
+          "formation": "Raise Spirits emanates from Caramon and each recruited ally, stacking on anyone hit multiple times. Pick the combo that covers your Primary DPS most often.",
+          "feats": [
+            "Battle Cry",
+            "His Brother's Sword",
+            "His Brother's Strength",
+            "His Own Path",
+            "Taunt"
+          ]
+        },
+        "bud": {
+          "specializations": [
+            "Raise Spirits: Overwatch",
+            "Sympathetic Allies"
+          ],
+          "specialization_ids": [
+            20178,
+            20181
+          ],
+          "formation": "Raise Spirits does not buff Caramon himself. If he is the carry, this spec still supports the rest of the party; otherwise stack Raise Spirits on the actual BUD.",
+          "feats": [
+            "Battle Cry",
+            "His Brother's Sword",
+            "His Brother's Strength",
+            "His Own Path"
+          ]
+        },
+        "gold": {
+          "specializations": [
+            "Raise Spirits: Overwatch",
+            "Sympathetic Allies"
+          ],
+          "specialization_ids": [
+            20178,
+            20181
+          ],
+          "formation": "Caramon has no gold spec. Use the same Raise Spirits + Allies combo that stacks most on your Primary DPS.",
+          "feats": [
+            "Inspiring Leader",
+            "Battle Cry"
+          ]
+        },
+        "speed": {
+          "specializations": [
+            "Raise Spirits: Overwatch",
+            "Sympathetic Allies"
+          ],
+          "specialization_ids": [
+            20178,
+            20181
+          ],
+          "formation": "Caramon has no speed spec. Use the same Raise Spirits + Allies combo that stacks most on your Primary DPS.",
+          "feats": []
+        }
+      }
+    },
+    "180": {
+      "name": "Kitiara",
+      "source": "CNE Spotlight",
+      "source_url": "https://codenameentertainment.com/?page=idle_champions&post_id=1970",
+      "source_date": "2026-10-07",
+      "guide_id": null,
+      "guide_title": "Idle Champion Spotlight: Kitiara Uth Matar",
+      "roles": {
+        "support": {
+          "specializations": [
+            "Loyal to Herself"
+          ],
+          "specialization_ids": [
+            20603
+          ],
+          "formation": "Merciless Resolve buffs Champions furthest from Kitiara, stacking per adjacent Champion. Park her near the front/mid with many adjacents and keep your Primary DPS in the farthest column. Pick Loyal to Her Past / Herself / Darkness by which group (Heroes of the Lance / Unaffiliated / Evil) is largest; Herself also lets Arrogant Charm trigger from adjacent tanks.",
+          "feats": [
+            "Cold as Ice",
+            "One Way or Another",
+            "Lonely Heart",
+            "Hungry Eyes",
+            "Total Eclipse",
+            "Inspiring Leader"
+          ]
+        },
+        "buffer": {
+          "specializations": [
+            "Loyal to Herself"
+          ],
+          "specialization_ids": [
+            20603
+          ],
+          "formation": "Merciless Resolve buffs Champions furthest from Kitiara, stacking per adjacent Champion. Park her near the front/mid with many adjacents and keep your Primary DPS in the farthest column. Pick Loyal to Her Past / Herself / Darkness by which group (Heroes of the Lance / Unaffiliated / Evil) is largest; Herself also lets Arrogant Charm trigger from adjacent tanks.",
+          "feats": [
+            "Cold as Ice",
+            "One Way or Another",
+            "Lonely Heart",
+            "Hungry Eyes",
+            "Total Eclipse",
+            "Inspiring Leader"
+          ]
+        },
+        "tank": {
+          "specializations": [
+            "Loyal to Herself"
+          ],
+          "specialization_ids": [
+            20603
+          ],
+          "formation": "Merciless Resolve buffs Champions furthest from Kitiara, stacking per adjacent Champion. Park her near the front/mid with many adjacents and keep your Primary DPS in the farthest column. Pick Loyal to Her Past / Herself / Darkness by which group (Heroes of the Lance / Unaffiliated / Evil) is largest; Herself also lets Arrogant Charm trigger from adjacent tanks.",
+          "feats": [
+            "Resilient",
+            "Calm Under Pressure",
+            "Defensive Duelist",
+            "Tough",
+            "Cold as Ice",
+            "Lonely Heart"
+          ]
+        },
+        "healer": {
+          "specializations": [
+            "Loyal to Herself"
+          ],
+          "specialization_ids": [
+            20603
+          ],
+          "formation": "Merciless Resolve buffs Champions furthest from Kitiara, stacking per adjacent Champion. Park her near the front/mid with many adjacents and keep your Primary DPS in the farthest column. Pick Loyal to Her Past / Herself / Darkness by which group (Heroes of the Lance / Unaffiliated / Evil) is largest; Herself also lets Arrogant Charm trigger from adjacent tanks.",
+          "feats": [
+            "Cold as Ice",
+            "One Way or Another",
+            "Lonely Heart",
+            "Hungry Eyes",
+            "Total Eclipse",
+            "Inspiring Leader"
+          ]
+        },
+        "debuffer": {
+          "specializations": [
+            "Loyal to Herself"
+          ],
+          "specialization_ids": [
+            20603
+          ],
+          "formation": "Merciless Resolve buffs Champions furthest from Kitiara, stacking per adjacent Champion. Park her near the front/mid with many adjacents and keep your Primary DPS in the farthest column. Pick Loyal to Her Past / Herself / Darkness by which group (Heroes of the Lance / Unaffiliated / Evil) is largest; Herself also lets Arrogant Charm trigger from adjacent tanks.",
+          "feats": [
+            "Cold as Ice",
+            "One Way or Another",
+            "Lonely Heart",
+            "Hungry Eyes",
+            "Total Eclipse",
+            "Inspiring Leader"
+          ]
+        },
+        "flex": {
+          "specializations": [
+            "Loyal to Herself"
+          ],
+          "specialization_ids": [
+            20603
+          ],
+          "formation": "Merciless Resolve buffs Champions furthest from Kitiara, stacking per adjacent Champion. Park her near the front/mid with many adjacents and keep your Primary DPS in the farthest column. Pick Loyal to Her Past / Herself / Darkness by which group (Heroes of the Lance / Unaffiliated / Evil) is largest; Herself also lets Arrogant Charm trigger from adjacent tanks.",
+          "feats": [
+            "Cold as Ice",
+            "One Way or Another",
+            "Lonely Heart",
+            "Hungry Eyes",
+            "Total Eclipse",
+            "Inspiring Leader"
+          ]
+        },
+        "bud": {
+          "specializations": [
+            "Loyal to Herself"
+          ],
+          "specialization_ids": [
+            20603
+          ],
+          "formation": "Merciless Resolve buffs Champions furthest from Kitiara, stacking per adjacent Champion. Park her near the front/mid with many adjacents and keep your Primary DPS in the farthest column. Pick Loyal to Her Past / Herself / Darkness by which group (Heroes of the Lance / Unaffiliated / Evil) is largest; Herself also lets Arrogant Charm trigger from adjacent tanks.",
+          "feats": [
+            "Cold as Ice",
+            "One Way or Another",
+            "Lonely Heart",
+            "Hungry Eyes",
+            "Total Eclipse",
+            "Inspiring Leader"
+          ]
+        },
+        "gold": {
+          "specializations": [
+            "Loyal to Herself"
+          ],
+          "specialization_ids": [
+            20603
+          ],
+          "formation": "Kitiara has no gold/speed spec. Merciless Resolve buffs Champions furthest from Kitiara, stacking per adjacent Champion. Park her near the front/mid with many adjacents and keep your Primary DPS in the farthest column. Pick Loyal to Her Past / Herself / Darkness by which group (Heroes of the Lance / Unaffiliated / Evil) is largest; Herself also lets Arrogant Charm trigger from adjacent tanks.",
+          "feats": [
+            "Cold as Ice",
+            "One Way or Another",
+            "Lonely Heart",
+            "Hungry Eyes",
+            "Total Eclipse",
+            "Inspiring Leader"
+          ]
+        },
+        "speed": {
+          "specializations": [
+            "Loyal to Herself"
+          ],
+          "specialization_ids": [
+            20603
+          ],
+          "formation": "Kitiara has no gold/speed spec. Merciless Resolve buffs Champions furthest from Kitiara, stacking per adjacent Champion. Park her near the front/mid with many adjacents and keep your Primary DPS in the farthest column. Pick Loyal to Her Past / Herself / Darkness by which group (Heroes of the Lance / Unaffiliated / Evil) is largest; Herself also lets Arrogant Charm trigger from adjacent tanks.",
+          "feats": []
+        }
+      }
     }
   },
   "unmatched_guides": [],
   "coverage": {
     "guides_indexed": 241,
-    "champions_matched": 164,
+    "champions_matched": 167,
     "champions_fallback": 0,
-    "champions_total": 164
+    "champions_total": 167
   },
-  "quality_pass": "role-specs+formation+feats-2026-07-29-v2"
+  "quality_pass": "liars-night-2026-10-10"
 }

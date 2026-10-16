@@ -117,11 +117,69 @@ def _formation_levels_fingerprint(payload: dict[str, Any]) -> tuple[tuple[int, i
     return tuple(sorted(best.items()))
 
 
+def _formation_ilvl_fingerprint(payload: dict[str, Any]) -> tuple[tuple[int, int], ...]:
+    """Coarse ``(hero_id, ilvl//100)`` for champions on the live board.
+
+    Bucketed so tiny enchant ticks do not thrash advice, while meaningful gear
+    upgrades still invalidate formation/advisor results.
+    """
+    layout = formation_layout_fingerprint(payload)
+    if not layout:
+        return ()
+    hero_ids = {hid for _seat, hid in layout if hid > 0}
+    if not hero_ids:
+        return ()
+    details = payload.get("details")
+    if not isinstance(details, dict):
+        return ()
+    try:
+        from ic_gamedata.party_advisor_formation import _loot_ilvl_by_hero
+    except ImportError:
+        return ()
+    ilvl_by_hero = _loot_ilvl_by_hero(details)
+    rows = [
+        (hid, int(ilvl_by_hero.get(hid, 0)) // 100)
+        for hid in sorted(hero_ids)
+    ]
+    return tuple(rows)
+
+
+def _highest_damage_hero_id(payload: dict[str, Any]) -> int | None:
+    """Live BUD/top-damage hero for the active party, if the API has reported one.
+
+    Early in a reset this is often missing; when it first appears (or switches),
+    carry-relative tips must refresh even if the seat layout did not change.
+    """
+    details = payload.get("details")
+    if not isinstance(details, dict):
+        return None
+    active_id = _parse_int(details.get("active_game_instance_id"))
+    for inst in details.get("game_instances") or []:
+        if not isinstance(inst, dict):
+            continue
+        if active_id is not None and _parse_int(inst.get("game_instance_id")) != active_id:
+            continue
+        stats = inst.get("stats")
+        if isinstance(stats, dict):
+            hid = _parse_int(stats.get("this_reset_highest_damage_dealt_hero_id"))
+            if hid is not None and hid > 0:
+                return hid
+        if active_id is not None:
+            break
+    stats = details.get("stats")
+    if isinstance(stats, dict):
+        hid = _parse_int(stats.get("this_reset_highest_damage_dealt_hero_id"))
+        if hid is not None and hid > 0:
+            return hid
+    return None
+
+
 def advice_fingerprint(payload: dict[str, Any] | None) -> tuple[Any, ...] | None:
     """Stable fingerprint of data that should trigger advisor/specs refresh.
 
     Covers party, adventure, live formation layout, formation hero levels,
-    specialization picks, and active feats.
+    specialization picks, active feats, top-damage (carry) hero, and coarse
+    formation item levels.
     """
     if not isinstance(payload, dict):
         return None
@@ -135,6 +193,8 @@ def advice_fingerprint(payload: dict[str, Any] | None) -> tuple[Any, ...] | None
         _formation_levels_fingerprint(payload),
         _spec_choices_fingerprint(payload),
         _feat_fingerprint(payload),
+        _highest_damage_hero_id(payload),
+        _formation_ilvl_fingerprint(payload),
     )
 
 

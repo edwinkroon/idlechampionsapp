@@ -10,7 +10,12 @@ from ic_gamedata.seat_advisor.models import BenchCandidate, SeatRole
 from ic_gamedata.seat_advisor.role_inference import role_fits_champion
 
 
-def _role_match_score(hero_roles: tuple[str, ...], hero_tags: tuple[str, ...], role: SeatRole) -> float:
+def _role_match_score(
+    hero_id: int,
+    hero_roles: tuple[str, ...],
+    hero_tags: tuple[str, ...],
+    role: SeatRole,
+) -> float:
     roles = set(hero_roles)
     tags = set(hero_tags)
     if role == "bud":
@@ -27,6 +32,10 @@ def _role_match_score(hero_roles: tuple[str, ...], hero_tags: tuple[str, ...], r
         return 3.0 if "healer" in roles else 0.0
     if role == "gold":
         return 3.0 if "gold" in roles or "gold" in tags else 0.0
+    if role == "scavenger":
+        from ic_gamedata.speed_utility_roles import scavenger_hero_ids
+
+        return 3.0 if hero_id in scavenger_hero_ids() else 0.0
     if role == "speed":
         return 3.0 if "speed" in tags else 0.0
     return 1.0 if "support" in roles or "dps" in roles else 0.0
@@ -48,12 +57,12 @@ def rank_bench_alternatives(
             continue
         if roster_filter is not None and not is_hero_allowed(hero_id, roster_filter):
             continue
-        match = _role_match_score(roles, tags, role)
+        match = _role_match_score(hero_id, roles, tags, role)
         if match <= 0:
             continue
         ilvl = ilvl_by_hero.get(hero_id, 0)
         score = match * 1000 + ilvl
-        reason = f"past bij rol {role}"
+        reason = f"fits role {role}"
         if ilvl:
             reason += f" · ilvl {ilvl}"
         candidates.append(

@@ -33,7 +33,7 @@ class AdvisorRunnable(QRunnable):
         try:
             from ic_gamedata.party_advisor import analyze_party
         except ImportError as exc:
-            self.signals.error.emit(f"Importfout: {exc}")
+            self.signals.error.emit(f"Import error: {exc}")
             return
 
         try:
@@ -45,7 +45,7 @@ class AdvisorRunnable(QRunnable):
                 include_formation=self._include_formation,
             )
         except Exception as exc:
-            self.signals.error.emit(f"Analysefout: {exc}")
+            self.signals.error.emit(f"Analysis error: {exc}")
             return
 
         self.signals.done.emit((self._payload, report, self._err))

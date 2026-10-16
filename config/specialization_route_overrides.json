@@ -246,7 +246,7 @@
       "Mithral Skin@1": 13756
     },
     "Valentine": {
-      "Socialite gold": 8150,
+      "Socialite gold": 8149,
       "My Loyal Bodyguard": 8150,
       "All Hail the God Brain": 8149,
       "Family Business": 8151
@@ -469,8 +469,14 @@
       "Go With The Phlo": 3457
     },
     "Avren": {
-      "Empowered Mirrors": 3099,
-      "Good/Sturdy mirror path": 3099
+      "Mirror Focus (Good)": 20700,
+      "Mirror Focus (Neutral)@1": 20701,
+      "Mirror Focus (Evil)": 20702,
+      "Mirror Focus (Lawful)": 20703,
+      "Mirror Focus (Neutral)@2": 20704,
+      "Mirror Focus (Chaotic)": 20705,
+      "Good/Evil mirror path": 20700,
+      "Law/Chaos mirror path": 20705
     },
     "Freely": {
       "Always Expect Chaos": 4043
@@ -492,12 +498,11 @@
       "Modron Core Toolbox": 18167
     },
     "Dob": {
-      "Support route": 8745,
-      "support_route": 8745,
-      "Befriend Everybody!": 8745,
-      "Befriend the Magical": 8742,
-      "Befriend the Friendly": 8743,
-      "Befriend the Quick": 8744
+      "Befriend the Magical": 20926,
+      "Befriend the Friendly": 20927,
+      "Befriend the Quick": 20928,
+      "Support route": 20926,
+      "support_route": 20926
     },
     "Vi": {
       "Support route": 12318,
@@ -567,10 +572,10 @@
       "Wisdom and Confidence": 6911
     },
     "Brig": {
-      "Support route": 6355,
-      "support_route": 6355,
-      "\"Back\"-Up Singer": 6355,
-      "Cream of the Crop": 6356
+      "Support route": 20713,
+      "support_route": 20713,
+      "\"Back\"-Up Singer": 20713,
+      "Cream of the Crop": 20714
     },
     "D'hani": {
       "Debuff focus": 13717,
@@ -652,6 +657,23 @@
       "Anarchy Amplified": 10892,
       "Infernal Impact": 10890,
       "Flawed Force": 10891
+    },
+    "Flint": {
+      "Fatherly Advice": 20134,
+      "Forged in War": 20135,
+      "Blood of Reorx": 20136,
+      "Craft Maker": 20137,
+      "Foe Breaker": 20138,
+      "Life Taker": 20139,
+      "gold_route": 20137,
+      "Gold route": 20137,
+      "push_route": 20138,
+      "dps_route": 20139
+    },
+    "Kitiara": {
+      "Loyal to Her Past": 20602,
+      "Loyal to Herself": 20603,
+      "Loyal to Darkness": 20604
     }
   }
 }

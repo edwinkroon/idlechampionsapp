@@ -14,7 +14,26 @@ from ic_gamedata.stats import StatsTracker
 
 
 class ModronAreaGoalTests(unittest.TestCase):
-    def test_config_override_wins_over_api_milestone(self) -> None:
+    def test_modron_saves_win_over_config_override(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            config_path = Path(tmp) / "gamedata.json"
+            config_path.write_text(
+                json.dumps({"party_modron_goals": {"1": 225}}),
+                encoding="utf-8",
+            )
+            payload = {
+                "details": {
+                    "modron_saves": {
+                        "1": {"core_id": "1", "instance_id": "1", "area_goal": "260"},
+                    }
+                }
+            }
+            with patch("ic_gamedata.modron_area_goal.GAMEDATA_CONFIG_PATH", config_path):
+                _load_gamedata.cache_clear()
+                goal = resolve_modron_area_goal(None, payload, party_index=1)
+        self.assertEqual(goal, 260)
+
+    def test_config_override_used_when_api_has_no_modron_goal(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             config_path = Path(tmp) / "gamedata.json"
             config_path.write_text(
@@ -60,6 +79,35 @@ class ModronAreaGoalTests(unittest.TestCase):
                 _load_gamedata.cache_clear()
                 goal = resolve_modron_area_goal(None, payload, party_index=1)
         self.assertEqual(goal, 320)
+
+    def test_reads_set_area_goal_enabled_from_modron_saves(self) -> None:
+        from ic_gamedata.modron_area_goal import resolve_modron_set_area_goal_enabled
+
+        payload = {
+            "details": {
+                "modron_saves": {
+                    "1": {
+                        "core_id": "1",
+                        "instance_id": "1",
+                        "area_goal": "175",
+                        "properties": {
+                            "toggle_preferences": {"formation": False, "reset": False, "buff": False},
+                        },
+                    },
+                    "3": {
+                        "core_id": "3",
+                        "instance_id": "3",
+                        "area_goal": "260",
+                        "properties": {
+                            "toggle_preferences": {"formation": True, "reset": True, "buff": False},
+                        },
+                    },
+                }
+            }
+        }
+        self.assertFalse(resolve_modron_set_area_goal_enabled(payload, party_index=1))
+        self.assertTrue(resolve_modron_set_area_goal_enabled(payload, party_index=3))
+        self.assertIsNone(resolve_modron_set_area_goal_enabled(payload, party_index=2))
 
     def test_records_run_at_modron_goal_not_milestone(self) -> None:
         party_high = PartySnapshot(

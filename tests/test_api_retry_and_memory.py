@@ -15,11 +15,11 @@ from ic_core.memory_service import MemoryReading, MemoryService
 class ApiRetryTests(unittest.TestCase):
     def test_retryable_classification(self) -> None:
         self.assertTrue(_is_retryable_error("API timeout"))
-        self.assertTrue(_is_retryable_error("API netwerkfout: timed out"))
+        self.assertTrue(_is_retryable_error("API network error: timed out"))
         self.assertTrue(_is_retryable_error("API HTTP 503: Unavailable"))
         self.assertTrue(_is_retryable_error("API HTTP 429: Too Many Requests"))
-        self.assertFalse(_is_retryable_error("API: success=false (credentials verlopen? Herstart het spel)"))
-        self.assertFalse(_is_retryable_error("API: ongeldige JSON"))
+        self.assertFalse(_is_retryable_error("API: success=false (credentials expired? Restart the game)"))
+        self.assertFalse(_is_retryable_error("API: invalid JSON"))
         self.assertFalse(_is_retryable_error("API HTTP 401: Unauthorized"))
 
     def test_retries_transient_then_succeeds(self) -> None:
@@ -46,7 +46,7 @@ class ApiRetryTests(unittest.TestCase):
         creds = GameCredentials("https://x/", "1", "h")
 
         def _once(_creds, *, timeout_sec: float):
-            return None, None, "API: success=false (credentials verlopen? Herstart het spel)"
+            return None, None, "API: success=false (credentials expired? Restart the game)"
 
         with mock.patch("ic_gamedata.api_client._fetch_user_details_once", side_effect=_once):
             with mock.patch("ic_gamedata.api_client.time.sleep") as sleep:

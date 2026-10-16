@@ -1,0 +1,22 @@
+{
+  "schema_version": "1.8",
+  "before_1_7_same_fixture": {
+    "advice_chars": 8279,
+    "clipboard_chars": 11887
+  },
+  "after_1_8_same_fixture": {
+    "advice_chars": 9055,
+    "clipboard_chars": 13013
+  },
+  "delta_clipboard_chars": 1126,
+  "isok_effect_chars": 1046,
+  "supplemented": [
+    "Cazrin In Search of Knowledge Book thresholds 10/40/80/120/160/200/240/300 from effect_defines post.conditions",
+    "Resolved placeholders: 5% per Book, 1% Unctuous Uggie, 40% chance, 50% Mage Armor, 400% tank Sunny"
+  ],
+  "still_missing_source_prose": [
+    "Umberto Beehive Barrage: no effect_defines description (custom handlers only)",
+    "Umberto Brown Bear Bash: only set_ultimate_attack",
+    "Live Book/Toughness stack counts: current state, not definitions"
+  ]
+}

@@ -148,7 +148,7 @@ def _role_label(roles: tuple[str, ...], tags: tuple[str, ...]) -> str:
         return "Healer"
     if roles:
         return roles[0].capitalize()
-    return "Onbekend"
+    return "Unknown"
 
 
 def _active_game_instance(payload: dict[str, Any]) -> dict[str, Any] | None:
@@ -169,7 +169,7 @@ def _active_game_instance(payload: dict[str, Any]) -> dict[str, Any] | None:
 
 def _adventure_name(payload: dict[str, Any], adventure_id: int | None) -> str:
     if adventure_id is None:
-        return "Onbekend adventure"
+        return "Unknown adventure"
     defines = payload.get("defines")
     if not isinstance(defines, dict):
         return f"Adventure {adventure_id}"
@@ -288,23 +288,23 @@ def _loot_ilvl_by_hero(details: dict[str, Any]) -> dict[int, int]:
 
 def _ilvl_label(ilvl: int, pct_vs_avg: float) -> str:
     if abs(pct_vs_avg) < 1:
-        return f"ilvl {ilvl} (≈ party-gemiddelde)"
+        return f"ilvl {ilvl} (≈ party average)"
     if pct_vs_avg >= 0:
-        return f"ilvl {ilvl} (+{pct_vs_avg:.0f}% vs gem.)"
-    return f"ilvl {ilvl} ({pct_vs_avg:.0f}% vs gem.)"
+        return f"ilvl {ilvl} (+{pct_vs_avg:.0f}% vs avg.)"
+    return f"ilvl {ilvl} ({pct_vs_avg:.0f}% vs avg.)"
 
 
 def _ilvl_below_avg_action(ilvl: int, pct_vs_avg: float, party_avg: float) -> str:
     below = max(0.0, -pct_vs_avg)
-    return f"ilvl {ilvl} — {below:.0f}% onder party-gemiddelde ({party_avg:.0f})."
+    return f"ilvl {ilvl} — {below:.0f}% below party average ({party_avg:.0f})."
 
 
 def _human_buff_note(multiplier: float | None) -> str | None:
     if multiplier is None or multiplier <= 1.5:
         return None
     if multiplier > 1000 or math.isinf(multiplier):
-        return "Dit adventure heeft een zeer sterke damage-buff."
-    return f"Adventure damage-buff: ongeveer {multiplier:.1f}×."
+        return "This adventure has a very strong damage buff."
+    return f"Adventure damage buff: about {multiplier:.1f}×."
 
 
 def _hero_on_field(
@@ -314,6 +314,7 @@ def _hero_on_field(
     seat: int | None,
     active_seats: frozenset[int],
     on_formation_grid: bool = False,
+    grid_populated: bool = False,
 ) -> bool:
     """True when the champion is actively placed in the current party formation."""
     if seat is None and not on_formation_grid:
@@ -323,7 +324,12 @@ def _hero_on_field(
         if game_id != active_party_id:
             return False
 
-    # Live formation grid is authoritative even when hero_in_seats lags.
+    # Populated live grid is exclusive — do not pull in benched seat-holders or
+    # other owned champs that share a permanent F-key seat_id.
+    if grid_populated:
+        return on_formation_grid
+
+    # Sparse/empty grid: keep the hero if they appear on the (partial) board.
     if on_formation_grid:
         return True
 
@@ -353,6 +359,8 @@ def _formation_heroes(payload: dict[str, Any]) -> tuple[FormationHero, ...]:
     name_lookup = _names_from_payload(payload)
 
     highest_damage_hero_id = _parse_int(stats.get("this_reset_highest_damage_dealt_hero_id"))
+    if highest_damage_hero_id is not None and highest_damage_hero_id <= 0:
+        highest_damage_hero_id = None
 
     seat_by_hero: dict[int, int] = {}
     hero_in_seats = instance.get("hero_in_seats")
@@ -370,7 +378,21 @@ def _formation_heroes(payload: dict[str, Any]) -> tuple[FormationHero, ...]:
         grid_hero_ids: set[int] = set()
     else:
         _active_id, active_seats = active_formation_seats(payload)
-        grid_hero_ids = set(live_formation_hero_ids(payload))
+        grid_hero_ids = {hid for hid in live_formation_hero_ids(payload) if hid > 0}
+
+    # Permanent seat_id only for heroes actually on the live grid — never for the
+    # whole roster (that pulled Bruenor/Celeste/… onto seats already filled by
+    # other champions and made the Formatie tab show the wrong party).
+    try:
+        from ic_gamedata.specialization_data import hero_seat_id_map_from_cached_definitions
+
+        defs = hero_seat_id_map_from_cached_definitions()
+    except ImportError:
+        defs = {}
+    for hero_id in grid_hero_ids:
+        seat = defs.get(hero_id)
+        if seat is not None and 1 <= seat <= 12:
+            seat_by_hero.setdefault(hero_id, seat)
 
     heroes_raw = details.get("heroes")
     if not isinstance(heroes_raw, list):
@@ -381,6 +403,7 @@ def _formation_heroes(payload: dict[str, Any]) -> tuple[FormationHero, ...]:
     rows: list[FormationHero] = []
     best_row_by_hero: dict[int, tuple[tuple[int, int, float], FormationHero]] = {}
     active_party_id = _parse_int(details.get("active_game_instance_id"))
+    grid_populated = len(grid_hero_ids) >= 2
     for hero in heroes_raw:
         if not isinstance(hero, dict):
             continue
@@ -394,6 +417,7 @@ def _formation_heroes(payload: dict[str, Any]) -> tuple[FormationHero, ...]:
             seat=seat,
             active_seats=active_seats,
             on_formation_grid=hero_id in grid_hero_ids,
+            grid_populated=grid_populated,
         ):
             continue
 

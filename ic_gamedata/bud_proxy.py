@@ -271,12 +271,12 @@ def bud_proxy_ratio(before: BudProxyBreakdown, after: BudProxyBreakdown) -> floa
 
 def format_bud_ratio(ratio: float) -> str:
     if not math.isfinite(ratio) or ratio <= 0:
-        return "onbekend"
+        return "unknown"
     if abs(ratio - 1.0) < 0.03:
-        return "geen winst"
+        return "no gain"
     if ratio >= 1.0:
         return f"~×{ratio:.2f}"
-    return f"~×{ratio:.2f} (lager)"
+    return f"~×{ratio:.2f} (lower)"
 
 
 def meaningful_bud_ratio(ratio: float | None, *, threshold: float = 0.03) -> bool:

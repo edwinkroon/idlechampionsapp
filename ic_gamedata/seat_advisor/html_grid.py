@@ -58,7 +58,7 @@ def generate_formation_html(nodes: tuple[VisualSeatNode, ...], *, formation_name
     nodes_json = json.dumps(node_payload, ensure_ascii=False)
 
     return f"""<!DOCTYPE html>
-<html lang="nl">
+<html lang="en">
 <head>
 <meta charset="utf-8"/>
 <style>
@@ -83,13 +83,13 @@ def generate_formation_html(nodes: tuple[VisualSeatNode, ...], *, formation_name
 </head>
 <body>
 <h3>{html.escape(formation_name)}</h3>
-<p class="hint">Klik op een champion om de rol te wijzigen. Enemies → rechts (front = naar rechts).</p>
+<p class="hint">Click a champion to change their role. Enemies → right (front = toward the right).</p>
 <div class="board" id="board"></div>
 <div id="rolePanel">
   <div id="panelTitle"></div>
-  <label>Rol: <select id="roleSelect"></select></label><br/>
-  <button id="saveRole">Opslaan</button>
-  <button id="clearRole" style="background:#6b7280;margin-left:6px;">Reset naar voorstel</button>
+  <label>Role: <select id="roleSelect"></select></label><br/>
+  <button id="saveRole">Save</button>
+  <button id="clearRole" style="background:#6b7280;margin-left:6px;">Reset to suggestion</button>
 </div>
 <script>
 const ROLES = {roles_json};
@@ -122,7 +122,7 @@ function openPanel(n) {{
   panel.classList.add('open');
   let extra = '';
   if (n.chosen && n.inferred && n.chosen !== n.inferred) {{
-    extra = ' · voorgesteld: ' + n.inferred;
+    extra = ' · suggested: ' + n.inferred;
   }}
   panelTitle.textContent = n.name + ' (slot ' + n.seat + ')' + extra;
   roleSelect.innerHTML = '';
@@ -160,4 +160,4 @@ render();
 
 def _empty_html(formation_name: str) -> str:
     return f"""<!DOCTYPE html><html><body style="font-family:Segoe UI;padding:12px;">
-    <h3>{html.escape(formation_name)}</h3><p>Geen formatie-posities beschikbaar.</p></body></html>"""
+    <h3>{html.escape(formation_name)}</h3><p>No formation positions available.</p></body></html>"""

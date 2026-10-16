@@ -110,6 +110,9 @@ RECORDS: dict[int, dict] = {
         "safe_default": _choice(59, "Leader of the Bregan D'aerthe"),
         "push_default": _choice(58, "Secret Lord of Luskan"),
         "farm_default": _choice(59, "Leader of the Bregan D'aerthe"),
+        "bud_default": _choice(58, "Secret Lord of Luskan"),
+        "gold_default": _choice(59, "Leader of the Bregan D'aerthe"),
+        "speed_default": _choice(59, "Leader of the Bregan D'aerthe"),
         "conditionals": [
             {
                 "when": "push/damage run needs Secret Lord of Luskan",
@@ -125,9 +128,9 @@ RECORDS: dict[int, dict] = {
         "sources": {
             "csv_default_label": "Piracy",
             "csv_label_maps_to": "Leader of the Bregan D'aerthe",
-            "csv_advice_text": "Gold/farm almost always Bregan; Secret Lord only for push/damage setups.",
+            "csv_advice_text": "Gold/speed almost always Bregan; Secret Lord only for BUD/push setups.",
         },
-        "explanation_summary": "Safe/farm Bregan (Piracy→gold); push→Secret Lord of Luskan.",
+        "explanation_summary": "Gold/speed Bregan; BUD/push→Secret Lord of Luskan.",
         "review_needed": False,
         "review_reasons": [],
     },
@@ -1170,24 +1173,43 @@ RECORDS: dict[int, dict] = {
         "review_reasons": [],
     },
     35: {
-        "advice_model": "safe_default",
+        "has_dynamic_handler": True,
+        "advice_model": "conditional_only",
         "safe_default": _choice(1659, "Breaking Out Solo"),
         "push_default": _choice(1659, "Breaking Out Solo"),
         "farm_default": None,
         "conditionals": [
-            {"when": "setup explicitly needs Spy Network", "upgrade_id": 1658, "name": "Spy Network"}
+            {
+                "when": "BUD shares Vlahnya's column → Spy Network",
+                "upgrade_id": 1658,
+                "name": "Spy Network",
+            },
+            {
+                "when": "Vlahnya's column has ≤2 champions → Breaking Out Solo",
+                "upgrade_id": 1659,
+                "name": "Breaking Out Solo",
+            },
+            {
+                "when": "Vlahnya's column is crowded → Spy Network",
+                "upgrade_id": 1658,
+                "name": "Spy Network",
+            },
         ],
         "context_flags": {
-            "formation_dependent": False,
+            "formation_dependent": True,
             "adventure_dependent": False,
             "farm_push_split": False,
         },
         "sources": {
             "csv_default_label": "Support route",
             "csv_label_maps_to": None,
-            "csv_advice_text": "Spy Network only when setup explicitly needs that alternate.",
+            "csv_advice_text": (
+                "Spy Network when BUD shares her column; Solo when her column is sparse."
+            ),
         },
-        "explanation_summary": "Safe Breaking Out Solo; Spy Network only when setup needs it.",
+        "explanation_summary": (
+            "Spy Network if BUD shares her column; else Breaking Out Solo when sparse."
+        ),
         "review_needed": False,
         "review_reasons": [],
     },
@@ -1516,17 +1538,39 @@ RECORDS: dict[int, dict] = {
     },
     51: {
         "advice_model": "safe_default",
-        "safe_default": _choice(3099, "Empowered Mirrors"),
-        "push_default": _choice(3099, "Empowered Mirrors"),
+        "safe_default": None,
+        "push_default": None,
         "farm_default": None,
         "conditionals": [
-            {"when": "tier0 Good mirror path", "upgrade_id": 3095, "name": "Mirror Focus (Good)"},
-            {"when": "tier0 Neutral mirror path", "upgrade_id": 3096, "name": "Mirror Focus (Neutral)"},
-            {"when": "tier0 Evil mirror path", "upgrade_id": 3097, "name": "Mirror Focus (Evil)"},
             {
-                "when": "tier1 Sturdy Mirrors needed instead of Empowered",
-                "upgrade_id": 3098,
-                "name": "Sturdy Mirrors",
+                "when": "most Good champions (Good/Evil axis)",
+                "upgrade_id": 20700,
+                "name": "Mirror Focus (Good)",
+            },
+            {
+                "when": "most Neutral champions on Good/Evil axis",
+                "upgrade_id": 20701,
+                "name": "Mirror Focus (Neutral)",
+            },
+            {
+                "when": "most Evil champions (Good/Evil axis)",
+                "upgrade_id": 20702,
+                "name": "Mirror Focus (Evil)",
+            },
+            {
+                "when": "most Lawful champions (Law/Chaos axis)",
+                "upgrade_id": 20703,
+                "name": "Mirror Focus (Lawful)",
+            },
+            {
+                "when": "most Neutral champions on Law/Chaos axis",
+                "upgrade_id": 20704,
+                "name": "Mirror Focus (Neutral)",
+            },
+            {
+                "when": "most Chaotic champions (Law/Chaos axis)",
+                "upgrade_id": 20705,
+                "name": "Mirror Focus (Chaotic)",
             },
         ],
         "context_flags": {
@@ -1535,11 +1579,17 @@ RECORDS: dict[int, dict] = {
             "farm_push_split": False,
         },
         "sources": {
-            "csv_default_label": "Good/Sturdy mirror path",
-            "csv_label_maps_to": "Empowered Mirrors",
-            "csv_advice_text": "Tier0 Good/Neutral/Evil mirrors are contextual; Sturdy when needed.",
+            "csv_default_label": None,
+            "csv_label_maps_to": None,
+            "csv_advice_text": (
+                "Liar's Night rebalance: both tiers are alignment stack picks "
+                "(Good/Evil then Law/Chaos)."
+            ),
         },
-        "explanation_summary": "Safe Empowered Mirrors (tier1); tier0 mirror foci are contextual.",
+        "explanation_summary": (
+            "Pick Mirror Focus on each axis by the most qualifying champions; "
+            "dual-qualified get priority mirrors."
+        ),
         "review_needed": False,
         "review_reasons": [],
     },
@@ -1871,28 +1921,29 @@ RECORDS: dict[int, dict] = {
         "review_reasons": [],
     },
     67: {
+        "has_dynamic_handler": True,
         "advice_model": "safe_default",
         "safe_default": _choice(3278, "Scent: Herbs and Spices"),
         "push_default": _choice(3278, "Scent: Herbs and Spices"),
         "farm_default": None,
         "conditionals": [
             {
-                "when": "survivability/tank pressure requires Roasted Chicken",
+                "when": "far Supports make the Meat Sauce curve beat ×1.50 per tank → Scent: Roasted Chicken",
                 "upgrade_id": 3277,
                 "name": "Scent: Roasted Chicken",
             }
         ],
         "context_flags": {
-            "formation_dependent": False,
+            "formation_dependent": True,
             "adventure_dependent": False,
             "farm_push_split": False,
         },
         "sources": {
             "csv_default_label": "Tank route",
             "csv_label_maps_to": None,
-            "csv_advice_text": "Roasted Chicken only when survivability is the problem.",
+            "csv_advice_text": "Herbs is ×1.50 per tanking champion; Chicken when far Supports win.",
         },
-        "explanation_summary": "Safe Herbs and Spices; Roasted Chicken only when survivability is the problem.",
+        "explanation_summary": "Herbs and Spices is ×1.50 per tank; Roasted Chicken when far Supports win.",
         "review_needed": False,
         "review_reasons": [],
     },
@@ -2599,13 +2650,13 @@ RECORDS: dict[int, dict] = {
     },
     90: {
         "advice_model": "safe_default",
-        "safe_default": _choice(6355, '"Back"-Up Singer'),
-        "push_default": _choice(6355, '"Back"-Up Singer'),
+        "safe_default": _choice(20713, '"Back"-Up Singer'),
+        "push_default": _choice(20713, '"Back"-Up Singer'),
         "farm_default": None,
         "conditionals": [
             {
                 "when": "the alternate utility route is clearly better",
-                "upgrade_id": 6356,
+                "upgrade_id": 20714,
                 "name": "Cream of the Crop",
             }
         ],
@@ -2617,7 +2668,10 @@ RECORDS: dict[int, dict] = {
         "sources": {
             "csv_default_label": "Support route",
             "csv_label_maps_to": '"Back"-Up Singer',
-            "csv_advice_text": "Cream of the Crop only when that utility route is clearly better.",
+            "csv_advice_text": (
+                "Liar's Night rebalance: same specs, new upgrade ids; "
+                "Cream of the Crop only when clearer."
+            ),
         },
         "explanation_summary": "Safe Back-Up Singer; Cream of the Crop only for clearer utility route.",
         "review_needed": False,
@@ -2997,33 +3051,34 @@ RECORDS: dict[int, dict] = {
         "review_reasons": [],
     },
     103: {
-        "advice_model": "farm_default",
-        "safe_default": _choice(8150, "My Loyal Bodyguard"),
+        "advice_model": "conditional_only",
+        "has_dynamic_handler": True,
+        "safe_default": _choice(8149, "All Hail the God Brain"),
         "push_default": None,
-        "farm_default": _choice(8150, "My Loyal Bodyguard"),
+        "farm_default": _choice(8149, "All Hail the God Brain"),
         "conditionals": [
             {
-                "when": "socialite/gold route is the explicit goal",
-                "upgrade_id": 8149,
-                "name": "All Hail the God Brain",
+                "when": "Tatyana is in the formation",
+                "upgrade_id": 8150,
+                "name": "My Loyal Bodyguard",
             },
             {
-                "when": "specific family/support synergies are needed",
+                "when": "explicit gold-find route is needed",
                 "upgrade_id": 8151,
                 "name": "Family Business",
             },
         ],
         "context_flags": {
-            "formation_dependent": False,
+            "formation_dependent": True,
             "adventure_dependent": False,
             "farm_push_split": True,
         },
         "sources": {
             "csv_default_label": "Socialite gold",
-            "csv_label_maps_to": "My Loyal Bodyguard",
-            "csv_advice_text": "God Brain for explicit gold; Family Business for family/support synergies.",
+            "csv_label_maps_to": "All Hail the God Brain",
+            "csv_advice_text": "Bodyguard only with Tatyana; Family Business for gold find.",
         },
-        "explanation_summary": "Safe/farm My Loyal Bodyguard; God Brain/Family Business situational.",
+        "explanation_summary": "God Brain without Tatyana; Bodyguard with Tatyana; Family Business for gold.",
         "review_needed": False,
         "review_reasons": [],
     },
@@ -3059,23 +3114,24 @@ RECORDS: dict[int, dict] = {
     },
     105: {
         "advice_model": "safe_default",
-        "safe_default": _choice(8745, "Befriend Everybody!"),
-        "push_default": _choice(8745, "Befriend Everybody!"),
+        "has_dynamic_handler": True,
+        "safe_default": _choice(20926, "Befriend the Magical"),
+        "push_default": _choice(20926, "Befriend the Magical"),
         "farm_default": None,
         "conditionals": [
             {
-                "when": "situational magical profile is needed",
-                "upgrade_id": 8742,
+                "when": "most Oxventure/magic attack champions",
+                "upgrade_id": 20926,
                 "name": "Befriend the Magical",
             },
             {
-                "when": "situational friendly profile is needed",
-                "upgrade_id": 8743,
+                "when": "most Oxventure/CHA>=17 champions",
+                "upgrade_id": 20927,
                 "name": "Befriend the Friendly",
             },
             {
-                "when": "situational quick profile is needed",
-                "upgrade_id": 8744,
+                "when": "most Oxventure/DEX>=17 champions",
+                "upgrade_id": 20928,
                 "name": "Befriend the Quick",
             },
         ],
@@ -3085,11 +3141,17 @@ RECORDS: dict[int, dict] = {
             "farm_push_split": False,
         },
         "sources": {
-            "csv_default_label": "Support route",
-            "csv_label_maps_to": "Befriend Everybody!",
-            "csv_advice_text": "Magical/Friendly/Quick are profile-based swaps; Everybody is stable default.",
+            "csv_default_label": None,
+            "csv_label_maps_to": None,
+            "csv_advice_text": (
+                "Liar's Night rebalance: Befriend Everybody is now base "
+                "(I Have Friends Everywhere); pick Magical/Friendly/Quick by stacks."
+            ),
         },
-        "explanation_summary": "Safe Befriend Everybody!; Magical/Friendly/Quick are profile-based.",
+        "explanation_summary": (
+            "Dynamic Magical/Friendly/Quick by Oxventure-or-filter stacks; "
+            "Everybody is now a base ability."
+        ),
         "review_needed": False,
         "review_reasons": [],
     },
@@ -5042,6 +5104,147 @@ RECORDS: dict[int, dict] = {
         "review_needed": False,
         "review_reasons": [],
     },
+    178: {
+        "advice_model": "safe_default",
+        "has_dynamic_handler": True,
+        "safe_default": _choice(20134, "Fatherly Advice"),
+        "push_default": _choice(20138, "Foe Breaker"),
+        "farm_default": _choice(20137, "Craft Maker"),
+        "conditionals": [
+            {
+                "when": "many champions age 40 or younger",
+                "upgrade_id": 20134,
+                "name": "Fatherly Advice",
+            },
+            {
+                "when": "Heroes of the Lance formation",
+                "upgrade_id": 20135,
+                "name": "Forged in War",
+            },
+            {
+                "when": "dwarf-heavy formation",
+                "upgrade_id": 20136,
+                "name": "Blood of Reorx",
+            },
+            {"when": "gold farm route", "upgrade_id": 20137, "name": "Craft Maker"},
+            {
+                "when": "armored/segmented/critical HP enemies",
+                "upgrade_id": 20138,
+                "name": "Foe Breaker",
+            },
+            {
+                "when": "Flint is BUD / personal DPS",
+                "upgrade_id": 20139,
+                "name": "Life Taker",
+            },
+        ],
+        "context_flags": {
+            "formation_dependent": True,
+            "adventure_dependent": False,
+            "farm_push_split": True,
+        },
+        "sources": {
+            "csv_default_label": None,
+            "csv_label_maps_to": None,
+            "csv_advice_text": (
+                "Tier0 picks best of Fatherly Advice / Forged in War / Blood of Reorx "
+                "by qualified multiplicative stacks. Tier1: Foe Breaker (push), "
+                "Craft Maker (gold), Life Taker (Flint DPS)."
+            ),
+        },
+        "explanation_summary": "Tier0 best qualified stack; tier1 Foe Breaker / Craft Maker / Life Taker by goal.",
+        "review_needed": False,
+        "review_reasons": [],
+    },
+    179: {
+        "advice_model": "safe_default",
+        "has_dynamic_handler": True,
+        "safe_default": _choice(20178, "Raise Spirits: Overwatch"),
+        "push_default": _choice(20181, "Sympathetic Allies"),
+        "farm_default": _choice(20178, "Raise Spirits: Overwatch"),
+        "conditionals": [
+            {
+                "when": "BUD is adjacent to Caramon / tank pocket",
+                "upgrade_id": 20177,
+                "name": "Raise Spirits: Encirclement",
+            },
+            {
+                "when": "BUD is in the two columns behind Caramon",
+                "upgrade_id": 20179,
+                "name": "Raise Spirits: Spearhead",
+            },
+            {
+                "when": "more tanks than Good/STR≥16 champions",
+                "upgrade_id": 20180,
+                "name": "Staunch Allies",
+            },
+            {
+                "when": "Good champions emanate Raise Spirits onto the BUD",
+                "upgrade_id": 20181,
+                "name": "Sympathetic Allies",
+            },
+            {
+                "when": "more STR≥16 champions than Good or tanks",
+                "upgrade_id": 20182,
+                "name": "Stalwart Allies",
+            },
+        ],
+        "context_flags": {
+            "formation_dependent": True,
+            "adventure_dependent": False,
+            "farm_push_split": False,
+        },
+        "sources": {
+            "csv_default_label": None,
+            "csv_label_maps_to": None,
+            "csv_advice_text": "Score Raise Spirits geometry × Allies emanation by stacks on the BUD.",
+        },
+        "explanation_summary": "Pick the Raise Spirits + Allies combo that stacks most on the BUD; often Overwatch + Sympathetic.",
+        "review_needed": False,
+        "review_reasons": [],
+    },
+    180: {
+        "advice_model": "safe_default",
+        "safe_default": None,
+        "push_default": None,
+        "farm_default": None,
+        "conditionals": [
+            {
+                "when": "most Heroes of the Lance champions",
+                "upgrade_id": 20602,
+                "name": "Loyal to Her Past",
+            },
+            {
+                "when": "most Unaffiliated champions",
+                "upgrade_id": 20603,
+                "name": "Loyal to Herself",
+            },
+            {
+                "when": "most Evil champions",
+                "upgrade_id": 20604,
+                "name": "Loyal to Darkness",
+            },
+        ],
+        "context_flags": {
+            "formation_dependent": True,
+            "adventure_dependent": False,
+            "farm_push_split": False,
+        },
+        "sources": {
+            "csv_default_label": None,
+            "csv_label_maps_to": None,
+            "csv_advice_text": (
+                "CNE Spotlight: pick Loyal * by affiliation/alignment stacks; "
+                "Herself also spreads Arrogant Charm to adjacents."
+            ),
+        },
+        "explanation_summary": (
+            "No universal default — pick Past / Herself / Darkness by Heroes of "
+            "the Lance, Unaffiliated, or Evil counts."
+        ),
+        "review_needed": False,
+        "review_reasons": [],
+    },
 }
 
 
@@ -5076,15 +5279,19 @@ def main() -> int:
             "options_by_tier": _options_by_tier(cfg),
         }
     from ic_gamedata.specialization_engine import HERO_HANDLERS
+    from ic_gamedata.specialization_positional_rules import load_positional_rules
 
+    positional_heroes = set(load_positional_rules())
     for hid, row in out_heroes.items():
-        row["has_dynamic_handler"] = int(hid) in HERO_HANDLERS
+        hero_id = int(hid)
+        row["has_dynamic_handler"] = hero_id in HERO_HANDLERS or hero_id in positional_heroes
 
     payload = {
         "version": 1,
         "notes": (
-            "Advisor-facing specialization model. Separates safe/push/farm defaults "
-            "and conditionals. review_needed means do not silently pick one conflict side."
+            "Advisor-facing specialization model. Separates bud/gold/speed (and legacy "
+            "safe/push/farm) defaults and conditionals. review_needed means do not "
+            "silently pick one conflict side."
         ),
         "heroes": out_heroes,
     }

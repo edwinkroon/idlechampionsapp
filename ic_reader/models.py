@@ -93,7 +93,7 @@ class GameOffsetsConfig:
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> GameOffsetsConfig:
         proc = data.get("process") or {}
-        names = tuple(proc.get("executable_names") or ["IdleChampions.exe"])
+        names = tuple(proc.get("executable_names") or ["IdleDragons.exe", "IdleChampions.exe"])
         modules = tuple(proc.get("modules") or ["GameAssembly.dll", "UnityPlayer.dll"])
         values: dict[str, tuple[ValueCandidateDef, ...]] = {}
         for key, spec in (data.get("values") or {}).items():

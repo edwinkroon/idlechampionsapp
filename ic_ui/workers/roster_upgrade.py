@@ -29,7 +29,7 @@ class RosterUpgradeRunnable(QRunnable):
         try:
             from ic_gamedata.roster_upgrade_advisor import suggest_roster_upgrades
         except ImportError as exc:
-            self.signals.error.emit(f"Importfout: {exc}")
+            self.signals.error.emit(f"Import error: {exc}")
             return
         try:
             suggestions = suggest_roster_upgrades(
@@ -38,6 +38,6 @@ class RosterUpgradeRunnable(QRunnable):
                 context=self._context,  # type: ignore[arg-type]
             )
         except Exception as exc:
-            self.signals.error.emit(f"Roster-upgrade fout: {exc}")
+            self.signals.error.emit(f"Roster upgrade error: {exc}")
             return
         self.signals.done.emit(suggestions)

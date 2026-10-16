@@ -178,9 +178,9 @@ def patron_restriction_note(hero_id: int, patron_id: int, payload: dict[str, Any
     availability = hero_patron_availability(hero_id, patron_id)
     patron_name = PATRON_NAMES.get(patron_id, f"Patron {patron_id}")
     if availability == "unavailable":
-        return f"Niet beschikbaar voor {patron_name}"
+        return f"Unavailable for {patron_name}"
     if availability == "feat":
         if payload and _has_patron_unlock_feat(hero_id, patron_id, payload):
             return None
-        return f"Patron-feat vereist voor {patron_name}"
+        return f"Patron feat required for {patron_name}"
     return None

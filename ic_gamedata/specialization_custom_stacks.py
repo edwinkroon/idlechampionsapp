@@ -183,10 +183,13 @@ def dob_qualified_counts(
     attack_types_by_hero: dict[int, frozenset[str]],
     scores_by_hero: dict[int, dict[str, int]],
 ) -> tuple[int, int, int, int]:
-    """Count Dob's Befriend stacks.
+    """Count Dob's Befriend Magical/Friendly/Quick stacks.
 
     Game text is Oxventure OR the listed filter (magic / CHA≥17 / DEX≥17),
     not Oxventure-only with an extra filter on top.
+
+    The 4th return value is a legacy unique-species count (unused after the
+    Liar's Night rebalance moved Befriend Everybody into a base ability).
     """
     magical = friendly = quick = 0
     for hero_id in active_hero_ids:
@@ -202,18 +205,14 @@ def dob_qualified_counts(
     return magical, friendly, quick, unique_species_count(active_hero_ids, tags_by_hero)
 
 
-def shadowheart_duplicity_distance(
+def shadowheart_duplicate_hero(
     active_hero_ids: set[int],
     seat_by_hero: dict[int, int] | None,
     scores_by_hero: dict[int, dict[str, int]],
-    adjacency: dict[int, frozenset[int]] | None = None,
-) -> int:
+) -> int | None:
+    """Hero id whose seat hosts Invoke Duplicity (highest DEX; ties → highest seat)."""
     if not seat_by_hero or _SHADOWHEART_ID not in active_hero_ids:
-        return 0
-    shadow_seat = seat_by_hero.get(_SHADOWHEART_ID)
-    if shadow_seat is None:
-        return 0
-
+        return None
     best_hero: int | None = None
     best_dex = -1
     best_seat = -1
@@ -226,7 +225,22 @@ def shadowheart_duplicity_distance(
             best_dex = dex
             best_seat = seat
             best_hero = hero_id
+    return best_hero
 
+
+def shadowheart_duplicity_distance(
+    active_hero_ids: set[int],
+    seat_by_hero: dict[int, int] | None,
+    scores_by_hero: dict[int, dict[str, int]],
+    adjacency: dict[int, frozenset[int]] | None = None,
+) -> int:
+    if not seat_by_hero or _SHADOWHEART_ID not in active_hero_ids:
+        return 0
+    shadow_seat = seat_by_hero.get(_SHADOWHEART_ID)
+    if shadow_seat is None:
+        return 0
+
+    best_hero = shadowheart_duplicate_hero(active_hero_ids, seat_by_hero, scores_by_hero)
     if best_hero is None or best_hero == _SHADOWHEART_ID:
         return 0
     duplicate_seat = seat_by_hero.get(best_hero)

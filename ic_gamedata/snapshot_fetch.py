@@ -8,12 +8,13 @@ from typing import Any
 from ic_gamedata.api_client import fetch_user_details_payload
 from ic_gamedata.credentials import GameCredentials, extract_credentials_from_log
 from ic_gamedata.log_parser import merge_snapshots, read_latest_snapshot
+from ic_gamedata.log_tailer import WebRequestLogTailer
 
 
 def fetch_merged_snapshot(
     credentials: GameCredentials | None,
     log_path: Path | None,
-    tailer=None,
+    tailer: WebRequestLogTailer | None = None,
 ) -> tuple[
     GameCredentials | None,
     dict[str, Any] | None,
@@ -24,6 +25,9 @@ def fetch_merged_snapshot(
 ]:
     """
     Fetch getuserdetails and merge with log tail data.
+
+    When ``tailer`` is provided, only appended log bytes are read (no full-file
+    rescan). Scripts may pass ``tailer=None`` to fall back to a full read.
 
     Returns (credentials, payload, api_snap, merged_snap, api_err, api_detail).
     """
@@ -45,24 +49,18 @@ def fetch_merged_snapshot(
         else:
             api_detail = "API ok"
 
-    log_sources = []
     if tailer is not None:
+        # Always advance the tail so unread growth does not pile up.
         polled = tailer.poll()
-        if polled is not None:
-            log_sources.append(polled)
-    if log_path is not None:
-        latest = read_latest_snapshot(log_path)
-        if latest is not None:
-            log_sources.append(latest)
-
-    if log_sources:
-        log_snap = merge_snapshots(*log_sources)
+        log_snap = polled or tailer.last_snapshot
+    elif log_path is not None:
+        log_snap = read_latest_snapshot(log_path)
 
     snap = merge_snapshots(api_snap, log_snap)
     if snap is not None:
         if api_snap is not None and log_snap is not None:
             api_detail = "API + log"
         elif log_snap is not None and api_snap is None:
-            api_detail = "log (API niet beschikbaar)"
+            api_detail = "log (API unavailable)"
 
     return credentials, payload, api_snap, snap, err, api_detail

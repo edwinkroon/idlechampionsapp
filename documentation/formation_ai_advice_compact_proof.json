@@ -1,0 +1,61 @@
+{
+  "schema_version": "1.7",
+  "fixture": {
+    "label": "tests._export() 3-champion Beast Mode fixture",
+    "advice_chars_before": 24682,
+    "clipboard_chars_before": 26249,
+    "export_internal_chars": 48812
+  },
+  "after": {
+    "advice_chars": 8279,
+    "clipboard_chars": 11887,
+    "section_chars": {
+      "meta": 115,
+      "bronregels": 572,
+      "context": 967,
+      "geometry": 1440,
+      "champions": 4614,
+      "onzekerheden": 369,
+      "readiness": 114
+    },
+    "reduction_vs_advice_before_pct": 66.5,
+    "reduction_vs_clipboard_before_pct": 54.7
+  },
+  "rich_synthetic_defines": {
+    "clipboard_chars_before_approx": 16697,
+    "clipboard_chars_after": 8893,
+    "advice_chars_after": 5528,
+    "section_chars": {
+      "meta": 128,
+      "bronregels": 572,
+      "context": 338,
+      "geometry": 1104,
+      "champions": 2785,
+      "onzekerheden": 379,
+      "readiness": 134
+    },
+    "reduction_pct": 46.7
+  },
+  "removed_from_advice_projection": [
+    "Hash effect_ref catalog + duplicated semantics/subeffects/parameters",
+    "Full distance matrix (adjacency retained)",
+    "quality/usability/effect_key_index/parser traces",
+    "Long notes block (replaced by short bronregels)",
+    "Repeated readiness dimension objects"
+  ],
+  "kept_for_advice": [
+    "Self-contained Dutch task brief with goal + main DPS",
+    "Geometry: positions, column direction, adjacency",
+    "Champion identity, effective traits, affiliations status",
+    "Complete mechanical effect text inline",
+    "Specialization options, prerequisites, availability, state_changes",
+    "Active feat effects",
+    "Bundled onzekerheden that can flip a choice"
+  ],
+  "agent_test_status": "Automatic presence/structure tests only — no live agent trial run.",
+  "remaining_decision_gaps": [
+    "Live party snapshot not frozen (equipment/feats/stacks often unknown).",
+    "Uggie companion seat unknown → Uggie-dependent targeting conditional.",
+    "Specialization selection_status often unknown in log fixtures → no A→B."
+  ]
+}

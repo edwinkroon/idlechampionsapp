@@ -39,6 +39,16 @@ _DEFAULT_ADJ: dict[int, frozenset[int]] = {
 
 
 
+def fallback_seat_column(seat: int) -> int:
+    """Stable 0-based column when topology has no entry for ``seat``.
+
+    Matches the heuristic diamond (5 columns, indices 0–4). Callers that
+    already have ``topology.seat_column`` should prefer that map and only
+    use this for missing seats.
+    """
+    return (int(seat) - 1) % 5
+
+
 # UI seat zones for standard diamond when API bridge data is unavailable (seats 10–12).
 
 _DIAMOND_FALLBACK_ZONE: dict[int, Zone] = {
@@ -116,7 +126,19 @@ def _zones_from_columns(seat_column: dict[int, int]) -> dict[int, Zone]:
     return zones
 
 
-
+def _symmetrize_adjacency(
+    seat_adjacency: dict[int, frozenset[int]],
+) -> dict[int, frozenset[int]]:
+    """Make physical neighbor edges mutual; drop self-loops and unknown seats."""
+    known = set(seat_adjacency)
+    mutual: dict[int, set[int]] = {seat: set() for seat in known}
+    for seat, neighbors in seat_adjacency.items():
+        for other in neighbors:
+            if other == seat or other not in known:
+                continue
+            mutual[seat].add(other)
+            mutual[other].add(seat)
+    return {seat: frozenset(neighbors) for seat, neighbors in mutual.items()}
 
 
 def _formation_grid_hero_ids(instance: dict[str, Any], payload: dict[str, Any]) -> list[int]:
@@ -218,74 +240,59 @@ def _bridge_seat_layout(
 ) -> tuple[dict[int, int], dict[int, frozenset[int]]]:
 
     """
-
     Map UI seat numbers (F1–F12) to formation columns via the live formation grid.
 
-
-
     Formation node index != UI seat number (e.g. diamond tip is UI seat 9 at grid index 0).
-
+    Empty grid slots get a free seat id so adjacency stays complete and symmetric.
     """
 
     index_to_seat: dict[int, int] = {}
+    used_seats: set[int] = set()
 
     for index, hero_id in enumerate(formation_ids):
-
-        if hero_id <= 0:
-
+        if index >= len(nodes) or hero_id <= 0:
             continue
-
         seat = seat_by_hero.get(hero_id)
-
-        if seat is not None:
-
+        if seat is not None and seat not in used_seats:
             index_to_seat[index] = seat
+            used_seats.add(seat)
 
-
+    # Assign free seat ids to empty / unmapped node indices (prefer index+1).
+    for index in range(len(nodes)):
+        if index in index_to_seat:
+            continue
+        preferred = index + 1
+        if preferred not in used_seats and 1 <= preferred <= 12:
+            seat = preferred
+        else:
+            seat = next((s for s in range(1, 13) if s not in used_seats), None)
+            if seat is None:
+                continue
+        index_to_seat[index] = seat
+        used_seats.add(seat)
 
     seat_column: dict[int, int] = {}
-
     seat_adjacency: dict[int, set[int]] = {}
 
     for index, node in enumerate(nodes):
-
         seat = index_to_seat.get(index)
-
         if seat is None:
-
             continue
-
         col = _parse_int(node.get("col"))
-
         if col is None:
-
             col = index
-
         seat_column[seat] = col
-
         neighbors: set[int] = set()
-
         raw_adj = node.get("adj")
-
         if isinstance(raw_adj, list):
-
             for adj_index in raw_adj:
-
                 adj_i = _parse_int(adj_index)
-
                 if adj_i is None:
-
                     continue
-
                 neighbor_seat = index_to_seat.get(adj_i)
-
-                if neighbor_seat is not None:
-
+                if neighbor_seat is not None and neighbor_seat != seat:
                     neighbors.add(neighbor_seat)
-
-        seat_adjacency.setdefault(seat, set()).update(neighbors)
-
-
+        seat_adjacency[seat] = neighbors
 
     return seat_column, {seat: frozenset(neighbors) for seat, neighbors in seat_adjacency.items()}
 
@@ -317,51 +324,33 @@ def _topology_from_formation_nodes(
 
     seat_adjacency: dict[int, frozenset[int]] = {}
 
+    # Prefer full graph bridge (occupied UI seats + free ids for empty slots).
+    if formation_ids is not None and seat_by_hero is not None:
+        bridged_col, bridged_adj = _bridge_seat_layout(
+            nodes, formation_ids, seat_by_hero
+        )
+        if len(bridged_col) == len(nodes):
+            seat_column = dict(bridged_col)
+            seat_adjacency = dict(bridged_adj)
 
-
-    if formation_ids and seat_by_hero:
-
-        bridged_col, bridged_adj = _bridge_seat_layout(nodes, formation_ids, seat_by_hero)
-
-        seat_column.update(bridged_col)
-
-        seat_adjacency.update(bridged_adj)
-
-
-
-    # Legacy index→seat fallback for nodes without a bridged hero (partial grids).
-
-    for index, node in enumerate(nodes):
-
-        seat = index + 1
-
-        if seat in seat_column:
-
-            continue
-
-        col = _parse_int(node.get("col"))
-
-        if col is None:
-
-            col = ((seat - 1) % 4) + 1
-
-        seat_column[seat] = col
-
-        raw_adj = node.get("adj")
-
-        neighbors: set[int] = set()
-
-        if isinstance(raw_adj, list):
-
-            for adj_index in raw_adj:
-
-                adj_i = _parse_int(adj_index)
-
-                if adj_i is not None:
-
-                    neighbors.add(adj_i + 1)
-
-        seat_adjacency[seat] = frozenset(neighbors)
+    # Legacy index→seat only when bridge could not cover every node.
+    if len(seat_column) != len(nodes):
+        for index, node in enumerate(nodes):
+            seat = index + 1
+            if seat in seat_column:
+                continue
+            col = _parse_int(node.get("col"))
+            if col is None:
+                col = ((seat - 1) % 4) + 1
+            seat_column[seat] = col
+            raw_adj = node.get("adj")
+            neighbors: set[int] = set()
+            if isinstance(raw_adj, list):
+                for adj_index in raw_adj:
+                    adj_i = _parse_int(adj_index)
+                    if adj_i is not None:
+                        neighbors.add(adj_i + 1)
+            seat_adjacency[seat] = frozenset(neighbors)
 
 
 
@@ -372,27 +361,15 @@ def _topology_from_formation_nodes(
 
 
     seat_zone = _zones_from_columns(seat_column)
-
-    for seat in range(1, 13):
-
-        seat_zone.setdefault(seat, _DIAMOND_FALLBACK_ZONE.get(seat, "mid"))
-
-        seat_column.setdefault(seat, ((seat - 1) % 4) + 1)
-
-        seat_adjacency.setdefault(seat, _DEFAULT_ADJ.get(seat, frozenset()))
-
-
+    # Do not pad to seats 1–12: API formations often have fewer physical slots
+    # (e.g. 9). Padding introduced phantom positions and asymmetric edges.
+    seat_adjacency = _symmetrize_adjacency(seat_adjacency)
 
     return FormationTopology(
-
         seat_adjacency=seat_adjacency,
-
         seat_column=seat_column,
-
         seat_zone=seat_zone,
-
         source=source,
-
     )
 
 

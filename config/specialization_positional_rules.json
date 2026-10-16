@@ -1,0 +1,197 @@
+{
+  "version": 1,
+  "notes": "Declarative formation+goal specialization rules. goals omit = all lanes (bud/gold/speed). First matching rule wins. Inventory (position-critical): already handled in code — Caramon 179, KoS 168, Omin 65, Shadowheart 141, Van Richten 177, Umberto 151, Regis 20 tier1. Declarative here — Vlahnya 35, Regis 20 tier0, Korth 45, Ezmerelda 70, Turiel 49, Tyril 10, Alyndra 77, Vin Ursa 127, Jamilah 11. Deferred (bespoke/comp) — Calliope distance, Celeste/Bruenor/Nayeli handler merges.",
+  "heroes": {
+    "35": {
+      "hero_id": 35,
+      "name": "Vlahnya",
+      "default_ids": [1659],
+      "default_reason": "Breaking Out Solo (default — no seat data)",
+      "rules": [
+        {
+          "when": "bud_same_column",
+          "choice_ids": [1658],
+          "reason": "BUD shares Vlahnya's column → Spy Network"
+        },
+        {
+          "when": "column_count_lte",
+          "n": 2,
+          "choice_ids": [1659],
+          "reason": "Vlahnya's column has ≤2 champions → Breaking Out Solo"
+        },
+        {
+          "when": "always",
+          "choice_ids": [1658],
+          "reason": "Vlahnya's column is crowded → Spy Network"
+        }
+      ]
+    },
+    "20": {
+      "hero_id": 20,
+      "name": "Regis",
+      "tier": 0,
+      "rules": [
+        {
+          "when": "bud_column_ahead",
+          "choice_ids": [11530],
+          "reason": "BUD is in front of Regis → Ahead"
+        },
+        {
+          "when": "bud_column_behind",
+          "choice_ids": [11531],
+          "reason": "BUD is behind Regis → Behind"
+        },
+        {
+          "when": "always",
+          "choice_ids": [11530],
+          "reason": "Ahead (same column default)"
+        }
+      ],
+      "default_ids": [11530],
+      "default_reason": "Ahead (default)"
+    },
+    "45": {
+      "hero_id": 45,
+      "name": "Korth",
+      "default_ids": [13041],
+      "default_reason": "Samurai Training (Behind) (default — no seat data)",
+      "rules": [
+        {
+          "when": "bud_adjacent",
+          "choice_ids": [13043],
+          "reason": "BUD is beside Korth → Samurai Training (Beside)"
+        },
+        {
+          "when": "bud_column_ahead",
+          "choice_ids": [13042],
+          "reason": "BUD is in front of Korth → Samurai Training (In Front)"
+        },
+        {
+          "when": "bud_column_behind",
+          "choice_ids": [13041],
+          "reason": "BUD is behind Korth → Samurai Training (Behind)"
+        },
+        {
+          "when": "always",
+          "choice_ids": [13041],
+          "reason": "Samurai Training (Behind) (same column / default)"
+        }
+      ]
+    },
+    "70": {
+      "hero_id": 70,
+      "name": "Ezmerelda",
+      "default_ids": [15041],
+      "default_reason": "We've Trained For This (default — no seat data)",
+      "rules": [
+        {
+          "when": "bud_same_column",
+          "choice_ids": [15042],
+          "reason": "BUD shares Ezmerelda's column → Vampire Hunter"
+        },
+        {
+          "when": "always",
+          "choice_ids": [15041],
+          "reason": "BUD not in Ezmerelda's column → We've Trained For This"
+        }
+      ]
+    },
+    "49": {
+      "hero_id": 49,
+      "name": "Turiel",
+      "default_ids": [10664],
+      "default_reason": "Voice of Authority (default — no seat data)",
+      "rules": [
+        {
+          "when": "is_front_seat",
+          "choice_ids": [10663],
+          "reason": "Turiel is frontline → Voice of Resilience"
+        },
+        {
+          "when": "always",
+          "choice_ids": [10664],
+          "reason": "Turiel not frontline → Voice of Authority"
+        }
+      ]
+    },
+    "10": {
+      "hero_id": 10,
+      "name": "Tyril",
+      "default_ids": [146],
+      "default_reason": "Wild Shape (default — no seat data)",
+      "rules": [
+        {
+          "when": "is_front_seat",
+          "choice_ids": [146],
+          "reason": "Tyril is frontline → Wild Shape"
+        },
+        {
+          "when": "always",
+          "choice_ids": [145],
+          "reason": "Tyril not frontline → Moonbeam"
+        }
+      ]
+    },
+    "77": {
+      "hero_id": 77,
+      "name": "Alyndra",
+      "default_ids": [17749],
+      "default_reason": "Expansive Vision (default — no seat data)",
+      "rules": [
+        {
+          "when": "bud_adjacent",
+          "choice_ids": [17749],
+          "reason": "BUD is adjacent to Alyndra → Expansive Vision"
+        },
+        {
+          "when": "always",
+          "choice_ids": [17750],
+          "reason": "BUD not adjacent to Alyndra → Extra Judgy"
+        }
+      ]
+    },
+    "127": {
+      "hero_id": 127,
+      "name": "Vin Ursa",
+      "default_ids": [12090, 12094],
+      "default_reason": "Front Deck + Friends in High Places (default — no seat data)",
+      "rules": [
+        {
+          "when": "is_front_seat",
+          "choice_ids": [12090, 12094],
+          "reason": "Vin Ursa frontline → Front Deck + Friends in High Places"
+        },
+        {
+          "when": "is_back_seat",
+          "choice_ids": [12091, 12094],
+          "reason": "Vin Ursa backline → Rear Deck + Friends in High Places"
+        },
+        {
+          "when": "always",
+          "choice_ids": [12090, 12094],
+          "reason": "Vin Ursa mid → Front Deck + Friends in High Places"
+        }
+      ]
+    },
+    "11": {
+      "hero_id": 11,
+      "name": "Jamilah",
+      "default_ids": [239],
+      "default_reason": "Bruiser (default — no seat data)",
+      "rules": [
+        {
+          "when": "adjacent_role_count_gte",
+          "role": "tank",
+          "n": 1,
+          "choice_ids": [239],
+          "reason": "tank adjacent to Jamilah → Bruiser"
+        },
+        {
+          "when": "always",
+          "choice_ids": [240],
+          "reason": "no adjacent tanks → Indomitable Might"
+        }
+      ]
+    }
+  }
+}

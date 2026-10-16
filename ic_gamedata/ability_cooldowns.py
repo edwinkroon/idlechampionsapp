@@ -331,33 +331,72 @@ def _active_instance(payload: dict[str, Any]) -> dict[str, Any] | None:
 
 
 
-def _formation_seats(instance: dict[str, Any]) -> dict[int, int]:
-
-    """seat -> hero_id for champions currently selected in the active party."""
-
-    seats: dict[int, int] = {}
-
+def _seat_by_hero(instance: dict[str, Any]) -> dict[int, int]:
+    """hero_id -> seat from ``hero_in_seats`` (includes benched seat holders)."""
+    mapping: dict[int, int] = {}
     raw = instance.get("hero_in_seats")
-
     if not isinstance(raw, dict):
-
-        return seats
-
+        return mapping
     for seat_raw, hero_raw in raw.items():
-
         seat = _parse_int(seat_raw)
-
         hero_id = _parse_int(hero_raw)
-
         if seat is None or hero_id is None or hero_id <= 0:
-
             continue
+        if 1 <= seat <= 12:
+            mapping[hero_id] = seat
+    return mapping
 
-        if 1 <= seat <= 10:
 
+def _permanent_seat_by_hero() -> dict[int, int]:
+    try:
+        from ic_gamedata.specialization_data import hero_seat_id_map_from_cached_definitions
+    except ImportError:
+        return {}
+    return hero_seat_id_map_from_cached_definitions()
+
+
+def _hotkey_seats_for_heroes(
+    hero_ids: list[int],
+    seat_by_hero: dict[int, int],
+) -> dict[int, int]:
+    """seat -> hero_id for formation champions who have a number hotkey (1–0)."""
+    defs = _permanent_seat_by_hero()
+    seats: dict[int, int] = {}
+    for hero_id in hero_ids:
+        seat = seat_by_hero.get(hero_id)
+        if seat is None:
+            seat = defs.get(hero_id)
+        if seat is not None and 1 <= seat <= 10:
             seats[seat] = hero_id
-
     return seats
+
+
+def _formation_seats(
+    instance: dict[str, Any],
+    payload: dict[str, Any] | None = None,
+) -> dict[int, int]:
+    """seat -> hero_id for champions on the live formation who can ult via 1–0.
+
+    ``hero_in_seats`` lists one champion per seat even when they are benched.
+    A populated formation grid is authoritative; a sparse grid (0–1 heroes) falls
+    back to seats 1–10 so a mid-update payload does not blank the hotkeys.
+    """
+    seat_by_hero = _seat_by_hero(instance)
+    live_ids: list[int] = []
+    if payload is not None:
+        try:
+            from ic_gamedata.formation_seats import live_formation_hero_ids
+        except ImportError:
+            live_ids = []
+        else:
+            live_ids = [hid for hid in live_formation_hero_ids(payload) if hid > 0]
+    if len(live_ids) >= 2:
+        return _hotkey_seats_for_heroes(live_ids, seat_by_hero)
+    return {
+        seat: hero_id
+        for hero_id, seat in seat_by_hero.items()
+        if 1 <= seat <= 10
+    }
 
 
 
@@ -447,7 +486,7 @@ def _attack_ready(attack_ids: list[int], cooldowns: dict[int, int]) -> bool:
 
 def formation_ability_keys(payload: dict[str, Any]) -> list[str]:
 
-    """Hotkeys for seats 1-10 on the active party (no cooldown filter)."""
+    """Hotkeys for champions on the live formation who can ult via 1–0."""
 
     instance = _active_instance(payload)
 
@@ -455,7 +494,7 @@ def formation_ability_keys(payload: dict[str, Any]) -> list[str]:
 
         return []
 
-    seats = _formation_seats(instance)
+    seats = _formation_seats(instance, payload)
 
     keys: list[str] = []
 
@@ -491,7 +530,7 @@ def ability_status(payload: dict[str, Any]) -> tuple[list[str], str]:
 
     if instance is None:
 
-        return [], "geen actieve party"
+        return [], "no active party"
 
 
 
@@ -503,15 +542,15 @@ def ability_status(payload: dict[str, Any]) -> tuple[list[str], str]:
 
         if not keys:
 
-            return [], "geen champions op toetsen 1-0"
+            return [], "no champions on hotkeys 1-0"
 
-        return keys, "klaar (geen cooldown-data): " + ",".join(keys)
+        return keys, "ready (no cooldown data): " + ",".join(keys)
 
 
 
     ultimates = _merged_ultimates(payload)
 
-    seats = _formation_seats(instance)
+    seats = _formation_seats(instance, payload)
 
     ready: list[str] = []
 
@@ -535,7 +574,7 @@ def ability_status(payload: dict[str, Any]) -> tuple[list[str], str]:
 
         if remaining is None:
 
-            parts.append(f"{key}: onbekend")
+            parts.append(f"{key}: unknown")
 
             continue
 
@@ -547,13 +586,13 @@ def ability_status(payload: dict[str, Any]) -> tuple[list[str], str]:
 
             ready.append(key)
 
-            parts.append(f"{key}: klaar")
+            parts.append(f"{key}: ready")
 
 
 
     if not parts:
 
-        return [], "geen champions op toetsen 1-0"
+        return [], "no champions on hotkeys 1-0"
 
     return ready, "; ".join(parts)
 
@@ -606,4 +645,151 @@ def persist_ultimates_from_payload(payload: dict[str, Any]) -> None:
     except OSError:
 
         return
+
+
+def _attack_name_by_id() -> dict[int, str]:
+    try:
+        from ic_gamedata.specialization_data import cached_definitions_data
+    except ImportError:
+        return {}
+    data = cached_definitions_data()
+    attacks = data.get("attack_defines")
+    if not isinstance(attacks, list):
+        return {}
+    out: dict[int, str] = {}
+    for item in attacks:
+        if not isinstance(item, dict):
+            continue
+        attack_id = _parse_int(item.get("id"))
+        name = str(item.get("name") or "").strip()
+        if attack_id is None or not name:
+            continue
+        out[attack_id] = name
+    return out
+
+
+def _hero_ultimate_attack_id() -> dict[int, int]:
+    try:
+        from ic_gamedata.specialization_data import cached_definitions_data
+    except ImportError:
+        return {}
+    heroes = cached_definitions_data().get("hero_defines")
+    if not isinstance(heroes, list):
+        return {}
+    out: dict[int, int] = {}
+    for item in heroes:
+        if not isinstance(item, dict):
+            continue
+        hero_id = _parse_int(item.get("id"))
+        attack_id = _parse_int(item.get("ultimate_attack_id"))
+        if hero_id is None or attack_id is None or attack_id <= 0:
+            continue
+        out[hero_id] = attack_id
+    return out
+
+
+def _hero_display_name(hero_id: int) -> str:
+    try:
+        from ic_gamedata.specialization_data import (
+            hero_name_map_from_cached_definitions,
+            hero_name_map_from_champion_config,
+        )
+    except ImportError:
+        return f"Hero {hero_id}"
+    name = hero_name_map_from_champion_config().get(hero_id)
+    if name:
+        return name
+    name = hero_name_map_from_cached_definitions().get(hero_id)
+    if name:
+        return name
+    return f"Hero {hero_id}"
+
+
+def _call_uggie_name_by_hero() -> dict[int, str]:
+    """Fallbacks ultimates also call Uggie; the hotkey UI shows Call Uggie."""
+    try:
+        from ic_gamedata.specialization_data import (
+            cached_definitions_data,
+            hero_name_map_from_cached_definitions,
+        )
+    except ImportError:
+        return {}
+    data = cached_definitions_data()
+    names = hero_name_map_from_cached_definitions()
+    attack_names = _attack_name_by_id()
+    out: dict[int, str] = {}
+
+    effect_hero: dict[int, int] = {}
+    for upgrade in data.get("upgrade_defines") or []:
+        if not isinstance(upgrade, dict):
+            continue
+        hero_id = _parse_int(upgrade.get("hero_id"))
+        effect = str(upgrade.get("effect") or "")
+        if hero_id is None or not effect.startswith("effect_def,"):
+            continue
+        effect_id = _parse_int(effect.split(",", 1)[1])
+        if effect_id is not None:
+            effect_hero[effect_id] = hero_id
+
+    for effect in data.get("effect_defines") or []:
+        if not isinstance(effect, dict):
+            continue
+        effect_id = _parse_int(effect.get("id"))
+        if effect_id is None:
+            continue
+        hero_id = effect_hero.get(effect_id)
+        if hero_id is None:
+            continue
+        for key in effect.get("effect_keys") or []:
+            if not isinstance(key, dict):
+                continue
+            call_id = _parse_int(key.get("call_uggie_ult_id"))
+            if call_id is None:
+                continue
+            name = attack_names.get(call_id)
+            if name:
+                out[hero_id] = name
+
+    for attack in data.get("attack_defines") or []:
+        if not isinstance(attack, dict):
+            continue
+        if str(attack.get("name") or "").strip() != "Call Uggie":
+            continue
+        desc = str(attack.get("description") or "")
+        for hero_id, hero_name in names.items():
+            if desc.startswith(f"{hero_name} "):
+                out.setdefault(hero_id, "Call Uggie")
+                break
+    return out
+
+
+def _ultimate_display_name(hero_id: int, payload: dict[str, Any]) -> str:
+    # Fallbacks: number key moves Uggie; game/UI treats that as Call Uggie.
+    call_uggie = _call_uggie_name_by_hero().get(hero_id)
+    if call_uggie:
+        return call_uggie
+    attack_id = _hero_ultimate_attack_id().get(hero_id)
+    if attack_id is None:
+        ids = _merged_ultimates(payload).get(hero_id) or []
+        attack_id = ids[0] if ids else None
+    if attack_id is None:
+        return "Ultimate"
+    return _attack_name_by_id().get(attack_id) or "Ultimate"
+
+
+def ability_hotkey_labels(payload: dict[str, Any]) -> dict[str, str]:
+    """Return hotkey → \"Champion - Ultimate\" for formation champions on seats 1–10."""
+    instance = _active_instance(payload)
+    if instance is None:
+        return {}
+    seats = _formation_seats(instance, payload)
+    labels: dict[str, str] = {}
+    for seat, hero_id in seats.items():
+        key = _SEAT_TO_KEY.get(seat)
+        if key is None:
+            continue
+        hero_name = _hero_display_name(hero_id)
+        ultimate = _ultimate_display_name(hero_id, payload)
+        labels[key] = f"{hero_name} - {ultimate}"
+    return labels
 

@@ -4,16 +4,19 @@ from __future__ import annotations
 
 from collections.abc import Callable
 
+from ic_gamedata.formation_advisor.bud_gate import append_proxy_ratio, score_bench_replace
 from ic_gamedata.formation_advisor.models import FormationInsight, FormationLayoutContext
+from ic_gamedata.formation_advisor.topology import fallback_seat_column
 
 _KOS_ID = 168
 _RAISTLIN_ID = 173
+_FLINT_ID = 178
 
 PlacementHandler = Callable[[FormationLayoutContext], FormationInsight | None]
 
 
 def _formation_column(ctx: FormationLayoutContext, seat: int) -> int:
-    return ctx.topology.seat_column.get(seat, ((seat - 1) % 4) + 1)
+    return ctx.topology.seat_column.get(seat, fallback_seat_column(seat))
 
 
 def _handle_king_of_shadows(ctx: FormationLayoutContext) -> FormationInsight | None:
@@ -46,10 +49,10 @@ def _handle_king_of_shadows(ctx: FormationLayoutContext) -> FormationInsight | N
             related_hero_name=None,
             related_seat=None,
             priority=2,
-            headline=f"{ctx.name(_KOS_ID)}: zet carries achter KoS",
+            headline=f"{ctx.name(_KOS_ID)}: put carries behind KoS",
             detail=(
-                f"King of Shadows staat goed vooraan (slot {kos_seat}). "
-                f"Schuif DPS/support naar de kolommen achter hem voor Power of the King."
+                f"King of Shadows is well placed up front (slot {kos_seat}). "
+                f"Move DPS/support into the columns behind him for Power of the King."
             ),
             rule_source_type="handler",
             data_source_version="handler",
@@ -65,10 +68,10 @@ def _handle_king_of_shadows(ctx: FormationLayoutContext) -> FormationInsight | N
         related_hero_name=None,
         related_seat=None,
         priority=2,
-        headline=f"{ctx.name(_KOS_ID)}: naar voren",
+        headline=f"{ctx.name(_KOS_ID)}: move forward",
         detail=(
-            f"KoS staat op slot {kos_seat} ({zone}) — zet hem in de frontlinie "
-            "zodat party-buffs achter hem landen."
+            f"KoS is on slot {kos_seat} ({zone}) — place him on the front line "
+            "so party buffs land behind him."
         ),
         rule_source_type="handler",
         data_source_version="handler",
@@ -98,11 +101,11 @@ def _handle_raistlin(ctx: FormationLayoutContext) -> FormationInsight | None:
         related_hero_name=None,
         related_seat=None,
         priority=2,
-        headline=f"{ctx.name(_RAISTLIN_ID)}: isoleer voor damage",
+        headline=f"{ctx.name(_RAISTLIN_ID)}: isolate for damage",
         detail=(
-            f"Raistlin op slot {seat} heeft {neighbor_count} buren — "
-            "meer damage wanneer hij naast minder champions staat. "
-            "Overweeg een isolerder slot."
+            f"Raistlin on slot {seat} has {neighbor_count} neighbors — "
+            "more damage when he stands next to fewer champions. "
+            "Consider a more isolated slot."
         ),
         rule_source_type="handler",
         data_source_version="handler",
@@ -111,38 +114,108 @@ def _handle_raistlin(ctx: FormationLayoutContext) -> FormationInsight | None:
     )
 
 
+def _handle_flint(ctx: FormationLayoutContext) -> FormationInsight | None:
+    if _FLINT_ID not in ctx.active_hero_ids:
+        return None
+    seat = ctx.seat_of(_FLINT_ID)
+    if seat is None:
+        return None
+    neighbor_count = sum(
+        1 for neighbor_seat in ctx.adjacent_seats(seat) if ctx.hero_at_seat(neighbor_seat) is not None
+    )
+    flint_col = _formation_column(ctx, seat)
+    carry_id = ctx.carry_hero_id
+    carry_covered = False
+    if carry_id is not None and carry_id != _FLINT_ID:
+        carry_seat = ctx.seat_of(carry_id)
+        if carry_seat is not None:
+            carry_col = _formation_column(ctx, carry_seat)
+            carry_covered = carry_col in (flint_col, flint_col + 1)
+
+    if neighbor_count <= 1 and len(ctx.active_hero_ids) >= 4:
+        return FormationInsight(
+            insight_type="placement",
+            hero_id=_FLINT_ID,
+            hero_name=ctx.name(_FLINT_ID),
+            seat=seat,
+            related_hero_id=None,
+            related_hero_name=None,
+            related_seat=None,
+            priority=2,
+            headline=f"{ctx.name(_FLINT_ID)}: pack neighbors for Forged Bonds",
+            detail=(
+                f"Flint on slot {seat} has only {neighbor_count} adjacent champion(s). "
+                "Forged Bonds stacks from each adjacent ally and buffs his column plus the "
+                "column behind him — move him into a denser pocket."
+            ),
+            rule_source_type="handler",
+            data_source_version="handler",
+            confidence=4,
+            rule_id="handler_flint_neighbors",
+        )
+
+    if carry_id is not None and carry_id != _FLINT_ID and not carry_covered:
+        return FormationInsight(
+            insight_type="placement",
+            hero_id=_FLINT_ID,
+            hero_name=ctx.name(_FLINT_ID),
+            seat=seat,
+            related_hero_id=carry_id,
+            related_hero_name=ctx.name(carry_id),
+            related_seat=ctx.seat_of(carry_id),
+            priority=2,
+            headline=f"{ctx.name(_FLINT_ID)}: cover {ctx.name(carry_id)} with Forged Bonds",
+            detail=(
+                f"Keep {ctx.name(carry_id)} in Flint's column or the column directly behind him "
+                "so Forged Bonds reaches your Primary DPS."
+            ),
+            rule_source_type="handler",
+            data_source_version="handler",
+            confidence=4,
+            rule_id="handler_flint_cover_carry",
+        )
+    return None
+
+
 def _bench_buffer_suggestion(ctx: FormationLayoutContext) -> FormationInsight | None:
     if ctx.carry_hero_id is None or ctx.goal != "bud":
         return None
     if _carry_has_adjacent_buffer(ctx):
         return None
+    best: tuple[int, int, float] | None = None
     for bench_id in sorted(ctx.allowed_bench_ids):
-        if "buffer" in ctx.tags(bench_id) or (
-            "support" in ctx.roles(bench_id) and "buffer" in ctx.tags(bench_id)
-        ):
-            replace_id = _weakest_non_carry(ctx)
-            if replace_id is None:
+        if "buffer" not in ctx.tags(bench_id):
+            continue
+        for replace_id in _non_carry_replace_candidates(ctx):
+            ratio = score_bench_replace(ctx, bench_id=bench_id, replace_id=replace_id)
+            if ratio is None or ratio < 1.0:
                 continue
-            return FormationInsight(
-                insight_type="bench",
-                hero_id=bench_id,
-                hero_name=ctx.name(bench_id),
-                seat=None,
-                related_hero_id=replace_id,
-                related_hero_name=ctx.name(replace_id),
-                related_seat=ctx.seat_of(replace_id),
-                priority=2,
-                headline=f"Bench: {ctx.name(bench_id)} i.p.v. {ctx.name(replace_id)}",
-                detail=(
-                    f"{ctx.name(bench_id)} op bench kan {ctx.name(ctx.carry_hero_id)} "
-                    f"beter buffen dan {ctx.name(replace_id)} (slot {ctx.seat_of(replace_id)})."
-                ),
-                rule_source_type="heuristic",
-                data_source_version="formation_rules_v1",
-                confidence=3,
-                rule_id="heuristic_bench_buffer",
-            )
-    return None
+            if best is None or ratio > best[2]:
+                best = (bench_id, replace_id, ratio)
+    if best is None:
+        return None
+    bench_id, replace_id, ratio = best
+    detail = (
+        f"{ctx.name(bench_id)} on bench can buff {ctx.name(ctx.carry_hero_id)} "
+        f"better than {ctx.name(replace_id)} (slot {ctx.seat_of(replace_id)})."
+    )
+    return FormationInsight(
+        insight_type="bench",
+        hero_id=bench_id,
+        hero_name=ctx.name(bench_id),
+        seat=None,
+        related_hero_id=replace_id,
+        related_hero_name=ctx.name(replace_id),
+        related_seat=ctx.seat_of(replace_id),
+        priority=2,
+        headline=f"Bench: {ctx.name(bench_id)} instead of {ctx.name(replace_id)}",
+        detail=append_proxy_ratio(detail, ratio),
+        rule_source_type="heuristic",
+        data_source_version="formation_rules_v1",
+        confidence=3,
+        rule_id="heuristic_bench_buffer",
+        bud_ratio=ratio,
+    )
 
 
 def _carry_has_adjacent_buffer(ctx: FormationLayoutContext) -> bool:
@@ -161,13 +234,17 @@ def _carry_has_adjacent_buffer(ctx: FormationLayoutContext) -> bool:
     return False
 
 
-def _weakest_non_carry(ctx: FormationLayoutContext) -> int | None:
+def _non_carry_replace_candidates(ctx: FormationLayoutContext) -> list[int]:
     carry = ctx.carry_hero_id
-    candidates = [
+    return [
         hid
         for hid in ctx.active_hero_ids
         if hid != carry and "tank" not in ctx.roles(hid) and "buffer" not in ctx.tags(hid)
     ]
+
+
+def _weakest_non_carry(ctx: FormationLayoutContext) -> int | None:
+    candidates = _non_carry_replace_candidates(ctx)
     if not candidates:
         return None
     return candidates[-1]
@@ -176,6 +253,7 @@ def _weakest_non_carry(ctx: FormationLayoutContext) -> int | None:
 PLACEMENT_HANDLERS: list[PlacementHandler] = [
     _handle_king_of_shadows,
     _handle_raistlin,
+    _handle_flint,
     _bench_buffer_suggestion,
 ]
 

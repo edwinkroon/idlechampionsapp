@@ -2,7 +2,7 @@
   "version": "0.1.0",
   "game_version_note": "VERIFY: set your client build (Steam/EGS) and patch date. Offsets break after updates.",
   "process": {
-    "executable_names": ["IdleChampions.exe"],
+    "executable_names": ["IdleDragons.exe", "IdleChampions.exe"],
     "modules": ["GameAssembly.dll", "UnityPlayer.dll"]
   },
   "values": {

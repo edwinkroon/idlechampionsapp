@@ -156,5 +156,5 @@ class AdviceResult:
         if self.exception_id:
             return f"csv-exception ({self.exception_id}, {version}{provenance})"
         if self.rule_id:
-            return f"csv-regel ({self.rule_id}, {version}{provenance})"
-        return f"csv-regel ({version}{provenance})"
+            return f"csv rule ({self.rule_id}, {version}{provenance})"
+        return f"csv rule ({version}{provenance})"

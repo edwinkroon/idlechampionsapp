@@ -1,4 +1,4 @@
-"""Persist champion role preferences per goal (BUD / gold)."""
+"""Persist champion role preferences per goal (BUD / gold / speed)."""
 
 from __future__ import annotations
 
@@ -10,7 +10,8 @@ from ic_gamedata.parsing import parse_int as _parse_int
 from ic_gamedata.seat_advisor.models import STANDARD_SEAT_ROLES, SeatRole
 
 _PREFS_FILENAME = "champion_role_preferences.json"
-_VALID_GOALS = frozenset({"bud", "gold"})
+_VALID_GOALS = frozenset({"bud", "gold", "speed"})
+_LEGACY_ROLE_ALIASES = {"modron": "scavenger"}
 
 if getattr(sys, "frozen", False):
     _CONFIG_BASE = Path(sys.executable).parent
@@ -20,6 +21,13 @@ else:
 
 def _prefs_path() -> Path:
     return _CONFIG_BASE / "config" / _PREFS_FILENAME
+
+
+def _normalize_role(role: str) -> str | None:
+    normalized = _LEGACY_ROLE_ALIASES.get(role, role)
+    if normalized in STANDARD_SEAT_ROLES:
+        return normalized
+    return None
 
 
 def load_role_preferences() -> dict[int, dict[str, str]]:
@@ -40,8 +48,8 @@ def load_role_preferences() -> dict[int, dict[str, str]]:
         mapped: dict[str, str] = {}
         for goal_raw, role_raw in goals_raw.items():
             goal = str(goal_raw).strip().lower()
-            role = str(role_raw).strip().lower()
-            if goal in _VALID_GOALS and role in STANDARD_SEAT_ROLES:
+            role = _normalize_role(str(role_raw).strip().lower())
+            if goal in _VALID_GOALS and role is not None:
                 mapped[goal] = role
         if mapped:
             result[hero_id] = mapped
@@ -58,8 +66,9 @@ def save_role_preferences(prefs: dict[int, dict[str, str]]) -> None:
 def get_chosen_role(hero_id: int, goal: str, prefs: dict[int, dict[str, str]] | None = None) -> SeatRole | None:
     store = prefs if prefs is not None else load_role_preferences()
     role = store.get(hero_id, {}).get(goal)
-    if role in STANDARD_SEAT_ROLES:
-        return role  # type: ignore[return-value]
+    normalized = _normalize_role(role) if isinstance(role, str) else None
+    if normalized in STANDARD_SEAT_ROLES:
+        return normalized  # type: ignore[return-value]
     return None
 
 
@@ -74,3 +83,12 @@ def set_chosen_role(hero_id: int, goal: str, role: SeatRole | None) -> dict[int,
         prefs.setdefault(hero_id, {})[goal] = role
     save_role_preferences(prefs)
     return prefs
+
+
+def role_prefs_stamp(prefs: dict[int, dict[str, str]] | None = None) -> tuple[tuple[int, tuple[tuple[str, str], ...]], ...]:
+    """Compact stamp for advice-job coalescing when roles change."""
+    store = prefs if prefs is not None else load_role_preferences()
+    return tuple(
+        (hero_id, tuple(sorted(goals.items())))
+        for hero_id, goals in sorted(store.items())
+    )

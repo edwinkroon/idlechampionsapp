@@ -13,6 +13,7 @@ from PySide6.QtWidgets import (
     QGroupBox,
     QHBoxLayout,
     QLabel,
+    QLayout,
     QMessageBox,
     QProgressBar,
     QPushButton,
@@ -26,7 +27,15 @@ from ic_core.game_state import GameStateService
 from ic_core.memory_service import MemoryReading, MemoryService
 from ic_ui import theme as ui_theme
 from ic_ui.tabs.sources_tab import SourcesTab
-from ic_ui.theme import apply_card_shadow, area_progress_bar_stylesheet, on_theme_changed, status_pill_stylesheet
+from ic_ui.theme import (
+    apply_button_icon,
+    apply_card_shadow,
+    area_progress_bar_stylesheet,
+    on_theme_changed,
+    status_pill_dot_stylesheet,
+    status_pill_stylesheet,
+    style_primary_button,
+)
 
 if TYPE_CHECKING:
     from ic_core.game_data_service import GameDataService
@@ -114,7 +123,7 @@ class DashboardTab(QWidget):
     def refresh_credentials_from_log(self) -> bool:
         if self._data is not None:
             self._data.configure(log_path=self.api_log_path(), credentials=self._dash_credentials)
-            ok = self._data.refresh_credentials()
+            ok = self._data.refresh_credentials(force=True)
             if self._data.credentials is not None:
                 self._dash_credentials = self._data.credentials
             return ok
@@ -152,7 +161,7 @@ class DashboardTab(QWidget):
         )
         if self._pending_session_seed and refreshed_snap is not None:
             self._pending_session_seed = False
-            self._dash_status.setText("Dashboard actief.")
+            self._set_dash_status("Dashboard active.")
             self._schedule_label_refresh()
 
     def disconnect_memory(self) -> None:
@@ -177,67 +186,177 @@ class DashboardTab(QWidget):
         root.setContentsMargins(8, 8, 8, 8)
         root.setSpacing(10)
 
-        self._dash_parties_container = QWidget()
-        self._dash_parties_container.setSizePolicy(
-            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum
-        )
-        self._dash_parties_layout = QGridLayout(self._dash_parties_container)
-        # Margins leave room for QGraphicsDropShadowEffect (otherwise cards clip).
-        self._dash_parties_layout.setContentsMargins(10, 10, 10, 14)
-        self._dash_parties_layout.setHorizontalSpacing(16)
-        self._dash_parties_layout.setVerticalSpacing(16)
-        self._dash_parties_layout.setColumnStretch(0, 1)
-        self._dash_parties_layout.setColumnStretch(1, 1)
-        self._dash_party_widgets: dict[int, dict[str, QWidget]] = {}
-
-        parties_scroll = QScrollArea()
-        parties_scroll.setWidgetResizable(True)
-        parties_scroll.setFrameShape(QFrame.Shape.NoFrame)
-        parties_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        parties_scroll.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
-        parties_scroll.setWidget(self._dash_parties_container)
-        root.addWidget(parties_scroll, stretch=1)
-
-        self._dash_detail = QLabel("")
-        self._dash_detail.setWordWrap(True)
-        root.addWidget(self._dash_detail)
+        # Header above tiles: actions left, status pills + detail right.
+        header = QHBoxLayout()
+        header.setSpacing(16)
+        header.setAlignment(Qt.AlignmentFlag.AlignTop)
 
         controls = QHBoxLayout()
+        controls.setSpacing(8)
         self._toggle_btn = QPushButton("Start dashboard")
+        style_primary_button(self._toggle_btn)
+        apply_button_icon(self._toggle_btn, "start")
         self._toggle_btn.clicked.connect(self._toggle)
-        refresh_btn = QPushButton("Opnieuw zoeken")
+        refresh_btn = QPushButton("Search again")
+        apply_button_icon(refresh_btn, "refresh")
         refresh_btn.clicked.connect(self.refresh_install)
-        reset_btn = QPushButton("Reset sessie")
+        reset_btn = QPushButton("Reset session")
+        apply_button_icon(reset_btn, "reset")
         reset_btn.clicked.connect(self.reset_session)
         controls.addWidget(self._toggle_btn)
         controls.addWidget(reset_btn)
         controls.addWidget(refresh_btn)
-        controls.addStretch(1)
-        root.addLayout(controls)
+        header.addLayout(controls, stretch=0)
 
+        header.addStretch(1)
+
+        status_col = QVBoxLayout()
+        status_col.setSpacing(6)
+        status_col.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignRight)
         status_row = QHBoxLayout()
-        self._status_api = QLabel("API: —")
-        self._status_memory = QLabel("Memory: —")
-        self._status_session = QLabel("Sessie: —")
-        for pill in (self._status_api, self._status_memory, self._status_session):
-            pill.setStyleSheet(status_pill_stylesheet())
-            status_row.addWidget(pill)
-        status_row.addStretch(1)
-        root.addLayout(status_row)
+        status_row.setSpacing(8)
+        status_row.setAlignment(Qt.AlignmentFlag.AlignRight)
+        self._status_pills: dict[str, dict[str, QWidget]] = {}
+        for key, tooltip in (
+            ("api", "Status of CNE API / webRequestLog credentials"),
+            ("memory", "Live memory read from the game process"),
+            ("session", "Dashboard session and last successful update"),
+        ):
+            frame, dot, text = self._make_status_pill(tooltip)
+            self._status_pills[key] = {"frame": frame, "dot": dot, "text": text}
+            status_row.addWidget(frame)
+        status_col.addLayout(status_row)
 
-        self._dash_status = QLabel(
-            "Dashboard gebruikt hybride API-refresh (log-wijziging + max. 30 s). Start voor memory-updates."
-        )
+        self._dash_detail = QLabel("")
+        self._dash_detail.setWordWrap(True)
+        self._dash_detail.setAlignment(Qt.AlignmentFlag.AlignRight)
+        self._dash_detail.setStyleSheet(f"color: {ui_theme.TEXT_MUTED}; font-size: 12px;")
+        status_col.addWidget(self._dash_detail)
+        header.addLayout(status_col, stretch=0)
+        root.addLayout(header)
+
+        self._dash_status = QLabel("")
         self._dash_status.setWordWrap(True)
+        self._dash_status.setStyleSheet(f"color: {ui_theme.TEXT_BODY};")
+        self._dash_status.hide()
         root.addWidget(self._dash_status)
 
+        # Transparent scroll host — the rounded panel hugs the tiles; leftover
+        # viewport space stays empty (page/tab background), not a giant black box.
+        self._dash_parties_container = QWidget()
+        self._dash_parties_container.setObjectName("partiesScrollHost")
+        self._dash_parties_container.setSizePolicy(
+            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum
+        )
+        self._dash_parties_container.setAttribute(
+            Qt.WidgetAttribute.WA_StyledBackground, False
+        )
+        parties_outer = QVBoxLayout(self._dash_parties_container)
+        parties_outer.setContentsMargins(0, 0, 0, 0)
+        parties_outer.setSpacing(0)
+        parties_outer.setAlignment(Qt.AlignmentFlag.AlignTop)
+
+        self._dash_parties_panel = QFrame()
+        self._dash_parties_panel.setObjectName("partiesPanel")
+        self._dash_parties_panel.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
+        self._dash_parties_panel.setSizePolicy(
+            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Maximum
+        )
+        panel_layout = QVBoxLayout(self._dash_parties_panel)
+        panel_layout.setContentsMargins(20, 20, 20, 20)
+        panel_layout.setSpacing(0)
+
+        self._dash_parties_grid_host = QWidget()
+        self._dash_parties_grid_host.setSizePolicy(
+            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Maximum
+        )
+        self._dash_parties_layout = QGridLayout(self._dash_parties_grid_host)
+        self._dash_parties_layout.setSizeConstraint(QLayout.SizeConstraint.SetMinimumSize)
+        # Extra margin for QGraphicsDropShadowEffect so shadows are not clipped.
+        self._dash_parties_layout.setContentsMargins(4, 4, 4, 8)
+        self._dash_parties_layout.setHorizontalSpacing(16)
+        self._dash_parties_layout.setVerticalSpacing(10)
+        self._dash_parties_layout.setColumnStretch(0, 1)
+        self._dash_parties_layout.setColumnStretch(1, 1)
+        self._dash_parties_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+        panel_layout.addWidget(self._dash_parties_grid_host)
+
+        parties_outer.addWidget(self._dash_parties_panel, 0, Qt.AlignmentFlag.AlignTop)
+        parties_outer.addStretch(1)
+        self._dash_party_widgets: dict[int, dict[str, QWidget]] = {}
+
+        self._parties_scroll = QScrollArea()
+        self._parties_scroll.setWidgetResizable(True)
+        self._parties_scroll.setFrameShape(QFrame.Shape.NoFrame)
+        self._parties_scroll.setStyleSheet(
+            "QScrollArea { background: transparent; border: none; }"
+            "QScrollArea > QWidget > QWidget { background: transparent; }"
+        )
+        self._parties_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self._parties_scroll.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+        self._parties_scroll.setAlignment(Qt.AlignmentFlag.AlignTop)
+        self._parties_scroll.setWidget(self._dash_parties_container)
+        root.addWidget(self._parties_scroll, stretch=1)
+
+        self._parties_empty = QLabel(
+            "No party data yet. Start the dashboard (and the game) to see party cards."
+        )
+        self._parties_empty.setWordWrap(True)
+        self._parties_empty.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self._parties_empty.setStyleSheet(f"color: {ui_theme.TEXT_MUTED}; padding: 24px;")
+        self._parties_empty.hide()
+        root.addWidget(self._parties_empty)
+
+    def _set_dash_status(self, text: str = "") -> None:
+        """Show a short status only for actionable messages (not idle 'active')."""
+        cleaned = (text or "").strip()
+        if not cleaned or cleaned.startswith("Dashboard active"):
+            self._dash_status.clear()
+            self._dash_status.hide()
+            return
+        self._dash_status.setText(cleaned)
+        self._dash_status.show()
+
+    def _make_status_pill(self, tooltip: str) -> tuple[QFrame, QLabel, QLabel]:
+        frame = QFrame()
+        frame.setObjectName("statusPill")
+        frame.setStyleSheet(status_pill_stylesheet())
+        frame.setToolTip(tooltip)
+        row = QHBoxLayout(frame)
+        row.setContentsMargins(8, 4, 10, 4)
+        row.setSpacing(6)
+        dot = QLabel()
+        dot.setObjectName("statusPillDot")
+        dot.setFixedSize(8, 8)
+        dot.setStyleSheet(status_pill_dot_stylesheet(ui_theme.TEXT_MUTED))
+        text = QLabel("—")
+        text.setObjectName("statusPillText")
+        row.addWidget(dot, alignment=Qt.AlignmentFlag.AlignVCenter)
+        row.addWidget(text, alignment=Qt.AlignmentFlag.AlignVCenter)
+        return frame, dot, text
+
     def _apply_local_theme(self, _mode: str = "dark") -> None:
-        for pill in (self._status_api, self._status_memory, self._status_session):
-            pill.setStyleSheet(status_pill_stylesheet())
+        for pill in self._status_pills.values():
+            pill["frame"].setStyleSheet(status_pill_stylesheet())
+        self._dash_detail.setStyleSheet(f"color: {ui_theme.TEXT_MUTED}; font-size: 12px;")
+        self._dash_status.setStyleSheet(f"color: {ui_theme.TEXT_BODY};")
+        self._parties_empty.setStyleSheet(f"color: {ui_theme.TEXT_MUTED}; padding: 24px;")
+        self._parties_scroll.setStyleSheet(
+            "QScrollArea { background: transparent; border: none; }"
+            "QScrollArea > QWidget > QWidget { background: transparent; }"
+        )
+        panel = getattr(self, "_dash_parties_panel", None)
+        if panel is not None:
+            panel.style().unpolish(panel)
+            panel.style().polish(panel)
         for widgets in self._dash_party_widgets.values():
             frame = widgets.get("frame")
             if frame is not None:
-                apply_card_shadow(frame)
+                is_active = bool(frame.property("partyActive"))
+                frame.setObjectName("activePartyCard" if is_active else "partyCard")
+                frame.style().unpolish(frame)
+                frame.style().polish(frame)
+                apply_card_shadow(frame, soft=True)
             progress_bar = widgets.get("modron_progress")
             if progress_bar is not None and progress_bar.isVisible():
                 progress_bar.setStyleSheet(
@@ -264,7 +383,10 @@ class DashboardTab(QWidget):
             return None
 
     def _on_memory_updated(self, reading: MemoryReading) -> None:
-        if reading.error and "niet beschikbaar" in (reading.detail or ""):
+        if reading.error and (
+            "unavailable" in (reading.detail or "").lower()
+            or "niet beschikbaar" in (reading.detail or "")
+        ):
             self._state.update_memory_fields(detail=reading.detail)
         else:
             self._state.update_memory_fields(
@@ -335,11 +457,11 @@ class DashboardTab(QWidget):
     @staticmethod
     def _format_rate_window(window_sec: float | None) -> str:
         if window_sec is None:
-            return "warmt op (<3 min)"
+            return "warming up (<3 min)"
         minutes = max(round(window_sec / 60), 1)
         if minutes >= 15:
-            return "15 min venster"
-        return f"{minutes} min venster"
+            return "15 min window"
+        return f"{minutes} min window"
 
     def _load_tracker(self) -> None:
         self._state.load_tracker()
@@ -348,27 +470,32 @@ class DashboardTab(QWidget):
         try:
             from ic_gamedata.paths import InstallSource, find_game_install
         except ImportError as exc:
-            self._sources_tab.install_lbl.setText(f"ic_gamedata ontbreekt: {exc}")
+            self._sources_tab.install_lbl.setText(f"ic_gamedata missing: {exc}")
             self._sources_tab.log_lbl.setText("—")
             return
         info = find_game_install()
         self._dash_install = info
         if info is None:
-            self._sources_tab.install_lbl.setText("Niet gevonden (Epic/Steam/handmatig pad)")
+            self._sources_tab.install_lbl.setText("Not found (Epic/Steam/manual path)")
             self._sources_tab.log_lbl.setText("—")
-            self._dash_status.setText("Geen installatie gevonden. Start het spel of gebruik handmatig pad.")
+            self._set_dash_status("No installation found. Start the game or use a manual path.")
+            self._sources_tab.set_feedback(
+                "No installation found — enter a manual path or start the game.",
+                ok=False,
+            )
             self._dash_tailer = None
             return
         source_labels = {
             InstallSource.EPIC: "Epic Games",
             InstallSource.STEAM: "Steam",
-            InstallSource.MANUAL: "Handmatig",
-            InstallSource.UNKNOWN: "Onbekend",
+            InstallSource.MANUAL: "Manual",
+            InstallSource.RUNNING: "Running process",
+            InstallSource.UNKNOWN: "Unknown",
         }
         self._sources_tab.install_lbl.setText(f"{source_labels.get(info.source, info.source.value)} — {info.install_dir}")
         self._sources_tab.manual_path.setText(str(info.install_dir))
         if info.web_request_log is None:
-            self._sources_tab.log_lbl.setText("webRequestLog.txt nog niet aanwezig")
+            self._sources_tab.log_lbl.setText("webRequestLog.txt not present yet")
             self._dash_tailer = None
             self._dash_credentials = None
             return
@@ -387,28 +514,35 @@ class DashboardTab(QWidget):
                 credentials=self._dash_credentials,
             )
         if self._dash_credentials is not None:
-            self._dash_status.setText(
-                "Klaar. API ververst bij spelactiviteit (log) en anders binnen 30 seconden."
+            self._set_dash_status(
+                "Ready. API refreshes on game activity (log) or within 30 seconds."
             )
+            self._sources_tab.set_feedback("Installation and credentials found.")
             self.api_poll_requested.emit()
         else:
-            self._dash_status.setText("Log gevonden maar nog geen credentials.")
+            self._set_dash_status("Log found but no credentials yet.")
+            self._sources_tab.set_feedback(
+                "Log found, but no credentials yet — play in-game briefly or search again.",
+                ok=False,
+            )
 
     def save_manual_path(self) -> None:
         try:
             from ic_gamedata.config_manager import ConfigManager
         except ImportError:
-            QMessageBox.critical(self, "Dashboard", "ic_gamedata module ontbreekt.")
+            QMessageBox.critical(self, "Dashboard", "ic_gamedata module missing.")
             return
         raw = (self._sources_tab.manual_path.text() or "").strip()
         try:
             ConfigManager().set_install_path(raw)
         except OSError as exc:
-            QMessageBox.critical(self, "Dashboard", f"Kon config niet opslaan:\n{exc}")
+            self._sources_tab.set_feedback(f"Save failed: {exc}", ok=False)
             return
         self.refresh_install()
         if raw:
-            QMessageBox.information(self, "Dashboard", "Handmatig pad opgeslagen in config/gamedata.json")
+            self._sources_tab.set_feedback("Manual path saved to config/gamedata.json.")
+        else:
+            self._sources_tab.set_feedback("Manual path cleared; auto-detect is used.")
 
     def _seed_session_from_store(self) -> bool:
         """Use latest GameDataService snap if available; otherwise wait for async poll."""
@@ -441,12 +575,13 @@ class DashboardTab(QWidget):
         self._dash_active = True
         self._dash_poll_tick = 0
         self._toggle_btn.setText("Stop dashboard")
+        apply_button_icon(self._toggle_btn, "stop")
         self._memory.start()
         self.api_poll_requested.emit()
         if seeded:
-            self._dash_status.setText("Dashboard actief.")
+            self._set_dash_status("Dashboard active.")
         else:
-            self._dash_status.setText("Dashboard actief — wachten op API-data…")
+            self._set_dash_status("Dashboard active — waiting for API data…")
         self._update_labels()
         self._poll_timer.start()
 
@@ -457,14 +592,14 @@ class DashboardTab(QWidget):
             self.refresh_install()
         self._start()
         if not self._dash_active:
-            self._dash_status.setText(
-                "Dashboard kon niet starten — opnieuw proberen zodra Idle Champions draait."
+            self._set_dash_status(
+                "Dashboard could not start — will retry once Idle Champions is running."
             )
             QTimer.singleShot(15000, self._auto_start)
             return
         if self._state.last_update is None and self._state.memory_area is None:
-            self._dash_status.setText(
-                "Dashboard actief — wachten op speldata. Start Idle Champions voor live rates."
+            self._set_dash_status(
+                "Dashboard active — waiting for game data. Start Idle Champions for live rates."
             )
 
     def _stop(self) -> None:
@@ -473,7 +608,8 @@ class DashboardTab(QWidget):
         self._poll_timer.stop()
         self._memory.stop()
         self._toggle_btn.setText("Start dashboard")
-        self._dash_status.setText("Dashboard gestopt.")
+        apply_button_icon(self._toggle_btn, "start")
+        self._set_dash_status("Dashboard stopped.")
 
     def _toggle(self) -> None:
         if self._dash_active:
@@ -540,7 +676,7 @@ class DashboardTab(QWidget):
             adv = f", {name}" if name else f", adventure {adventure_id}"
         else:
             adv = ""
-        active = " · actief venster" if is_active else ""
+        active = " · active window" if is_active else ""
         return f"Party {party_index}{adv}{active}"
 
     def _enriched_party(self, tracked):
@@ -589,11 +725,14 @@ class DashboardTab(QWidget):
 
         box = QGroupBox(f"Party {party_index}")
         box.setProperty("party_index", party_index)
-        box.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
-        apply_card_shadow(box)
+        box.setObjectName("partyCard")
+        # Expanding so a shorter tile grows to the tallest tile in the same row.
+        box.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        apply_card_shadow(box, soft=True)
         layout = QVBoxLayout(box)
-        layout.setContentsMargins(12, 18, 12, 12)
+        layout.setContentsMargins(8, 10, 8, 8)
         layout.setSpacing(6)
+        layout.setAlignment(Qt.AlignmentFlag.AlignTop)
         lbl_area = QLabel("Area: —")
         lbl_modron_progress = QLabel("")
         modron_bar = QProgressBar()
@@ -604,25 +743,31 @@ class DashboardTab(QWidget):
         modron_bar.hide()
         lbl_modron_progress.hide()
         lbl_run = QLabel("Run: —")
-        lbl_gems = QLabel("Gems deze run: —")
+        lbl_gems = QLabel("Gems this run: —")
         lbl_areas_rate = QLabel("Areas/kw: —")
         goal_runs_row = QWidget()
         goal_runs_row_layout = QHBoxLayout(goal_runs_row)
         goal_runs_row_layout.setContentsMargins(0, 0, 0, 0)
+        goal_runs_row_layout.setSpacing(6)
+        goal_runs_row_layout.setAlignment(Qt.AlignmentFlag.AlignVCenter)
         lbl_goal_runs = QLabel("")
-        btn_goal_runs_clear = QPushButton("Wis")
-        btn_goal_runs_clear.setFixedWidth(40)
-        btn_goal_runs_clear.setToolTip("Wis Modron-run historie voor deze party")
+        lbl_goal_runs.setWordWrap(True)
+        btn_goal_runs_clear = QPushButton("Clear")
+        btn_goal_runs_clear.setObjectName("compactBtn")
+        apply_button_icon(btn_goal_runs_clear, "clear", size=16)
+        btn_goal_runs_clear.setToolTip("Clear Modron run history for this party")
+        btn_goal_runs_clear.setFixedHeight(24)
         btn_goal_runs_expand = QPushButton("▶")
-        btn_goal_runs_expand.setFixedWidth(28)
-        btn_goal_runs_expand.setToolTip("Toon eerdere Modron-runs")
+        btn_goal_runs_expand.setObjectName("compactBtn")
+        btn_goal_runs_expand.setFixedSize(24, 24)
+        btn_goal_runs_expand.setToolTip("Show earlier Modron runs")
         goal_runs_row_layout.addWidget(lbl_goal_runs, stretch=1)
-        goal_runs_row_layout.addWidget(btn_goal_runs_clear)
-        goal_runs_row_layout.addWidget(btn_goal_runs_expand)
+        goal_runs_row_layout.addWidget(btn_goal_runs_clear, alignment=Qt.AlignmentFlag.AlignVCenter)
+        goal_runs_row_layout.addWidget(btn_goal_runs_expand, alignment=Qt.AlignmentFlag.AlignVCenter)
         goal_runs_extra = QWidget()
         goal_runs_extra_layout = QVBoxLayout(goal_runs_extra)
         goal_runs_extra_layout.setContentsMargins(0, 0, 0, 0)
-        goal_runs_extra_layout.setSpacing(2)
+        goal_runs_extra_layout.setSpacing(1)
         lbl_patron = QLabel("")
         lbl_briv = QLabel("")
         lbl_warps = QLabel("")
@@ -640,6 +785,7 @@ class DashboardTab(QWidget):
         for widget in all_labels:
             widget.setWordWrap(True)
             widget.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
+        lbl_modron_progress.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
         for widget in (
             lbl_area,
             lbl_modron_progress,
@@ -732,9 +878,9 @@ class DashboardTab(QWidget):
     def _clear_goal_runs(self, party_index: int) -> None:
         reply = QMessageBox.question(
             self,
-            "Modron-runs wissen",
-            f"Alle opgeslagen Modron-run tijden voor party {party_index} wissen?\n"
-            "Dit kan niet ongedaan worden gemaakt.",
+            "Clear Modron runs",
+            f"Clear all saved Modron run times for party {party_index}?\n"
+            "This cannot be undone.",
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
             QMessageBox.StandardButton.No,
         )
@@ -802,8 +948,14 @@ class DashboardTab(QWidget):
         expand_btn.setText("▼" if expanded else "▶")
         extra.setVisible(expanded)
 
-    def _apply_party_tile(self, widgets: dict[str, QWidget], view) -> None:
+    def _apply_party_tile(self, widgets: dict[str, QWidget], view, *, is_active: bool = False) -> None:
         widgets["frame"].setTitle(view.title)
+        frame = widgets["frame"]
+        frame.setProperty("partyActive", is_active)
+        frame.setObjectName("activePartyCard" if is_active else "partyCard")
+        frame.style().unpolish(frame)
+        frame.style().polish(frame)
+        apply_card_shadow(frame, soft=True)
         widgets["area"].setText(view.area)
         widgets["run"].setText(view.run)
         widgets["gems"].setText(view.gems)
@@ -838,20 +990,21 @@ class DashboardTab(QWidget):
                 credentials_ok=self._dash_credentials is not None,
             )
         )
-        for pill, text, color in (
-            (self._status_api, api_text, api_color),
-            (self._status_memory, mem_text, mem_color),
-            (self._status_session, session_text, session_color),
+        for key, text, color in (
+            ("api", api_text, api_color),
+            ("memory", mem_text, mem_color),
+            ("session", session_text, session_color),
         ):
-            pill.setText(text)
-            pill.setStyleSheet(
-                f"font-size: 11px; color: {ui_theme.TEXT_BADGE}; background: {ui_theme.BG_BADGE}; "
-                f"border-left: 4px solid {color}; border-radius: 10px; padding: 4px 10px;"
-            )
+            pill = self._status_pills[key]
+            pill["text"].setText(text)
+            pill["dot"].setStyleSheet(status_pill_dot_stylesheet(color))
+            pill["frame"].setStyleSheet(status_pill_stylesheet())
 
     def _update_labels(self) -> None:
         tracker = self._state.tracker
         if tracker is None:
+            self._parties_scroll.hide()
+            self._parties_empty.show()
             return
         stats = tracker.compute()
         latest = tracker.latest
@@ -861,7 +1014,7 @@ class DashboardTab(QWidget):
         if self._state.api_detail:
             detail_parts.append(self._state.api_detail)
         if self._state.last_update:
-            detail_parts.append(f"laatste update: {time.strftime('%H:%M:%S', time.localtime(self._state.last_update))}")
+            detail_parts.append(f"last update: {time.strftime('%H:%M:%S', time.localtime(self._state.last_update))}")
         self._dash_detail.setText(" · ".join(detail_parts))
         self._update_status_pills()
 
@@ -870,6 +1023,9 @@ class DashboardTab(QWidget):
         party_stats_map = {p.party_index: p for p in stats.parties} if stats else {}
         base_parties = self._running_parties(latest)
         seen: set[int] = set()
+        has_parties = bool(base_parties)
+        self._parties_scroll.setVisible(has_parties)
+        self._parties_empty.setVisible(not has_parties)
 
         for tile_index, base in enumerate(base_parties):
             tracked = None
@@ -886,18 +1042,26 @@ class DashboardTab(QWidget):
             tile = widgets["frame"]
             is_active = self._is_active_party(party.party_index)
             self._dash_parties_layout.removeWidget(tile)
-            self._dash_parties_layout.addWidget(tile, tile_index // 2, tile_index % 2)
+            # Always one column wide (same as tiles above). Grid row height matches
+            # the tallest tile; Expanding policy equalizes heights within the row.
+            self._dash_parties_layout.addWidget(
+                tile, tile_index // 2, tile_index % 2
+            )
 
             ps = party_stats_map.get(party.party_index)
-            use_memory_gems = is_active and self._state.memory_gems is not None
-            if use_memory_gems and not (
-                party.gems_this_reset is not None
-                and party.current_area is not None
-                and party.current_area < 40
-                and self._state.memory_gems > party.gems_this_reset + 50
-            ):
-                gems = self._state.memory_gems
-                gem_prefix = ""
+            try:
+                from ic_gamedata.dashboard_enrich import resolve_dashboard_gems
+            except ImportError:
+                resolve_dashboard_gems = None  # type: ignore[assignment]
+            if resolve_dashboard_gems is not None:
+                gems, gem_prefix = resolve_dashboard_gems(
+                    is_active=is_active,
+                    memory_gems=self._state.memory_gems if is_active else None,
+                    api_gems=party.gems_this_reset,
+                    tracked_gems=ps.gems_this_reset if ps is not None else None,
+                    tracked_estimated=bool(ps.gems_estimated) if ps is not None else False,
+                    area=party.current_area,
+                )
             else:
                 gems = ps.gems_this_reset if ps is not None else party.gems_this_reset
                 gem_prefix = "~" if ps is not None and ps.gems_estimated else ""
@@ -921,7 +1085,7 @@ class DashboardTab(QWidget):
                     format_rate_window=self._format_rate_window,
                     goal_run_history=tracker.goal_run_history(party.party_index),
                 )
-                self._apply_party_tile(widgets, view)
+                self._apply_party_tile(widgets, view, is_active=is_active)
             else:
                 tile.setTitle(self._party_title(party.party_index, party.adventure_id, is_active))
                 widgets["area"].setText(
@@ -944,8 +1108,8 @@ class DashboardTab(QWidget):
         self.api_poll_requested.emit()
         if self._seed_session_from_store():
             self._pending_session_seed = False
-            self._dash_status.setText("Sessie gereset — nieuwe baseline gezet.")
+            self._set_dash_status("Session reset — new baseline set.")
         else:
-            self._dash_status.setText("Sessie gereset — wachten op verse API-data…")
+            self._set_dash_status("Session reset — waiting for fresh API data…")
         self._update_labels()
 

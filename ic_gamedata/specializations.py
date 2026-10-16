@@ -19,6 +19,7 @@ from ic_gamedata.specialization_data import (
 from ic_gamedata.specialization_engine import (
     FormationContext,
     HERO_HANDLERS,
+    resolve_bud_hero_id_from_party_stats,
 )
 from ic_gamedata.specialization_engine import (
     baseline_default_ids as _baseline_default_ids,
@@ -309,7 +310,10 @@ def _active_highest_damage_hero_id(payload: dict[str, Any]) -> int | None:
     stats = instance.get("stats")
     if not isinstance(stats, dict):
         return None
-    return _parse_int(stats.get("this_reset_highest_damage_dealt_hero_id"))
+    hero_id = _parse_int(stats.get("this_reset_highest_damage_dealt_hero_id"))
+    if hero_id is None or hero_id <= 0:
+        return None
+    return hero_id
 
 
 def _active_hero_ids(instance: dict[str, Any]) -> set[int]:
@@ -322,6 +326,26 @@ def _active_hero_ids(instance: dict[str, Any]) -> set[int]:
         if hero_id is not None and hero_id > 0:
             hero_ids.add(hero_id)
     return hero_ids
+
+
+def _formation_active_hero_ids(payload: dict[str, Any], instance: dict[str, Any]) -> set[int]:
+    """Heroes currently on the live formation — not mere hero_in_seats assignees."""
+    seat_map = _active_hero_ids(instance)
+    try:
+        from ic_gamedata.formation_seats import live_formation_hero_ids
+    except ImportError:
+        return seat_map
+
+    grid_ids = {hid for hid in live_formation_hero_ids(payload) if hid > 0}
+    # A real live board (≥2) is authoritative. Intersect with seats when present so
+    # we drop benched seat-holders that can linger in hero_in_seats. Sparse/stale
+    # single-hero grids (common in fixtures) fall back to seats.
+    if len(grid_ids) >= 2:
+        if seat_map:
+            both = grid_ids & seat_map
+            return both or grid_ids
+        return grid_ids
+    return seat_map
 
 
 def _seat_by_hero(instance: dict[str, Any]) -> dict[int, int]:
@@ -544,6 +568,32 @@ def _csv_rules_for_champion(hero_name: str) -> bool:
     return any(champion_names_match(rule.champion, hero_name) for rule in dataset.rules)
 
 
+def _resolve_bud_hero_id_for_specs(
+    payload: dict[str, Any] | None,
+    active_hero_ids: set[int] | None,
+) -> int | None:
+    if not isinstance(payload, dict) or not active_hero_ids:
+        return None
+    try:
+        from ic_gamedata.party_advisor_formation import (
+            _formation_heroes,
+            _resolve_bud_hero,
+        )
+    except ImportError:
+        return None
+    formation = _formation_heroes(payload)
+    if formation:
+        bud = _resolve_bud_hero(formation)
+        if bud is not None:
+            return bud.hero_id
+    inst = _active_instance(payload)
+    if inst is not None:
+        inst_stats = inst.get("stats")
+        if isinstance(inst_stats, dict):
+            return resolve_bud_hero_id_from_party_stats(active_hero_ids, inst_stats)
+    return None
+
+
 def _csv_choice_advice(
     hero_id: int,
     hero_name: str,
@@ -556,17 +606,23 @@ def _csv_choice_advice(
     seat_by_hero: dict[int, int] | None,
     known_options: list[SpecializationOption] | None,
     payload: dict[str, Any] | None,
+    bud_hero_id: int | None = None,
 ) -> tuple[list[int], str, AdviceResult | None]:
     if not known_options or not _csv_rules_for_champion(hero_name):
         return [], "", None
 
     party_ids = active_hero_ids if active_hero_ids else {hero_id}
+    resolved_bud = bud_hero_id
+    if resolved_bud is None:
+        resolved_bud = _resolve_bud_hero_id_for_specs(payload, party_ids)
 
     formation = FormationContext(
         active_hero_ids=party_ids,
         highest_damage_hero_id=highest_damage_hero_id,
+        bud_hero_id=resolved_bud,
         familiar_count=familiar_count,
         seat_by_hero=seat_by_hero,
+        run_goal=run_goal,
     )
     eval_ctx = build_evaluation_context(
         hero_id=hero_id,
@@ -597,6 +653,45 @@ def _csv_choice_advice(
     return chosen_ids, f"{source}: {detail}", last_advice
 
 
+def recommended_specialization_ids_for_party(
+    payload: dict[str, Any],
+    hero_id: int,
+    hero_name: str,
+    *,
+    context: str = "campaign",
+    run_goal: str | None = None,
+    rules: dict[str, Any] | None = None,
+    known_options: list[SpecializationOption] | None = None,
+) -> tuple[list[int], str, AdviceResult | None]:
+    """Resolve recommended upgrade ids — same pipeline as open-choice advice."""
+    rules = rules or load_specialization_rules()
+    instance = _active_instance(payload)
+    if instance is None:
+        return [], "no rule", None
+
+    adventure_id, campaign_id, location_id = _active_adventure_details(payload)
+    active_hero_ids = _formation_active_hero_ids(payload, instance)
+    if known_options is None:
+        known_options = _merge_known_options(payload, rules).get(hero_id, [])
+
+    return _desired_choice_ids(
+        hero_id,
+        hero_name,
+        rules,
+        adventure_id=adventure_id,
+        campaign_id=campaign_id,
+        location_id=location_id,
+        context=context,
+        run_goal=run_goal,
+        active_hero_ids=active_hero_ids,
+        highest_damage_hero_id=_active_highest_damage_hero_id(payload),
+        familiar_count=familiar_party_count(payload),
+        seat_by_hero=_seat_by_hero(instance),
+        known_options=known_options,
+        payload=payload,
+    )
+
+
 def _desired_choice_ids(
     hero_id: int,
     hero_name: str,
@@ -619,13 +714,13 @@ def _desired_choice_ids(
         baseline = _baseline_default_ids(hero_id, known_options or [])
         if baseline is not None:
             return (*baseline, None)
-        return [], "geen regel", None
+        return [], "no rule", None
     cfg = heroes.get(str(hero_id))
     if not isinstance(cfg, dict):
         baseline = _baseline_default_ids(hero_id, known_options or [])
         if baseline is not None:
             return (*baseline, None)
-        return [], "geen regel", None
+        return [], "no rule", None
 
     resolved_run_goal = run_goal or _map_run_goal(context)
 
@@ -643,26 +738,27 @@ def _desired_choice_ids(
     if adventure_id is not None and isinstance(by_adventure, dict):
         ids = _ids(by_adventure.get(str(adventure_id)))
         if ids:
-            return ids, f"adventure-regel ({adventure_id})", None
+            return ids, f"adventure rule ({adventure_id})", None
 
     by_location = cfg.get("locations")
     if location_id is not None and isinstance(by_location, dict):
         ids = _ids(by_location.get(str(location_id)))
         if ids:
-            return ids, f"locatie-regel ({location_id})", None
+            return ids, f"location rule ({location_id})", None
 
     by_campaign = cfg.get("campaigns")
     if campaign_id is not None and isinstance(by_campaign, dict):
         ids = _ids(by_campaign.get(str(campaign_id)))
         if ids:
-            return ids, f"campaign-regel ({campaign_id})", None
+            return ids, f"campaign rule ({campaign_id})", None
 
     by_context = cfg.get("contexts")
     if isinstance(by_context, dict):
         ids = _ids(by_context.get(context))
         if ids:
-            return ids, f"context-regel ({context})", None
+            return ids, f"context rule ({context})", None
 
+    csv_bud_hero_id = _resolve_bud_hero_id_for_specs(payload, active_hero_ids)
     csv_ids, csv_source, csv_advice = _csv_choice_advice(
         hero_id,
         hero_name,
@@ -674,6 +770,7 @@ def _desired_choice_ids(
         seat_by_hero=seat_by_hero,
         known_options=known_options,
         payload=payload,
+        bud_hero_id=csv_bud_hero_id,
     )
     authored_csv = bool(
         csv_ids and csv_advice and csv_advice.rule_source_type == "authored"
@@ -692,6 +789,7 @@ def _desired_choice_ids(
         owned_hero_ids = None
         hero_upgrade_ids = None
         roster_filter = None
+        bud_hero_id = csv_bud_hero_id
         if isinstance(payload, dict):
             details = payload.get("details")
             if isinstance(details, dict):
@@ -705,7 +803,12 @@ def _desired_choice_ids(
                 )
 
                 loot_by_hero = loot_stats_by_hero(details)
-                raw_stats = details.get("stats")
+                raw_stats = None
+                inst = _active_instance(payload)
+                if inst is not None:
+                    raw_stats = inst.get("stats")
+                if not isinstance(raw_stats, dict):
+                    raw_stats = details.get("stats")
                 account_stats = raw_stats if isinstance(raw_stats, dict) else None
                 event_boon_count = event_boon_count_from_details(details)
                 modron_stacks = modron_core_competency_stacks(details)
@@ -727,6 +830,7 @@ def _desired_choice_ids(
             hero_id,
             active_hero_ids,
             highest_damage_hero_id=highest_damage_hero_id,
+            bud_hero_id=bud_hero_id,
             familiar_count=familiar_count,
             seat_by_hero=seat_by_hero,
             known_options=known_options,
@@ -741,12 +845,27 @@ def _desired_choice_ids(
             preferred_ids=preferred,
         )
 
+    dynamic_authored_csv_override_hero_ids = {100, 103, 144}
+
     if authored_csv:
         # CSV often covers only one tier (e.g. Regis Ahead). Fill open tiers
         # from formation handlers when available.
         if known_options and (cfg.get("default") is not None or hero_id in HERO_HANDLERS):
             dynamic = _resolve_dynamic()
             if dynamic is not None:
+                if hero_id in dynamic_authored_csv_override_hero_ids:
+                    return dynamic[0], dynamic[1], csv_advice
+                from ic_gamedata.specialization_advisor_model import advisor_model_for_hero
+
+                model = advisor_model_for_hero(hero_id)
+                if (
+                    hero_id == 65
+                    and model is not None
+                    and model.has_dynamic_handler
+                    and model.context_flags.farm_push_split
+                    and resolved_run_goal not in {"gold_farm", "speed_farm", "farm"}
+                ):
+                    return (*dynamic, None)
                 merged = _supplement_missing_tier_ids(
                     known_options, csv_ids, dynamic[0]
                 )
@@ -771,11 +890,11 @@ def _desired_choice_ids(
 
     ids = _ids(cfg.get("default"))
     if ids:
-        return ids, "default-regel", None
+        return ids, "default rule", None
     baseline = _baseline_default_ids(hero_id, known_options or [])
     if baseline is not None:
         return (*baseline, None)
-    return [], "geen regel", None
+    return [], "no rule", None
 
 
 def pending_specializations(
@@ -797,7 +916,7 @@ def pending_specializations(
     familiar_count = familiar_party_count(payload)
     hero_name_map = _hero_name_map(rules)
     known_by_hero = _merge_known_options(payload, rules)
-    active_hero_ids = _active_hero_ids(instance)
+    active_hero_ids = _formation_active_hero_ids(payload, instance)
     seat_by_hero = _seat_by_hero(instance)
     heroes = details.get("heroes")
     if not isinstance(heroes, list):
@@ -859,18 +978,21 @@ def pending_specializations(
 
             desired_upgrade_id = next((item for item in desired_ids if any(opt.upgrade_id == item for opt in options)), None)
             desired_option_index = None
-            reason = "geen regel"
-            rationale = "Geen specialization-regel gevonden voor deze champion."
+            reason = "no rule"
+            rationale = "No specialization rule found for this champion."
             if desired_upgrade_id is not None:
                 for index, option in enumerate(options):
                     if option.upgrade_id == desired_upgrade_id:
                         desired_option_index = index
-                        reason = "regel match"
-                        rationale = f"Gekozen via {rule_source}: {option.name}."
+                        reason = "rule match"
+                        rationale = f"Chosen via {rule_source}: {option.name}."
                         break
+            elif "insufficient data" in rule_source:
+                reason = "insufficient data"
+                rationale = rule_source
             elif desired_ids:
-                reason = "regel past niet op deze tier"
-                rationale = f"Er is wel een {rule_source}, maar die bevat geen keuze voor deze specialization-tier."
+                reason = "rule does not apply to this tier"
+                rationale = f"A {rule_source} exists, but it has no choice for this specialization tier."
 
             pending.append(
                 PendingSpecialization(
@@ -904,12 +1026,14 @@ def format_specialization_advice(
     payload: dict[str, Any],
     pending: list[PendingSpecialization],
 ) -> str:
-    actionable = [
-        item for item in pending if item.desired_option_index is not None
+    reportable = [
+        item
+        for item in pending
+        if item.desired_option_index is not None or item.reason == "insufficient data"
     ]
-    if not actionable:
-        return "Geen specialization-advies nodig."
-    pending = actionable
+    if not reportable:
+        return "No specialization advice needed."
+    pending = reportable
     context = _active_adventure_context(payload)
     header_parts: list[str] = []
     adventure_name = context.get("adventure_name")
@@ -923,16 +1047,16 @@ def format_specialization_advice(
         lines.append(" | ".join(header_parts))
     for item in pending:
         options = " / ".join(option.name for option in item.options)
-        seat_text = f"seat {item.seat}" if item.seat is not None else "onbekende seat"
+        seat_text = f"seat {item.seat}" if item.seat is not None else "unknown seat"
         if item.desired_option_index is not None:
             chosen = item.options[item.desired_option_index].name
             extra_lines: list[str] = []
             if item.data_source_version:
                 extra_lines.append(f"Dataset: {item.data_source_version}")
             if item.rule_source_type:
-                extra_lines.append(f"Regelkwaliteit: {item.rule_source_type}")
+                extra_lines.append(f"Rule quality: {item.rule_source_type}")
             if item.advice_source:
-                extra_lines.append(f"Bron: {item.advice_source}")
+                extra_lines.append(f"Source: {item.advice_source}")
             if item.confidence:
                 extra_lines.append(f"Confidence: {item.confidence}/5")
             if item.manual_review and item.manual_review != "no":
@@ -942,16 +1066,21 @@ def format_specialization_advice(
             extra_block = ("\n" + "\n".join(extra_lines)) if extra_lines else ""
             lines.append(
                 f"{item.hero_name} ({seat_text})\n"
-                f"Advies: {chosen}\n"
-                f"Waarom: {human_specialization_reason(item, context)}\n"
-                f"Open opties: {options}{extra_block}"
+                f"Advice: {chosen}\n"
+                f"Why: {human_specialization_reason(item, context)}\n"
+                f"Open options: {options}{extra_block}"
             )
         else:
+            advice_line = (
+                "Advice: unknown — not enough data"
+                if item.reason == "insufficient data"
+                else "Advice: no fixed choice yet"
+            )
             lines.append(
                 f"{item.hero_name} ({seat_text})\n"
-                f"Advies: nog geen vaste keuze\n"
-                f"Waarom: {human_specialization_reason(item, context)}\n"
-                f"Open opties: {options}"
+                f"{advice_line}\n"
+                f"Why: {human_specialization_reason(item, context)}\n"
+                f"Open options: {options}"
             )
     return "\n\n".join(lines)
 

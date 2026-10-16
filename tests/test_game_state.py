@@ -5,7 +5,7 @@ from __future__ import annotations
 import unittest
 
 from ic_core.game_state import GameStateService
-from ic_gamedata.dashboard_tiles import modron_area_progress
+from ic_gamedata.dashboard_tiles import area_goal_progress, modron_area_progress
 
 
 class ModronProgressTests(unittest.TestCase):
@@ -23,6 +23,37 @@ class ModronProgressTests(unittest.TestCase):
         self.assertEqual(modron_area_progress(None, 500), (None, None))
         self.assertEqual(modron_area_progress(100, None), (None, None))
         self.assertEqual(modron_area_progress(100, 0), (None, None))
+
+    def test_area_goal_progress_prefers_enabled_modron(self) -> None:
+        pct, text = area_goal_progress(
+            130,
+            modron_goal=260,
+            modron_goal_enabled=True,
+            adventure_goal=650,
+        )
+        self.assertEqual(pct, 50)
+        self.assertEqual(text, "Modron: 130 / 260")
+
+    def test_area_goal_progress_falls_back_to_adventure(self) -> None:
+        pct, text = area_goal_progress(
+            325,
+            modron_goal=175,
+            modron_goal_enabled=False,
+            adventure_goal=650,
+        )
+        self.assertEqual(pct, 50)
+        self.assertEqual(text, "Adventure: 325 / 650")
+
+    def test_area_goal_progress_hidden_without_goals(self) -> None:
+        self.assertEqual(
+            area_goal_progress(
+                100,
+                modron_goal=175,
+                modron_goal_enabled=False,
+                adventure_goal=0,
+            ),
+            (None, None),
+        )
 
 
 class GameStateServiceTests(unittest.TestCase):
@@ -46,8 +77,8 @@ class GameStateServiceTests(unittest.TestCase):
             active=False,
             credentials_ok=False,
         )
-        self.assertIn("geen credentials", api_text.lower())
-        self.assertIn("gestopt", session_text.lower())
+        self.assertIn("no credentials", api_text.lower())
+        self.assertIn("stopped", session_text.lower())
 
 
 if __name__ == "__main__":

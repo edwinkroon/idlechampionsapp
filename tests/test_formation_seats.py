@@ -94,6 +94,43 @@ class FormationSeatsTests(unittest.TestCase):
         self.assertNotIn(5, seats)
         self.assertNotIn(7, seats)
 
+    def test_rich_grid_recovers_seats_when_hero_in_seats_sparse(self) -> None:
+        """Regression: sparse hero_in_seats must not collapse a full board to F1 only."""
+        payload = {
+            "details": {
+                "active_game_instance_id": 2,
+                "game_instances": [
+                    {
+                        "game_instance_id": 2,
+                        # Only one seat mapped — previously made automation "levelt F1".
+                        "hero_in_seats": {"1": 1},
+                        "formation": [1, 2, 3, 4, 5, 6, 7, 8, -1],
+                    }
+                ],
+                "heroes": [
+                    {
+                        "hero_id": hid,
+                        "in_seat": 0,
+                        "game_instance_id": 2,
+                        "level": 50,
+                        "owned": 1,
+                    }
+                    for hid in range(1, 9)
+                ],
+            }
+        }
+        party_id, seats = active_formation_seats(payload)
+        self.assertEqual(party_id, 2)
+        # Champions 1–8 use permanent seat_id 1–8 in cached definitions.
+        self.assertEqual(seats, frozenset(range(1, 9)))
+
+        from ic_gamedata.party_advisor_formation import _formation_heroes
+
+        formation = _formation_heroes(payload)
+        self.assertEqual(len(formation), 8)
+        self.assertTrue(all(hero.seat is not None for hero in formation))
+        self.assertEqual({hero.seat for hero in formation}, set(range(1, 9)))
+
     def test_layout_fingerprint_tracks_live_grid_swaps(self) -> None:
         payload = {
             "details": {

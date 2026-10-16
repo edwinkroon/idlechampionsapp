@@ -120,9 +120,9 @@ class SpecializationAdvisorModelTests(unittest.TestCase):
         assert model is not None
         lines = format_advisor_model_lines(model)
         joined = " | ".join(lines)
-        self.assertIn("contextafhankelijk", joined)
-        self.assertNotIn("Review nodig", joined)
-        meta = next(line for line in lines if "contextafhankelijk" in line)
+        self.assertIn("context-dependent", joined)
+        self.assertNotIn("Review needed", joined)
+        meta = next(line for line in lines if "context-dependent" in line)
         self.assertEqual(advisor_model_line_kind(model, meta), "muted")
 
     def test_format_lines_safe_default_celeste(self) -> None:
@@ -131,7 +131,7 @@ class SpecializationAdvisorModelTests(unittest.TestCase):
         assert model is not None
         lines = format_advisor_model_lines(model)
         self.assertTrue(any(line.startswith("safe:") for line in lines))
-        self.assertFalse(any(line.startswith("Review nodig:") for line in lines))
+        self.assertFalse(any(line.startswith("Review needed:") for line in lines))
 
     def test_deekin_boss_wants_speed_maps(self) -> None:
         opts = [
@@ -165,6 +165,8 @@ class SpecializationAdvisorModelTests(unittest.TestCase):
         assert model is not None
         self.assertEqual(preferred_ids_for_run_goal(model, run_goal="gold_farm"), [59])
         self.assertEqual(preferred_ids_for_run_goal(model, run_goal="push"), [58])
+        self.assertEqual(preferred_ids_for_run_goal(model, run_goal="speed_farm"), [59])
+        self.assertEqual(preferred_ids_for_run_goal(model, run_goal="bud"), [58])
 
     def test_batch03_arkhan_and_jamilah(self) -> None:
         arkhan = advisor_model_for_hero(12)

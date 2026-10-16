@@ -2,6 +2,10 @@
 
 from __future__ import annotations
 
+from ic_gamedata.formation_advisor.bud_gate import (
+    append_proxy_ratio,
+    best_swap_to_carry,
+)
 from ic_gamedata.formation_advisor.loader import (
     cached_formation_rules,
     rule_matches_context,
@@ -69,40 +73,14 @@ def _carry_has_adjacent_tag(ctx: FormationLayoutContext, tag: str) -> bool:
 
 
 def _buffers_and_debuffers(ctx: FormationLayoutContext) -> list[int]:
+    """Buffers/debuffers only — not bare support roles (adjacency is kit-dependent)."""
     result: list[int] = []
     for hero_id in ctx.active_hero_ids:
         if hero_id == ctx.carry_hero_id:
             continue
-        if "buffer" in ctx.tags(hero_id) or "debuffer" in ctx.tags(hero_id) or ("support" in ctx.roles(hero_id) and ("buffer" in ctx.tags(hero_id) or ctx.goal == "bud")):
+        if "buffer" in ctx.tags(hero_id) or "debuffer" in ctx.tags(hero_id):
             result.append(hero_id)
     return result
-
-
-def _find_swap_partner(ctx: FormationLayoutContext, hero_id: int) -> tuple[int | None, int | None]:
-    """Seat adjacent to carry that hero could swap with."""
-    carry_id = ctx.carry_hero_id
-    if carry_id is None or hero_id == carry_id:
-        return None, None
-    carry_seat = ctx.seat_of(carry_id)
-    hero_seat = ctx.seat_of(hero_id)
-    if carry_seat is None or hero_seat is None:
-        return None, None
-    if ctx.is_adjacent(hero_id, carry_id):
-        return None, None
-
-    best_partner: int | None = None
-    best_seat: int | None = None
-    for neighbor_seat in ctx.adjacent_seats(carry_seat):
-        if neighbor_seat == hero_seat:
-            continue
-        partner_id = ctx.hero_at_seat(neighbor_seat)
-        if partner_id is None:
-            return None, neighbor_seat
-        partner_roles = ctx.roles(partner_id)
-        if "tank" not in partner_roles and partner_id != carry_id:
-            best_partner = partner_id
-            best_seat = neighbor_seat
-    return best_partner, best_seat
 
 
 def _evaluate_rule_for_hero(
@@ -120,6 +98,7 @@ def _evaluate_rule_for_hero(
     triggered = False
     related_hero_id: int | None = None
     related_seat: int | None = None
+    proxy_ratio: float | None = None
 
     if field == "seat_zone":
         zone = ctx.zone_of_seat(seat)
@@ -132,13 +111,12 @@ def _evaluate_rule_for_hero(
             return None
         is_adj = ctx.is_adjacent(hero_id, carry_id)
         if op == "false" and not is_adj:
+            best = best_swap_to_carry(ctx, hero_id)
+            if best is None:
+                # No BUD-neutral/positive seat next to carry — suppress tip.
+                return None
+            related_hero_id, related_seat, proxy_ratio = best
             triggered = True
-            related_hero_id = carry_id
-            related_seat = ctx.seat_of(carry_id)
-            partner, partner_seat = _find_swap_partner(ctx, hero_id)
-            if partner is not None:
-                related_hero_id = partner
-                related_seat = partner_seat
 
     if not triggered:
         return None
@@ -156,9 +134,10 @@ def _evaluate_rule_for_hero(
         related_seat=str(related_seat) if related_seat is not None else "",
     )
     if rule.tip_type == "swap" and related_hero_id is not None and related_seat is not None:
-        detail += f" Suggestie: wissel {hero_name} (slot {seat}) met {related_name} (slot {related_seat})."
+        detail += f" Suggestion: swap {hero_name} (slot {seat}) with {related_name} (slot {related_seat})."
     elif rule.tip_type == "swap" and related_seat is not None and related_hero_id is None:
-        detail += f" Suggestie: schuif {hero_name} naar leeg slot {related_seat} naast carry."
+        detail += f" Suggestion: move {hero_name} to empty slot {related_seat} next to carry."
+    detail = append_proxy_ratio(detail, proxy_ratio)
 
     return FormationInsight(
         insight_type=rule.tip_type,
@@ -175,6 +154,7 @@ def _evaluate_rule_for_hero(
         data_source_version="formation_rules_v1",
         confidence=4 if rule.rule_source_type == "authored" else 3,
         rule_id=rule.rule_id,
+        bud_ratio=proxy_ratio,
     )
 
 

@@ -30,7 +30,7 @@ class AutomationController:
         self._worker = AutomationWorker(settings, self._status_queue)
         self._running = True
         self._worker.start()
-        self._status_queue.put_nowait(StatusEvent(text="Status: actief (worker)"))
+        self._status_queue.put_nowait(StatusEvent(text="Status: active (worker)"))
 
     def stop(self) -> None:
         self._running = False

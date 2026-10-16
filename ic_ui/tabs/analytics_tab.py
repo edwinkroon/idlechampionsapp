@@ -68,12 +68,12 @@ class AnalyticsTab(QWidget):
         self._party_combo = QComboBox()
         self._party_combo.currentIndexChanged.connect(self._on_party_changed)
         ctrl.addWidget(self._party_combo)
-        refresh_btn = QPushButton("Verversen")
+        refresh_btn = QPushButton("Refresh")
         refresh_btn.clicked.connect(self.refresh)
         export_btn = QPushButton("Export CSV")
         export_btn.clicked.connect(self._export_csv)
-        clear_btn = QPushButton("Wis historie")
-        clear_btn.setToolTip("Wis Modron-run historie voor de geselecteerde party")
+        clear_btn = QPushButton("Clear history")
+        clear_btn.setToolTip("Clear Modron run history for the selected party")
         clear_btn.clicked.connect(self._clear_history)
         ctrl.addWidget(refresh_btn)
         ctrl.addWidget(export_btn)
@@ -81,13 +81,13 @@ class AnalyticsTab(QWidget):
         ctrl.addStretch(1)
         root.addLayout(ctrl)
 
-        self._summary = QLabel("Modron-runs verschijnen hier zodra je resets voltooit.")
+        self._summary = QLabel("Modron runs appear here once you complete resets.")
         self._summary.setWordWrap(True)
         self._summary.setStyleSheet(f"color: {ui_theme.TEXT_PRIMARY};")
         root.addWidget(self._summary)
 
         if pg is None:
-            fallback = QLabel("PyQtGraph is niet geïnstalleerd. Voer uit: pip install pyqtgraph")
+            fallback = QLabel("PyQtGraph is not installed. Run: pip install pyqtgraph")
             fallback.setWordWrap(True)
             fallback.setStyleSheet(f"color: {ui_theme.TEXT_MUTED};")
             root.addWidget(fallback)
@@ -98,7 +98,7 @@ class AnalyticsTab(QWidget):
             self._plot = pg.PlotWidget()
             self._plot.setBackground(ui_theme.PLOT_BG)
             self._plot.showGrid(x=True, y=True, alpha=0.25)
-            self._plot.setLabel("left", "Duur", units="min")
+            self._plot.setLabel("left", "Duration", units="min")
             self._plot.setLabel("bottom", "Run")
             self._plot.setMinimumHeight(280)
             root.addWidget(self._plot, stretch=1)
@@ -135,7 +135,7 @@ class AnalyticsTab(QWidget):
 
         if not parties:
             self._summary.setText(
-                "Nog geen Modron-runs opgeslagen. Voltooi een run tot je Modron-doel op het dashboard."
+                "No Modron runs saved yet. Complete a run to your Modron goal on the dashboard."
             )
             if self._plot is not None:
                 self._plot.clear()
@@ -182,26 +182,26 @@ class AnalyticsTab(QWidget):
         if summary.run_count == 0:
             if summary.excluded_unreliable_count:
                 self._summary.setText(
-                    f"Party {party_index}: geen betrouwbare Modron-runs "
-                    f"({summary.excluded_unreliable_count} overgeslagen na party-wissel)."
+                    f"Party {party_index}: no reliable Modron runs "
+                    f"({summary.excluded_unreliable_count} skipped after party switch)."
                 )
             else:
-                self._summary.setText(f"Party {party_index}: nog geen voltooide Modron-runs.")
+                self._summary.setText(f"Party {party_index}: no completed Modron runs yet.")
             if self._plot is not None:
                 self._plot.clear()
             if hasattr(self, "_legend"):
                 self._legend.setText("")
             return
 
-        goal_txt = f"doel {summary.area_goal}" if summary.area_goal is not None else "doel —"
+        goal_txt = f"goal {summary.area_goal}" if summary.area_goal is not None else "goal —"
         excluded_txt = ""
         if summary.excluded_unreliable_count:
-            excluded_txt = f" · {summary.excluded_unreliable_count} overgeslagen (party gewisseld)"
+            excluded_txt = f" · {summary.excluded_unreliable_count} skipped (party switched)"
         self._summary.setText(
             f"Party {party_index} · {summary.run_count} runs · {goal_txt} · "
-            f"beste {format_duration_minutes(summary.best_sec)} · "
-            f"gemiddeld {format_duration_minutes(summary.avg_sec)} · "
-            f"laatste {format_duration_minutes(summary.latest_sec)}{excluded_txt}"
+            f"best {format_duration_minutes(summary.best_sec)} · "
+            f"average {format_duration_minutes(summary.avg_sec)} · "
+            f"latest {format_duration_minutes(summary.latest_sec)}{excluded_txt}"
         )
 
         if self._plot is None:
@@ -242,16 +242,16 @@ class AnalyticsTab(QWidget):
         self._plot.setXRange(0.5, max(x_vals) + 0.5, padding=0.05)
         ymax = max(y_vals) * 1.15 if y_vals else 1.0
         self._plot.setYRange(0, max(ymax, 0.5))
-        self._legend.setText("▮ run-duur · -- gemiddelde · ★ beste run")
+        self._legend.setText("▮ run duration · -- average · ★ best run")
 
     def _export_csv(self) -> None:
         party_index = self._selected_party
         if party_index is None:
-            QMessageBox.information(self, "Export", "Geen party geselecteerd.")
+            QMessageBox.information(self, "Export", "No party selected.")
             return
         records = self._records_for_party(party_index)
         if not records:
-            QMessageBox.information(self, "Export", "Geen runs om te exporteren voor deze party.")
+            QMessageBox.information(self, "Export", "No runs to export for this party.")
             return
 
         from PySide6.QtWidgets import QFileDialog
@@ -273,9 +273,9 @@ class AnalyticsTab(QWidget):
             with open(path, "w", encoding="utf-8", newline="") as handle:
                 handle.write(buffer.getvalue())
         except OSError as exc:
-            QMessageBox.critical(self, "Export", f"Kon bestand niet schrijven:\n{exc}")
+            QMessageBox.critical(self, "Export", f"Could not write file:\n{exc}")
             return
-        QMessageBox.information(self, "Export", f"Opgeslagen: {path}")
+        QMessageBox.information(self, "Export", f"Saved: {path}")
 
     def _clear_history(self) -> None:
         party_index = self._selected_party
@@ -283,14 +283,14 @@ class AnalyticsTab(QWidget):
             history = self._load_history()
             parties = party_indexes_with_history(history)
             if not parties:
-                QMessageBox.information(self, "Wis historie", "Geen Modron-runs om te wissen.")
+                QMessageBox.information(self, "Clear history", "No Modron runs to clear.")
                 return
             party_index = parties[0]
         reply = QMessageBox.question(
             self,
-            "Wis historie",
-            f"Alle opgeslagen Modron-run tijden voor party {party_index} wissen?\n"
-            "Dit kan niet ongedaan worden gemaakt.",
+            "Clear history",
+            f"Clear all saved Modron run times for party {party_index}?\n"
+            "This cannot be undone.",
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
             QMessageBox.StandardButton.No,
         )

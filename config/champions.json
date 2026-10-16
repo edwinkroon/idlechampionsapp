@@ -1685,5 +1685,38 @@
       "debuffer",
       "bud"
     ]
+  },
+  "178": {
+    "name": "Flint",
+    "roles": [
+      "support",
+      "tank"
+    ],
+    "tags": [
+      "buffer",
+      "gold"
+    ]
+  },
+  "179": {
+    "name": "Caramon",
+    "roles": [
+      "tank",
+      "support"
+    ],
+    "tags": [
+      "buffer"
+    ]
+  },
+  "180": {
+    "name": "Kitiara",
+    "roles": [
+      "tank",
+      "support"
+    ],
+    "tags": [
+      "buffer",
+      "control",
+      "breaking"
+    ]
   }
 }

@@ -42,8 +42,8 @@ from ic_gamedata.seat_advisor.role_prefs import get_chosen_role, load_role_prefe
 from ic_gamedata.specializations import _merge_known_options, load_specialization_rules
 from ic_gamedata.speed_utility_roles import (
     recommended_feats_for_speed_utility,
+    speed_utility_for_effective_role,
     speed_utility_relevance_reason,
-    speed_utility_role,
 )
 
 
@@ -110,7 +110,7 @@ def _spec_labels(spec_insights: tuple[SpecializationInsight, ...], hero_id: int)
 
 def _best_spec(spec_insights: tuple[SpecializationInsight, ...], hero_id: int) -> str | None:
     # Prefer actionable mismatch/open picks, else any formation-aware recommendation.
-    for status in ("open_tier", "mismatch", "ok", "match", "bench_suggestion"):
+    for status in ("open_tier", "mismatch", "ok", "match", "matches", "bench_suggestion"):
         for ins in spec_insights:
             if ins.hero_id == hero_id and ins.recommended_label and ins.status == status:
                 return ins.recommended_label
@@ -145,6 +145,149 @@ def _role_advice_fields(
         advice.source_url,
         guide_default,
         advice.wiki_url,
+    )
+
+
+def _apply_roster_suggestion(
+    formation: tuple[FormationHero, ...],
+    suggestion: Any,
+    *,
+    occupied_seats: set[int],
+) -> tuple[FormationHero, ...]:
+    try:
+        from ic_gamedata.roster_upgrade_advisor import _OwnedChamp, _hypothetical_formation
+    except ImportError:
+        return formation
+
+    candidate_seat = getattr(suggestion, "candidate_seat", None)
+    candidate_hero_id = getattr(suggestion, "candidate_hero_id", None)
+    candidate_name = getattr(suggestion, "candidate_name", None)
+    if not isinstance(candidate_hero_id, int) or not isinstance(candidate_name, str):
+        return formation
+
+    if candidate_seat is not None and candidate_seat in occupied_seats and not bool(
+        getattr(suggestion, "same_seat_swap", False)
+    ):
+        return formation
+
+    replace_hero = next(
+        (
+            hero
+            for hero in formation
+            if hero.hero_id == getattr(suggestion, "replace_hero_id", None)
+        ),
+        None,
+    )
+    candidate = _OwnedChamp(
+        hero_id=candidate_hero_id,
+        name=candidate_name,
+        roles=(),
+        tags=(),
+        ilvl=0,
+        seat_id=candidate_seat,
+    )
+    updated = _hypothetical_formation(
+        formation,
+        candidate=candidate,
+        replace=replace_hero,
+        same_seat_swap=bool(getattr(suggestion, "same_seat_swap", False)),
+    )
+    occupied_seats.clear()
+    occupied_seats.update(hero.seat for hero in updated if hero.seat is not None)
+    return updated
+
+
+def _build_recommended_visual_nodes(
+    payload: dict[str, Any],
+    formation: tuple[FormationHero, ...],
+    *,
+    goal: GoalMode,
+    context: ContextMode,
+    adventure_id: int | None,
+    seat_meta: dict[int, dict[str, Any]],
+    roster_filter: AdventureRosterFilter | None,
+) -> tuple[tuple[VisualSeatNode, ...], str | None]:
+    # Unknown/unevaluable restriction expressions: hide rather than guess illegal swaps.
+    # Known patron/variant/trials rules are fine — suggest_roster_upgrades and the
+    # is_hero_allowed gate below already filter candidates to the allowed roster.
+    if roster_filter is not None and roster_filter.has_unknown_rules:
+        return (), (
+            "Owned formation not shown: this scenario's restrictions cannot be fully "
+            "evaluated."
+        )
+    try:
+        from ic_gamedata.roster_upgrade_advisor import suggest_roster_upgrades
+    except ImportError:
+        return (), None
+
+    suggestions = suggest_roster_upgrades(payload, goal=goal, context=context, limit=4)
+    if not suggestions:
+        return (), None
+
+    projected = formation
+    occupied_seats = {hero.seat for hero in formation if hero.seat is not None}
+    touched_heroes = {hero.hero_id for hero in formation}
+    changed = False
+    for suggestion in suggestions:
+        candidate_id = getattr(suggestion, "candidate_hero_id", None)
+        replace_id = getattr(suggestion, "replace_hero_id", None)
+        if not isinstance(candidate_id, int):
+            continue
+        if roster_filter is not None and not is_hero_allowed(candidate_id, roster_filter):
+            continue
+        if candidate_id in touched_heroes:
+            continue
+        if replace_id is not None and replace_id not in touched_heroes:
+            continue
+        updated = _apply_roster_suggestion(
+            projected,
+            suggestion,
+            occupied_seats=occupied_seats,
+        )
+        if updated == projected:
+            continue
+        projected = updated
+        touched_heroes.add(candidate_id)
+        if isinstance(replace_id, int):
+            touched_heroes.discard(replace_id)
+        changed = True
+
+    if not changed:
+        return (), None
+
+    hero_name_by_id = {hero.hero_id: hero.name for hero in projected}
+    formation_seats = {hero.hero_id: hero.seat for hero in projected if hero.seat is not None}
+    visual_nodes = build_visual_nodes(
+        payload,
+        adventure_id,
+        hero_name_by_id=hero_name_by_id,
+        seat_meta=seat_meta,
+        formation_seats=formation_seats,
+    )
+    if any(node.hero_id is not None for node in visual_nodes):
+        return visual_nodes, None
+    topo = load_formation_topology(payload, adventure_id)
+    return (
+        tuple(
+            VisualSeatNode(
+                seat=seat,
+                x=float(index % 4) * 110.0,
+                y=float(index // 4) * 72.0,
+                zone=topo.seat_zone.get(seat, "mid"),
+                hero_id=hero_id,
+                hero_name=hero_name_by_id.get(hero_id),
+                effective_role=(seat_meta.get(seat) or {}).get("effective_role"),
+                inferred_role=(seat_meta.get(seat) or {}).get("inferred_role"),
+                chosen_role=(seat_meta.get(seat) or {}).get("chosen_role"),
+                is_bud=bool((seat_meta.get(seat) or {}).get("is_bud")),
+                has_issue=bool((seat_meta.get(seat) or {}).get("has_issue")),
+                is_active=True,
+            )
+            for index, (hero_id, seat) in enumerate(
+                sorted(formation_seats.items(), key=lambda item: item[1])
+            )
+        ),
+        None,
     )
 
 
@@ -185,11 +328,23 @@ def build_seat_advisor_report(
 
     seat_reports: list[SeatReport] = []
     seat_meta: dict[int, dict[str, Any]] = {}
+    try:
+        from ic_gamedata.specialization_data import hero_seat_id_map_from_cached_definitions
+
+        def_seats = hero_seat_id_map_from_cached_definitions()
+    except ImportError:
+        def_seats = {}
 
     for hero in formation:
-        if hero.seat is None:
-            continue
         seat = hero.seat
+        if seat is None:
+            # Grid heroes can arrive before hero_in_seats catches up — permanent
+            # F-key seat_id still lets the Party Advisor champ overview refresh.
+            resolved = def_seats.get(hero.hero_id)
+            if resolved is not None and 1 <= resolved <= 12:
+                seat = resolved
+            else:
+                continue
         zone = topo.seat_zone.get(seat, "mid")
         inferred: SeatRole = infer_seat_role(
             hero,
@@ -201,7 +356,7 @@ def build_seat_advisor_report(
         chosen_raw = get_chosen_role(hero.hero_id, goal, prefs)
         chosen: SeatRole | None = chosen_raw
         effective: SeatRole = chosen or inferred
-        utility = speed_utility_role(hero, goal)
+        utility = speed_utility_for_effective_role(hero, goal, effective)
         allowed = is_hero_allowed(hero.hero_id, roster_filter, formation_hero_ids=formation_ids)
         lines = _lines_for_seat(seat, hero.hero_id, formation_insights, specialization_insights)
         if not allowed:
@@ -211,11 +366,11 @@ def build_seat_advisor_report(
                 if patron_id
                 else None
             )
-            detail = patron_note or "Deze champion voldoet niet aan de adventure-beperkingen."
+            detail = patron_note or "This champion does not meet the adventure restrictions."
             lines = (
                 SeatInsightLine(
                     source="restrictie",
-                    headline="Niet toegestaan — vervang",
+                    headline="Not allowed — replace",
                     detail=detail,
                     priority=0,
                 ),
@@ -231,14 +386,14 @@ def build_seat_advisor_report(
         )
         better = better_bench_for_role(hero, effective, alternatives)
         if not allowed:
-            relevance = "Niet toegestaan op adventure/patron"
+            relevance = "Not allowed on adventure/patron"
             priority = 0
         elif better and not lines:
             lines = (
                 SeatInsightLine(
                     source="bench",
-                    headline=f"Alternatief voor rol {role_label(effective)}",
-                    detail=f"Overweeg {better.hero_name} ({better.reason}) i.p.v. {hero.name}.",
+                    headline=f"Alternative for {role_label(effective)} role",
+                    detail=f"Consider {better.hero_name} ({better.reason}) instead of {hero.name}.",
                     priority=4,
                 ),
             )
@@ -249,10 +404,10 @@ def build_seat_advisor_report(
         elif not allowed:
             pass
         elif better:
-            relevance = f"Betere {role_label(effective)} beschikbaar op bench"
+            relevance = f"Better {role_label(effective)} available on bench"
             priority = 5
         elif not role_fits_champion(hero, effective):
-            relevance = f"{hero.name} past niet ideaal bij rol {role_label(effective)}"
+            relevance = f"{hero.name} is not ideal for {role_label(effective)} role"
             priority = 6
         elif utility is not None:
             relevance = speed_utility_relevance_reason(utility)
@@ -265,7 +420,10 @@ def build_seat_advisor_report(
         is_bud = goal == "bud" and bud_id == hero.hero_id
         is_speed_focus = goal == "speed" and speed_id == hero.hero_id
         current_best = _best_spec(specialization_insights, hero.hero_id)
-        if current_best is None and goal in {"speed", "gold"}:
+        if current_best is None:
+            # Always resolve a display recommendation — match insights are omitted
+            # on purpose, which previously left BUD/campaign seats without best_spec
+            # unless role-guide specialization_names happened to exist.
             current_best = recommended_spec_for_goal(
                 payload,
                 hero.hero_id,
@@ -338,6 +496,8 @@ def build_seat_advisor_report(
 
     hero_name_by_id = {h.hero_id: h.name for h in formation}
     formation_seats = {h.hero_id: h.seat for h in formation if h.seat is not None}
+    for item in seat_reports:
+        formation_seats.setdefault(item.hero_id, item.seat)
     formation_name, _nodes = load_formation_graph(payload, adventure_id)
     visual_nodes = build_visual_nodes(
         payload,
@@ -369,6 +529,15 @@ def build_seat_advisor_report(
             )
         )
     html_grid = generate_formation_html(visual_nodes, formation_name=formation_name)
+    recommended_visual_nodes, recommended_hidden_reason = _build_recommended_visual_nodes(
+        payload,
+        formation,
+        goal=goal,
+        context=context,
+        adventure_id=adventure_id,
+        seat_meta=seat_meta,
+        roster_filter=roster_filter,
+    )
 
     return SeatAdvisorReport(
         bud_hero_id=bud_id,
@@ -379,4 +548,6 @@ def build_seat_advisor_report(
         visual_nodes=visual_nodes,
         formation_name=formation_name,
         html_grid=html_grid,
+        recommended_visual_nodes=recommended_visual_nodes,
+        recommended_hidden_reason=recommended_hidden_reason,
     )

@@ -30,7 +30,11 @@ class InstallSource(str, Enum):
     EPIC = "epic"
     STEAM = "steam"
     MANUAL = "manual"
+    RUNNING = "running"
     UNKNOWN = "unknown"
+
+
+_GAME_EXES = ("idledragons.exe", "idlechampions.exe")
 
 
 @dataclass(frozen=True)
@@ -109,8 +113,34 @@ def find_epic_install() -> Path | None:
     return fallback
 
 
+def _steam_path_from_registry() -> Path | None:
+    try:
+        import winreg
+    except ImportError:
+        return None
+    keys = (
+        (winreg.HKEY_CURRENT_USER, r"SOFTWARE\Valve\Steam"),
+        (winreg.HKEY_LOCAL_MACHINE, r"SOFTWARE\WOW6432Node\Valve\Steam"),
+        (winreg.HKEY_LOCAL_MACHINE, r"SOFTWARE\Valve\Steam"),
+    )
+    for hive, subkey in keys:
+        try:
+            with winreg.OpenKey(hive, subkey) as key:
+                loc, _ = winreg.QueryValueEx(key, "SteamPath")
+        except OSError:
+            continue
+        if loc:
+            path = Path(str(loc))
+            if path.is_dir():
+                return path
+    return None
+
+
 def _steam_library_roots() -> list[Path]:
     roots: list[Path] = []
+    registry = _steam_path_from_registry()
+    if registry is not None:
+        roots.append(registry)
     pf86 = os.environ.get("ProgramFiles(x86)")
     if pf86:
         roots.append(Path(pf86) / "Steam")
@@ -165,11 +195,33 @@ def find_steam_install() -> Path | None:
     return None
 
 
+def find_running_install() -> Path | None:
+    """Use the directory of a running Idle Champions process."""
+    try:
+        import psutil
+    except ImportError:
+        return None
+    for proc in psutil.process_iter(["name", "exe"]):
+        try:
+            pname = (proc.info.get("name") or "").lower()
+            if pname not in _GAME_EXES:
+                continue
+            exe = proc.info.get("exe")
+            if not exe:
+                continue
+            path = Path(str(exe)).resolve().parent
+            if _is_valid_game_dir(path):
+                return path
+        except (psutil.NoSuchProcess, psutil.AccessDenied, OSError, TypeError):
+            continue
+    return None
+
+
 def find_game_install(*, prefer_manual: bool = True) -> GameInstallInfo | None:
     """
     Resolve game install directory.
 
-    Order: manual config override → Epic → Steam.
+    Order: manual config override → Epic → Steam → running process.
     """
     if prefer_manual:
         manual = _load_manual_override()
@@ -183,6 +235,10 @@ def find_game_install(*, prefer_manual: bool = True) -> GameInstallInfo | None:
     steam = find_steam_install()
     if steam is not None:
         return _build_install_info(steam, InstallSource.STEAM)
+
+    running = find_running_install()
+    if running is not None:
+        return _build_install_info(running, InstallSource.RUNNING)
 
     return None
 

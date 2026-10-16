@@ -25,6 +25,7 @@ from ic_gamedata.specializations import (
     load_specialization_rules,
     merged_hero_record_for_specializations,
     pending_specializations,
+    recommended_specialization_ids_for_party,
     resolve_hero_record,
 )
 from ic_gamedata.speed_utility_roles import (
@@ -84,15 +85,40 @@ class SpecializationInsight:
 
 
 def advisor_run_goal(goal: GoalMode, context: ContextMode) -> str:
-    if goal == "gold":
+    from ic_gamedata.advice_goals import scoring_lane
+
+    lane = scoring_lane(str(goal))
+    if lane == "gold":
         return "gold_farm"
-    if goal == "speed":
+    if lane == "speed":
         return "speed_farm"
     if context == "modron":
         return "speed_farm"
-    if context == "push":
+    if context == "push" or str(goal) == "push":
         return "push"
     return "generic_progression"
+
+
+def _party_spec_recommendation(
+    payload: dict[str, Any],
+    hero_id: int,
+    hero_name: str,
+    options: list[SpecializationOption],
+    *,
+    context: ContextMode,
+    run_goal: str,
+) -> tuple[list[int], tuple[str, ...], str, AdviceResult | None]:
+    """Party-aware spec ids/labels — aligned with pending_specializations."""
+    desired_ids, rule_source, csv_advice = recommended_specialization_ids_for_party(
+        payload,
+        hero_id,
+        hero_name,
+        context=context,
+        run_goal=run_goal,
+        known_options=options,
+    )
+    labels = _labels_for_choices(tuple(desired_ids), options)
+    return desired_ids, labels, rule_source, csv_advice
 
 
 def recommended_spec_for_goal(
@@ -108,7 +134,11 @@ def recommended_spec_for_goal(
     hero: FormationHero | None = None,
     formation: tuple[FormationHero, ...] = (),
 ) -> str | None:
-    """CSV-backed specialization labels for speed/gold goals (all tiers)."""
+    """Recommended specialization label(s) for the active goal/context.
+
+    Uses the same resolution pipeline as open-choice advice so post-choice
+    status lines cannot drift from what the dialog recommended.
+    """
     from ic_gamedata.speed_utility_roles import (
         recommended_spec_for_speed_utility,
         speed_utility_role,
@@ -119,28 +149,34 @@ def recommended_spec_for_goal(
         if utility is not None:
             return recommended_spec_for_speed_utility(hero, formation, utility=utility)
 
-    from ic_gamedata.specializations import _csv_choice_advice
-
-    run_goal = advisor_run_goal(goal, context)
-    if run_goal not in {"speed_farm", "gold_farm"}:
-        return None
     if not options:
         return None
 
-    chosen_ids, _, _ = _csv_choice_advice(
+    run_goal = advisor_run_goal(goal, context)
+    _desired_ids, labels, _rule_source, _csv_advice = _party_spec_recommendation(
+        payload,
         hero_id,
         hero_name,
-        seat=seat,
+        options,
+        context=context,
         run_goal=run_goal,
-        active_hero_ids=set(formation_ctx.active_hero_ids),
-        highest_damage_hero_id=formation_ctx.highest_damage_hero_id,
-        familiar_count=formation_ctx.familiar_count,
-        seat_by_hero=dict(formation_ctx.seat_by_hero),
-        known_options=options,
-        payload=payload,
     )
-    labels = _labels_for_choices(tuple(chosen_ids), options)
-    return " / ".join(labels) if labels else None
+    if labels:
+        return " / ".join(labels)
+
+    advice = _evaluate_hero_advice(
+        payload=payload,
+        hero_id=hero_id,
+        hero_name=hero_name,
+        seat=seat,
+        options=options,
+        run_goal=run_goal,
+        formation_ctx=formation_ctx,
+    )
+    if advice is None:
+        return None
+    label = (advice.chosen_label or advice.specialization_key or "").strip()
+    return label or None
 
 
 def _recommended_label_parts(recommended: str) -> tuple[str, ...]:
@@ -247,9 +283,13 @@ def _formation_context_from_payload(
     for hero in formation:
         if hero.seat is not None:
             seat_by_hero.setdefault(hero.hero_id, hero.seat)
+    from ic_gamedata.party_advisor_formation import _resolve_bud_hero
+
+    bud = _resolve_bud_hero(formation) if formation else None
     return FormationContext(
         active_hero_ids=frozenset(h.hero_id for h in formation),
         highest_damage_hero_id=highest_damage_hero_id,
+        bud_hero_id=bud.hero_id if bud is not None else None,
         familiar_count=familiar_party_count(payload),
         seat_by_hero=seat_by_hero,
     )
@@ -323,10 +363,7 @@ def _open_tier_insight(
     *,
     run_goal: str,
 ) -> SpecializationInsight | None:
-    from ic_gamedata.specialization_advisor_model import (
-        advisor_model_for_hero,
-        preferred_ids_for_run_goal,
-    )
+    from ic_gamedata.specialization_advisor_model import advisor_model_for_hero
 
     tier_index = pending_item.options[0].tier_index if pending_item.options else 0
     tier_label = tier_index + 1
@@ -348,20 +385,31 @@ def _open_tier_insight(
                 model_suffix += f" Review: {model.review_reasons[0]}"
 
     if pending_item.desired_option_index is None:
-        detail = (
-            f"Tier {tier_label} wacht op een keuze ({run_goal.replace('_', ' ')}). "
-            f"Open opties: {options_text}."
-        )
-        if model is not None and model.safe_default is None:
-            detail += " Geen veilige universele default in advisor-model."
+        if pending_item.reason == "insufficient data":
+            detail = (
+                f"Tier {tier_label} has no recommendation — not enough data "
+                f"({run_goal.replace('_', ' ')}). Open options: {options_text}."
+            )
         else:
-            detail += " Er is nog geen vaste regel voor deze tier."
+            detail = (
+                f"Tier {tier_label} is waiting for a choice ({run_goal.replace('_', ' ')}). "
+                f"Open options: {options_text}."
+            )
+        if model is not None and model.safe_default is None:
+            detail += " No safe universal default in advisor model."
+        elif pending_item.reason != "insufficient data":
+            detail += " No fixed rule exists for this tier yet."
         detail += model_suffix
+        recommended = (
+            "(unknown — not enough data)"
+            if pending_item.reason == "insufficient data"
+            else "(no fixed choice yet)"
+        )
         return SpecializationInsight(
             hero_id=pending_item.hero_id,
             hero_name=pending_item.hero_name,
             seat=pending_item.seat,
-            recommended_label="(nog geen vaste keuze)",
+            recommended_label=recommended,
             current_labels=(),
             status="open_tier",
             rule_source_type=pending_item.rule_source_type or "heuristic",
@@ -372,19 +420,13 @@ def _open_tier_insight(
             priority=5 if model is None or not model.review_needed else 3,
         )
 
+    # Keep the live formation/handler pick. Do not overwrite with static
+    # safe_default — that hides formation-dependent winners (e.g. Cazrin
+    # Self Taught vs Ancestor's Shadow on qualified stacks).
     chosen = pending_item.options[pending_item.desired_option_index].name
-    if model is not None:
-        preferred = preferred_ids_for_run_goal(model, run_goal=run_goal)
-        if preferred:
-            match = next(
-                (opt for opt in pending_item.options if opt.upgrade_id == preferred[0]),
-                None,
-            )
-            if match is not None:
-                chosen = match.name
 
     detail = (
-        f"Kies {chosen} voor tier {tier_label} "
+        f"Choose {chosen} for tier {tier_label} "
         f"({run_goal.replace('_', ' ')}){quality}."
     )
     detail += model_suffix
@@ -436,7 +478,7 @@ def _utility_spec_mismatch_insight(
     if any(_same_route_family(label, recommended) for label in current_labels):
         return None
 
-    task = "gem-farming" if utility == "gold" else "modron scavenging"
+    task = "gem-farming" if utility == "gold" else "scavenging"
     return SpecializationInsight(
         hero_id=hero.hero_id,
         hero_name=hero.name,
@@ -447,10 +489,10 @@ def _utility_spec_mismatch_insight(
         rule_source_type="authored",
         data_source_version="utility",
         confidence=5,
-        headline=f"{hero.name}: utility-spec voor speed-team",
+        headline=f"{hero.name}: utility spec for speed team",
         detail=(
-            f"Huidige keuze: {' / '.join(current_labels) or '—'}. "
-            f"Aanbevolen voor {task} in speed-team: {recommended}."
+            f"Current choice: {' / '.join(current_labels) or '—'}. "
+            f"Recommended for {task} in speed team: {recommended}."
         ),
         priority=2,
     )
@@ -462,6 +504,7 @@ def _insight_for_formation_hero(
     hero: FormationHero,
     options: list[SpecializationOption],
     run_goal: str,
+    context: ContextMode,
     formation_ctx: FormationContext,
     open_pending: list,
 ) -> SpecializationInsight | None:
@@ -477,35 +520,56 @@ def _insight_for_formation_hero(
 
     current_ids = _current_choices(hero_record, options)
     current_labels = _labels_for_choices(current_ids, options)
-    advice = _evaluate_hero_advice(
-        payload=payload,
-        hero_id=hero.hero_id,
-        hero_name=hero.name,
-        seat=hero.seat,
-        options=options,
+    desired_ids, recommended_labels, _rule_source, csv_advice = _party_spec_recommendation(
+        payload,
+        hero.hero_id,
+        hero.name,
+        options,
+        context=context,
         run_goal=run_goal,
-        formation_ctx=formation_ctx,
     )
-    if advice is None or advice.upgrade_id is None:
+    if not recommended_labels:
         return None
 
-    recommended = advice.chosen_label or advice.specialization_key
+    recommended = " / ".join(recommended_labels)
 
     # Choice already made (and matches recommendation) → no advice to show.
-    if advice.upgrade_id in current_ids:
+    if desired_ids and all(upgrade_id in current_ids for upgrade_id in desired_ids):
         return None
-    if current_labels and (
-        any(label.casefold() == recommended.casefold() for label in current_labels)
-        or any(_same_route_family(label, recommended) for label in current_labels)
-    ):
+    if resolve_spec_display_status(
+        hero.hero_id,
+        (),
+        recommended=recommended,
+        current_labels=current_labels,
+    ) != "mismatch":
         return None
 
+    rule_source_type = csv_advice.rule_source_type if csv_advice else "authored"
+    confidence = csv_advice.confidence if csv_advice else 4
+    rationale = csv_advice.rationale if csv_advice else "Recommended for this party and goal."
     if _is_meaningful_mismatch(
         current_labels,
         recommended,
-        rule_source_type=advice.rule_source_type,
-        confidence=advice.confidence,
+        rule_source_type=rule_source_type,
+        confidence=confidence,
     ):
+        advice = csv_advice or AdviceResult(
+            champion=hero.name,
+            seat=hero.seat,
+            specialization_key=recommended,
+            upgrade_id=desired_ids[0] if desired_ids else None,
+            rule_id=None,
+            exception_id=None,
+            rationale=rationale,
+            condition_used="",
+            manual_review="no",
+            confidence=confidence,
+            source="empty",
+            priority_code="medium",
+            data_source_version="",
+            rule_source_type=rule_source_type,
+            chosen_label=recommended,
+        )
         return _insight_from_advice(
             hero_id=hero.hero_id,
             hero_name=hero.name,
@@ -514,10 +578,10 @@ def _insight_for_formation_hero(
             current_labels=current_labels,
             status="mismatch",
             priority=2,
-            headline=f"{hero.name}: overweeg andere spec",
+            headline=f"{hero.name}: consider another spec",
             detail=(
-                f"Huidige keuze: {' / '.join(current_labels)}. "
-                f"Aanbevolen voor deze party: {recommended}. {advice.rationale}"
+                f"Current choice: {' / '.join(current_labels)}. "
+                f"Recommended for this party: {recommended}. {rationale}"
             ).strip(),
         )
 
@@ -586,10 +650,10 @@ def _bench_specialization_insights(
                 rule_source_type=advice.rule_source_type,
                 data_source_version=advice.data_source_version,
                 confidence=advice.confidence,
-                headline=f"Op bench: {name}",
+                headline=f"On bench: {name}",
                 detail=(
-                    f"Overweeg {name} met {recommended} — past bij "
-                    f"{goal}/{context} en vult een formatie-gap."
+                    f"Consider {name} with {recommended} — fits "
+                    f"{goal}/{context} and fills a formation gap."
                 ),
                 priority=3,
             )
@@ -631,16 +695,8 @@ def _party_specialization_composition_tips(
     insight_names = {ins.hero_name.casefold() for ins in insights}
 
     if (context == "modron" or goal == "speed") and not _party_has_speed_spec(formation):
-        bench_speed = [
-            ins
-            for ins in insights
-            if ins.status == "bench_suggestion"
-            and "speed" in ins.recommended_label.casefold()
-        ]
-        detail = "Speed-specs (Briv, Widdle, Deekin) zijn belangrijk voor areas/uur."
-        if bench_speed:
-            detail += f" Op bench: {bench_speed[0].hero_name} → {bench_speed[0].recommended_label}."
-        title = "Speed-specs voor Modron" if context == "modron" else "Geen speed-spec champion in party"
+        detail = "Speed specs (Briv, Widdle, Deekin) matter for areas/hour."
+        title = "Speed specs for Modron" if context == "modron" else "No speed-spec champion in party"
         tips.append(
             AdvisorTip(
                 priority=2,
@@ -650,14 +706,11 @@ def _party_specialization_composition_tips(
         )
 
     if goal == "gold" and not _party_has_gold_spec(formation):
-        detail = "Gold/favor-specs (Jarlaxle, Omin, Freely) versterken economy runs."
-        gold_bench = [ins for ins in insights if ins.status == "bench_suggestion"]
-        if gold_bench:
-            detail += f" Op bench: {gold_bench[0].hero_name} → {gold_bench[0].recommended_label}."
+        detail = "Gold/favor specs (Jarlaxle, Omin, Freely) strengthen economy runs."
         tips.append(
             AdvisorTip(
                 priority=2,
-                title="Geen gold-spec champion in party",
+                title="No gold-spec champion in party",
                 detail=detail,
             )
         )
@@ -669,8 +722,8 @@ def _party_specialization_composition_tips(
             tips.append(
                 AdvisorTip(
                     priority=3,
-                    title="Asharra: bond-spec afhankelijk van party",
-                    detail="Kies de bond/spec die past bij dwarf/elf (of andere species) in je huidige formation.",
+                    title="Asharra: bond spec depends on party",
+                    detail="Choose the bond/spec that fits dwarf/elf (or other species) in your current formation.",
                 )
             )
 
@@ -704,13 +757,14 @@ def build_specialization_insights(
         hero_run_goal = run_goal
         if utility == "gold":
             hero_run_goal = "gold_farm"
-        elif utility == "modron":
+        elif utility == "scavenger":
             hero_run_goal = "generic_progression"
         insight = _insight_for_formation_hero(
             payload=payload,
             hero=hero,
             options=options,
             run_goal=hero_run_goal,
+            context=context,
             formation_ctx=formation_ctx,
             open_pending=hero_open,
         )
@@ -725,22 +779,6 @@ def build_specialization_insights(
             )
         if insight is not None:
             insights.append(insight)
-
-    in_party = {h.hero_id for h in formation}
-    owned = _owned_from_payload(payload)
-    insights.extend(
-        _bench_specialization_insights(
-            payload=payload,
-            owned=owned,
-            in_party=in_party,
-            known_by_hero=known_by_hero,
-            run_goal=run_goal,
-            goal=goal,
-            context=context,
-            formation_ctx=formation_ctx,
-            roster_filter=roster_filter,
-        )
-    )
 
     insights.sort(key=lambda item: (item.priority, item.hero_name))
     return tuple(insights[:MAX_INSIGHTS])
@@ -778,9 +816,9 @@ def spec_summary_for_hero(
         if insight.hero_id != hero_id or insight.status == "bench_suggestion":
             continue
         if insight.status == "open_tier":
-            return f"Spec: kies {insight.recommended_label} ({insight.rule_source_type})"
+            return f"Spec: choose {insight.recommended_label} ({insight.rule_source_type})"
         if insight.status == "mismatch":
-            return f"Spec: overweeg {insight.recommended_label} (nu: {' / '.join(insight.current_labels)})"
+            return f"Spec: consider {insight.recommended_label} (now: {' / '.join(insight.current_labels)})"
     return None
 
 

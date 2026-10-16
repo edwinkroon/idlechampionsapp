@@ -13,6 +13,7 @@ from ic_gamedata.paths import (
     InstallSource,
     find_epic_install,
     find_game_install,
+    find_running_install,
 )
 
 
@@ -86,6 +87,40 @@ class EpicPathTests(unittest.TestCase):
             assert info is not None
             self.assertEqual(info.install_dir, manual.resolve())
             self.assertEqual(info.source, InstallSource.MANUAL)
+
+    def test_running_process_fallback(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            game_dir = Path(tmp) / "IdleChampions"
+            game_dir.mkdir()
+            (game_dir / "IdleDragons.exe").write_text("", encoding="utf-8")
+            (game_dir / "IdleDragons_Data").mkdir()
+
+            with (
+                patch("ic_gamedata.paths._load_manual_override", return_value=None),
+                patch("ic_gamedata.paths.find_epic_install", return_value=None),
+                patch("ic_gamedata.paths.find_steam_install", return_value=None),
+                patch("ic_gamedata.paths.find_running_install", return_value=game_dir.resolve()),
+            ):
+                info = find_game_install()
+            self.assertIsNotNone(info)
+            assert info is not None
+            self.assertEqual(info.install_dir, game_dir.resolve())
+            self.assertEqual(info.source, InstallSource.RUNNING)
+
+    def test_find_running_install_from_exe(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            game_dir = Path(tmp) / "IdleChampions"
+            game_dir.mkdir()
+            exe = game_dir / "IdleDragons.exe"
+            exe.write_text("", encoding="utf-8")
+            (game_dir / "IdleDragons_Data").mkdir()
+
+            class _Proc:
+                info = {"name": "IdleDragons.exe", "exe": str(exe)}
+
+            with patch("psutil.process_iter", return_value=[_Proc()]):
+                found = find_running_install()
+            self.assertEqual(found, game_dir.resolve())
 
 
 if __name__ == "__main__":

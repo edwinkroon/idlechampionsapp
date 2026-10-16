@@ -55,7 +55,7 @@ class BudProxyTests(unittest.TestCase):
 
     def test_format_and_boost(self) -> None:
         self.assertIn("×", format_bud_ratio(1.4))
-        self.assertEqual(format_bud_ratio(1.0), "geen winst")
+        self.assertEqual(format_bud_ratio(1.0), "no gain")
         self.assertGreater(score_boost_from_ratio(2.0), 0)
         self.assertLess(score_boost_from_ratio(0.5), 0)
 

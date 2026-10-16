@@ -15,7 +15,7 @@ SeatRole = Literal[
     "support",
     "healer",
     "gold",
-    "modron",
+    "scavenger",
     "speed",
     "flex",
 ]
@@ -28,7 +28,7 @@ STANDARD_SEAT_ROLES: tuple[SeatRole, ...] = (
     "support",
     "healer",
     "gold",
-    "modron",
+    "scavenger",
     "speed",
     "flex",
 )
@@ -102,5 +102,7 @@ class SeatAdvisorReport:
     visual_nodes: tuple[VisualSeatNode, ...]
     formation_name: str
     html_grid: str
+    recommended_visual_nodes: tuple[VisualSeatNode, ...] = ()
+    recommended_hidden_reason: str | None = None
     speed_hero_id: int | None = None
     speed_hero_name: str | None = None

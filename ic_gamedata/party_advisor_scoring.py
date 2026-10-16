@@ -87,11 +87,11 @@ def _disallowed_replacement_detail(
         if fallback:
             parts.append(f"{hero.name}{seat_txt} → {', '.join(fallback)} (bench)")
         else:
-            parts.append(f"{hero.name}: geen toegestane vervanger op bench")
+            parts.append(f"{hero.name}: no allowed replacement on bench")
 
     if not parts:
         return None
-    return "Alternatieven: " + " · ".join(parts)
+    return "Alternatives: " + " · ".join(parts)
 
 
 def _composition_advice(
@@ -133,26 +133,26 @@ def _composition_advice(
     if is_underfilled and "formation_not_full" not in covered:
         if capacity_label is not None:
             detail = (
-                f"Je hebt {occupied} van {capacity_label} beschikbare champion-slots gevuld "
-                "(NPC-slots tellen niet mee). "
-                "Vul lege slots met supports/buffers — dat levert meestal meer op dan een extra DPS."
+                f"You have {occupied} of {capacity_label} available champion slots filled "
+                "(NPC slots do not count). "
+                "Fill empty slots with supports/buffers — that usually beats adding another DPS."
             )
         else:
             detail = (
-                f"Je hebt {occupied} champions in formation. "
-                "Vul lege slots met supports/buffers — dat levert meestal meer op dan een extra DPS."
+                f"You have {occupied} champions in formation. "
+                "Fill empty slots with supports/buffers — that usually beats adding another DPS."
             )
-        tips.append(_tip(2, "Formatie niet vol", detail))
+        tips.append(_tip(2, "Formation not full", detail))
 
     # Geen tank waar overleving telt
     if not tanks and context in ("push", "campaign"):
         suggestions = _bench_suggestions(
             owned, in_party, want_roles={"tank"}, roster_filter=roster_filter
         )
-        detail = "Zet een tank vooraan (bijv. Nayeli, Briv, Torogar) om langer te overleven."
+        detail = "Put a tank up front (e.g. Nayeli, Briv, Torogar) to survive longer."
         if suggestions:
-            detail += f" Op de bank: {', '.join(suggestions)}."
-        tips.append(_tip(2, "Geen tank in formation", detail))
+            detail += f" On bench: {', '.join(suggestions)}."
+        tips.append(_tip(2, "No tank in formation", detail))
 
     # Te veel DPS, te weinig support — alleen bij BUD
     if goal == "bud" and len(dps) >= 3 and len(buffers) <= 1:
@@ -160,9 +160,9 @@ def _composition_advice(
         tips.append(
             _tip(
                 2,
-                "Te veel DPS t.o.v. support",
-                f"DPS in party: {dps_names}. Focus buffs op één carry ({main.name}) "
-                "of wissel een DPS om voor een buffer/support.",
+                "Too much DPS vs support",
+                f"DPS in party: {dps_names}. Focus buffs on one carry ({main.name}) "
+                "or swap a DPS for a buffer/support.",
             )
         )
 
@@ -171,9 +171,9 @@ def _composition_advice(
         tips.append(
             _tip(
                 2,
-                f"Carry-focus: {main.name} is geen DPS",
-                f"{main.name} heeft de sterkste instrument-score, maar {dps[0].name} "
-                "heeft wel een DPS-rol. Overweeg buffs/debuffers op die DPS te richten.",
+                f"Carry focus: {main.name} is not a DPS",
+                f"{main.name} has the strongest instrument score, but {dps[0].name} "
+                "does have a DPS role. Consider aiming buffs/debuffers at that DPS.",
             )
         )
 
@@ -182,11 +182,11 @@ def _composition_advice(
         suggestions = _bench_suggestions(
             owned, in_party, want_tags={"speed"}, roster_filter=roster_filter
         )
-        detail = "Voor areas/uur helpt een speed champion (Briv, Hank, Widdle, Deekin)."
+        detail = "For areas/hour, a speed champion helps (Briv, Hank, Widdle, Deekin)."
         if suggestions:
-            detail += f" Beschikbaar: {', '.join(suggestions)}."
+            detail += f" Available: {', '.join(suggestions)}."
         priority = 1 if goal == "speed" else 2
-        tips.append(_tip(priority, "Geen speed champion", detail))
+        tips.append(_tip(priority, "No speed champion", detail))
 
     # Push zonder debuffer + zonder tank is already covered separately;
     # Push met veel healers/tanks maar weinig DPS
@@ -194,8 +194,8 @@ def _composition_advice(
         tips.append(
             _tip(
                 1,
-                "Geen DPS in push-formation",
-                "Aan je wall wil je minstens één dedicated single-target DPS als carry.",
+                "No DPS in push formation",
+                "At your wall you want at least one dedicated single-target DPS as carry.",
             )
         )
 
@@ -205,14 +205,14 @@ def _composition_advice(
         and len(supports) <= 1
         and len(formation) >= 8
         and "buffer_placement" not in covered
-        and not any(t.title.startswith("Te veel DPS") for t in tips)
+        and not any(t.title.startswith("Too much DPS") for t in tips)
     ):
         tips.append(
             _tip(
                 3,
-                "Weinig support in formation",
-                f"Met bijna alleen DPS/tank mist je positional buffs. "
-                f"Voeg een buffer toe naast BUD {main.name} ({_seat_text(main.seat)}).",
+                "Low support in formation",
+                f"With mostly DPS/tank you miss positional buffs. "
+                f"Add a buffer next to BUD {main.name} ({_seat_text(main.seat)}).",
             )
         )
 
@@ -233,8 +233,8 @@ def _build_improvements(
                 priority=1,
                 hero_name=None,
                 seat=None,
-                headline="Geen actieve formation gevonden",
-                action="Start een adventure in Idle Champions en klik opnieuw op Analyseer party.",
+                headline="No active formation found",
+                action="Start an adventure in Idle Champions and click Analyze again.",
             )
         ]
 
@@ -254,11 +254,11 @@ def _build_improvements(
                     priority=2,
                     hero_name=top_damage.name,
                     seat=top_damage.seat,
-                    headline="Hardste hit deze run",
+                    headline="Hardest hit this run",
                     action=(
-                        f"De game registreerde de zwaarste hit op {top_damage.name} "
-                        f"({_seat_text(top_damage.seat)}), niet op BUD-focus {main.name}. "
-                        "Overweeg buffs te verschuiven als dit consistent blijft."
+                        f"The game logged the hardest hit on {top_damage.name} "
+                        f"({_seat_text(top_damage.seat)}), not on BUD focus {main.name}. "
+                        "Consider shifting buffs if this stays consistent."
                     ),
                 )
             )
@@ -272,20 +272,20 @@ def _build_improvements(
                         priority=2,
                         hero_name=hero.name,
                         seat=hero.seat,
-                        headline="Gear onder party-gemiddelde",
+                        headline="Gear below party average",
                         action=_ilvl_below_avg_action(hero.ilvl, hero.ilvl_pct_vs_avg, party_avg_ilvl),
                     )
                 )
 
         for hero in formation:
-            if hero.active_feats == 0 and hero.role_label in ("DPS", "Onbekend"):
+            if hero.active_feats == 0 and hero.role_label in ("DPS", "Unknown"):
                 items.append(
                     HeroImprovement(
                         priority=3,
                         hero_name=hero.name,
                         seat=hero.seat,
-                        headline="Geen actief feat",
-                        action="Zet een damage- of speed-feat aan als je die unlocked hebt.",
+                        headline="No active feat",
+                        action="Enable a damage or speed feat if you have one unlocked.",
                     )
                 )
 
@@ -298,15 +298,15 @@ def _build_improvements(
             suggestions = _bench_suggestions(
                 owned, {h.hero_id for h in formation}, want_tags={"speed"}, roster_filter=None
             )
-            action = "Zet een speed champion in party voor kortere runs (Briv, Widdle, Deekin, Hank)."
+            action = "Add a speed champion to the party for shorter runs (Briv, Widdle, Deekin, Hank)."
             if suggestions:
-                action += f" Op bench: {', '.join(suggestions)}."
+                action += f" On bench: {', '.join(suggestions)}."
             items.append(
                 HeroImprovement(
                     priority=1,
                     hero_name=None,
                     seat=None,
-                    headline="Geen speed champion in formation",
+                    headline="No speed champion in formation",
                     action=action,
                 )
             )
@@ -317,8 +317,8 @@ def _build_improvements(
                         priority=2,
                         hero_name=speed_main.name,
                         seat=speed_main.seat,
-                        headline="Geen actief feat",
-                        action="Zet een speed- of utility-feat aan op je speed carry.",
+                        headline="No active feat",
+                        action="Enable a speed or utility feat on your speed carry.",
                     )
                 )
             for hero in formation:
@@ -330,7 +330,7 @@ def _build_improvements(
                             priority=3,
                             hero_name=hero.name,
                             seat=hero.seat,
-                            headline="Gear onder party-gemiddelde",
+                            headline="Gear below party average",
                             action=_ilvl_below_avg_action(
                                 hero.ilvl, hero.ilvl_pct_vs_avg, party_avg_ilvl
                             ),
@@ -345,7 +345,7 @@ def _build_improvements(
                         priority=2,
                         hero_name=hero.name,
                         seat=hero.seat,
-                        headline="Gear onder party-gemiddelde",
+                        headline="Gear below party average",
                         action=_ilvl_below_avg_action(hero.ilvl, hero.ilvl_pct_vs_avg, party_avg_ilvl),
                     )
                 )
@@ -374,8 +374,8 @@ def _formation_tips(
         return [
             _tip(
                 1,
-                "Geen formation gevonden",
-                "Start een adventure in Idle Champions en klik opnieuw op Analyseer party.",
+                "No formation found",
+                "Start an adventure in Idle Champions and click Analyze again.",
             )
         ]
 
@@ -389,11 +389,11 @@ def _formation_tips(
             tips.append(
                 _tip(
                     1,
-                    f"BUD deze run: {main.name}",
+                    f"BUD this run: {main.name}",
                     (
-                        f"De game registreerde de hardste hit op {main.name} "
+                        f"The game logged the hardest hit on {main.name} "
                         f"({_seat_text(main.seat)}, {main.gear_label}). "
-                        "Richt buffers, debuffers en positional buffs op deze champion."
+                        "Aim buffers, debuffers, and positional buffs at this champion."
                     ),
                 )
             )
@@ -401,11 +401,11 @@ def _formation_tips(
             tips.append(
                 _tip(
                     1,
-                    f"BUD-focus: {main.name}",
+                    f"BUD focus: {main.name}",
                     (
-                        f"Verwachte carry voor BUD-stacking: {main.name} "
+                        f"Expected carry for BUD stacking: {main.name} "
                         f"({_seat_text(main.seat)}, {main.gear_label}). "
-                        "Nog geen harde hit geregistreerd deze reset — stack buffs hier naarmate damage opbouwt."
+                        "No hard hit logged this reset yet — stack buffs here as damage builds."
                     ),
                 )
             )
@@ -414,10 +414,10 @@ def _formation_tips(
             tips.append(
                 _tip(
                     2,
-                    f"Geen debuffer voor {main.name}",
+                    f"No debuffer for {main.name}",
                     (
-                        f"Debuffers verhogen BUD op {main.name} via zware debuff-hits. "
-                        "Overweeg Krull, Aila, Gromma, Spurt, Warden of Sisaspia in party."
+                        f"Debuffers raise BUD on {main.name} via heavy debuff hits. "
+                        "Consider Krull, Aila, Gromma, Spurt, Warden, or Sisaspia in party."
                     ),
                 )
             )
@@ -426,10 +426,10 @@ def _formation_tips(
             tips.append(
                 _tip(
                     3,
-                    f"Weinig buffers voor {main.name}",
+                    f"Low buffers for {main.name}",
                     (
-                        f"Champions als Avren, Celeste, Birdsong en Gale verhogen single-target hits. "
-                        f"Zet een buffer naast BUD {main.name} ({_seat_text(main.seat)})."
+                        f"Champions like Avren, Celeste, Birdsong, and Gale raise single-target hits. "
+                        f"Place a buffer next to BUD {main.name} ({_seat_text(main.seat)})."
                     ),
                 )
             )
@@ -438,27 +438,27 @@ def _formation_tips(
             tips.append(
                 _tip(
                     2,
-                    "Push-modus",
-                    f"Focus op één single-target DPS ({main.name}) plus debuffers. "
-                    "AoE-champions zijn minder efficiënt aan je wall.",
+                    "Push mode",
+                    f"Focus on one single-target DPS ({main.name}) plus debuffers. "
+                    "AoE champions are less efficient at your wall.",
                 )
             )
         elif context == "modron":
             tips.append(
                 _tip(
                     3,
-                    "Modron-modus",
-                    "BUD is hier minder belangrijk dan areas/uur. "
-                    "Kies speed/support (Briv, Hank) boven pure BUD-stacking.",
+                    "Modron mode",
+                    "BUD matters less here than areas/hour. "
+                    "Pick speed/support (Briv, Hank) over pure BUD stacking.",
                 )
             )
         elif context == "events":
             tips.append(
                 _tip(
                     3,
-                    "Events-modus",
-                    f"Check event-boons en variant-restrictions. "
-                    f"Debuffer-stacking blijft sterk voor BUD {main.name}.",
+                    "Events mode",
+                    f"Check event boons and variant restrictions. "
+                    f"Debuffer stacking stays strong for BUD {main.name}.",
                 )
             )
 
@@ -483,9 +483,9 @@ def _formation_tips(
                     1,
                     f"Speed focus: {speed_main.name}",
                     (
-                        f"Areas/uur draait om snelle clears — focus specs/feats op "
+                        f"Areas/hour is about fast clears — focus specs/feats on "
                         f"{speed_main.name} ({_seat_text(speed_main.seat)}, {speed_main.gear_label}). "
-                        "Combineer met genoeg DPS/support om areas vlot te resetten."
+                        "Combine with enough DPS/support to reset areas quickly."
                     ),
                 )
             )
@@ -497,18 +497,18 @@ def _formation_tips(
                 and hid not in in_party
                 and is_hero_allowed(hid, roster_filter)
             ]
-            detail = "Zonder speed champion mis je areas/uur. Briv, Widdle, Deekin en Hank zijn gangbare keuzes."
+            detail = "Without a speed champion you miss areas/hour. Briv, Widdle, Deekin, and Hank are common picks."
             if bench_speed:
-                detail += " Op bench: " + ", ".join(bench_speed[:4]) + "."
-            tips.append(_tip(1, "Geen speed champion in formation", detail))
+                detail += " On bench: " + ", ".join(bench_speed[:4]) + "."
+            tips.append(_tip(1, "No speed champion in formation", detail))
 
         if len(speed) > 1:
             names = ", ".join(h.name for h in speed)
             tips.append(
                 _tip(
                     3,
-                    f"Meerdere speed champions: {names}",
-                    "Meestal volstaat één primary speed carry; extra slots zijn beter voor DPS/support.",
+                    f"Multiple speed champions: {names}",
+                    "Usually one primary speed carry is enough; extra slots are better for DPS/support.",
                 )
             )
 
@@ -517,8 +517,8 @@ def _formation_tips(
             tips.append(
                 _tip(
                     2,
-                    "Weinig DPS voor speed runs",
-                    "Speed stacking helpt pas als je areas snel genoeg cleart — voeg minstens één carry toe.",
+                    "Low DPS for speed runs",
+                    "Speed stacking only helps once you clear areas fast enough — add at least one carry.",
                 )
             )
 
@@ -527,7 +527,7 @@ def _formation_tips(
                 _tip(
                     2,
                     "Modron farming",
-                    "Korte resets en hoge areas/uur zijn het doel — prioriteer speed-specs en snelle kills.",
+                    "Short resets and high areas/hour are the goal — prioritize speed specs and fast kills.",
                 )
             )
         elif context == "campaign":
@@ -535,7 +535,7 @@ def _formation_tips(
                 _tip(
                     3,
                     "Campaign speed",
-                    "Farm favor/gold sneller door areas kort te houden met speed + burst DPS.",
+                    "Farm favor/gold faster by keeping areas short with speed + burst DPS.",
                 )
             )
 
@@ -545,7 +545,7 @@ def _formation_tips(
                 _tip(
                     1,
                     f"Gold growth rate: {gold_growth_rate:.2f}×",
-                    "Hogere waarde = meer gold per kill op dit adventure.",
+                    "Higher value = more gold per kill on this adventure.",
                 )
             )
 
@@ -567,25 +567,25 @@ def _formation_tips(
                 _tip(
                     1,
                     f"Gold champion(s) in formation: {names}",
-                    "Houd gold-champions in party voor campaign/event farming.",
+                    "Keep gold champions in party for campaign/event farming.",
                 )
             )
         elif bench_gold and "gold_no_gold_role" not in covered:
             tips.append(
                 _tip(
                     1,
-                    "Geen gold champion in formation",
-                    "Overweeg: "
+                    "No gold champion in formation",
+                    "Consider: "
                     + ", ".join(bench_gold[:4])
-                    + ". Jarlaxle, Pisl, Freely en Ellywick zijn gangbare keuzes.",
+                    + ". Jarlaxle, Pisl, Freely, and Ellywick are common picks.",
                 )
             )
         else:
             tips.append(
                 _tip(
                     2,
-                    "Geen gold specialist gevonden",
-                    "Unlock Jarlaxle (gold) of Pisl voor dedicated gold income.",
+                    "No gold specialist found",
+                    "Unlock Jarlaxle (gold) or Pisl for dedicated gold income.",
                 )
             )
 
@@ -593,8 +593,8 @@ def _formation_tips(
             _tip(
                 2,
                 "Kill speed = gold speed",
-                f"Sterkste gear: {main.name}. Sneller areas clearen levert meer gold op, "
-                "vooral zonder dedicated gold champion.",
+                f"Strongest gear: {main.name}. Clearing areas faster yields more gold, "
+                "especially without a dedicated gold champion.",
             )
         )
 
@@ -603,8 +603,8 @@ def _formation_tips(
                 _tip(
                     2,
                     "Campaign farming",
-                    "Combineer gold champion met voldoende DPS om areas snel te clearen. "
-                    "Patron currency is apart — kies de juiste patron per adventure.",
+                    "Combine a gold champion with enough DPS to clear areas quickly. "
+                    "Patron currency is separate — pick the right patron per adventure.",
                 )
             )
         elif context == "events":
@@ -612,8 +612,8 @@ def _formation_tips(
                 _tip(
                     2,
                     "Event farming",
-                    "Prioriteit: event tokens (Strongheart e.a.) boven raw gold. "
-                    "Check event-boons in game voor bonuses.",
+                    "Prioritize event tokens (Strongheart etc.) over raw gold. "
+                    "Check in-game event boons for bonuses.",
                 )
             )
         elif context == "push":
@@ -621,7 +621,7 @@ def _formation_tips(
                 _tip(
                     3,
                     "Push / wall",
-                    "Gold income is hier niet de bottleneck — focus op DPS om verder te push.",
+                    "Gold income is not the bottleneck here — focus on DPS to push further.",
                 )
             )
         elif context == "modron":
@@ -629,13 +629,13 @@ def _formation_tips(
                 _tip(
                     2,
                     "Modron farming",
-                    "Areas/uur telt meer dan gold/uur. Gebruik speed champions (Briv) en korte resets.",
+                    "Areas/hour matters more than gold/hour. Use speed champions (Briv) and short resets.",
                 )
             )
 
     for note in modifiers[:2]:
         if _is_actionable_adventure_rule(note):
-            tips.append(_tip(3, "Adventure-regel", note))
+            tips.append(_tip(3, "Adventure rule", note))
 
     if roster_filter is not None and formation:
         from ic_gamedata.adventure_restrictions import is_hero_allowed, restriction_summary
@@ -649,7 +649,7 @@ def _formation_tips(
         if disallowed_heroes:
             summary = restriction_summary(roster_filter)
             detail = (
-                f"{', '.join(hero.name for hero in disallowed_heroes)} voldoen niet aan de adventure-beperkingen"
+                f"{', '.join(hero.name for hero in disallowed_heroes)} do not meet the adventure restrictions"
                 + (f" ({summary})." if summary else ".")
             )
             replacement = _disallowed_replacement_detail(
@@ -663,7 +663,7 @@ def _formation_tips(
             )
             if replacement:
                 detail = f"{detail} {replacement}"
-            tips.append(_tip(1, "Champions niet toegestaan op dit adventure", detail))
+            tips.append(_tip(1, "Champions not allowed on this adventure", detail))
 
     tips.extend(
         _composition_advice(
@@ -692,10 +692,10 @@ def _tip(priority: int, title: str, detail: str) -> AdvisorTip:
 _GENERIC_FORMATION_TIP_TITLES = frozenset(
     {
         "adventure damage-buff",
-        "adventure-regel",
-        "push-modus",
-        "modron-modus",
-        "events-modus",
+        "adventure rule",
+        "push mode",
+        "modron mode",
+        "events mode",
         "campaign farming",
         "event farming",
         "push / wall",
@@ -709,8 +709,8 @@ def _is_relevant_formation_tip(tip: AdvisorTip, *, has_seat_report: bool) -> boo
     """Drop open-deur tips that duplicate seat cards or state the obvious."""
     title = tip.title.casefold().strip()
     if has_seat_report and (
-        title.startswith("bud deze run:")
-        or title.startswith("bud-focus:")
+        title.startswith("bud this run:")
+        or title.startswith("bud focus:")
         or title.startswith("speed focus:")
     ):
         return False

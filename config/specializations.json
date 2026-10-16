@@ -1394,36 +1394,43 @@
     "51": {
       "name": "Avren",
       "default": [
-        3099
+        20700,
+        20705
       ],
       "options": [
         {
-          "upgrade_id": 3095,
+          "upgrade_id": 20700,
           "name": "Mirror Focus (Good)",
           "required_level": 100,
           "tier_index": 0
         },
         {
-          "upgrade_id": 3096,
+          "upgrade_id": 20701,
           "name": "Mirror Focus (Neutral)",
           "required_level": 100,
           "tier_index": 0
         },
         {
-          "upgrade_id": 3097,
+          "upgrade_id": 20702,
           "name": "Mirror Focus (Evil)",
           "required_level": 100,
           "tier_index": 0
         },
         {
-          "upgrade_id": 3098,
-          "name": "Sturdy Mirrors",
+          "upgrade_id": 20703,
+          "name": "Mirror Focus (Lawful)",
           "required_level": 200,
           "tier_index": 1
         },
         {
-          "upgrade_id": 3099,
-          "name": "Empowered Mirrors",
+          "upgrade_id": 20704,
+          "name": "Mirror Focus (Neutral)",
+          "required_level": 200,
+          "tier_index": 1
+        },
+        {
+          "upgrade_id": 20705,
+          "name": "Mirror Focus (Chaotic)",
           "required_level": 200,
           "tier_index": 1
         }
@@ -2687,17 +2694,17 @@
     "90": {
       "name": "Brig",
       "default": [
-        6355
+        20713
       ],
       "options": [
         {
-          "upgrade_id": 6355,
+          "upgrade_id": 20713,
           "name": "\"Back\"-Up Singer",
           "required_level": 150,
           "tier_index": 0
         },
         {
-          "upgrade_id": 6356,
+          "upgrade_id": 20714,
           "name": "Cream of the Crop",
           "required_level": 150,
           "tier_index": 0
@@ -3025,7 +3032,7 @@
     "103": {
       "name": "Valentine",
       "default": [
-        8150
+        8149
       ],
       "options": [
         {
@@ -3096,30 +3103,24 @@
     "105": {
       "name": "Dob",
       "default": [
-        8745
+        20926
       ],
       "options": [
         {
-          "upgrade_id": 8742,
+          "upgrade_id": 20926,
           "name": "Befriend the Magical",
           "required_level": 160,
           "tier_index": 0
         },
         {
-          "upgrade_id": 8743,
+          "upgrade_id": 20927,
           "name": "Befriend the Friendly",
           "required_level": 160,
           "tier_index": 0
         },
         {
-          "upgrade_id": 8744,
+          "upgrade_id": 20928,
           "name": "Befriend the Quick",
-          "required_level": 160,
-          "tier_index": 0
-        },
-        {
-          "upgrade_id": 8745,
-          "name": "Befriend Everybody!",
           "required_level": 160,
           "tier_index": 0
         }
@@ -5109,6 +5110,122 @@
           "name": "Occult Aid: Sanctuary",
           "required_level": 220,
           "tier_index": 1
+        }
+      ]
+    },
+    "178": {
+      "name": "Flint",
+      "default": [
+        20134,
+        20138
+      ],
+      "options": [
+        {
+          "upgrade_id": 20134,
+          "name": "Fatherly Advice",
+          "required_level": 90,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 20135,
+          "name": "Forged in War",
+          "required_level": 90,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 20136,
+          "name": "Blood of Reorx",
+          "required_level": 90,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 20137,
+          "name": "Craft Maker",
+          "required_level": 200,
+          "tier_index": 1
+        },
+        {
+          "upgrade_id": 20138,
+          "name": "Foe Breaker",
+          "required_level": 200,
+          "tier_index": 1
+        },
+        {
+          "upgrade_id": 20139,
+          "name": "Life Taker",
+          "required_level": 200,
+          "tier_index": 1
+        }
+      ]
+    },
+    "179": {
+      "name": "Caramon",
+      "default": [
+        20178,
+        20181
+      ],
+      "options": [
+        {
+          "upgrade_id": 20177,
+          "name": "Raise Spirits: Encirclement",
+          "required_level": 20,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 20178,
+          "name": "Raise Spirits: Overwatch",
+          "required_level": 20,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 20179,
+          "name": "Raise Spirits: Spearhead",
+          "required_level": 20,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 20180,
+          "name": "Staunch Allies",
+          "required_level": 170,
+          "tier_index": 1
+        },
+        {
+          "upgrade_id": 20181,
+          "name": "Sympathetic Allies",
+          "required_level": 170,
+          "tier_index": 1
+        },
+        {
+          "upgrade_id": 20182,
+          "name": "Stalwart Allies",
+          "required_level": 170,
+          "tier_index": 1
+        }
+      ]
+    },
+    "180": {
+      "name": "Kitiara",
+      "default": [
+        20603
+      ],
+      "options": [
+        {
+          "upgrade_id": 20602,
+          "name": "Loyal to Her Past",
+          "required_level": 300,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 20603,
+          "name": "Loyal to Herself",
+          "required_level": 300,
+          "tier_index": 0
+        },
+        {
+          "upgrade_id": 20604,
+          "name": "Loyal to Darkness",
+          "required_level": 300,
+          "tier_index": 0
         }
       ]
     }

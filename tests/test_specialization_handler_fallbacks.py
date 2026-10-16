@@ -18,17 +18,18 @@ def _is_explicit_fallback_reason(reason: str) -> bool:
     text = reason.casefold()
     markers = (
         "default",
-        "geen qualified",
-        "geen stack",
-        "geen loot",
-        "geen good",
-        "geen ability",
-        "geen data",
-        "algemene ",
+        "no qualified",
+        "no stack",
+        "no loot",
+        "no good",
+        "no ability",
+        "no data",
+        "insufficient",
+        "general ",
         "0 melee",
         "0 magic",
         "0 familiars",
-        "geen attack-type",
+        "no attack-type",
     )
     return any(marker in text for marker in markers)
 
@@ -60,6 +61,12 @@ class PickBestQualifiedStackFallbackTests(unittest.TestCase):
 
 
 class HandlerEmptyDataFallbackTests(unittest.TestCase):
+    def test_nordom_empty_data_falls_back_to_basic_functionality(self) -> None:
+        handler = HERO_HANDLERS[100]
+        picked, reason = handler(FormationContext(active_hero_ids={100}))
+        self.assertEqual(picked, [18166])
+        self.assertIn("default basic functionality", reason.casefold())
+
     def test_empty_cached_data_pick_changes_are_explicit_or_allowlisted(self) -> None:
         scores = hero_ability_scores_map_from_cached_definitions()
         if len(scores) < 10:
@@ -96,6 +103,10 @@ class HandlerEmptyDataFallbackTests(unittest.TestCase):
                     "ic_gamedata.specialization_engine._hero_attack_types_map_from_cached_definitions",
                     return_value={},
                 ),
+                patch(
+                    "ic_gamedata.specialization_engine._hero_age_map_from_cached_definitions",
+                    return_value={},
+                ),
             ):
                 empty = handler(
                     FormationContext(
@@ -124,7 +135,7 @@ class HandlerEmptyDataFallbackTests(unittest.TestCase):
             silent,
             [],
             "Handlers changed pick under empty data without an explicit "
-            f"default/geen/algemene rationale: {silent}",
+            f"default/no/general rationale: {silent}",
         )
 
 

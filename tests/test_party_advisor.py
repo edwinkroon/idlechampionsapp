@@ -378,10 +378,10 @@ class PartyAdvisorTests(unittest.TestCase):
             gold_growth_rate=None,
         )
         joined = " ".join(t.title + " " + t.detail for t in tips)
-        self.assertIn("BUD deze run: Azaka", joined)
+        self.assertIn("BUD this run: Azaka", joined)
         self.assertIn("Azaka", joined)
-        self.assertNotIn("BUD deze run: Eric", joined)
-        self.assertIn("Geen debuffer voor Azaka", joined)
+        self.assertNotIn("BUD this run: Eric", joined)
+        self.assertIn("No debuffer for Azaka", joined)
 
     def test_debuffer_tip_suppressed_when_formation_rule_covers(self) -> None:
         from ic_gamedata.formation_advisor.models import FormationInsight
@@ -398,7 +398,7 @@ class PartyAdvisorTests(unittest.TestCase):
                     related_hero_name=None,
                     related_seat=None,
                     priority=3,
-                    headline="Geen debuffer",
+                    headline="No debuffer",
                     detail="",
                     rule_source_type="heuristic",
                     data_source_version="formation_rules_v1",
@@ -416,8 +416,8 @@ class PartyAdvisorTests(unittest.TestCase):
             include_formation=True,
         )
         debuffer_titles = [t.title for t in report.tips if "debuffer" in t.title.lower()]
-        # Either suppressed or renamed — should not have generic "Geen debuffer in formation"
-        self.assertFalse(any(t == "Geen debuffer in formation" for t in debuffer_titles))
+        # Either suppressed or renamed — should not have generic "No debuffer in formation"
+        self.assertFalse(any(t == "No debuffer in formation" for t in debuffer_titles))
 
     def test_formation_insights_not_duplicated_in_formation_tips(self) -> None:
         report = analyze_party(
@@ -444,9 +444,9 @@ class PartyAdvisorTests(unittest.TestCase):
             self.skipTest("no seat report in fixture")
         titles = {tip.title.casefold() for tip in report.tips}
         self.assertNotIn("adventure damage-buff", titles)
-        self.assertNotIn("adventure-regel", titles)
+        self.assertNotIn("adventure rule", titles)
         self.assertFalse(
-            any(title.startswith("bud deze run:") or title.startswith("bud-focus:") for title in titles)
+            any(title.startswith("bud this run:") or title.startswith("bud focus:") for title in titles)
         )
         self.assertFalse(any(title.endswith("-modus") for title in titles))
 
@@ -497,7 +497,7 @@ class PartyAdvisorTests(unittest.TestCase):
 
         report = analyze_party(self.payload, goal="speed", context="campaign", include_formation=True)
         self.assertEqual(report.goal, "speed")
-        self.assertIn("Speed-advies", report.summary)
+        self.assertIn("Speed advice", report.summary)
         if report.seat_report is not None:
             self.assertIsNotNone(report.seat_report.speed_hero_name)
 
@@ -509,21 +509,21 @@ class PartyAdvisorTests(unittest.TestCase):
             include_formation=True,
         )
         titles = {tip.title.casefold() for tip in report.tips}
-        self.assertNotIn("modron-modus", titles)
+        self.assertNotIn("modron mode", titles)
 
     def test_weak_gear_shows_ilvl_vs_avg(self) -> None:
         report = analyze_party(self.payload, goal="bud", context="campaign")
         weak = [
             item
             for item in report.improvements
-            if "party-gemiddelde" in item.headline or "onder party-gemiddelde" in item.action
+            if "party average" in item.headline or "below party average" in item.action
         ]
         self.assertTrue(weak)
         for item in weak:
             self.assertRegex(item.action, r"ilvl \d+")
-            self.assertIn("% onder party-gemiddelde", item.action)
+            self.assertIn("% below party average", item.action)
             self.assertNotIn("Open chests", item.action)
-            self.assertNotIn("wissel uit", item.action)
+            self.assertNotIn("swap out", item.action)
         for hero in report.formation_heroes:
             self.assertRegex(hero.gear_label, r"^ilvl \d+")
 
@@ -648,7 +648,7 @@ class PartyAdvisorTests(unittest.TestCase):
             owned=[],
             player_capacity=6,
         )
-        self.assertFalse(any(tip.title == "Formatie niet vol" for tip in tips))
+        self.assertFalse(any(tip.title == "Formation not full" for tip in tips))
 
     def test_formation_not_full_uses_grid_fill_when_heroes_list_lags(self) -> None:
         from ic_gamedata.party_advisor import FormationHero, _composition_advice
@@ -684,7 +684,7 @@ class PartyAdvisorTests(unittest.TestCase):
             player_capacity=10,
             filled_slots=10,
         )
-        self.assertFalse(any(tip.title == "Formatie niet vol" for tip in tips))
+        self.assertFalse(any(tip.title == "Formation not full" for tip in tips))
 
     def test_formation_heroes_includes_grid_champion_missing_from_hero_in_seats(self) -> None:
         from ic_gamedata.party_advisor import _formation_heroes

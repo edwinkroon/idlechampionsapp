@@ -42,7 +42,7 @@ _ROLE_FEAT_TAG_HINTS: dict[str, tuple[str, ...]] = {
     "buffer": ("pushing", "support"),
     "support": ("pushing", "support"),
     "flex": ("pushing", "support"),
-    "modron": ("speed", "farming", "support"),
+    "scavenger": ("speed", "farming", "support"),
 }
 _SPEED_FALLBACK_TAG_HINTS: tuple[str, ...] = ("survivability", "healing")
 _PUSHING_FEAT_TAGS: frozenset[str] = frozenset({"pushing", "dps"})
@@ -302,8 +302,8 @@ def _role_fallback_order(role: SeatRole) -> tuple[str, ...]:
         return ("flex", "support", "bud", "buffer")
     if role == "gold":
         return ("gold", "support", "buffer")
-    if role == "modron":
-        return ("modron", "support", "buffer")
+    if role == "scavenger":
+        return ("scavenger", "modron", "support", "buffer")
     if role == "speed":
         return ("speed", "support", "buffer")
     if role == "tank":

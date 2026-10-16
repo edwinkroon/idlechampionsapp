@@ -1,4 +1,4 @@
-"""Tests for speed-team utility roles (gem gold, modron scavenger)."""
+"""Tests for speed-team utility roles (gem gold, scavenger)."""
 
 from __future__ import annotations
 
@@ -8,10 +8,13 @@ from pathlib import Path
 
 from ic_gamedata.party_advisor import FormationHero, analyze_party
 from ic_gamedata.seat_advisor import build_seat_advisor_report
-from ic_gamedata.seat_advisor.role_inference import infer_seat_role
+from ic_gamedata.seat_advisor.role_inference import infer_seat_role, role_fits_champion
 from ic_gamedata.speed_utility_roles import (
     best_presto_spec_for_party,
+    list_scavenger_champions,
     recommended_spec_for_speed_utility,
+    scavenger_hero_ids,
+    speed_utility_for_effective_role,
     speed_utility_role,
 )
 
@@ -59,13 +62,35 @@ class SpeedUtilityRoleTests(unittest.TestCase):
             "gold",
         )
 
-    def test_presto_in_speed_team_is_modron_utility(self) -> None:
+    def test_presto_in_speed_team_is_scavenger_utility(self) -> None:
         hero = _hero(144, "Presto", 2, roles=("support",), tags=("debuffer",))
-        self.assertEqual(speed_utility_role(hero, "speed"), "modron")
+        self.assertEqual(speed_utility_role(hero, "speed"), "scavenger")
         self.assertEqual(
             infer_seat_role(hero, zone="mid", bud_hero_id=None, goal="speed", context="campaign"),
-            "modron",
+            "scavenger",
         )
+
+    def test_hank_fits_scavenger_role(self) -> None:
+        hero = _hero(163, "Hank", 2, roles=("support",), tags=("control", "buffer"))
+        self.assertIn(163, scavenger_hero_ids())
+        self.assertIsNone(speed_utility_role(hero, "speed"))
+        self.assertTrue(role_fits_champion(hero, "scavenger"))
+        self.assertEqual(
+            speed_utility_for_effective_role(hero, "speed", "scavenger"),
+            "scavenger",
+        )
+
+    def test_sheila_and_bobby_fit_scavenger_role(self) -> None:
+        for hid, name in ((160, "Sheila"), (152, "Bobby"), (126, "Strongheart")):
+            hero = _hero(hid, name, 2)
+            self.assertTrue(role_fits_champion(hero, "scavenger"), name)
+
+    def test_list_scavenger_champions_includes_loot_labels(self) -> None:
+        champions = list_scavenger_champions()
+        self.assertGreaterEqual(len(champions), 7)
+        by_name = {row.hero_name: row for row in champions}
+        self.assertEqual(by_name["Hank"].loot, "Time Gate Pieces")
+        self.assertEqual(by_name["Presto"].loot, "Modron Component pieces")
 
     def test_ellywick_utility_spec_is_all_that_sparkles(self) -> None:
         hero = _hero(83, "Ellywick", 3, roles=("support", "gold", "healer"), tags=("gold", "buffer"))
@@ -83,7 +108,7 @@ class SpeedUtilityRoleTests(unittest.TestCase):
         )
         self.assertEqual(best_presto_spec_for_party(formation), "Humble Heroes")
         presto = formation[1]
-        spec = recommended_spec_for_speed_utility(presto, formation, utility="modron")
+        spec = recommended_spec_for_speed_utility(presto, formation, utility="scavenger")
         self.assertEqual(spec, "Humble Heroes")
 
     def test_speed_seat_report_recommends_utility_specs(self) -> None:
@@ -104,7 +129,7 @@ class SpeedUtilityRoleTests(unittest.TestCase):
         by_name = {seat.hero_name: seat for seat in report.seats}
         self.assertEqual(by_name["Ellywick"].effective_role, "gold")
         self.assertEqual(by_name["Ellywick"].best_spec, "All That Sparkles")
-        self.assertEqual(by_name["Presto"].effective_role, "modron")
+        self.assertEqual(by_name["Presto"].effective_role, "scavenger")
         self.assertEqual(
             by_name["Presto"].best_spec,
             best_presto_spec_for_party(formation),

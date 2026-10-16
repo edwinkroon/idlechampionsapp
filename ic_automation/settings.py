@@ -23,17 +23,20 @@ class AutomationSettings:
 
     enable_abilities: bool = False
     abilities_interval_sec: int = 10
+    # Ultimate hotkeys for seats 1-9 then 0 (formation slot order).
+    abilities_keys: tuple[str, ...] = field(
+        default_factory=lambda: ("1", "2", "3", "4", "5", "6", "7", "8", "9", "0")
+    )
 
     enable_auto_click: bool = False
     auto_click_cps: int = 10
 
+    # Fixed safety policy (not user-configurable in the UI).
     hover_gate: bool = True
     restore_focus: bool = True
-    # Pause automation so the helper UI stays usable (no focus-steal).
     pause_on_ctrl: bool = True
     pause_when_over_app: bool = True
     pause_when_app_focused: bool = True
-    # Prefer sending keys only when the game already has focus (no activate).
     prefer_game_already_focused: bool = True
 
     def with_updates(self, **kwargs) -> AutomationSettings:

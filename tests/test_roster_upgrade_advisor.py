@@ -365,7 +365,7 @@ class RosterUpgradeAdvisorTests(unittest.TestCase):
         self.assertTrue(spurts)
         self.assertIsNotNone(spurts[0].bud_ratio)
         self.assertGreater(spurts[0].bud_ratio or 0.0, 1.2)
-        self.assertIn("BUD-proxy", spurts[0].why)
+        self.assertIn("BUD proxy", spurts[0].why)
 
     def test_does_not_replace_speed_buffer_with_pure_buffer_on_ilvl(self) -> None:
         """Halsin (speed+buffer) must not lose to Nayeli on ilvl alone."""

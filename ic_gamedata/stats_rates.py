@@ -31,15 +31,18 @@ def _resolve_gems_per_area(
     gems: int | None,
     area: int | None,
 ) -> float | None:
-    """Prefer learned rate; fall back to gems/area or a default so estimates keep moving."""
+    """Prefer a learned gems/area rate; else derive from observed gems÷area.
+
+    Do **not** fall back to ``DEFAULT_GEMS_PER_AREA`` — that invented ~1.4 gems/area
+    and made Dashboard "Gems this run" drift away from the in-game counter whenever
+    the API stalled. Better show a slightly lagging true value than a wrong estimate.
+    """
     if gems_per_area is not None and gems_per_area >= MIN_GEMS_PER_AREA:
         return gems_per_area
     if gems is not None and gems > 0 and area is not None and area > 1:
         rate = gems / area
         if rate >= MIN_GEMS_PER_AREA:
             return rate
-    if gems is not None and gems > 0:
-        return DEFAULT_GEMS_PER_AREA
     return None
 
 
@@ -249,15 +252,17 @@ def _extrapolate_gems(
     if rate is not None and gems_per_area is None:
         gems_per_area = rate
 
+    # Boss extrapolation only with a rate learned from real gem increases — the
+    # old DEFAULT_GEMS_PER_BOSS (7) often mismatched patron/event income.
     if (
-        boss is not None
+        gems_per_boss is not None
+        and boss is not None
         and prev_boss is not None
         and boss > prev_boss
         and floor_gems is not None
     ):
         delta_boss = boss - prev_boss
-        boss_rate = gems_per_boss if gems_per_boss is not None else DEFAULT_GEMS_PER_BOSS
-        boss_est = int(round(floor_gems + delta_boss * boss_rate))
+        boss_est = int(round(floor_gems + delta_boss * gems_per_boss))
         if estimated is None or boss_est > estimated:
             estimated = boss_est
             is_estimated = True

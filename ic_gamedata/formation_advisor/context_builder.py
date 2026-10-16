@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import replace as dc_replace
 from typing import Any
 
 from ic_gamedata.adventure_restrictions import (
@@ -97,6 +98,13 @@ def build_formation_layout_context(
     else:
         grid_count = len(live_formation_hero_ids(payload))
 
+    # Prefer live seats from the board so bud_proxy swaps match tip seats.
+    seated_formation = tuple(
+        dc_replace(hero, seat=seat_by_hero[hero.hero_id])
+        for hero in formation
+        if hero.hero_id in seat_by_hero
+    )
+
     return FormationLayoutContext(
         active_hero_ids=frozenset(seat_by_hero.keys()),
         seat_by_hero=seat_by_hero,
@@ -113,4 +121,5 @@ def build_formation_layout_context(
         formation_capacity=capacity,
         owned_hero_ids=owned_ids,
         allowed_bench_ids=allowed_bench,
+        formation=seated_formation,
     )
