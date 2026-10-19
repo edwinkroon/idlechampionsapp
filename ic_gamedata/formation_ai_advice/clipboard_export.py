@@ -525,6 +525,8 @@ def _project_champion_for_advice(
             }
         )
 
+    gender = champ.get("gender") if isinstance(champ.get("gender"), dict) else None
+
     projected = {
         "id": champ.get("champion_id"),
         "name": champ.get("name"),
@@ -532,6 +534,7 @@ def _project_champion_for_advice(
         "position": champ.get("current_position"),
         "species": champ.get("species"),
         "classes": champ.get("classes"),
+        "gender": gender,
         "alignment": eff_align,
         "base_alignment": base_align if base_align != eff_align else None,
         "roles": eff_roles,
@@ -663,8 +666,10 @@ def build_advice_payload(export_payload: dict[str, Any]) -> dict[str, Any]:
                         "name": name_by_id.get(int(row["champion_id"]))
                         if isinstance(row.get("champion_id"), int)
                         else None,
-                        "status": row.get("status"),
-                        "reason": row.get("reason"),
+                        # Prefer effective (post-override) status for AI.
+                        "status": row.get("effective_status") or row.get("status"),
+                        "reason": row.get("effective_reason") or row.get("reason"),
+                        "base_status": row.get("base_status"),
                     }
                 )
                 for row in (goal.get("party_restriction_checks") or [])
@@ -688,16 +693,35 @@ def build_advice_payload(export_payload: dict[str, Any]) -> dict[str, Any]:
                     "state": row.get("state"),
                     "label": row.get("label"),
                     "champion_id": row.get("current_champion_id"),
+                    "display_column": row.get("display_column"),
+                    "display_slot": row.get("display_slot"),
+                    "display_position": row.get("display_position"),
                 }
             )
         )
 
     distance = formation.get("distance") if isinstance(formation.get("distance"), dict) else {}
+    front_direction = formation.get("front_direction") or {
+        "rule": "lower_column_is_front",
+    }
+    from ic_gamedata.formation_ai_advice.labels import position_display_convention_block
+
+    convention = formation.get("position_display_convention")
+    if not isinstance(convention, dict):
+        convention = position_display_convention_block(technical_id_field="id")
+    else:
+        convention = {**convention, "technical_id_field": "id"}
     geometry = _prune_empty(
         {
             "source": formation.get("geometry_source") or formation.get("formation_id"),
-            "column_direction": formation.get("front_direction")
-            or "lower_column_index_is_front",
+            "column_direction": front_direction,
+            "row_direction": (
+                front_direction.get("row_direction")
+                if isinstance(front_direction, dict)
+                else None
+            )
+            or "lower_row_is_top",
+            "position_display_convention": convention,
             "distance_rule": distance.get("rule")
             or (formation.get("distance_definition") or {}).get("type")
             or "hops_on_active_adjacency",
@@ -709,6 +733,7 @@ def build_advice_payload(export_payload: dict[str, Any]) -> dict[str, Any]:
             "adjacency": formation.get("adjacency_by_position"),
             "positions": positions,
             "geometry_issues": formation.get("geometry_issues"),
+            "table_order_note": formation.get("table_order_note"),
         }
     )
 
@@ -800,6 +825,83 @@ def _format_priorities(priorities: Any) -> str:
     if isinstance(priorities, list) and priorities:
         return "; ".join(str(p).rstrip(".") for p in priorities if p)
     return "volgens de aangeleverde doelprioriteiten"
+
+
+def _readable_table_format_lines() -> list[str]:
+    from ic_gamedata.formation_ai_advice.labels import (
+        ADVICE_REPLY_FORMAT_INSTRUCTION,
+        POSITION_DISPLAY_AI_INSTRUCTION,
+    )
+
+    return [
+        "### Leesbare formatietabel + import-JSON",
+        "",
+        ADVICE_REPLY_FORMAT_INSTRUCTION,
+        "",
+        "Tabelkop:",
+        "",
+        "| Plek | Champion |",
+        "| --- | --- |",
+        "",
+        POSITION_DISPLAY_AI_INSTRUCTION,
+        "",
+    ]
+
+
+def _json_reply_format_lines(*, request_id: str) -> list[str]:
+    """Machine-readable reply contract for clipboard JSON mode (e.g. Perplexity)."""
+    example = {
+        "schema_version": SCHEMA_VERSION,
+        "request_id": request_id or "PLAK_DEZE_REQUEST_ID",
+        "conditional": False,
+        "placements": [
+            {"position_id": 1, "champion_id": 3},
+            {"position_id": 2, "champion_id": 2},
+        ],
+        "specializations": [
+            {
+                "champion_id": 3,
+                "group_id": "tier_0",
+                "option_id": 101,
+            }
+        ],
+    }
+    example_json = json.dumps(example, ensure_ascii=False, indent=2)
+    lines = _readable_table_format_lines()
+    lines.extend(
+        [
+            "### Verwacht antwoord-JSON (verplicht voor Plak)",
+            "",
+            "Na de leesbare tabel en eventuele uitleg: precies **één** JSON-object "
+            "in één afgesloten Markdown-codeblok met taal json. "
+            "Dat blok is wat de app inleest (Plak).",
+            "",
+            "Verplichte velden:",
+            f"- `schema_version`: `\"{SCHEMA_VERSION}\"`",
+            f"- `request_id`: exact `\"{request_id}\"` (niet wijzigen)",
+            "- `placements`: array van `{position_id, champion_id}` "
+            "(iedere geselecteerde champion precies éénmaal; geldige actieve "
+            "posities — technische id’s, niet `1-1`)",
+            "- `specializations`: array van `{champion_id, group_id, option_id}` "
+            "(alleen echte keuzes uit de aangeleverde gegevens)",
+            "",
+            "Optioneel:",
+            "- `conditional`: `true` als toelating/restricties onzeker zijn "
+            "(anders `false` of weglaten)",
+            "- `condition`: korte toelichting bij `conditional: true`",
+            "",
+            "Regels:",
+            "- Gebruik integer IDs uit de gegevens, geen namen als ID.",
+            "- `position_id` = technische fysieke formatiepositie "
+            "(niet display_position, niet permanente F-seat).",
+            "- Plakbaar voorbeeld (pas IDs aan op jouw voorstel):",
+            "",
+            "```json",
+            example_json,
+            "```",
+        ]
+    )
+    return lines
 
 
 def _instruction_block(
@@ -907,23 +1009,31 @@ def _instruction_block(
             "- Bij restrictieconflict of onbekende toelating: geef uitsluitend een "
             "voorwaardelijk voorstel en claim geen geldig speelbare party.",
             "",
-            "Antwoord uitsluitend met deze Markdown-tabel, niets ervoor of erna:",
-            "",
-            "| Positie (ID + kolom/rij) | Champion | Seat | Specialisaties | Reden / onzekerheid |",
-            "| --- | --- | --- | --- | --- |",
-            "",
-            "Sorteer achterste kolom naar voorste kolom, binnen de kolom boven naar beneden.",
-            "Gebruik de aangeleverde positie-ID's en labels.",
-            "Vermeld onzekerheden kort bij de betreffende champion.",
-            "Gebruik A → B alleen als de actuele keuze A daadwerkelijk bekend is.",
-            "Toon wijzigingen van bekende specialisaties vet.",
-            "Maak onderscheid tussen behouden, nieuw kiezen en huidige keuze onbekend.",
-            "",
-            "Als een andere opstelling nodig is om stacks of een fase op te bouwen, "
-            "vermeld de noodzakelijke tijdelijke plaatsing kort in de relevante rij.",
-            "De tabel beschrijft de aanbevolen hoofdopstelling.",
         ]
     )
+    # Both modes: readable Plek/Champion table + one import JSON block.
+    # Table-only mode previously forbade JSON; that conflicted with paste/import.
+    if output_mode == "json":
+        lines.extend(_json_reply_format_lines(request_id=request_id))
+    else:
+        lines.extend(_readable_table_format_lines())
+        lines.extend(
+            [
+                "Specialisaties: vermeld kort onder of naast de tabel "
+                "(behouden / nieuw / wijzigen). "
+                "Gebruik A → B alleen als de actuele keuze A daadwerkelijk bekend is.",
+                "Vermeld onzekerheden kort bij de betreffende champion.",
+                "",
+                "Als een andere opstelling nodig is om stacks of een fase op te bouwen, "
+                "vermeld de noodzakelijke tijdelijke plaatsing kort in de relevante rij "
+                "(ook met display_position).",
+                "De tabel beschrijft de aanbevolen hoofdopstelling.",
+                "",
+                "Sluit af met precies één importeerbaar JSON-object in één "
+                "afgesloten Markdown-codeblok met taal json en technische "
+                f"position_id’s (request_id=`{request_id}`).",
+            ]
+        )
     # Default: no web research. Only mention if explicitly allowed.
     if research_mode == "web_research_allowed":
         lines.extend(
@@ -931,14 +1041,6 @@ def _instruction_block(
                 "",
                 "Aanvullend webonderzoek is voor deze aanvraag toegestaan; "
                 "claims herleidbaar houden; geen verzonnen URL’s.",
-            ]
-        )
-    if output_mode == "json":
-        lines.extend(
-            [
-                "",
-                "Daarna **één** JSON-object in een ```json-blok voor Plak voorstel "
-                f"(request_id `{request_id}` behouden; schema_version `{SCHEMA_VERSION}`).",
             ]
         )
     if char_count >= 120_000:
@@ -1295,22 +1397,31 @@ def _swap_instruction_block(
             "Daarna max. drie sterkste onafhankelijke één-wisselvoorstellen "
             "(minder of nul mag; niet iedere kandidaat bespreken):",
             "",
-            "| Voorstel | Eruit (seat) | Erin (seat) | Verwacht voordeel | Verlies / onzekerheid |",
+            "| Voorstel | Eruit (Plek) | Erin (Plek) | Verwacht voordeel | Verlies / onzekerheid |",
             "| --- | --- | --- | --- | --- |",
             "",
             "Per aanbevolen of expliciet voorwaardelijk voorstel: complete "
             "eindformatietabel:",
             "",
-            "| Positie (ID + kolom/rij) | Champion | Seat | Specialisaties | Reden / onzekerheid |",
-            "| --- | --- | --- | --- | --- |",
+            "| Plek | Champion |",
+            "| --- | --- |",
             "",
-            "Sorteer achterste kolom eerst, binnen de kolom boven naar beneden.",
+        ]
+    )
+    from ic_gamedata.formation_ai_advice.labels import POSITION_DISPLAY_AI_INSTRUCTION
+
+    lines.extend(
+        [
+            POSITION_DISPLAY_AI_INSTRUCTION,
             "Specs: behouden / nieuw / wijzigen; A→B alleen als A bekend is.",
             "Geen verzonnen exacte winstpercentages.",
             "",
             "Bij geen onderbouwde wissel: kort waarom; geef één geoptimaliseerde "
             "baselineformatietabel. Optioneel één korte dekkingsbeperking als "
             "coverage_complete false is.",
+            "Sluit af met precies één importeerbaar JSON-object in één "
+            "afgesloten Markdown-codeblok met taal json en technische "
+            "position_id’s.",
         ]
     )
     if research_mode == "web_research_allowed":
@@ -1407,7 +1518,12 @@ def format_swap_clipboard_markdown(export_payload: dict[str, Any]) -> str:
 
 
 def extract_json_object(text: str) -> dict[str, Any] | None:
-    """Extract the first JSON object from pasted chat / markdown fences."""
+    """Extract a JSON object from pasted chat / markdown fences.
+
+    Prefers fenced json code blocks so a preceding readable Markdown table
+    does not break import. Falls back to the first fenced block, then brace
+    scan. Does not relax schema validation of the extracted object.
+    """
     if not isinstance(text, str) or not text.strip():
         return None
     stripped = text.strip()
@@ -1416,6 +1532,26 @@ def extract_json_object(text: str) -> dict[str, Any] | None:
         return value if isinstance(value, dict) else None
     except Exception:
         pass
+
+    # Prefer explicit ```json fences (table + explanation may precede).
+    lower = stripped.casefold()
+    search_from = 0
+    while True:
+        idx = lower.find("```json", search_from)
+        if idx < 0:
+            break
+        rest = stripped[idx + len("```json") :]
+        end = rest.find("```")
+        if end >= 0:
+            chunk = rest[:end].strip()
+            try:
+                value = json.loads(chunk)
+                if isinstance(value, dict):
+                    return value
+            except Exception:
+                pass
+        search_from = idx + len("```json")
+
     start = stripped.find("```")
     if start >= 0:
         rest = stripped[start + 3 :]

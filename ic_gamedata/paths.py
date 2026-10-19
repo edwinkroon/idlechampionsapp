@@ -24,6 +24,9 @@ else:
 
 GAMEDATA_CONFIG_PATH = _CONFIG_BASE / "config" / "gamedata.json"
 GOAL_RUN_HISTORY_PATH = _CONFIG_BASE / "config" / "goal_run_history.json"
+OWNED_ROSTER_CACHE_PATH = _CONFIG_BASE / "config" / "owned_roster_cache.json"
+ADVICE_SNAPSHOT_REGISTRY_PATH = _CONFIG_BASE / "config" / "advice_snapshot_registry.json"
+ADVICE_SNAPSHOTS_DIR = _CONFIG_BASE / "config" / "advice_snapshots"
 
 
 class InstallSource(str, Enum):

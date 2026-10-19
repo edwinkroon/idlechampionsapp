@@ -223,5 +223,68 @@ class AutomationWorkerTests(unittest.TestCase):
         self.assertGreaterEqual(level.call_count, 1)
 
 
+class AutomationAbilityHotkeyUiTests(unittest.TestCase):
+    """Ultimate checkboxes must only show seats that are on the live board."""
+
+    @classmethod
+    def setUpClass(cls) -> None:
+        from PySide6.QtWidgets import QApplication
+
+        cls._app = QApplication.instance() or QApplication([])
+
+    def test_ability_seats_always_shown_and_map_to_formation_hotkeys(self) -> None:
+        from ic_ui.tabs.automation_tab import AutomationTab
+
+        tab = AutomationTab()
+        # Isolate from whatever party prefs are stored on this machine.
+        tab._abilities_seats_by_party = {}  # noqa: SLF001
+        tab._formation_party_id = None  # noqa: SLF001
+        payload = {
+            "details": {
+                "active_game_instance_id": 1,
+                "game_instances": [
+                    {
+                        "game_instance_id": 1,
+                        "hero_in_seats": {
+                            "1": 171,
+                            "2": 34,
+                            "3": 179,
+                            "4": 169,  # benched — seat checkbox stays visible but off
+                            "5": 172,
+                            "7": 151,
+                            "8": 164,
+                            "10": 166,
+                            "12": 165,  # Baldric on the board
+                        },
+                        # Board order → hotkeys 1–8; Baldric (seat 12) gets toets 8.
+                        "formation": [171, 34, 179, 172, 151, 164, 166, 165, -1, -1],
+                    }
+                ],
+                "heroes": [],
+            }
+        }
+        tab.sync_fkeys_from_payload(payload)
+        seats = tab._widgets.abilities_keys  # noqa: SLF001
+        # Always show all 12 seats.
+        for seat in range(1, 13):
+            self.assertFalse(seats[seat].isHidden())
+        # Empty/benched seats are visible but not toggleable.
+        self.assertFalse(seats[4].isEnabled())
+        self.assertFalse(seats[4].isChecked())
+        self.assertFalse(seats[11].isEnabled())
+        # Occupied board seats (including seat 12) are toggleable.
+        self.assertTrue(seats[1].isEnabled())
+        self.assertTrue(seats[12].isEnabled())
+        self.assertIn(1, tab._formation_ability_seats)  # noqa: SLF001
+        self.assertIn(12, tab._formation_ability_seats)  # noqa: SLF001
+        self.assertNotIn(4, tab._formation_ability_seats)  # noqa: SLF001
+        self.assertEqual(tab._seat_ultimate_hotkeys.get(12), "8")  # noqa: SLF001
+        self.assertIsNone(tab._seat_ultimate_hotkeys.get(4))  # noqa: SLF001
+        fired = tab._ability_keys_to_fire()  # noqa: SLF001
+        # Seat 4 is empty → its checkbox stays off; Baldric (seat 12) fires toets 8.
+        self.assertFalse(seats[4].isChecked())
+        self.assertIn("8", fired)
+
+
 if __name__ == "__main__":
     unittest.main()

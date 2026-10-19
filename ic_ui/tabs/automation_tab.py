@@ -39,6 +39,7 @@ from ic_ui.widgets.option_visibility import bind_option_visibility
 _SETTINGS_ORG = "IdleChampions"
 _SETTINGS_APP = "Companion"
 _SETTINGS_PREFIX = "automation/"
+_ABILITY_SEATS: tuple[int, ...] = tuple(range(1, 13))
 _ABILITY_HOTKEYS: tuple[str, ...] = ("1", "2", "3", "4", "5", "6", "7", "8", "9", "0")
 
 
@@ -69,7 +70,7 @@ class AutomationWidgets:
     grave_interval_sec: QLineEdit
     abilities_enabled: QCheckBox
     abilities_interval_sec: QLineEdit
-    abilities_keys: dict[str, QCheckBox]
+    abilities_keys: dict[int, QCheckBox]
     auto_click_enabled: QCheckBox
     auto_click_cps: QLineEdit
     level_fkeys: dict[int, QCheckBox]
@@ -91,10 +92,14 @@ class AutomationTab(QWidget):
         self._formation_seats: frozenset[int] | None = None
         self._formation_party_id: int | None = None
         self._familiar_level_seats: frozenset[int] = frozenset()
-        self._abilities_keys_by_party: dict[int, tuple[str, ...]] = {}
+        # party_id → seat → user wants this seat's ultimate when it is on the board.
+        self._abilities_seats_by_party: dict[int, dict[int, bool]] = {}
+        self._formation_ability_seats: frozenset[int] = frozenset()
+        self._seat_ultimate_hotkeys: dict[int, str] = {}
         self._formation_poll_tick = 0
         self._last_payload: dict | None = None
         self._widgets: AutomationWidgets | None = None
+        self._abilities_keys_grid: QGridLayout | None = None
         self._settings = QSettings(_SETTINGS_ORG, _SETTINGS_APP)
         self._persist_timer = QTimer(self)
         self._persist_timer.setSingleShot(True)
@@ -363,7 +368,10 @@ class AutomationTab(QWidget):
         row.addRow("Abilities interval (seconds):", abilities_interval_sec)
         abilities_options_layout.addLayout(row)
 
-        abilities_keys_label = QLabel("Ultimates in the formation (hotkeys 1–0):")
+        abilities_keys_label = QLabel(
+            "Ultimates per seat (1–12). Hotkeys 1–0 follow who is on the board, "
+            "so seat 11/12 also work when those champions are in the party:"
+        )
         abilities_keys_label.setWordWrap(True)
         abilities_options_layout.addWidget(abilities_keys_label)
         abilities_keys_grid = QGridLayout()
@@ -372,15 +380,16 @@ class AutomationTab(QWidget):
         abilities_keys_grid.setContentsMargins(0, 0, 0, 0)
         abilities_keys_grid.setColumnStretch(0, 1)
         abilities_keys_grid.setColumnStretch(1, 1)
-        abilities_keys: dict[str, QCheckBox] = {}
-        for index, key in enumerate(_ABILITY_HOTKEYS):
-            cb = QCheckBox(key)
+        abilities_keys: dict[int, QCheckBox] = {}
+        for index, seat in enumerate(_ABILITY_SEATS):
+            cb = QCheckBox(f"Seat {seat}")
             cb.setChecked(True)
+            cb.setEnabled(False)
             cb.setStyleSheet(
                 f"QCheckBox {{ font-size: 11px; color: {ui_theme.TEXT_BODY}; }}"
                 f"QCheckBox:disabled {{ color: {ui_theme.TEXT_MUTED}; }}"
             )
-            abilities_keys[key] = cb
+            abilities_keys[seat] = cb
             abilities_keys_grid.addWidget(
                 cb, index // 2, index % 2, Qt.AlignmentFlag.AlignLeft
             )
@@ -410,6 +419,7 @@ class AutomationTab(QWidget):
         self._w_abilities_enabled = abilities_enabled
         self._w_abilities_interval = abilities_interval_sec
         self._w_abilities_keys = abilities_keys
+        self._abilities_keys_grid = abilities_keys_grid
         self._w_auto_click_enabled = auto_click_enabled
         self._w_auto_click_cps = auto_click_cps
         return group
@@ -461,53 +471,59 @@ class AutomationTab(QWidget):
     def _schedule_save_settings(self, *_args) -> None:
         self._persist_timer.start()
 
-    def _ability_keys_selection(self) -> tuple[str, ...]:
+    def _ability_seats_selection(self) -> tuple[int, ...]:
+        """Checked seats that currently have a champion on the board."""
         w = self._widgets
         assert w is not None
-        return tuple(key for key in _ABILITY_HOTKEYS if w.abilities_keys[key].isChecked())
-
-    def _ability_keys_to_fire(self) -> tuple[str, ...]:
-        """Checked hotkeys whose champion is actually in the formation."""
-        w = self._widgets
-        assert w is not None
+        active = self._formation_ability_seats
         return tuple(
-            key
-            for key in _ABILITY_HOTKEYS
-            if w.abilities_keys[key].isChecked() and w.abilities_keys[key].isEnabled()
+            seat
+            for seat in _ABILITY_SEATS
+            if seat in active and w.abilities_keys[seat].isChecked()
         )
 
-    def _set_ability_keys_selection(self, keys: tuple[str, ...]) -> None:
+    def _ability_keys_to_fire(self) -> tuple[str, ...]:
+        """Keyboard keys for checked seats that are currently on the board."""
+        keys: list[str] = []
+        for seat in self._ability_seats_selection():
+            hotkey = self._seat_ultimate_hotkeys.get(seat)
+            if hotkey in _ABILITY_HOTKEYS:
+                keys.append(hotkey)
+        return tuple(keys)
+
+    def _set_ability_seats_selection(self, prefs: dict[int, bool]) -> None:
         if self._widgets is None:
             return
-        selected = set(keys)
-        for key, cb in self._widgets.abilities_keys.items():
+        for seat, cb in self._widgets.abilities_keys.items():
             cb.blockSignals(True)
-            cb.setChecked(key in selected)
+            cb.setChecked(bool(prefs.get(seat, True)))
             cb.blockSignals(False)
 
     def _remember_ability_keys_for_party(self, party_id: int | None) -> None:
         if party_id is None or self._widgets is None:
             return
-        self._abilities_keys_by_party[party_id] = self._ability_keys_selection()
+        prefs = dict(self._abilities_seats_by_party.get(party_id) or {})
+        for seat in self._formation_ability_seats:
+            prefs[seat] = self._widgets.abilities_keys[seat].isChecked()
+        self._abilities_seats_by_party[party_id] = prefs
 
     def _restore_ability_keys_for_party(self, party_id: int | None) -> None:
         if party_id is None or self._widgets is None:
             return
-        keys = self._abilities_keys_by_party.get(party_id)
-        if keys is None:
-            # Unknown party: default to all seats selected.
-            keys = _ABILITY_HOTKEYS
-            self._abilities_keys_by_party[party_id] = keys
-        self._set_ability_keys_selection(keys)
+        prefs = self._abilities_seats_by_party.get(party_id)
+        if prefs is None:
+            prefs = {seat: True for seat in _ABILITY_SEATS}
+            self._abilities_seats_by_party[party_id] = prefs
+        self._set_ability_seats_selection(prefs)
 
     def _switch_ability_keys_for_party(self, party_id: int | None) -> None:
         if party_id == self._formation_party_id:
             return
         if self._formation_party_id is None and party_id is not None:
-            # First known party after startup: keep current UI (legacy) as its memory.
-            if party_id not in self._abilities_keys_by_party:
-                self._remember_ability_keys_for_party(party_id)
-            else:
+            # First known party after startup: restore saved prefs if any.
+            # Do not remember yet — formation seats are applied right after this,
+            # and remembering against an empty board would store an empty selection.
+            if party_id in self._abilities_seats_by_party:
                 self._restore_ability_keys_for_party(party_id)
         else:
             self._remember_ability_keys_for_party(self._formation_party_id)
@@ -516,7 +532,10 @@ class AutomationTab(QWidget):
         self._push_live_settings()
 
     def _load_abilities_keys_by_party(self) -> None:
-        raw = self._settings.value(f"{_SETTINGS_PREFIX}abilities_keys_by_party", "")
+        raw = self._settings.value(f"{_SETTINGS_PREFIX}abilities_seats_by_party", "")
+        if not str(raw or "").strip():
+            # Migrate older hotkey-based party prefs (seats 1-10 only).
+            raw = self._settings.value(f"{_SETTINGS_PREFIX}abilities_keys_by_party", "")
         text = str(raw or "").strip()
         if not text:
             return
@@ -526,35 +545,63 @@ class AutomationTab(QWidget):
             return
         if not isinstance(data, dict):
             return
-        loaded: dict[int, tuple[str, ...]] = {}
-        for party_raw, keys_raw in data.items():
+        loaded: dict[int, dict[int, bool]] = {}
+        for party_raw, seats_raw in data.items():
             try:
                 party_id = int(party_raw)
             except (TypeError, ValueError):
                 continue
-            if not isinstance(keys_raw, list):
+            prefs: dict[int, bool] = {seat: True for seat in _ABILITY_SEATS}
+            if isinstance(seats_raw, dict):
+                for seat_raw, want in seats_raw.items():
+                    try:
+                        seat = int(seat_raw)
+                    except (TypeError, ValueError):
+                        continue
+                    if seat in _ABILITY_SEATS:
+                        prefs[seat] = bool(want)
+            elif isinstance(seats_raw, list):
+                # Legacy: list of selected seats / hotkeys.
+                selected: set[int] = set()
+                for item in seats_raw:
+                    try:
+                        seat = int(item)
+                    except (TypeError, ValueError):
+                        if str(item) == "0":
+                            seat = 10
+                        else:
+                            continue
+                    if seat in _ABILITY_SEATS:
+                        selected.add(seat)
+                if selected and max(selected) <= 10:
+                    selected.update({11, 12})
+                for seat in _ABILITY_SEATS:
+                    prefs[seat] = seat in selected if selected else True
+            else:
                 continue
-            keys = tuple(
-                key for key in _ABILITY_HOTKEYS if str(key) in {str(item) for item in keys_raw}
-            )
-            loaded[party_id] = keys
-        self._abilities_keys_by_party = loaded
+            loaded[party_id] = prefs
+        self._abilities_seats_by_party = loaded
 
     def _save_abilities_keys_by_party(self) -> None:
         self._remember_ability_keys_for_party(self._formation_party_id)
         payload = {
-            str(party_id): list(keys)
-            for party_id, keys in sorted(self._abilities_keys_by_party.items())
+            str(party_id): {str(seat): bool(want) for seat, want in sorted(prefs.items())}
+            for party_id, prefs in sorted(self._abilities_seats_by_party.items())
         }
         self._settings.setValue(
-            f"{_SETTINGS_PREFIX}abilities_keys_by_party",
+            f"{_SETTINGS_PREFIX}abilities_seats_by_party",
             json.dumps(payload, separators=(",", ":")),
         )
 
     def _on_abilities_enabled_toggled(self, checked: bool) -> None:
-        """Turning special abilities back on selects every seat again."""
+        """Turning special abilities back on selects every occupied formation seat."""
         if checked and self._widgets is not None:
-            self._set_ability_keys_selection(_ABILITY_HOTKEYS)
+            for seat, cb in self._widgets.abilities_keys.items():
+                if seat not in self._formation_ability_seats:
+                    continue
+                cb.blockSignals(True)
+                cb.setChecked(True)
+                cb.blockSignals(False)
             self._remember_ability_keys_for_party(self._formation_party_id)
             self._schedule_save_settings()
         self._push_live_settings()
@@ -592,8 +639,11 @@ class AutomationTab(QWidget):
         w.abilities_enabled.setChecked(_bool("abilities_enabled", True))
         w.abilities_interval_sec.setText(_text("abilities_interval_sec", "10"))
         self._load_abilities_keys_by_party()
-        for key, cb in w.abilities_keys.items():
-            cb.setChecked(_bool(f"ability_key_{key}", True))
+        for seat, cb in w.abilities_keys.items():
+            # Prefer seat prefs; fall back to legacy hotkey prefs for seats 1-10.
+            legacy_key = "0" if seat == 10 else str(seat)
+            default = _bool(f"ability_key_{legacy_key}", True) if seat <= 10 else True
+            cb.setChecked(_bool(f"ability_seat_{seat}", default))
         w.auto_click_enabled.setChecked(_bool("auto_click_enabled", False))
         w.auto_click_cps.setText(_text("auto_click_cps", "10"))
         for i, cb in w.level_fkeys.items():
@@ -625,8 +675,8 @@ class AutomationTab(QWidget):
             f"{_SETTINGS_PREFIX}abilities_interval_sec", w.abilities_interval_sec.text()
         )
         self._save_abilities_keys_by_party()
-        for key, cb in w.abilities_keys.items():
-            s.setValue(f"{_SETTINGS_PREFIX}ability_key_{key}", cb.isChecked())
+        for seat, cb in w.abilities_keys.items():
+            s.setValue(f"{_SETTINGS_PREFIX}ability_seat_{seat}", cb.isChecked())
         s.setValue(f"{_SETTINGS_PREFIX}auto_click_enabled", w.auto_click_enabled.isChecked())
         s.setValue(f"{_SETTINGS_PREFIX}auto_click_cps", w.auto_click_cps.text())
         for i, cb in w.level_fkeys.items():
@@ -771,33 +821,65 @@ class AutomationTab(QWidget):
         self._sync_indicator_state()
 
     def _apply_ability_key_labels(self, payload: dict | None) -> None:
+        """Always show seats 1–12; enable those currently on the board with their hotkey."""
         if self._widgets is None:
             return
-        labels: dict[str, str] = {}
-        active_keys: set[str] | None = None
+        labels: dict[int, str] = {}
+        seat_hotkeys: dict[int, str] = {}
         if payload is not None:
             try:
                 from ic_gamedata.ability_cooldowns import (
-                    ability_hotkey_labels,
-                    formation_ability_keys,
+                    formation_ultimate_seat_hotkeys,
+                    formation_ultimate_seat_labels,
                 )
             except ImportError:
-                ability_hotkey_labels = None
+                pass
             else:
-                labels = ability_hotkey_labels(payload)
-                active_keys = set(formation_ability_keys(payload))
-        for key, cb in self._widgets.abilities_keys.items():
-            in_formation = active_keys is None or key in active_keys
-            detail = labels.get(key) or ""
-            cb.setText(f"{key}  {detail}".rstrip() if detail else key)
-            cb.setEnabled(in_formation)
+                labels = formation_ultimate_seat_labels(payload)
+                seat_hotkeys = formation_ultimate_seat_hotkeys(payload)
+
+        previous_active = self._formation_ability_seats
+        self._seat_ultimate_hotkeys = dict(seat_hotkeys)
+        self._formation_ability_seats = frozenset(seat_hotkeys)
+        party_id = self._formation_party_id
+        prefs = (
+            self._abilities_seats_by_party.get(party_id, {})
+            if party_id is not None
+            else {}
+        )
+
+        for seat, cb in self._widgets.abilities_keys.items():
+            in_formation = seat in seat_hotkeys
+            was_in_formation = seat in previous_active
+            detail = labels.get(seat) or ""
+            hotkey = seat_hotkeys.get(seat)
             if detail:
-                tip = f"Hotkey {key}: {detail}"
-            elif in_formation:
-                tip = f"Hotkey {key} (empty seat)"
+                cb.setText(f"{seat}  {detail}")
+            elif hotkey:
+                cb.setText(f"{seat}  (toets {hotkey})")
             else:
-                tip = f"Hotkey {key}: no champion in the formation on this seat"
+                cb.setText(f"Seat {seat}")
+            cb.setVisible(True)
+            cb.setEnabled(in_formation)
+            cb.blockSignals(True)
+            if in_formation:
+                if not was_in_formation:
+                    # Seat just joined the board: restore saved pref or default on.
+                    cb.setChecked(bool(prefs[seat]) if seat in prefs else True)
+                # else: keep the user's current checked state
+            else:
+                cb.setChecked(False)
+            cb.blockSignals(False)
+            if detail:
+                tip = f"Seat {seat}: {detail}"
+            elif in_formation and hotkey:
+                tip = f"Seat {seat} fires ultimate hotkey {hotkey}"
+            else:
+                tip = f"Seat {seat}: geen champion van deze seat in de formatie"
             cb.setToolTip(tip)
+
+        # Keep party memory aligned with occupied seats only.
+        self._remember_ability_keys_for_party(self._formation_party_id)
 
     def _apply_formation_fkeys(
         self,

@@ -52,8 +52,8 @@ def _hero(hid: int, name: str, seat: int, *, roles=()) -> FormationHero:
 
 
 class AdviceGoalDefinitionTests(unittest.TestCase):
-    def test_all_five_goals_have_label_metric_priorities(self) -> None:
-        self.assertEqual(len(USER_GOAL_IDS), 5)
+    def test_all_goals_have_label_metric_priorities(self) -> None:
+        self.assertEqual(len(USER_GOAL_IDS), 6)
         for gid in USER_GOAL_IDS:
             definition = GOAL_DEFINITIONS[gid]
             self.assertEqual(definition.id, gid)
@@ -61,6 +61,8 @@ class AdviceGoalDefinitionTests(unittest.TestCase):
             self.assertTrue(definition.description.strip())
             self.assertTrue(definition.primary_metric.strip())
             self.assertGreaterEqual(len(definition.priorities), 3)
+        self.assertIn("gold_farm", USER_GOAL_IDS)
+        self.assertEqual(GOAL_DEFINITIONS["gold_farm"].primary_metric, "gold_income")
 
     def test_gems_primary_metric_is_gems_per_hour_not_bud(self) -> None:
         definition = GOAL_DEFINITIONS["gem_farm"]
@@ -79,6 +81,7 @@ class AdviceGoalDefinitionTests(unittest.TestCase):
     def test_scoring_lane_is_not_silent_user_migration(self) -> None:
         self.assertEqual(scoring_lane("push"), "bud")
         self.assertEqual(scoring_lane("gem_farm"), "speed")
+        self.assertEqual(scoring_lane("gold_farm"), "gold")
         self.assertEqual(scoring_lane("favor_farm"), "gold")
         # Scoring helpers may still see legacy lanes; that is not a user migration.
         self.assertEqual(scoring_lane("speed"), "speed")
@@ -101,12 +104,13 @@ class AdviceGoalMigrationTests(unittest.TestCase):
         self.assertNotEqual(result.proposed_id, "gem_farm")
         self.assertIn("niet automatisch Gems", result.message or "")
 
-    def test_gold_not_silently_favor_farm(self) -> None:
+    def test_gold_proposes_gold_farm_not_favor(self) -> None:
         result = migrate_stored_goal("gold")
-        self.assertIsNone(result.goal_id)
-        self.assertIsNone(result.proposed_id)
+        self.assertEqual(result.goal_id, "gold_farm")
+        self.assertEqual(result.proposed_id, "gold_farm")
         self.assertTrue(result.needs_confirm)
-        self.assertIn("niet automatisch Favor", result.message or "")
+        self.assertIn("Gold verzamelen", result.message or "")
+        self.assertIn("Favor", result.message or "")
 
     def test_new_goal_ids_need_no_confirm(self) -> None:
         for gid in USER_GOAL_IDS:

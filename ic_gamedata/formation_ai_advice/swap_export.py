@@ -7,6 +7,7 @@ classified roster data — no ranking or mandatory manual candidate pick.
 
 from __future__ import annotations
 
+import time
 from collections import Counter
 from dataclasses import dataclass
 from typing import Any, Literal
@@ -164,8 +165,15 @@ def _effective_eligibility_record(
         resolved_reason = "patron_blocked"
     elif base_status == "denied" and (
         "dex" in reason_text.casefold()
+        or "str" in reason_text.casefold()
+        or "int" in reason_text.casefold()
+        or "wis" in reason_text.casefold()
+        or "con" in reason_text.casefold()
+        or "cha" in reason_text.casefold()
         or "stat" in reason_text.casefold()
+        or "bovengrens" in reason_text.casefold()
         or ">=" in reason_text
+        or "<=" in reason_text
     ):
         resolved_reason = base_reason if isinstance(base_reason, str) else "stat_gate"
     else:
@@ -470,6 +478,7 @@ def build_swap_export_payload(
     manual_restriction_text: str | None = None,
     request_id: str | None = None,
     research_mode: str = "provided_data_only",
+    force_refresh_roster: bool = False,
 ) -> dict[str, Any]:
     """Party baseline + automatic owned external roster (classified, no ranking).
 
@@ -478,6 +487,9 @@ def build_swap_export_payload(
 
     Locks come only from explicit ``locked_champion_ids`` and an explicit fixed
     main DPS — never from an auto-selected carry.
+
+    External champion rows are disk-cached (~24h). Pass ``force_refresh_roster``
+    to rebuild every owned external from live definitions/payload.
     """
     fixed_dps = (
         fixed_main_dps_id
@@ -595,6 +607,21 @@ def build_swap_export_payload(
     classification: list[dict[str, Any]] = []
     data_gap_ids: list[int] = []
 
+    from ic_gamedata.formation_ai_advice.export import _data_version
+    from ic_gamedata.formation_ai_advice.owned_roster_cache import (
+        entries_for_save,
+        load_owned_roster_cache,
+        loadout_fingerprint,
+        resolve_champion_entry,
+        save_owned_roster_cache,
+    )
+
+    data_version = _data_version(payload)
+    roster_cache = load_owned_roster_cache()
+    cache_hits = 0
+    cache_built = 0
+    cache_dirty = False
+
     for hid in external_ids:
         name, roles, tags = owned_meta.get(hid, (str(hid), (), ()))
         check = base_checks.get(hid) or {
@@ -604,15 +631,38 @@ def build_swap_export_payload(
         entry: dict[str, Any] | None = None
         build_error: str | None = None
         try:
-            entry = build_champion_entry(
+            fingerprint = loadout_fingerprint(
                 payload,
-                ctx,
                 hid,
-                current_position=None,
                 ilvl=ilvl_map.get(hid),
-                scores_map=scores_map,
-                attack_map=attack_map,
+                data_version=data_version,
             )
+
+            def _build_entry(
+                _hid: int = hid,
+            ) -> dict[str, Any]:
+                return build_champion_entry(
+                    payload,
+                    ctx,
+                    _hid,
+                    current_position=None,
+                    ilvl=ilvl_map.get(_hid),
+                    scores_map=scores_map,
+                    attack_map=attack_map,
+                )
+
+            entry, source = resolve_champion_entry(
+                cache=roster_cache,
+                hero_id=hid,
+                fingerprint=fingerprint,
+                builder=_build_entry,
+                force_refresh=force_refresh_roster,
+            )
+            if source == "cache":
+                cache_hits += 1
+            else:
+                cache_built += 1
+                cache_dirty = True
             entry["in_party"] = False
             entry["owned"] = True
             entry["current_position"] = None
@@ -741,6 +791,22 @@ def build_swap_export_payload(
         1 for c in candidates_out if c.get("inclusion") == "included_conditional"
     )
 
+    if cache_dirty:
+        prior_at = roster_cache.get("cached_at")
+        try:
+            cached_at = float(prior_at) if prior_at else 0.0
+        except (TypeError, ValueError):
+            cached_at = 0.0
+        if cached_at <= 0:
+            cached_at = time.time()
+        try:
+            save_owned_roster_cache(
+                entries_for_save(roster_cache),
+                cached_at=cached_at,
+            )
+        except OSError:
+            pass
+
     # Accounting: party + external == owned; external == included+excluded+incomplete
     accounts_ok = (
         n_party + n_external == n_owned
@@ -837,10 +903,18 @@ def build_swap_export_payload(
             "coverage_incomplete_reason": incomplete_reason,
             "accounts_reconciled": accounts_ok,
             "exclusion_reasons": exclusion_reasons or None,
+            "roster_cache": {
+                "hits": cache_hits,
+                "built": cache_built,
+                "force_refresh": bool(force_refresh_roster),
+                "ttl_hours": 24,
+            },
             "note": (
                 "Alle betrouwbaar owned champions buiten de party zijn "
                 "geclassificeerd. Geen verborgen ranking of top-N. "
-                "De AI kiest zelf relevante alternatieven uit de opgenomen set."
+                "De AI kiest zelf relevante alternatieven uit de opgenomen set. "
+                "Owned-roster mechanica worden tot 24u lokaal gecachet "
+                "(ververst bij feat/spec/ilvl-wijziging)."
             ),
         },
         "excluded": excluded_out,

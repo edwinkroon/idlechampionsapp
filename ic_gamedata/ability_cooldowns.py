@@ -11,30 +11,23 @@ from typing import Any
 
 from ic_gamedata.parsing import parse_int as _parse_int
 
-# Seat 1..10 → hotkeys "1".."9","0". Seats 11-12 have no number hotkey.
+# Number keys follow live formation order (up to 10 champions on the board),
+# not permanent bench-seat numbers. That lets seat 11/12 ultimates fire when
+# those champions are actually in the party.
+_FORMATION_HOTKEYS: tuple[str, ...] = ("1", "2", "3", "4", "5", "6", "7", "8", "9", "0")
 
+# Legacy alias kept for older call sites / tests that still mention seat→key.
 _SEAT_TO_KEY = {
-
     1: "1",
-
     2: "2",
-
     3: "3",
-
     4: "4",
-
     5: "5",
-
     6: "6",
-
     7: "7",
-
     8: "8",
-
     9: "9",
-
     10: "0",
-
 }
 
 
@@ -355,48 +348,83 @@ def _permanent_seat_by_hero() -> dict[int, int]:
     return hero_seat_id_map_from_cached_definitions()
 
 
-def _hotkey_seats_for_heroes(
-    hero_ids: list[int],
-    seat_by_hero: dict[int, int],
-) -> dict[int, int]:
-    """seat -> hero_id for formation champions who have a number hotkey (1–0)."""
-    defs = _permanent_seat_by_hero()
-    seats: dict[int, int] = {}
-    for hero_id in hero_ids:
-        seat = seat_by_hero.get(hero_id)
-        if seat is None:
-            seat = defs.get(hero_id)
-        if seat is not None and 1 <= seat <= 10:
-            seats[seat] = hero_id
-    return seats
+def _resolve_hero_seat(hero_id: int, seat_by_hero: dict[int, int]) -> int | None:
+    seat = seat_by_hero.get(hero_id)
+    if seat is None:
+        seat = _permanent_seat_by_hero().get(hero_id)
+    if seat is not None and 1 <= seat <= 12:
+        return seat
+    return None
+
+
+def _live_formation_hero_ids(payload: dict[str, Any], instance: dict[str, Any]) -> list[int]:
+    """Champions currently on the board, in formation-array order."""
+    try:
+        from ic_gamedata.formation_seats import live_formation_hero_ids
+    except ImportError:
+        live_formation_hero_ids = None  # type: ignore[assignment]
+    if live_formation_hero_ids is not None:
+        live_ids = [hid for hid in live_formation_hero_ids(payload) if hid > 0]
+        # Trust an explicit formation list even when sparse/empty.
+        if isinstance(instance.get("formation"), list):
+            return live_ids
+        if live_ids:
+            return live_ids
+    # No formation grid in payload: fall back to hero_in_seats order by seat.
+    seat_by_hero = _seat_by_hero(instance)
+    return [
+        hid
+        for hid, _seat in sorted(seat_by_hero.items(), key=lambda item: item[1])
+        if 1 <= _seat <= 12
+    ][:10]
+
+
+def formation_ultimate_assignments(payload: dict[str, Any]) -> list[dict[str, Any]]:
+    """Bind live formation champions to ultimate hotkeys ``1``–``9``, ``0``.
+
+    Order follows the formation board (not permanent bench seat numbers), so a
+    seat-12 champion such as Baldric gets a real number key whenever they are
+    one of the (up to ten) champions on the field.
+    """
+    instance = _active_instance(payload)
+    if instance is None:
+        return []
+    seat_by_hero = _seat_by_hero(instance)
+    live_ids = _live_formation_hero_ids(payload, instance)
+    rows: list[dict[str, Any]] = []
+    for index, hero_id in enumerate(live_ids[: len(_FORMATION_HOTKEYS)]):
+        seat = _resolve_hero_seat(hero_id, seat_by_hero)
+        rows.append(
+            {
+                "seat": seat,
+                "hero_id": hero_id,
+                "hotkey": _FORMATION_HOTKEYS[index],
+                "name": _hero_display_name(hero_id),
+                "ultimate": _ultimate_display_name(hero_id, payload),
+            }
+        )
+    return rows
 
 
 def _formation_seats(
     instance: dict[str, Any],
     payload: dict[str, Any] | None = None,
 ) -> dict[int, int]:
-    """seat -> hero_id for champions on the live formation who can ult via 1–0.
-
-    ``hero_in_seats`` lists one champion per seat even when they are benched.
-    A populated formation grid is authoritative; a sparse grid (0–1 heroes) falls
-    back to seats 1–10 so a mid-update payload does not blank the hotkeys.
-    """
-    seat_by_hero = _seat_by_hero(instance)
-    live_ids: list[int] = []
-    if payload is not None:
-        try:
-            from ic_gamedata.formation_seats import live_formation_hero_ids
-        except ImportError:
-            live_ids = []
-        else:
-            live_ids = [hid for hid in live_formation_hero_ids(payload) if hid > 0]
-    if len(live_ids) >= 2:
-        return _hotkey_seats_for_heroes(live_ids, seat_by_hero)
-    return {
-        seat: hero_id
-        for hero_id, seat in seat_by_hero.items()
-        if 1 <= seat <= 10
-    }
+    """seat -> hero_id for champions on the live formation (seats 1–12)."""
+    if payload is None:
+        seat_by_hero = _seat_by_hero(instance)
+        return {
+            seat: hero_id
+            for hero_id, seat in seat_by_hero.items()
+            if 1 <= seat <= 12
+        }
+    seats: dict[int, int] = {}
+    for row in formation_ultimate_assignments(payload):
+        seat = row.get("seat")
+        hero_id = row.get("hero_id")
+        if isinstance(seat, int) and isinstance(hero_id, int):
+            seats[seat] = hero_id
+    return seats
 
 
 
@@ -485,114 +513,67 @@ def _attack_ready(attack_ids: list[int], cooldowns: dict[int, int]) -> bool:
 
 
 def formation_ability_keys(payload: dict[str, Any]) -> list[str]:
-
-    """Hotkeys for champions on the live formation who can ult via 1–0."""
-
-    instance = _active_instance(payload)
-
-    if instance is None:
-
-        return []
-
-    seats = _formation_seats(instance, payload)
-
-    keys: list[str] = []
-
-    for seat in sorted(seats):
-
-        key = _SEAT_TO_KEY.get(seat)
-
-        if key is not None:
-
-            keys.append(key)
-
-    return keys
+    """Hotkeys ``1``–``9``, ``0`` bound to champions currently on the board."""
+    return [str(row["hotkey"]) for row in formation_ultimate_assignments(payload)]
 
 
+def formation_ultimate_seat_hotkeys(payload: dict[str, Any]) -> dict[int, str]:
+    """Permanent seat → current ultimate hotkey for champions on the board."""
+    out: dict[int, str] = {}
+    for row in formation_ultimate_assignments(payload):
+        seat = row.get("seat")
+        hotkey = row.get("hotkey")
+        if isinstance(seat, int) and isinstance(hotkey, str):
+            out[seat] = hotkey
+    return out
 
+
+def formation_ultimate_seat_labels(payload: dict[str, Any]) -> dict[int, str]:
+    """Permanent seat → ``Champion - Ultimate (toets X)`` for board members."""
+    labels: dict[int, str] = {}
+    for row in formation_ultimate_assignments(payload):
+        seat = row.get("seat")
+        if not isinstance(seat, int):
+            continue
+        name = str(row.get("name") or "Champion")
+        ultimate = str(row.get("ultimate") or "Ultimate")
+        hotkey = str(row.get("hotkey") or "?")
+        labels[seat] = f"{name} - {ultimate}  (toets {hotkey})"
+    return labels
 
 
 def ability_status(payload: dict[str, Any]) -> tuple[list[str], str]:
+    """Return (ready_hotkeys, status_text) for formation-order ultimate keys.
 
+    Status lists every board champion's assigned hotkey with remaining cooldown
+    or 'ready'. Unmapped champions are shown as 'unknown' and never ready.
     """
-
-    Return (ready_hotkeys, status_text) for seats 1-10.
-
-
-
-    Status lists every occupied hotkey with remaining cooldown or 'klaar'.
-
-    Unmapped champions are shown as 'onbekend' and are never treated as ready.
-
-    """
-
-    instance = _active_instance(payload)
-
-    if instance is None:
-
-        return [], "no active party"
-
-
+    assignments = formation_ultimate_assignments(payload)
+    if not assignments:
+        return [], "no champions on hotkeys 1-0"
 
     cooldowns = _cooldown_map(payload)
-
     if not cooldowns:
-
-        keys = formation_ability_keys(payload)
-
-        if not keys:
-
-            return [], "no champions on hotkeys 1-0"
-
+        keys = [str(row["hotkey"]) for row in assignments]
         return keys, "ready (no cooldown data): " + ",".join(keys)
 
-
-
     ultimates = _merged_ultimates(payload)
-
-    seats = _formation_seats(instance, payload)
-
     ready: list[str] = []
-
     parts: list[str] = []
 
-
-
-    for seat in sorted(seats):
-
-        key = _SEAT_TO_KEY.get(seat)
-
-        if key is None:
-
-            continue
-
-        hero_id = seats[seat]
-
+    for row in assignments:
+        key = str(row["hotkey"])
+        hero_id = int(row["hero_id"])
         attack_ids = ultimates.get(hero_id) or []
-
         remaining = _ultimate_cooldown_remaining(attack_ids, cooldowns)
-
         if remaining is None:
-
             parts.append(f"{key}: unknown")
-
             continue
-
         if remaining > 0:
-
             parts.append(f"{key}: {remaining}s")
-
         else:
-
             ready.append(key)
-
             parts.append(f"{key}: ready")
-
-
-
-    if not parts:
-
-        return [], "no champions on hotkeys 1-0"
 
     return ready, "; ".join(parts)
 
@@ -778,18 +759,12 @@ def _ultimate_display_name(hero_id: int, payload: dict[str, Any]) -> str:
 
 
 def ability_hotkey_labels(payload: dict[str, Any]) -> dict[str, str]:
-    """Return hotkey → \"Champion - Ultimate\" for formation champions on seats 1–10."""
-    instance = _active_instance(payload)
-    if instance is None:
-        return {}
-    seats = _formation_seats(instance, payload)
+    """Return hotkey → \"Champion - Ultimate\" for champions currently on the board."""
     labels: dict[str, str] = {}
-    for seat, hero_id in seats.items():
-        key = _SEAT_TO_KEY.get(seat)
-        if key is None:
-            continue
-        hero_name = _hero_display_name(hero_id)
-        ultimate = _ultimate_display_name(hero_id, payload)
-        labels[key] = f"{hero_name} - {ultimate}"
+    for row in formation_ultimate_assignments(payload):
+        hotkey = str(row["hotkey"])
+        name = str(row.get("name") or "Champion")
+        ultimate = str(row.get("ultimate") or "Ultimate")
+        labels[hotkey] = f"{name} - {ultimate}"
     return labels
 

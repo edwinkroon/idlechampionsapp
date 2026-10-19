@@ -23,7 +23,7 @@ class AutomationSettings:
 
     enable_abilities: bool = False
     abilities_interval_sec: int = 10
-    # Ultimate hotkeys for seats 1-9 then 0 (formation slot order).
+    # Ultimate hotkeys 1-9 then 0 in live formation order (includes seat 11/12 champs).
     abilities_keys: tuple[str, ...] = field(
         default_factory=lambda: ("1", "2", "3", "4", "5", "6", "7", "8", "9", "0")
     )

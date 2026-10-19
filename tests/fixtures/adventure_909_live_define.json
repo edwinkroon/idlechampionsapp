@@ -1,0 +1,56 @@
+{
+  "id": 909,
+  "campaign_id": 25,
+  "location_id": 52,
+  "area_set_id": 134,
+  "repeatable": false,
+  "name": "Mountain - Unannounced Visit",
+  "description": "Distract the Cult of Dragons by taking the battle to the slopes of Mount Tiamat.",
+  "graphic_id": 11043,
+  "requirements_text": "Must have selected the Mountain Trial in the campaign lobby.",
+  "objectives_text": "Complete Area 600",
+  "restrictions_text": "Only Champions with a DEX score of 12 or higher can be used",
+  "requirements": [
+    {
+      "condition": "active_trials_role",
+      "role": 3
+    }
+  ],
+  "objectives": [
+    {
+      "condition": "complete_area",
+      "area": 600
+    }
+  ],
+  "game_changes": [
+    {
+      "type": "disallow_crusaders",
+      "by_stat": {
+        "stats": [
+          {
+            "stat": "dex",
+            "comp": "<",
+            "value": 12
+          }
+        ],
+        "blocked_portrait": 11036
+      }
+    }
+  ],
+  "rewards": [
+    {
+      "reward": "trials_dps",
+      "dps": 423
+    }
+  ],
+  "repeat_rewards": [
+    {
+      "reward": "trials_dps",
+      "dps": 423
+    }
+  ],
+  "costs": [],
+  "patron_objectives": [],
+  "patron_rewards": [],
+  "allow_offline_progress": "1"
+}

@@ -722,8 +722,15 @@ def _target_tags(
                         tags.append(raw.strip())
                     elif isinstance(raw, list):
                         tags.extend(str(x).strip() for x in raw if str(x).strip())
+        es = key.get("effect_string")
+        op = _op_name(es) if isinstance(es, str) else ""
+        # counter + per_hero tag is scaling_population, not a recipient filter.
+        counter_scales = (
+            op == "counter"
+            and str(key.get("stack_func") or "").casefold() == "per_hero"
+        )
         tag = key.get("tag")
-        if isinstance(tag, str) and tag.strip():
+        if isinstance(tag, str) and tag.strip() and not counter_scales:
             tags.append(tag.strip())
         new_targets = key.get("new_targets")
         if isinstance(new_targets, dict):
@@ -733,10 +740,8 @@ def _target_tags(
             elif isinstance(raw, list):
                 tags.extend(str(x).strip() for x in raw if str(x).strip())
         # per_hero_expr is scaling_population, not recipient filter — skip here.
-        es = key.get("effect_string")
         if isinstance(es, str):
             parts = [p.strip() for p in es.split(",")]
-            op = parts[0].casefold() if parts else ""
             # per_tagged in the op name is scaling, not recipients.
             if op == "force_allow_hero_by_tag" and len(parts) >= 2:
                 tags.append(parts[-1])
@@ -765,6 +770,14 @@ def _scaling_population(keys: list[dict[str, Any]]) -> dict[str, Any] | None:
             op = parts[0].casefold() if parts else ""
             if "per_tagged" in op and len(parts) >= 3:
                 tags.append(parts[2])
+            # counter stacks equal to matching heroes (e.g. Soprano / female).
+            if (
+                op == "counter"
+                and str(key.get("stack_func") or "").casefold() == "per_hero"
+            ):
+                tag = key.get("tag")
+                if isinstance(tag, str) and tag.strip():
+                    tags.append(tag.strip())
     if not tags and not exprs:
         return None
     unique: list[str] = []
@@ -2227,9 +2240,19 @@ def merge_restriction_sources(
     api_has_rules: bool,
     manual_text: str | None,
 ) -> str:
-    """Manual text does not silently replace an API verdict."""
+    """Manual text does not silently replace an API verdict.
+
+    When the API already has roster rules, extra handmatige tekst is géén
+    bewezen party-illegality. Escalate only when the API side is already a
+    hard conflict; otherwise mark unconfirmed so copy stays possible with
+    warnings (handmatige tekst mag API niet overschrijven, maar mag ook geen
+    false 'Bevestigd conflict' forceren).
+    """
     if party_status == "conflict":
         return "conflict"
     if api_has_rules and manual_text and manual_text.strip():
-        return "conflict"
+        # API + manual together: uncertain provenance, not a denied party.
+        if party_status in ("ok", "unchecked", ""):
+            return "unconfirmed"
+        return party_status
     return party_status

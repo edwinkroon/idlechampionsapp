@@ -360,3 +360,70 @@ def build_visual_nodes(
             )
 
     return tuple(nodes_out)
+
+
+def build_position_geometry(
+    payload: dict[str, Any],
+    adventure_id: int | None = None,
+) -> dict[int, tuple[float, float, str]]:
+    """position_id → (x, y, zone) for every formation slot, including empty ones.
+
+    Live visual nodes only cover occupied seats. AI proposals that move a
+    champion onto an empty ``position_id`` need the formation-graph coordinates
+    for that slot so the preview keeps the same shape as ``Nu (live)``.
+    """
+    if adventure_id is None:
+        try:
+            from ic_gamedata.formation_ai_advice.swap_export import _active_adventure_id
+
+            adventure_id = _active_adventure_id(payload)
+        except Exception:
+            adventure_id = None
+
+    _name, graph_nodes = load_formation_graph(payload, adventure_id)
+    if not graph_nodes:
+        return {}
+
+    from ic_gamedata.formation_advisor.topology import _bridge_seat_layout
+
+    inst = _active_instance(payload) or {}
+    formation_ids = _formation_grid_hero_ids(inst, payload)
+    seat_by_hero = _seat_by_hero(inst)
+    seat_column, _adj = _bridge_seat_layout(graph_nodes, formation_ids, seat_by_hero)
+    if not seat_column:
+        return {}
+
+    topo = load_formation_topology(payload, adventure_id)
+
+    # Same index→seat mapping as the bridge (occupied first, then free ids).
+    index_to_seat: dict[int, int] = {}
+    used_seats: set[int] = set()
+    for index, hero_id in enumerate(formation_ids):
+        if index >= len(graph_nodes) or hero_id <= 0:
+            continue
+        seat = seat_by_hero.get(hero_id)
+        if seat is not None and seat not in used_seats:
+            index_to_seat[index] = seat
+            used_seats.add(seat)
+    for index in range(len(graph_nodes)):
+        if index in index_to_seat:
+            continue
+        preferred = index + 1
+        if preferred not in used_seats and 1 <= preferred <= 12:
+            seat = preferred
+        else:
+            seat = next((s for s in range(1, 13) if s not in used_seats), None)
+            if seat is None:
+                continue
+        index_to_seat[index] = seat
+        used_seats.add(seat)
+
+    out: dict[int, tuple[float, float, str]] = {}
+    for index, node in enumerate(graph_nodes):
+        seat = index_to_seat.get(index)
+        if seat is None:
+            continue
+        x, y = _node_xy(node, index)
+        zone = topo.seat_zone.get(seat, "mid")
+        out[int(seat)] = (float(x), float(y), str(zone))
+    return out

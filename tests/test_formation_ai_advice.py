@@ -119,7 +119,12 @@ class FormationAiAdviceTests(unittest.TestCase):
             goal = "gem_farm"
         elif objective == "push_damage":
             goal = goal if goal in {
-                "push", "quest_clear", "gem_farm", "favor_farm", "custom_task"
+                "push",
+                "quest_clear",
+                "gem_farm",
+                "gold_farm",
+                "favor_farm",
+                "custom_task",
             } else "push"
         fixed = kwargs.get(
             "fixed_main_dps_id",
@@ -235,14 +240,15 @@ class FormationAiAdviceTests(unittest.TestCase):
         result = preflight_export(export)
         self.assertNotEqual(result.status, "invalid")
 
-    def test_clipboard_default_table_only_no_required_json(self) -> None:
+    def test_clipboard_table_mode_includes_plek_table_and_import_json(self) -> None:
         md = format_clipboard_markdown(self._export(), output_mode="table")
-        self.assertIn("uitsluitend", md.casefold())
-        self.assertIn("| Positie (ID + kolom/rij) |", md)
+        self.assertIn("| Plek | Champion |", md)
+        self.assertIn("display_position", md.casefold())
+        self.assertIn("kolom-plek", md.casefold())
+        # Readable table + one import JSON (no longer table-only).
+        self.assertIn("importeerbaar json-object", md.casefold())
         self.assertNotIn("position_id + kolom/zone", md)
         self.assertNotIn("Korte samenvatting (2–5 zinnen)", md)
-        self.assertNotIn("Daarna **één** JSON-object", md)
-        self.assertIn("markdown-tabel", md.casefold())
         # One gegevens block — no prose champion dump duplicating JSON.
         self.assertEqual(md.count("## Champions"), 0)
         self.assertIn("## Gegevens", md)
@@ -250,39 +256,12 @@ class FormationAiAdviceTests(unittest.TestCase):
 
     def test_clipboard_json_mode_includes_paste_hint(self) -> None:
         md = format_clipboard_markdown(self._export(), output_mode="json")
-        self.assertIn("Plak voorstel", md)
+        self.assertIn("Verwacht antwoord-JSON", md)
         self.assertIn("req-test-1", md)
+        self.assertIn('"placements"', md)
+        self.assertIn('"specializations"', md)
+        self.assertIn("```json", md)
         self.assertNotIn("### JSON Schema", md)
-
-    def test_format_spec_cell_bolds_changes_only(self) -> None:
-        from ic_gamedata.formation_ai_advice.models import SpecializationChoice
-        from ic_ui.tabs.formation_tab import FormationTab
-
-        # Exercise formatting helper without a full Qt window where possible.
-        tab = FormationTab.__new__(FormationTab)
-        tab._last_payload = self.payload
-        tab._current_spec_ids_by_group = lambda _cid: {"tier_0": 29}
-        tab._group_label = lambda _cid, gid: "Keuze 1" if gid == "tier_0" else gid
-        tab._spec_label = lambda _cid, oid: {29: "War Domain", 30: "Life Domain"}.get(
-            oid, str(oid)
-        )
-        html_txt, changed = FormationTab._format_spec_cell(
-            tab,
-            2,
-            (SpecializationChoice("tier_0", 30, "switch"),),
-        )
-        self.assertTrue(changed)
-        self.assertIn("<b>", html_txt)
-        self.assertIn("War Domain", html_txt)
-        self.assertIn("Life Domain", html_txt)
-        same_html, same_changed = FormationTab._format_spec_cell(
-            tab,
-            2,
-            (SpecializationChoice("tier_0", 29, "keep"),),
-        )
-        self.assertFalse(same_changed)
-        self.assertNotIn("<b>", same_html)
-        self.assertIn("(zelfde)", same_html)
 
     def test_needs_information_blocks_apply(self) -> None:
         export = self._export()
@@ -429,8 +408,16 @@ class FormationAiAdviceTests(unittest.TestCase):
         self.assertEqual(unknown["affiliation_verified"], "unknown")
 
     def test_conflicting_restriction_sources(self) -> None:
+        # Manual text + API rules must not invent a hard party conflict when
+        # the API evaluation already says ok — mark unconfirmed instead.
         self.assertEqual(
             merge_restriction_sources("ok", api_has_rules=True, manual_text="geen evil"),
+            "unconfirmed",
+        )
+        self.assertEqual(
+            merge_restriction_sources(
+                "conflict", api_has_rules=True, manual_text="geen evil"
+            ),
             "conflict",
         )
         self.assertEqual(
@@ -1518,17 +1505,23 @@ class FormationAiAdviceTests(unittest.TestCase):
         self.assertIn("boven", pos)
         self.assertNotIn("Seat", pos)
         self.assertEqual(champion_seat_caption(8), "Seat 8")
+        # Live: Vlahnya F5 at pos 5, Calliope F8 at pos 8.
+        # Proposal: Vlahnya → pos 8, Calliope → pos 5. Labels stay F-seats.
         nodes = (_node(5, 35, "Vlahnya"), _node(8, 5, "Calliope"))
         remapped = remap_visual_nodes(nodes, {35: 8, 5: 5})
-        by_pos = {n.seat: n for n in remapped}
-        self.assertEqual(by_pos[8].hero_id, 35)
-        self.assertEqual(by_pos[5].hero_id, 5)
+        by_hero = {n.hero_id: n for n in remapped}
+        self.assertEqual(by_hero[35].seat, 5)
+        self.assertEqual(by_hero[5].seat, 8)
+        self.assertEqual(by_hero[35].x, nodes[1].x)
+        self.assertEqual(by_hero[5].x, nodes[0].x)
 
     def test_preview_without_mutation(self) -> None:
         nodes = (_node(1, 3, "Nayeli"), _node(2, 2, "Celeste"), _node(3, 4, "Jarlaxle"))
         remapped = remap_visual_nodes(nodes, {3: 3, 2: 1, 4: 2})
         self.assertEqual(nodes[0].hero_id, 3)
-        self.assertEqual({n.seat: n.hero_id for n in remapped}[1], 2)
+        by_hero = {n.hero_id: n for n in remapped}
+        self.assertEqual(by_hero[2].seat, 2)
+        self.assertEqual(by_hero[2].x, nodes[0].x)
 
     def test_apply_and_undo(self) -> None:
         nodes = (_node(1, 3, "Nayeli"), _node(2, 2, "Celeste"), _node(3, 4, "Jarlaxle"))
@@ -1549,6 +1542,78 @@ class FormationAiAdviceTests(unittest.TestCase):
         undo = snapshot_from_visual_nodes(nodes)
         self.assertEqual(undo.seat_by_hero[3], 1)
 
+    def test_remap_shows_new_seat_not_in_live_geometry(self) -> None:
+        """Briv on an empty position must get a visible, non-overlapping card."""
+        nodes = (
+            _node(12, 105, "Dob"),
+            _node(2, 120, "Solaak"),
+            _node(6, 118, "Fen"),
+        )
+        after = {105: 12, 120: 2, 118: 6, 58: 5}
+        names = {105: "Dob", 120: "Solaak", 118: "Fen", 58: "Briv"}
+        remapped = remap_visual_nodes(
+            nodes,
+            after,
+            hero_name_by_id=names,
+            permanent_seat_by_hero={58: 5},
+        )
+        by_hero = {n.hero_id: n for n in remapped if n.hero_id is not None}
+        self.assertIn(58, by_hero)
+        self.assertEqual(by_hero[58].hero_name, "Briv")
+        self.assertEqual(by_hero[58].seat, 5)
+        live_coords = {(n.x, n.y) for n in nodes}
+        self.assertNotIn((by_hero[58].x, by_hero[58].y), live_coords)
+
+    def test_remap_uses_position_geometry_for_empty_slot(self) -> None:
+        """Empty position_id must use formation-graph coords, not overflow strip."""
+        nodes = (
+            _node(9, 178, "Flint"),
+            _node(6, 118, "Fen"),
+            _node(5, 58, "Briv"),
+        )
+        after = {178: 1, 118: 9, 58: 5}
+        remapped = remap_visual_nodes(
+            nodes,
+            after,
+            hero_name_by_id={178: "Flint", 118: "Fen", 58: "Briv"},
+            permanent_seat_by_hero={178: 9, 118: 6, 58: 5},
+            position_geometry={1: (40.0, 10.0, "front")},
+        )
+        by_hero = {n.hero_id: n for n in remapped}
+        self.assertEqual(by_hero[178].seat, 9)
+        self.assertEqual(by_hero[178].x, 40.0)
+        self.assertEqual(by_hero[178].y, 10.0)
+        self.assertEqual(by_hero[178].zone, "front")
+        # Must not sit past Briv on an overflow strip.
+        self.assertLess(by_hero[178].x, by_hero[58].x + 50.0)
+        # Fen takes Flint's old place; roles follow Fen (none on stub) not Tank.
+        self.assertEqual(by_hero[118].x, nodes[0].x)
+
+    def test_remap_keeps_permanent_seat_label_when_position_changes(self) -> None:
+        """Flint (F-seat 9) at position_id 1 must still show Slot 9, not Slot 1."""
+        nodes = (
+            _node(9, 178, "Flint"),
+            _node(6, 118, "Fen"),
+            _node(4, 96, "Desmond"),
+        )
+        # Move Flint → pos 1, Fen → pos 9, Desmond → pos 6.
+        after = {178: 1, 118: 9, 96: 6}
+        remapped = remap_visual_nodes(
+            nodes,
+            after,
+            hero_name_by_id={178: "Flint", 118: "Fen", 96: "Desmond"},
+            permanent_seat_by_hero={178: 9, 118: 6, 96: 4},
+            position_geometry={1: (15.0, 5.0, "front")},
+        )
+        by_hero = {n.hero_id: n for n in remapped}
+        self.assertEqual(by_hero[178].seat, 9)
+        self.assertEqual(by_hero[118].seat, 6)
+        self.assertEqual(by_hero[96].seat, 4)
+        # Fen occupies former Flint geometry (position 9).
+        self.assertEqual(by_hero[118].x, nodes[0].x)
+        self.assertEqual(by_hero[118].y, nodes[0].y)
+        self.assertEqual(by_hero[178].x, 15.0)
+
     def test_parse_request_id_mismatch(self) -> None:
         text = json.dumps(
             {
@@ -1568,10 +1633,67 @@ class FormationAiAdviceTests(unittest.TestCase):
         self.assertIsNone(proposal)
         self.assertTrue(any("request_id" in e for e in errors))
 
+    def test_parse_compact_placements_specializations(self) -> None:
+        """AI often returns placements/specializations instead of full schema."""
+        text = json.dumps(
+            {
+                "schema_version": "1.9",
+                "request_id": "req-compact",
+                "conditional": True,
+                "condition": "Eligibility conflict for Dark Urge.",
+                "placements": [
+                    {"position_id": 1, "champion_id": 25},
+                    {"position_id": 4, "champion_id": 96},
+                ],
+                "specializations": [
+                    {
+                        "champion_id": 25,
+                        "group_id": "tier_0",
+                        "option_id": 11313,
+                    },
+                    {
+                        "champion_id": 96,
+                        "group_id": "tier_0",
+                        "option_id": 7305,
+                    },
+                ],
+            }
+        )
+        proposal, errors = parse_proposal_json(
+            text, expected_request_id="req-compact"
+        )
+        self.assertEqual(errors, [])
+        self.assertIsNotNone(proposal)
+        assert proposal is not None
+        # Placements present → usable proposal; condition becomes a warning.
+        self.assertEqual(proposal.status, "proposal")
+        self.assertIn("Dark Urge", proposal.summary)
+        self.assertTrue(
+            any("Dark Urge" in w for w in proposal.warnings),
+            proposal.warnings,
+        )
+        self.assertEqual(len(proposal.assignments), 2)
+        by_champ = {a.champion_id: a for a in proposal.assignments}
+        self.assertEqual(by_champ[25].position_id, 1)
+        self.assertEqual(by_champ[25].specialization_choices[0].option_id, 11313)
+        self.assertEqual(by_champ[96].position_id, 4)
+
     def test_fingerprint_stable_without_request_id(self) -> None:
         a = self._export(request_id="a")
         b = self._export(request_id="b")
         self.assertEqual(request_fingerprint(a), request_fingerprint(b))
+
+    def test_layout_fingerprint_ignores_poll_current_time(self) -> None:
+        """API polls bump current_time → meta.data_version; must not stale advice."""
+        a = self._export()
+        b = json.loads(json.dumps(a))
+        meta = b.setdefault("meta", {})
+        meta["data_version"] = str(int(meta.get("data_version") or 0) + 999_999)
+        meta["data_fetched_at"] = meta["data_version"]
+        self.assertEqual(
+            formation_layout_fingerprint_from_export(a),
+            formation_layout_fingerprint_from_export(b),
+        )
 
     def test_export_group_labels_readable(self) -> None:
         export = self._export()
@@ -1621,9 +1743,63 @@ class FormationAiAdviceTests(unittest.TestCase):
             }
         ]
         status, issues, dims = _readiness_issues(export)
-        self.assertNotEqual(status, "ready")
+        self.assertEqual(status, "ready_with_warnings")
         self.assertEqual(dims["restrictions"], "conflict")
-        self.assertTrue(any(i.get("code") == "restriction_conflict" for i in issues))
+        conflict = next(i for i in issues if i.get("code") == "restriction_conflict")
+        self.assertEqual(conflict.get("severity"), "warning")
+        # Chat export must remain copyable so AI can propose legal swaps.
+        self.assertNotEqual(status, "blocked")
+
+    def test_override_clears_restriction_conflict_for_seated_party(self) -> None:
+        """Raw CHA deny + Dark Inheritance allow → no open party conflict."""
+        from ic_gamedata.formation_ai_advice.export import (
+            _enrich_eligibility,
+            _readiness_issues,
+        )
+
+        export = self._export()
+        # Simulate Dark Urge already in party: raw deny, kit override allows.
+        export["goal"]["party_restriction_status"] = "conflict"
+        export["goal"]["restrictions_checked_by_app"] = True
+        export["goal"]["party_restriction_checks"] = [
+            {
+                "champion_id": 146,
+                "status": "denied",
+                "reason": "CHA 17 blocked by gate",
+            }
+        ]
+        # Inject a seated champion row with Dark Inheritance ability text.
+        export["champions"] = [
+            {
+                "champion_id": 146,
+                "name": "The Dark Urge",
+                "abilities": [
+                    {
+                        "ability_id": 14378,
+                        "active_state": "kit",
+                        "mechanical_text": (
+                            "The Dark Urge is eligible to start in all adventures, "
+                            "even if the Patron, Variant, or other restrictions "
+                            "would say otherwise."
+                        ),
+                        "effect_facts": {"effect_strings": ["do_nothing"]},
+                    }
+                ],
+            }
+        ]
+        _enrich_eligibility(export)
+        check = export["goal"]["party_restriction_checks"][0]
+        self.assertEqual(check.get("base_status"), "denied")
+        self.assertEqual(check.get("status"), "allowed")
+        self.assertEqual(check.get("effective_status"), "allowed")
+        self.assertEqual(export["goal"]["party_restriction_status"], "ok")
+        status, issues, dims = _readiness_issues(export)
+        self.assertNotEqual(dims.get("restrictions"), "conflict")
+        self.assertFalse(
+            any(i.get("code") == "restriction_conflict" for i in issues),
+            issues,
+        )
+        self.assertNotEqual(status, "blocked")
 
     def test_or_expr_stat_gate_is_soft_not_hard_min(self) -> None:
         from ic_gamedata.adventure_restrictions import (
@@ -1734,7 +1910,13 @@ class FormationAiAdviceTests(unittest.TestCase):
         ]
         self.assertEqual(cols, sorted(cols, reverse=True))
         md = format_clipboard_markdown(export)
-        self.assertIn("achterste kolom", md.casefold())
+        self.assertIn("achter naar voren", md.casefold())
+        self.assertIn("display_position", md.casefold())
+        # Active places carry kolom-plek labels in geometry JSON.
+        advice_low = json.dumps(
+            build_advice_payload(export), ensure_ascii=False
+        ).casefold()
+        self.assertIn('"display_position": "1-1"', advice_low)
 
     def test_standalone_advice_brief_is_self_contained(self) -> None:
         """Export must explain the task without prior chat history."""
@@ -1746,7 +1928,8 @@ class FormationAiAdviceTests(unittest.TestCase):
         self.assertIn("zoek niet op internet", low)
         self.assertIn("hoofd-dps", low)
         self.assertIn("jarlaxle", low)
-        self.assertIn("| positie (id + kolom/rij) |", low)
+        self.assertIn("| plek | champion |", low)
+        self.assertIn("display_position", low)
         self.assertNotIn("zoals eerder besproken", low)
         self.assertNotIn("vorige afspraken", low)
         self.assertNotIn("bekende regels", low)

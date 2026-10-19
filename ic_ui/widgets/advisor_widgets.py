@@ -147,6 +147,92 @@ class FormationSeatCard(QFrame):
         super().mousePressEvent(event)
 
 
+def _legend_swatch(color: str, *, border: str | None = None) -> QLabel:
+    swatch = QLabel()
+    swatch.setFixedSize(12, 12)
+    edge = border or color
+    swatch.setStyleSheet(
+        f"background: {color}; border: 2px solid {edge}; border-radius: 3px;"
+    )
+    return swatch
+
+
+def _legend_item(color: str, label: str, *, border: str | None = None) -> QWidget:
+    wrap = QWidget()
+    row = QHBoxLayout(wrap)
+    row.setContentsMargins(0, 0, 0, 0)
+    row.setSpacing(4)
+    row.addWidget(_legend_swatch(color, border=border))
+    row.addWidget(advisor_lbl(label, kind="muted"))
+    return wrap
+
+
+def formation_board_legend(
+    *,
+    issue_border_label: str = "aandachtspunt",
+    lang: str = "nl",
+) -> QWidget:
+    """Explain zone backgrounds and border colors used on formation cards."""
+    if lang == "en":
+        zone_labels = (
+            ("back", "back (away from enemies)"),
+            ("mid", "mid"),
+            ("front", "front (toward enemies)"),
+        )
+        border_items = (
+            (ui_theme.BUD_BORDER, "BUD / carry", ui_theme.BG_HOVER),
+            (ui_theme.ISSUE_BORDER, issue_border_label, ui_theme.BG_HOVER),
+            (ui_theme.BORDER_HOVER, "normal", ui_theme.BG_HOVER),
+        )
+        title = "Legend"
+        note = "Card colors only — no connection lines are drawn between seats."
+    else:
+        zone_labels = (
+            ("back", "back (van vijanden af)"),
+            ("mid", "mid"),
+            ("front", "front (richting vijanden)"),
+        )
+        border_items = (
+            (ui_theme.BUD_BORDER, "BUD / carry", ui_theme.BG_HOVER),
+            (ui_theme.ISSUE_BORDER, issue_border_label, ui_theme.BG_HOVER),
+            (ui_theme.BORDER_HOVER, "normaal", ui_theme.BG_HOVER),
+        )
+        title = "Legenda"
+        note = (
+            "Alleen kaartkleuren betekenen iets — er worden geen "
+            "verbindingslijnen tussen seats getekend."
+        )
+
+    box = QWidget()
+    root = QVBoxLayout(box)
+    root.setContentsMargins(0, 4, 0, 0)
+    root.setSpacing(4)
+    root.addWidget(advisor_lbl(title, kind="muted"))
+
+    zones = QWidget()
+    zone_row = QHBoxLayout(zones)
+    zone_row.setContentsMargins(0, 0, 0, 0)
+    zone_row.setSpacing(10)
+    zone_row.addWidget(advisor_lbl("Zone:" if lang == "en" else "Zone:", kind="muted"))
+    for zone_key, zone_label in zone_labels:
+        bg = ui_theme.FORMATION_ZONE_BG.get(zone_key, ui_theme.BG_HOVER)
+        zone_row.addWidget(_legend_item(bg, zone_label, border=ui_theme.BORDER_HOVER))
+    zone_row.addStretch(1)
+    root.addWidget(zones)
+
+    borders = QWidget()
+    border_row = QHBoxLayout(borders)
+    border_row.setContentsMargins(0, 0, 0, 0)
+    border_row.setSpacing(10)
+    border_row.addWidget(advisor_lbl("Rand:" if lang != "en" else "Border:", kind="muted"))
+    for edge, label, fill in border_items:
+        border_row.addWidget(_legend_item(fill, label, border=edge))
+    border_row.addStretch(1)
+    root.addWidget(borders)
+    root.addWidget(advisor_lbl(note, kind="muted"))
+    return box
+
+
 def add_formation_board(
     layout: QVBoxLayout,
     nodes,
@@ -157,12 +243,19 @@ def add_formation_board(
     on_seat_clicked=None,
     node_caption=None,
     node_subcaption=None,
+    show_legend: bool = True,
+    issue_border_label: str | None = None,
+    legend_lang: str = "nl",
 ) -> None:
     """Render a formation grid board into ``layout`` (active or recommended).
 
     ``node_caption(node)`` / ``node_subcaption(node)`` override the default
     ``Slot {seat} · {zone}`` header when provided (e.g. AI preview separates
     physical position from champion F-seat).
+
+    Card background = formation zone (back/mid/front). Border: blue = BUD,
+    red = issue/changed (see ``issue_border_label``), grey = normal.
+    No adjacency lines are drawn between seats.
     """
     if not nodes:
         card = advisor_card()
@@ -244,6 +337,19 @@ def add_formation_board(
 
     scroll.setWidget(board)
     shell_lyt.addWidget(scroll)
+    if show_legend:
+        if issue_border_label is None:
+            issue_border_label = (
+                "attention / mismatch"
+                if legend_lang == "en"
+                else "aandachtspunt"
+            )
+        shell_lyt.addWidget(
+            formation_board_legend(
+                issue_border_label=issue_border_label,
+                lang=legend_lang,
+            )
+        )
     layout.addWidget(shell)
 
 
@@ -546,6 +652,7 @@ __all__ = [
     "FORMATION_ZONE_BG",
     "FormationSeatCard",
     "add_formation_board",
+    "formation_board_legend",
     "advisor_badge",
     "advisor_tag_pill",
     "advisor_card",

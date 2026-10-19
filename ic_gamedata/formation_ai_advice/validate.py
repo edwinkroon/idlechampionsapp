@@ -142,6 +142,90 @@ def _as_str_tuple(value: Any) -> tuple[str, ...]:
     return tuple(str(x) for x in value if x is not None)
 
 
+def _normalize_proposal_payload(data: dict[str, Any]) -> dict[str, Any]:
+    """Map compact AI replies (placements/specializations) onto the full schema.
+
+    Chat models often return a shorter shape than FORMATION_ADVICE_JSON_SCHEMA.
+    Accept that and fill required empties so Plak can ingest the proposal.
+    """
+    out = dict(data)
+
+    if "assignments" not in out and isinstance(out.get("placements"), list):
+        specs_by_champ: dict[int, list[dict[str, Any]]] = {}
+        for raw in out.get("specializations") or []:
+            if not isinstance(raw, dict):
+                continue
+            try:
+                cid = int(raw["champion_id"])
+                specs_by_champ.setdefault(cid, []).append(
+                    {
+                        "group_id": str(raw.get("group_id") or ""),
+                        "option_id": int(raw["option_id"]),
+                        "reason": str(raw.get("reason") or ""),
+                    }
+                )
+            except (KeyError, TypeError, ValueError):
+                continue
+        assignments: list[dict[str, Any]] = []
+        for raw in out["placements"]:
+            if not isinstance(raw, dict):
+                continue
+            try:
+                cid = int(raw["champion_id"])
+                assignments.append(
+                    {
+                        "position_id": int(raw["position_id"]),
+                        "champion_id": cid,
+                        "specialization_choices": specs_by_champ.get(cid, []),
+                        "placement_reason": str(
+                            raw.get("placement_reason") or raw.get("reason") or ""
+                        ),
+                    }
+                )
+            except (KeyError, TypeError, ValueError):
+                continue
+        out["assignments"] = assignments
+
+    has_assignments = isinstance(out.get("assignments"), list) and bool(out["assignments"])
+
+    if "status" not in out:
+        # Compact replies with placements are usable proposals. Keep
+        # needs_information only when there is nothing to place.
+        if has_assignments:
+            out["status"] = "proposal"
+        elif out.get("conditional") is True:
+            out["status"] = "needs_information"
+        else:
+            out["status"] = "needs_information"
+
+    if "summary" not in out:
+        cond = out.get("condition")
+        if isinstance(cond, str) and cond.strip():
+            out["summary"] = cond.strip()
+        else:
+            out["summary"] = "Voorstel uit chat."
+
+    for key in (
+        "expected_key_buffs",
+        "assumptions",
+        "missing_information",
+        "warnings",
+        "source_refs",
+    ):
+        if key not in out:
+            out[key] = []
+
+    if out.get("conditional") is True:
+        cond = str(out.get("condition") or "").strip()
+        if cond:
+            warnings = [str(w) for w in (out.get("warnings") or []) if w is not None]
+            if cond not in warnings:
+                warnings.append(cond)
+            out["warnings"] = warnings
+
+    return out
+
+
 def parse_proposal_json(
     text: str,
     *,
@@ -155,6 +239,8 @@ def parse_proposal_json(
 
     if not isinstance(data, dict):
         return None, ["Antwoord is geen JSON-object."]
+
+    data = _normalize_proposal_payload(data)
 
     for key in FORMATION_ADVICE_JSON_SCHEMA["required"]:
         if key not in data:

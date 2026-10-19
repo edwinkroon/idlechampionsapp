@@ -20,6 +20,7 @@ from PySide6.QtWidgets import (
 )
 
 from ic_core.game_data_service import GameDataService, SnapshotEnvelope
+from ic_ui.tabs.advice_tab import AdviceTab
 from ic_ui.tabs.advisor_tab import AdvisorTab
 from ic_ui.tabs.automation_tab import AutomationTab
 from ic_ui.tabs.dashboard_tab import DashboardTab
@@ -97,20 +98,23 @@ class IdleChampionsMainWindow(QMainWindow):
             self._dashboard_tab, data_service=self._data
         )
         self._formation_tab = FormationTab(self._dashboard_tab, data_service=self._data)
+        self._advice_tab = AdviceTab(self._formation_tab)
         self._advisor_tab.advice_resync_requested.connect(self._resync_advice_after_role_change)
 
         tabs.addTab(self._automation_tab, "Automation")
         tabs.addTab(self._dashboard_tab, "Dashboard")
         tabs.addTab(self._formation_tab, "Formation")
+        tabs.addTab(self._advice_tab, "Advies")
         tabs.addTab(self._advisor_tab, "Party Advisor")
         tabs.addTab(self._specializations_tab, "Specializations")
         tabs.addTab(self._sources_tab, "Sources")
         tabs.setTabToolTip(0, "Auto-level, progress, abilities (Ctrl+1)")
         tabs.setTabToolTip(1, "Live party status, Modron progress, rates (Ctrl+2)")
         tabs.setTabToolTip(2, "Active and optimal formation (Ctrl+3)")
-        tabs.setTabToolTip(3, "Seat roles, tips, and feats (Ctrl+4)")
-        tabs.setTabToolTip(4, "Specialization choices and tips (Ctrl+5)")
-        tabs.setTabToolTip(5, "Install path, log, and memory hint (Ctrl+6)")
+        tabs.setTabToolTip(3, "Externe AI: export, plak, voor/na (Ctrl+4)")
+        tabs.setTabToolTip(4, "Seat roles, tips, and feats (Ctrl+5)")
+        tabs.setTabToolTip(5, "Specialization choices and tips (Ctrl+6)")
+        tabs.setTabToolTip(6, "Install path, log, and memory hint (Ctrl+7)")
         self._tabs = tabs
         self._set_automation_tab_indicator("off")
         on_theme_changed(lambda _mode: self._set_automation_tab_indicator())
@@ -448,7 +452,7 @@ class IdleChampionsMainWindow(QMainWindow):
         self._status_theme = QLabel("")
         self._status_version = QLabel("")
         self._status_hint = QLabel(
-            "F5 refresh all · Ctrl+1…6 tabs · Ctrl+R reload · Help → Keyboard shortcuts"
+            "F5 refresh all · Ctrl+1…7 tabs · Ctrl+R reload · Help → Keyboard shortcuts"
         )
         bar.addWidget(self._status_theme, 0)
         bar.addWidget(self._status_version, 0)
@@ -543,7 +547,7 @@ class IdleChampionsMainWindow(QMainWindow):
             self,
             "Keyboard shortcuts",
             "F5 — refresh all game data and advice\n"
-            "Ctrl+1 … Ctrl+6 — switch tabs\n"
+            "Ctrl+1 … Ctrl+7 — switch tabs\n"
             "Ctrl+R — reload app\n"
             "View → Dark/Light — switch theme\n\n"
             "Automation:\n"

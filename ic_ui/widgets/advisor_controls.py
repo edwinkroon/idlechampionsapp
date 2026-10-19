@@ -5,7 +5,14 @@ from __future__ import annotations
 import weakref
 
 from PySide6.QtCore import QSettings, Signal
-from PySide6.QtWidgets import QCheckBox, QComboBox, QHBoxLayout, QLabel, QWidget
+from PySide6.QtWidgets import (
+    QCheckBox,
+    QComboBox,
+    QHBoxLayout,
+    QLabel,
+    QSizePolicy,
+    QWidget,
+)
 
 from ic_gamedata.advice_goals import (
     GOAL_COMBO_ITEMS,
@@ -15,7 +22,7 @@ from ic_gamedata.advice_goals import (
 )
 
 CONTEXT_ITEMS = (
-    ("Campaign", "campaign"),
+    ("Campagne", "campaign"),
     ("Events", "events"),
     ("Push", "push"),
     ("Modron", "modron"),
@@ -26,6 +33,38 @@ _SETTINGS_APP = "Companion"
 # One prefs namespace for all advice tabs so Formation / Advisor / Specs agree.
 _SHARED_SETTINGS_KEY = "advice"
 _LEGACY_SETTINGS_KEYS = ("advisor", "formation", "specializations")
+
+
+def read_shared_advice_goal() -> str | None:
+    """Goal id from shared QSettings (no UI). ``None`` if unset/ambiguous."""
+    settings = QSettings(_SETTINGS_ORG, _SETTINGS_APP)
+    raw = settings.value(f"{_SHARED_SETTINGS_KEY}/goal", None)
+    if raw is None:
+        for legacy in _LEGACY_SETTINGS_KEYS:
+            raw = settings.value(f"{legacy}/goal", None)
+            if raw is not None:
+                break
+    confirmed = settings.value(f"{_SHARED_SETTINGS_KEY}/goal_confirmed", False, type=bool)
+    migration = migrate_stored_goal(str(raw) if raw is not None else None)
+    if migration.needs_confirm and not confirmed:
+        return None
+    if migration.goal_id:
+        return str(migration.goal_id)
+    if raw is not None and is_user_goal_id(str(raw)):
+        return str(raw)
+    return None
+
+
+def read_shared_advice_context() -> str:
+    """Context id from shared QSettings (default ``campaign``)."""
+    settings = QSettings(_SETTINGS_ORG, _SETTINGS_APP)
+    raw = settings.value(f"{_SHARED_SETTINGS_KEY}/context", None)
+    if raw is None:
+        for legacy in _LEGACY_SETTINGS_KEYS:
+            raw = settings.value(f"{legacy}/context", None)
+            if raw is not None:
+                break
+    return str(raw or "campaign")
 
 
 class AdvisorGoalContextBar(QWidget):
@@ -43,6 +82,7 @@ class AdvisorGoalContextBar(QWidget):
         *,
         include_formation: bool = False,
         settings_key: str = _SHARED_SETTINGS_KEY,
+        inline_migration_hint: bool = True,
         parent: QWidget | None = None,
     ) -> None:
         super().__init__(parent)
@@ -52,15 +92,26 @@ class AdvisorGoalContextBar(QWidget):
         self._syncing = False
         self._needs_confirm = False
         self._migration_message: str | None = None
+        self._inline_migration_hint = inline_migration_hint
         layout = QHBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(6)
+        self.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Fixed)
 
         self._goal = QComboBox()
+        self._goal.setMinimumContentsLength(16)
+        self._goal.setSizeAdjustPolicy(
+            QComboBox.SizeAdjustPolicy.AdjustToMinimumContentsLengthWithIcon
+        )
         self._goal.addItem("Kies doel…", None)
         for label, value in GOAL_COMBO_ITEMS:
             self._goal.addItem(label, value)
 
         self._context = QComboBox()
+        self._context.setMinimumContentsLength(8)
+        self._context.setSizeAdjustPolicy(
+            QComboBox.SizeAdjustPolicy.AdjustToMinimumContentsLengthWithIcon
+        )
         for label, value in CONTEXT_ITEMS:
             self._context.addItem(label, value)
 
@@ -76,9 +127,9 @@ class AdvisorGoalContextBar(QWidget):
         self._goal.activated.connect(self._on_goal_activated)
         self._context.currentIndexChanged.connect(self._on_changed)
 
-        layout.addWidget(QLabel("Doel:"))
+        layout.addWidget(QLabel("Doel"))
         layout.addWidget(self._goal)
-        layout.addWidget(QLabel("Context:"))
+        layout.addWidget(QLabel("Context"))
         layout.addWidget(self._context)
         if self._formation is not None:
             layout.addWidget(self._formation)
@@ -87,8 +138,11 @@ class AdvisorGoalContextBar(QWidget):
         self._migrate_hint.setWordWrap(True)
         self._migrate_hint.setStyleSheet("color: #b45309;")
         self._migrate_hint.setVisible(False)
-        layout.addWidget(self._migrate_hint, stretch=1)
-        layout.addStretch(1)
+        if inline_migration_hint:
+            layout.addWidget(self._migrate_hint, stretch=1)
+        else:
+            self._migrate_hint.setParent(self)
+            self._migrate_hint.hide()
 
         self._load_prefs()
         AdvisorGoalContextBar._live.add(self)
@@ -134,6 +188,10 @@ class AdvisorGoalContextBar(QWidget):
             self._formation.blockSignals(False)
 
     def _update_migration_hint(self) -> None:
+        if not self._inline_migration_hint:
+            self._migrate_hint.clear()
+            self._migrate_hint.setVisible(False)
+            return
         if self._needs_confirm and self._migration_message:
             self._migrate_hint.setText(self._migration_message)
             self._migrate_hint.setVisible(True)

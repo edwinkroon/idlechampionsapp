@@ -7,6 +7,7 @@ import json
 import re
 import uuid
 from datetime import datetime, timezone
+from functools import lru_cache
 from typing import Any
 
 from ic_gamedata.formation_ai_advice.models import SCHEMA_VERSION, AdviceObjective
@@ -53,6 +54,13 @@ _META_TAGS = frozenset(
         "nonbinary",
     }
 )
+# Structured gender for tag-based counts (e.g. Soprano). Not alignment/roles.
+_GENDER_FROM_TAG = {
+    "female": "female",
+    "male": "male",
+    "non-binary": "non-binary",
+    "nonbinary": "non-binary",
+}
 
 
 def _utc_now_iso() -> str:
@@ -140,6 +148,58 @@ def _normalize_tag(tag: str) -> str:
     return str(tag).strip().casefold()
 
 
+def gender_from_raw_tags(raw_tags: list[str] | None) -> dict[str, Any]:
+    """Structured gender from ``hero_defines.tags`` only — never from names.
+
+    Returns status known | unknown | conflict. ``tag`` is the mechanic tag
+    used for counts (female/male/non-binary). Distinct from alignment/roles.
+    """
+    source = "hero_defines.tags"
+    if raw_tags is None:
+        return {
+            "status": "unknown",
+            "value": None,
+            "tag": None,
+            "source": None,
+            "note": (
+                "Genderbron ontbreekt (tags niet gelezen); niet afleiden uit "
+                "naam, uiterlijk of algemene kennis."
+            ),
+        }
+    found: list[str] = []
+    for raw in raw_tags:
+        mapped = _GENDER_FROM_TAG.get(_normalize_tag(raw))
+        if mapped and mapped not in found:
+            found.append(mapped)
+    if not found:
+        return {
+            "status": "unknown",
+            "value": None,
+            "tag": None,
+            "source": source,
+            "note": (
+                "Geen male/female/non-binary tag in hero_defines.tags; "
+                "niet afleiden uit naam of herinnering."
+            ),
+        }
+    if len(found) > 1:
+        return {
+            "status": "conflict",
+            "value": None,
+            "tag": None,
+            "values": found,
+            "source": source,
+            "note": "Meerdere gendertags in defines — niet raden welke geldt.",
+        }
+    value = found[0]
+    return {
+        "status": "known",
+        "value": value,
+        "tag": value,
+        "source": source,
+    }
+
+
 def _hero_tags_extra(hero_id: int) -> dict[str, Any]:
     """Species/classes/alignment/affiliations from authoritative defines + tag buckets."""
     out: dict[str, Any] = {
@@ -148,6 +208,7 @@ def _hero_tags_extra(hero_id: int) -> dict[str, Any]:
         "alignment": None,
         "affiliations": None,
         "raw_tags": None,
+        "gender": None,
         "tag_sources": {},
     }
     try:
@@ -217,10 +278,14 @@ def _hero_tags_extra(hero_id: int) -> dict[str, Any]:
         out["affiliations"] = affiliations
         out["tag_sources"]["affiliations"] = "hero_defines.tags ∩ affiliation set"
         out["tag_sources"]["raw_tags"] = "hero_defines.tags"
+        gender = gender_from_raw_tags(out["raw_tags"])
+        out["gender"] = gender
+        out["tag_sources"]["gender"] = gender.get("source") or "hero_defines.tags"
         break
     return out
 
 
+@lru_cache(maxsize=1)
 def _upgrade_row_map() -> dict[int, dict[str, Any]]:
     try:
         from ic_gamedata.specialization_data import cached_definitions_data
@@ -240,6 +305,33 @@ def _upgrade_row_map() -> dict[int, dict[str, Any]]:
     return out
 
 
+@lru_cache(maxsize=1)
+def _upgrades_by_hero_id() -> dict[int, tuple[dict[str, Any], ...]]:
+    by_hero: dict[int, list[dict[str, Any]]] = {}
+    for row in _upgrade_row_map().values():
+        hid = _parse_int(row.get("hero_id"))
+        if hid is None:
+            continue
+        by_hero.setdefault(hid, []).append(row)
+    return {hid: tuple(rows) for hid, rows in by_hero.items()}
+
+
+@lru_cache(maxsize=1)
+def _upgrade_name_by_id() -> dict[int, str]:
+    out: dict[int, str] = {}
+    for uid, item in _upgrade_row_map().items():
+        name = str(item.get("name") or item.get("specialization_name") or "").strip()
+        if name:
+            out[uid] = name
+    return out
+
+
+@lru_cache(maxsize=1)
+def _upgrade_ids_known() -> frozenset[int]:
+    return frozenset(_upgrade_row_map())
+
+
+@lru_cache(maxsize=1)
 def _effect_defines_by_id() -> dict[int, dict[str, Any]]:
     try:
         from ic_gamedata.specialization_data import cached_definitions_data
@@ -259,6 +351,17 @@ def _effect_defines_by_id() -> dict[int, dict[str, Any]]:
     return out
 
 
+def clear_export_definition_caches() -> None:
+    """Drop in-memory definition indexes (e.g. after definitions reload)."""
+    _upgrade_row_map.cache_clear()
+    _upgrades_by_hero_id.cache_clear()
+    _upgrade_name_by_id.cache_clear()
+    _upgrade_ids_known.cache_clear()
+    _effect_defines_by_id.cache_clear()
+    _hero_name_by_id.cache_clear()
+    _feat_defines_by_id.cache_clear()
+
+
 def _effect_def_id(raw: Any) -> int | None:
     if isinstance(raw, str):
         match = _EFFECT_DEF_RE.match(raw.strip())
@@ -267,11 +370,51 @@ def _effect_def_id(raw: Any) -> int | None:
     return _parse_int(raw) if not isinstance(raw, str) else None
 
 
-def _effect_description_text(effect_row: dict[str, Any]) -> str | None:
-    """Mechanical prose from effect_defines, including verified post-conditions.
+def _normalize_effect_desc_blob(raw: str) -> str:
+    """Normalize game desc blobs (^ / ^^ soft breaks)."""
+    extra = raw.strip()
+    extra = extra.replace("^^", "\n").replace("^", "\n").strip()
+    if extra.startswith(":"):
+        extra = extra[1:].strip()
+    return extra
 
-    IC often puts stack thresholds (e.g. Cazrin Books) under
-    ``description.post.conditions[].desc`` rather than the base ``desc``.
+
+def _append_condition_descs(parts: list[str], conditions: Any) -> None:
+    """Append game-authored condition ``desc`` blobs (deduped, ^^ → newlines).
+
+    Prefer unconditional rows when present so upgrade-gated variants (nearly
+    identical prose) do not double the export. When every row is gated, keep
+    each unique desc once.
+    """
+    if not isinstance(conditions, list):
+        return
+    uncond: list[str] = []
+    gated: list[str] = []
+    seen: set[str] = set()
+    for cond in conditions:
+        if not isinstance(cond, dict):
+            continue
+        extra = _normalize_effect_desc_blob(str(cond.get("desc") or ""))
+        if not extra or extra in seen:
+            continue
+        seen.add(extra)
+        if str(cond.get("condition") or "").strip():
+            gated.append(extra)
+        else:
+            uncond.append(extra)
+    chosen = uncond if uncond else gated
+    parts.extend(chosen)
+
+
+def _effect_description_text(effect_row: dict[str, Any]) -> str | None:
+    """Mechanical prose from effect_defines, including verified conditions.
+
+    IC stores prose in several shapes:
+    - ``description`` string
+    - ``description.desc``
+    - ``description.post.conditions[].desc`` (e.g. Cazrin Books thresholds)
+    - ``description.conditions[].desc`` (e.g. Baeloth Morbid Excitement —
+      conditional variants without a top-level ``desc``)
     """
     desc = effect_row.get("description")
     if isinstance(desc, str) and desc.strip():
@@ -279,23 +422,14 @@ def _effect_description_text(effect_row: dict[str, Any]) -> str | None:
     if not isinstance(desc, dict):
         return None
     parts: list[str] = []
-    base = str(desc.get("desc") or "").strip()
+    base = _normalize_effect_desc_blob(str(desc.get("desc") or ""))
     if base:
         parts.append(base)
+    # Top-level conditions (not only under post) — ~110 defines use this shape.
+    _append_condition_descs(parts, desc.get("conditions"))
     post = desc.get("post")
     if isinstance(post, dict):
-        for cond in post.get("conditions") or []:
-            if not isinstance(cond, dict):
-                continue
-            extra = str(cond.get("desc") or "").strip()
-            if not extra:
-                continue
-            # Game uses ^^ as soft line breaks inside one desc blob.
-            extra = extra.replace("^^", "\n").strip()
-            if extra.startswith(":"):
-                extra = extra[1:].strip()
-            if extra:
-                parts.append(extra)
+        _append_condition_descs(parts, post.get("conditions"))
     text = "\n".join(parts).strip()
     return text or None
 
@@ -394,6 +528,7 @@ def _synthetic_mechanical_text(
     return None
 
 
+@lru_cache(maxsize=1)
 def _hero_name_by_id() -> dict[int, str]:
     try:
         from ic_gamedata.specialization_data import cached_definitions_data
@@ -479,11 +614,7 @@ def _mechanic_fields_from_upgrade(
 
     from ic_gamedata.formation_ai_advice.mechanics import refine_mechanic
 
-    upgrade_names = {
-        uid: str(item.get("name") or item.get("specialization_name") or "").strip()
-        for uid, item in _upgrade_row_map().items()
-        if str(item.get("name") or item.get("specialization_name") or "").strip()
-    }
+    upgrade_names = _upgrade_name_by_id()
     effect_field = str(row.get("effect") or "")
     if owner_name is None:
         hid = _parse_int(row.get("hero_id"))
@@ -506,7 +637,7 @@ def _mechanic_fields_from_upgrade(
         effect_field or None,
         owner_name=owner_name,
         upgrade_name_by_id=upgrade_names,
-        upgrade_ids_known=set(_upgrade_row_map()),
+        upgrade_ids_known=_upgrade_ids_known(),
         selected_upgrade_ids=selected_upgrade_ids,
     )
     if refined.get("text"):
@@ -530,6 +661,27 @@ def _mechanic_fields_from_upgrade(
         mechanical = _synthetic_mechanical_text(facts, upgrade_names)
         if mechanical:
             mechanical_source = mechanical_source or "parsed_effect_parameters"
+
+    # Attack-id / hit-effect wiring alone is not usable advice prose. Prefer the
+    # game-authored specialization_description when that is all we have.
+    if isinstance(mechanical, str) and (
+        mechanical.casefold().startswith("sets attack id to")
+        or mechanical.casefold().startswith("adds monster hit effect")
+    ):
+        fallback = flavor or plain
+        if isinstance(fallback, str) and fallback.strip():
+            mechanical = fallback.strip()
+            mechanical_source = (
+                "upgrade_defines.specialization_description"
+                if fallback == flavor
+                else "upgrade_defines.description"
+            )
+            if fallback == flavor:
+                flavor = None
+            unresolved.append("attack_id_wiring_supplemented_by_source_prose")
+        else:
+            # Keep synthetic line for parsers; projection may still strip it.
+            unresolved.append("attack_id_wiring_only")
 
     if mechanical and quality.get("usable_for_numeric_comparison") is True:
         usability = "mechanical_usable"
@@ -609,19 +761,7 @@ def _ability_texts(
     selected_upgrade_ids: set[int] | None = None,
 ) -> list[dict[str, Any]]:
     abilities: list[dict[str, Any]] = []
-    try:
-        from ic_gamedata.specialization_data import cached_definitions_data
-
-        upgrades = cached_definitions_data().get("upgrade_defines")
-    except Exception:
-        return abilities
-    if not isinstance(upgrades, list):
-        return abilities
-    for row in upgrades:
-        if not isinstance(row, dict):
-            continue
-        if _parse_int(row.get("hero_id")) != hero_id:
-            continue
+    for row in _upgrades_by_hero_id().get(hero_id, ()):
         if row.get("specialization_name"):
             # Spec options are exported under specialization_groups.
             continue
@@ -677,9 +817,7 @@ def _expand_ability_dependencies(
         if isinstance(item.get("ability_id"), int)
     }
     queue: list[tuple[int, int]] = []
-    for row in upgrades.values():
-        if _parse_int(row.get("hero_id")) != hero_id:
-            continue
+    for row in _upgrades_by_hero_id().get(hero_id, ()):
         parent = _parse_int(row.get("id") or row.get("upgrade_id"))
         if parent is None:
             continue
@@ -870,6 +1008,7 @@ def _specialization_groups(
     return groups
 
 
+@lru_cache(maxsize=1)
 def _feat_defines_by_id() -> dict[int, dict[str, Any]]:
     try:
         from ic_gamedata.specialization_data import cached_definitions_data
@@ -924,6 +1063,9 @@ def _feat_info(payload: dict[str, Any], hero_id: int) -> dict[str, Any]:
 
     details = payload.get("details") if isinstance(payload.get("details"), dict) else {}
     defines = _feat_defines_by_id()
+    upgrade_names = _upgrade_name_by_id()
+    known_ids = _upgrade_ids_known()
+    owner = _hero_name_by_id().get(hero_id)
     for hero in details.get("heroes") or []:
         if not isinstance(hero, dict):
             continue
@@ -939,23 +1081,17 @@ def _feat_info(payload: dict[str, Any], hero_id: int) -> dict[str, Any]:
             # Only effect-key descriptions are mechanical; feat.description is flavor.
             mech_text, _ = _feat_mechanical_parts(row.get("effects"))
             primary = mech_text
-            upgrade_names = {
-                uid: str(item.get("name") or item.get("specialization_name") or "").strip()
-                for uid, item in _upgrade_row_map().items()
-                if str(item.get("name") or item.get("specialization_name") or "").strip()
-            }
             effect_field = None
             for key in (effect_row or {}).get("effect_keys") or []:
                 if isinstance(key, dict) and isinstance(key.get("effect_string"), str):
                     effect_field = key["effect_string"]
                     break
-            owner = _hero_name_by_id().get(hero_id)
             refined = refine_mechanic(
                 primary,
                 effect_row,
                 effect_field,
                 owner_name=owner,
-                upgrade_ids_known=set(_upgrade_row_map()),
+                upgrade_ids_known=known_ids,
                 upgrade_name_by_id=upgrade_names,
             )
             keys = (effect_row or {}).get("effect_keys") or []
@@ -1076,32 +1212,81 @@ def _restriction_block(
         has_unknown = bool(filt.has_unknown_rules)
         restriction_text = restriction_summary(filt)
         gates = structured_stat_gates(filt)
+        hard_gates = [
+            g
+            for g in (gates or [])
+            if isinstance(g, dict) and g.get("source") == "by_stat_or_text"
+        ]
+        raw_texts = list(getattr(filt, "raw_restriction_texts", None) or [])
+        if raw_restrictions_text and raw_restrictions_text not in raw_texts:
+            raw_texts.insert(0, raw_restrictions_text)
+        elif raw_texts and not raw_restrictions_text:
+            raw_restrictions_text = " | ".join(raw_texts)
+
         structured = {
             "required_tags": sorted(filt.required_tags) or None,
             "banned_tags": sorted(filt.banned_tags) or None,
             "min_stats": [
-                {
-                    "stat": s,
-                    "operator": ">=",
-                    "value": v,
-                    "scope": "hard_min",
-                    "source": "by_stat_or_text",
-                    "stats_basis": "character_sheet_ability_scores",
-                }
-                for s, v in filt.min_stats
+                g
+                for g in hard_gates
+                if g.get("operator") in (">=", ">")
+            ]
+            or None,
+            "max_stats": [
+                g
+                for g in hard_gates
+                if g.get("operator") in ("<=", "<")
             ]
             or None,
             "stat_gates": gates or None,
             "allow_exprs": list(filt.allow_exprs) or None,
+            "deny_exprs": list(filt.deny_exprs) or None,
+            "expr_interpretations": list(filt.expr_interpretations) or None,
+            "has_restriction_semantics_conflict": (
+                filt.has_restriction_semantics_conflict or None
+            ),
             "banned_hero_ids": sorted(filt.banned_hero_ids) or None,
             "patron_blocked_hero_ids": sorted(filt.patron_blocked_hero_ids) or None,
+            "ilvl_seat_rule": (
+                {
+                    "comparison": filt.ilvl_seat_comparison,
+                    "meaning": (
+                        "Per permanente F-seat (1–12) alleen owned champions "
+                        "met de laagste gemiddelde item level "
+                        "(avg enchant+1 over equipment loot slots)."
+                        if filt.ilvl_seat_comparison == "least"
+                        else "Per permanente F-seat alleen owned champions "
+                        "met de hoogste gemiddelde item level."
+                    ),
+                    "allowed_champion_ids": (
+                        sorted(filt.ilvl_allowed_hero_ids)
+                        if filt.ilvl_allowed_hero_ids is not None
+                        else None
+                    ),
+                    "allowed_count": (
+                        len(filt.ilvl_allowed_hero_ids)
+                        if filt.ilvl_allowed_hero_ids is not None
+                        else None
+                    ),
+                }
+                if filt.ilvl_seat_comparison
+                else None
+            ),
+            "time_available_rule": (
+                dict(filt.time_available_rule)
+                if getattr(filt, "time_available_rule", None)
+                else None
+            ),
             "active_notes": list(filt.active_notes) or None,
             "has_unknown_rules": filt.has_unknown_rules,
             "uses_api_game_changes": filt.uses_api_game_changes,
             "raw_restrictions_text": raw_restrictions_text,
+            "raw_restriction_texts": raw_texts or None,
             "checked_means": (
-                "Filter is opgebouwd en party is geëvalueerd tegen harde mins "
-                "en allow_exprs; 'checked' ≠ bewezen toelating bij unknown."
+                "Filter is opgebouwd en party is geëvalueerd tegen harde "
+                "ability-score gates (min én max), allow/deny exprs, "
+                "patron-tags en eventuele by_i_levels seat-regel; "
+                "'checked' ≠ bewezen toelating bij unknown."
             ),
         }
         if selected_hero_ids:
@@ -1184,6 +1369,7 @@ def _restriction_block(
                     structured.get("required_tags")
                     or structured.get("banned_tags")
                     or structured.get("min_stats")
+                    or structured.get("max_stats")
                     or structured.get("stat_gates")
                     or structured.get("allow_exprs")
                     or structured.get("banned_hero_ids")
@@ -1327,7 +1513,9 @@ def _formation_block(
     )
     from ic_gamedata.formation_advisor.topology import fallback_seat_column
     from ic_gamedata.formation_ai_advice.labels import (
+        assign_display_positions,
         position_caption,
+        position_display_convention_block,
         sort_positions_for_display,
     )
 
@@ -1506,6 +1694,27 @@ def _formation_block(
     )
     geo_issues = list(geo_issues) + list(graph_report["issues"])
 
+    front_direction = {
+        "rule": "lower_column_is_front",
+        "ui_note": "Enemies → right (front = toward the right / lower column_index).",
+        "source": topo.source,
+        "row_direction": "lower_row_is_top",
+        "row_direction_note": (
+            "Binnen een kolom: laagste row_order / y = bovenste plek."
+        ),
+    }
+    positions_with_display, display_issues = assign_display_positions(
+        positions_detail,
+        column_direction=front_direction,
+        active_only=True,
+    )
+    geo_issues = list(geo_issues) + list(display_issues)
+    # Re-sort after display fields (stable back→front, top→bottom).
+    positions_with_display = sort_positions_for_display(
+        positions_with_display,
+        column_direction_rule=front_direction["rule"],
+    )
+
     return {
         "formation_id": topo.source,
         "geometry_source": topo.source,
@@ -1514,17 +1723,17 @@ def _formation_block(
         "blocked_position_ids": blocked_ids,
         "valid_position_ids": active_ids,  # placeable slots only
         # Reading order for tables: back column → front, top → bottom in column.
-        "positions": sort_positions_for_display(positions_detail),
+        "positions": positions_with_display,
+        "position_display_convention": position_display_convention_block(
+            technical_id_field="position_id"
+        ),
         "table_order_note": (
-            "Tabelvolgorde: hoogste kolom eerst (achterste Kolom N → voorste Kolom 1), "
-            "binnen een kolom van boven naar beneden (laagste row_order / y eerst)."
+            "Tabelvolgorde: display_position kolom-plek (achter→voor, "
+            "boven→beneden), bijv. 1-1, 1-2, 2-1. Technisch id blijft "
+            "position_id voor import-JSON."
         ),
         "column_by_position": column_by_position,
-        "front_direction": {
-            "rule": "lower_column_is_front",
-            "ui_note": "Enemies → right (front = toward the right / lower column_index).",
-            "source": topo.source,
-        },
+        "front_direction": front_direction,
         "adjacency_by_position": {str(k): v for k, v in adjacency.items() if k in active_ids},
         "distance_definition": {
             "type": "graph_hops",
@@ -1619,6 +1828,11 @@ def build_champion_entry(
         feats=feats,
     )
     affiliations_status = "unknown" if extra.get("raw_tags") is None else "known"
+    gender = extra.get("gender")
+    if not isinstance(gender, dict):
+        gender = gender_from_raw_tags(
+            extra["raw_tags"] if isinstance(extra.get("raw_tags"), list) else None
+        )
     position = (
         current_position
         if current_position is not None
@@ -1630,6 +1844,7 @@ def build_champion_entry(
         "seat": _permanent_seat(hero_id),
         "species": extra["species"],
         "classes": extra["classes"],
+        "gender": gender,
         "alignment": effective.get("alignment") or extra["alignment"],
         "base_alignment": extra["alignment"],
         "effective_alignment": effective.get("alignment") or extra["alignment"],
@@ -2044,29 +2259,59 @@ def _readiness_issues(
         dimensions["restrictions"] = "unconfirmed"
         dimensions["party_legality"] = "unknown"
     elif party_status == "conflict":
-        denied_ids = [
-            r.get("champion_id")
-            for r in (goal.get("party_restriction_checks") or [])
-            if isinstance(r, dict) and r.get("status") == "denied"
-        ]
-        issues.append(
-            {
-                "code": "restriction_conflict",
-                "severity": "error",
-                "dimension": "restrictions",
-                "affected_champion_ids": denied_ids,
-                "message": (
-                    "Bevestigd conflict tussen restrictieregels en championgegevens "
-                    "(geen formation-trust bypass). Party-geldigheid niet bevestigd."
-                ),
-                "fix": (
-                    "In de tabel: plaatsing voorwaardelijk / geldigheid onbevestigd "
-                    "vermelden; geen 'ready' party claimen."
-                ),
-            }
-        )
-        dimensions["restrictions"] = "conflict"
-        dimensions["party_legality"] = "conflict"
+        denied_ids: list[Any] = []
+        seen_denied: set[Any] = set()
+        for row in goal.get("party_restriction_checks") or []:
+            if not isinstance(row, dict):
+                continue
+            # Prefer post-override eligibility; raw CHA denies must not block
+            # when Dark Inheritance (etc.) already made the champion allowed.
+            resolved = row.get("effective_status")
+            if resolved is None:
+                resolved = row.get("status")
+            if resolved != "denied":
+                continue
+            hid = row.get("champion_id")
+            if hid in seen_denied:
+                continue
+            seen_denied.add(hid)
+            denied_ids.append(hid)
+        if denied_ids:
+            issues.append(
+                {
+                    "code": "restriction_conflict",
+                    "severity": "warning",
+                    "dimension": "restrictions",
+                    "affected_champion_ids": denied_ids,
+                    "message": (
+                        "Bevestigd conflict tussen restrictieregels en championgegevens "
+                        "(geen formation-trust bypass). Party-geldigheid niet bevestigd. "
+                        f"Denied: {', '.join(str(i) for i in denied_ids)}."
+                    ),
+                    "fix": (
+                        "Kopieer mag; vermeld conflict in het advies en stel legale "
+                        "swaps voor. Geen 'ready' party claimen."
+                    ),
+                }
+            )
+            dimensions["restrictions"] = "conflict"
+            dimensions["party_legality"] = "conflict"
+        else:
+            # Status said conflict but no champion is denied (e.g. stale label).
+            issues.append(
+                {
+                    "code": "incomplete_restrictions",
+                    "severity": "warning",
+                    "dimension": "restrictions",
+                    "message": (
+                        "Restrictiestatus is conflict zonder denied champions — "
+                        "behandeld als onbevestigd, niet als harde party-blokkade."
+                    ),
+                    "fix": "Voorwaardelijk adviseren; geen geldige party claimen.",
+                }
+            )
+            dimensions["restrictions"] = "unconfirmed"
+            dimensions["party_legality"] = "unknown"
     elif party_status in ("unconfirmed", "unchecked") or not goal.get(
         "restrictions_fully_known"
     ):
@@ -2107,8 +2352,9 @@ def _readiness_issues(
             _set_advice("numeric_comparison", "partial")
             break
 
-    # Overall: geometry/party_identity errors → blocked.
-    # Schema-valid + party allowed does NOT imply numeric_comparison sufficient.
+    # Overall: geometry/party_identity errors → blocked (export unsafe).
+    # Restriction conflicts stay copyable as ready_with_warnings so chat/AI can
+    # propose legal swaps; do not hard-block the clipboard on party vs rules.
     errors = [i for i in issues if i.get("severity") == "error"]
     hard_block = any(
         i.get("dimension") in ("geometry", "party_identity") and i.get("severity") == "error"
@@ -2211,8 +2457,15 @@ def _enrich_eligibility(export: dict[str, Any]) -> None:
             base_reason = "patron_blocked"
         elif base == "denied" and (
             "dex" in reason_text.casefold()
+            or "str" in reason_text.casefold()
+            or "int" in reason_text.casefold()
+            or "wis" in reason_text.casefold()
+            or "con" in reason_text.casefold()
+            or "cha" in reason_text.casefold()
             or "stat" in reason_text.casefold()
+            or "bovengrens" in reason_text.casefold()
             or ">=" in reason_text
+            or "<=" in reason_text
         ):
             base_reason = reason if isinstance(reason, str) else "stat_gate"
         else:
@@ -2236,10 +2489,23 @@ def _enrich_eligibility(export: dict[str, Any]) -> None:
             campaign_name=campaign_name,
         )
         champ["eligibility"] = record
-        # Keep party check row aligned with effective status.
-        if isinstance(check, dict) and check.get("champion_id") == champ.get("champion_id"):
+        # Party check rows: keep raw base, but make ``status`` the effective
+        # truth so clipboard/AI do not keep warning about already-resolved
+        # overrides (e.g. Dark Urge CHA deny + Dark Inheritance allow).
+        if isinstance(check, dict) and check.get("champion_id") == champ.get(
+            "champion_id"
+        ):
+            if "base_status" not in check:
+                check["base_status"] = check.get("status")
+            if "base_reason" not in check and check.get("reason") is not None:
+                check["base_reason"] = check.get("reason")
             check["effective_status"] = record.get("effective_eligibility")
             check["effective_reason"] = record.get("effective_reason")
+            eff = record.get("effective_eligibility")
+            if isinstance(eff, str):
+                check["status"] = eff
+                if record.get("effective_reason"):
+                    check["reason"] = record.get("effective_reason")
         value = record.get("effective_eligibility")
         if isinstance(value, str):
             effective.append(value)
@@ -2247,15 +2513,22 @@ def _enrich_eligibility(export: dict[str, Any]) -> None:
     manual = any(
         "handmatig" in str(item).casefold() for item in (goal.get("local_evidence") or [])
     )
-    if not effective or manual:
+    if not effective:
         return
     if any(value == "denied" for value in effective):
         goal["party_restriction_status"] = "conflict"
     elif any(value == "unknown" for value in effective):
-        if goal.get("party_restriction_status") in {"ok", None}:
+        if goal.get("party_restriction_status") in {"ok", None, "conflict"}:
             goal["party_restriction_status"] = "unconfirmed"
     elif all(value == "allowed" for value in effective):
-        if goal.get("party_restriction_status") in {"conflict", "unconfirmed"}:
+        # Overrides can clear a raw conflict even with manual restriction text.
+        if manual and goal.get("party_restriction_status") not in {"ok"}:
+            goal["party_restriction_status"] = "unconfirmed"
+        elif goal.get("party_restriction_status") in {
+            "conflict",
+            "unconfirmed",
+            None,
+        }:
             goal["party_restriction_status"] = "ok"
 
 
@@ -2529,7 +2802,12 @@ def request_fingerprint(export_payload: dict[str, Any]) -> str:
 
 
 def formation_layout_fingerprint_from_export(export_payload: dict[str, Any]) -> str:
-    """Fingerprint of formation placement only — used for stale detection after edits."""
+    """Fingerprint of formation placement + advice goal — used for stale detection.
+
+    Deliberately excludes ``meta.data_version``: that often comes from payload
+    ``current_time``, which changes on every API poll and would falsely mark
+    proposals stale between copy and paste.
+    """
     formation = export_payload.get("formation") or {}
     champions = export_payload.get("champions") or []
     subset = {
@@ -2543,7 +2821,6 @@ def formation_layout_fingerprint_from_export(export_payload: dict[str, Any]) -> 
         "fixed_main_dps_id": (export_payload.get("goal") or {}).get(
             "fixed_main_dps_id"
         ),
-        "data_version": (export_payload.get("meta") or {}).get("data_version"),
     }
     blob = json.dumps(subset, sort_keys=True, ensure_ascii=False)
     return hashlib.sha256(blob.encode("utf-8")).hexdigest()[:32]

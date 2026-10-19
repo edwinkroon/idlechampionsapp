@@ -10,6 +10,30 @@ _ZONE_NL = {
     "back": "achter",
 }
 
+# Human-facing place notation: ``display_column``-``display_slot`` (e.g. ``1-1``).
+# Technical ``position_id`` / permanent seats stay separate for import JSON.
+POSITION_DISPLAY_CONVENTION: dict[str, Any] = {
+    "format": "column-slot",
+    "column_order": "back_to_front",
+    "slot_order": "top_to_bottom",
+    "index_base": 1,
+    "active_positions_only": True,
+    "example": "1-1",
+    "technical_id_field": "id",
+    "row_direction": "lower_row_is_top",
+    "known_column_direction_rules": (
+        "lower_column_is_front",
+        "lower_column_index_is_front",
+    ),
+}
+
+_LOWER_COLUMN_IS_FRONT = frozenset(
+    {
+        "lower_column_is_front",
+        "lower_column_index_is_front",
+    }
+)
+
 
 def zone_label_nl(zone: str | None) -> str:
     if not zone:
@@ -71,12 +95,17 @@ def position_caption(
     column: int | None,
     zone: str | None,
     row_order: int | float | None = None,
+    display_position: str | None = None,
 ) -> str:
     """Physical place label — not the champion's permanent F-seat.
 
-    Always includes ``position_id`` so columns with multiple seats stay unique.
+    Prefer ``display_position`` (``kolom-plek``, e.g. ``1-1``) when known.
+    Technical ``position_id`` remains available for import, not as the
+    primary human label.
     """
     zone_txt = zone_label_nl(zone)
+    if display_position:
+        return f"Plek {display_position} — {zone_txt}"
     if column is None:
         base = f"Positie {position_id} — {zone_txt}"
     else:
@@ -100,33 +129,252 @@ def champion_seat_caption(permanent_seat: int | None) -> str:
     return f"Seat {permanent_seat}"
 
 
+def resolve_column_direction_rule(front_direction: Any) -> str | None:
+    """Return a known column-direction rule string, or None if unknown."""
+    if isinstance(front_direction, dict):
+        raw = front_direction.get("rule") or front_direction.get("id")
+    else:
+        raw = front_direction
+    if raw is None:
+        return None
+    text = str(raw).strip().casefold().replace("-", "_")
+    # Normalise common aliases.
+    aliases = {
+        "lower_column_is_front": "lower_column_is_front",
+        "lower_column_index_is_front": "lower_column_is_front",
+        "higher_column_is_front": "higher_column_is_front",
+        "higher_column_index_is_front": "higher_column_is_front",
+    }
+    return aliases.get(text)
+
+
+def _position_column_value(row: dict[str, Any]) -> int | None:
+    for key in ("column_index", "column"):
+        value = row.get(key)
+        if isinstance(value, int):
+            return value
+        if isinstance(value, float) and value == int(value):
+            return int(value)
+    return None
+
+
+def _position_row_value(row: dict[str, Any]) -> float:
+    for key in ("row_order", "row"):
+        value = row.get(key)
+        if isinstance(value, (int, float)) and not isinstance(value, bool):
+            return float(value)
+    return 0.0
+
+
+def _position_tech_id(row: dict[str, Any]) -> int:
+    for key in ("position_id", "id"):
+        value = row.get(key)
+        if isinstance(value, int):
+            return value
+        if isinstance(value, str) and value.isdigit():
+            return int(value)
+    return 0
+
+
+def _is_active_position(row: dict[str, Any]) -> bool:
+    state = row.get("state")
+    if state is None:
+        return True
+    return str(state).casefold() == "active"
+
+
 def formation_display_sort_key(
     *,
     column_index: int | None,
     row_order: int | float | None = None,
     position_id: int = 0,
+    column_direction_rule: str | None = "lower_column_is_front",
 ) -> tuple[int, float, int]:
     """Table/board reading order: back column → front, top → bottom within column.
 
-    ``column_index`` is 0-based (0 = front / Kolom 1). Higher index = farther back
-    (Kolom 5 before Kolom 1). ``row_order`` / y: lower = higher on screen.
+    With ``lower_column_is_front``, higher ``column_index`` is farther back
+    (sorted first). ``row_order`` / y: lower = higher on screen (top first).
     """
     col = int(column_index) if column_index is not None else 0
     row = float(row_order) if row_order is not None else 0.0
-    return (-col, row, int(position_id))
+    rule = resolve_column_direction_rule(column_direction_rule) or "lower_column_is_front"
+    if rule == "higher_column_is_front":
+        col_key = col
+    else:
+        # lower_column_is_front: back = highest column index
+        col_key = -col
+    return (col_key, row, int(position_id))
 
 
-def sort_positions_for_display(positions: list[dict[str, Any]]) -> list[dict[str, Any]]:
+def sort_positions_for_display(
+    positions: list[dict[str, Any]],
+    *,
+    column_direction_rule: str | None = "lower_column_is_front",
+) -> list[dict[str, Any]]:
     """Sort export ``formation.positions`` rows for tables and clipboard."""
     return sorted(
         (p for p in positions if isinstance(p, dict)),
         key=lambda p: formation_display_sort_key(
-            column_index=p.get("column_index")
-            if isinstance(p.get("column_index"), int)
-            else None,
-            row_order=p.get("row_order"),
-            position_id=int(p["position_id"])
-            if isinstance(p.get("position_id"), int)
-            else 0,
+            column_index=_position_column_value(p),
+            row_order=_position_row_value(p),
+            position_id=_position_tech_id(p),
+            column_direction_rule=column_direction_rule,
         ),
     )
+
+
+def assign_display_positions(
+    positions: list[dict[str, Any]],
+    *,
+    column_direction: Any = "lower_column_is_front",
+    active_only: bool = True,
+) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    """Attach display_column / display_slot / display_position from geometry.
+
+    Numbering is derived only from column direction + row order among active
+    positions — never from position_id, permanent seat, or array order.
+    Returns ``(updated_rows, issues)``.
+    """
+    rule = resolve_column_direction_rule(column_direction)
+    issues: list[dict[str, Any]] = []
+    if rule is None:
+        issues.append(
+            {
+                "code": "unknown_column_direction",
+                "severity": "error",
+                "message": (
+                    "Kolomrichting ontbreekt of is onbekend — "
+                    "display_position wordt niet gegokt."
+                ),
+                "fix": (
+                    "Exporteer opnieuw met een bekende front_direction.rule "
+                    "(bijv. lower_column_is_front)."
+                ),
+            }
+        )
+        cleaned: list[dict[str, Any]] = []
+        for row in positions:
+            if not isinstance(row, dict):
+                continue
+            out = dict(row)
+            out.pop("display_column", None)
+            out.pop("display_slot", None)
+            out.pop("display_position", None)
+            cleaned.append(out)
+        return cleaned, issues
+
+    # Group active (or all) rows by geometry column.
+    by_col: dict[int, list[dict[str, Any]]] = {}
+    passthrough: list[dict[str, Any]] = []
+    for row in positions:
+        if not isinstance(row, dict):
+            continue
+        out = dict(row)
+        out.pop("display_column", None)
+        out.pop("display_slot", None)
+        out.pop("display_position", None)
+        col = _position_column_value(out)
+        if col is None:
+            issues.append(
+                {
+                    "code": "missing_column_for_display",
+                    "severity": "warning",
+                    "position_id": _position_tech_id(out) or None,
+                    "message": (
+                        f"Positie {_position_tech_id(out)} heeft geen kolom — "
+                        "geen display_position."
+                    ),
+                }
+            )
+            passthrough.append(out)
+            continue
+        if active_only and not _is_active_position(out):
+            passthrough.append(out)
+            continue
+        by_col.setdefault(col, []).append(out)
+
+    if rule in _LOWER_COLUMN_IS_FRONT:
+        # Back → front: highest geometry column first → display_column 1.
+        ordered_cols = sorted(by_col.keys(), reverse=True)
+    else:
+        # higher_column_is_front: back = lowest column index.
+        ordered_cols = sorted(by_col.keys())
+
+    numbered: list[dict[str, Any]] = []
+    seen_labels: set[str] = set()
+    for display_col, geo_col in enumerate(ordered_cols, start=1):
+        slots = sorted(
+            by_col[geo_col],
+            key=lambda r: (_position_row_value(r), _position_tech_id(r)),
+        )
+        for display_slot, row in enumerate(slots, start=1):
+            label = f"{display_col}-{display_slot}"
+            if label in seen_labels:
+                issues.append(
+                    {
+                        "code": "duplicate_display_position",
+                        "severity": "error",
+                        "message": f"Dubbele display_position {label}.",
+                    }
+                )
+            seen_labels.add(label)
+            row = dict(row)
+            row["display_column"] = display_col
+            row["display_slot"] = display_slot
+            row["display_position"] = label
+            # Refresh human label when present.
+            if "label" in row or "position_id" in row:
+                row["label"] = position_caption(
+                    position_id=_position_tech_id(row),
+                    column=_position_column_value(row),
+                    zone=str(row["zone"]) if row.get("zone") else None,
+                    row_order=_position_row_value(row),
+                    display_position=label,
+                )
+            numbered.append(row)
+
+    # Preserve blocked / incomplete rows after numbered actives, still
+    # sorted by geometry reading order for stable output.
+    combined = numbered + passthrough
+    combined = sort_positions_for_display(
+        combined, column_direction_rule=rule
+    )
+    return combined, issues
+
+
+def position_display_convention_block(
+    *,
+    technical_id_field: str = "id",
+) -> dict[str, Any]:
+    """Machine-readable convention for exports / AI instructions."""
+    return {
+        **POSITION_DISPLAY_CONVENTION,
+        "technical_id_field": technical_id_field,
+    }
+
+
+# Shared AI instruction for every advice-export entry point.
+POSITION_DISPLAY_AI_INSTRUCTION = (
+    "Gebruik voor de leesbare formatietabel de aangeleverde display_position "
+    "in het formaat kolom-plek, bijvoorbeeld 1-1. Het eerste nummer telt de "
+    "kolommen van achter naar voren; het tweede nummer telt de plekken binnen "
+    "die kolom van boven naar beneden. Gebruik de kolommen ‘Plek’ en "
+    "‘Champion’ en sorteer op display_column en vervolgens display_slot. "
+    "Toon geen technische position_id’s of permanente seats in deze tabel. "
+    "Gebruik in uitleg over verplaatsingen dezelfde notatie. Behoud in het "
+    "import-JSON juist de echte position_id’s; vervang deze nooit door de "
+    "weergavenotatie."
+)
+
+ADVICE_REPLY_FORMAT_INSTRUCTION = (
+    "Antwoordvorm (verplicht, zelfstandig — geen eerdere chat nodig):\n"
+    "1. Een leesbare formatietabel met kolommen ‘Plek’ en ‘Champion’, "
+    "gesorteerd op display_column en daarna display_slot "
+    "(bijv. 1-1, 1-2, 2-1, …).\n"
+    "2. Eventuele korte uitleg en specialisatieadviezen.\n"
+    "3. Precies één importeerbaar JSON-object in één afgesloten "
+    "Markdown-codeblok met taal json, volgens het bestaande "
+    "antwoordschema, met technische position_id’s "
+    "(niet de weergavenotatie).\n"
+    f"{POSITION_DISPLAY_AI_INSTRUCTION}"
+)

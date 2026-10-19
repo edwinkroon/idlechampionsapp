@@ -13,12 +13,14 @@ UserGoalId = Literal[
     "push",
     "quest_clear",
     "gem_farm",
+    "gold_farm",
     "favor_farm",
     "custom_task",
 ]
 LegacyGoalId = Literal["bud", "gold", "speed"]
 ScoringLane = Literal["bud", "gold", "speed"]
 FavorHorizon = Literal["per_run", "per_time", "unknown"]
+GoldHorizon = Literal["per_hour", "per_run", "unknown"]
 PlayMode = Literal["foreground", "background", "offline", "unknown"]
 AutoReset = Literal["yes", "no", "unknown"]
 
@@ -26,6 +28,7 @@ USER_GOAL_IDS: tuple[UserGoalId, ...] = (
     "push",
     "quest_clear",
     "gem_farm",
+    "gold_farm",
     "favor_farm",
     "custom_task",
 )
@@ -99,6 +102,21 @@ GOAL_DEFINITIONS: dict[UserGoalId, GoalDefinition] = {
             "Claim geen exacte gems/uur zonder voldoende gegevens of metingen.",
         ),
     ),
+    "gold_farm": GoalDefinition(
+        id="gold_farm",
+        label="Gold verzamelen",
+        description="Maximaliseer gold find / goudinkomen van de party.",
+        primary_metric="gold_income",
+        priorities=(
+            "Respecteer harde partyregels.",
+            "Optimaliseer gold find en goudinkomen.",
+            "Damage en overleving moeten voldoende zijn voor de farmroute.",
+            "Maximaal gebied en maximale BUD zijn geen zelfstandig doel.",
+            "Verwar gold find niet met favoropbrengst of gems per uur.",
+            "Gold find is het hoofddoel hier; favor is een apart doel.",
+            "Claim geen exacte gold/uur zonder voldoende gegevens.",
+        ),
+    ),
     "favor_farm": GoalDefinition(
         id="favor_farm",
         label="Favor verzamelen",
@@ -137,6 +155,7 @@ _SCORING_LANE: dict[str, ScoringLane] = {
     "push": "bud",
     "quest_clear": "bud",
     "gem_farm": "speed",
+    "gold_farm": "gold",
     "favor_farm": "gold",
     "custom_task": "bud",
     # Legacy technical lanes (scoring only; not silent user-goal migration).
@@ -198,13 +217,14 @@ def migrate_stored_goal(raw: str | None) -> GoalMigration:
         )
     if value == "gold":
         return GoalMigration(
-            goal_id=None,
+            goal_id="gold_farm",
             needs_confirm=True,
             legacy_id="gold",
-            proposed_id=None,
+            proposed_id="gold_farm",
             message=(
-                "Eerder doel was ‘Gold income’. Kies een nieuw doel "
-                "(niet automatisch Favor verzamelen)."
+                "Eerder doel was ‘Gold income’. Voorgesteld nieuw doel: "
+                "Gold verzamelen — bevestig of kies een ander doel "
+                "(niet hetzelfde als Favor verzamelen)."
             ),
         )
     if value == "speed":
@@ -437,6 +457,15 @@ def build_goal_parameters(
             else:
                 params[key] = None
                 missing.append(key)
+    elif goal_id == "gold_farm":
+        horizon = _unknown_token(
+            user.get("time_horizon"),
+            allowed=frozenset({"per_hour", "per_run", "unknown"}),
+        )
+        params["time_horizon"] = horizon
+        params["current_area"] = live.get("current_area")
+        if horizon == "unknown":
+            missing.append("time_horizon")
     elif goal_id == "favor_farm":
         camp_id = _parse_int(user.get("campaign_id"))
         camp_name = str(user.get("campaign_name") or "").strip() or None

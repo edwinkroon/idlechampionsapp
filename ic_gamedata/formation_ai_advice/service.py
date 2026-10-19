@@ -43,6 +43,7 @@ def ingest_pasted_proposal(
         "push",
         "quest_clear",
         "gem_farm",
+        "gold_farm",
         "favor_farm",
         "custom_task",
         "push_damage",
