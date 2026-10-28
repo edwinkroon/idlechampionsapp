@@ -95,7 +95,12 @@ class AdviceAnalysisHub(QObject):
     Formation, Party Advisor, and Specializations often refresh on the same
     snapshot. Running ``analyze_party`` three times wastes CPU; waiters with the
     same goal/context/fingerprint share one result.
+
+    ``busy_changed`` is True while a job is in flight (including pending drain).
+    Tabs should show a spinner/status; do not disable goal/context combos.
     """
+
+    busy_changed = Signal(bool)
 
     def __init__(self, parent: QObject | None = None) -> None:
         super().__init__(parent)
@@ -104,6 +109,10 @@ class AdviceAnalysisHub(QObject):
         self._waiters: list[tuple[DoneCallback, ErrorCallback]] = []
         self._pending: dict[str, Any] | None = None
         self._signals: _SharedAdviceSignals | None = None
+
+    @property
+    def busy(self) -> bool:
+        return self._inflight
 
     @staticmethod
     def _job_key(
@@ -170,9 +179,12 @@ class AdviceAnalysisHub(QObject):
         err: str | None,
         waiters: list[tuple[DoneCallback, ErrorCallback]],
     ) -> None:
+        was_busy = self._inflight
         self._inflight = True
         self._key = key
         self._waiters = list(waiters)
+        if not was_busy:
+            self.busy_changed.emit(True)
         signals = _SharedAdviceSignals(self)
         self._signals = signals
         signals.done.connect(self._on_done)
@@ -191,6 +203,8 @@ class AdviceAnalysisHub(QObject):
         assert isinstance(result, SharedAdviceResult)
         for on_done, _on_error in waiters:
             on_done(result)
+        if self._pending is None:
+            self.busy_changed.emit(False)
         self._drain_pending()
 
     def _on_error(self, msg: str) -> None:
@@ -201,6 +215,8 @@ class AdviceAnalysisHub(QObject):
         self._signals = None
         for _on_done, on_error in waiters:
             on_error(msg)
+        if self._pending is None:
+            self.busy_changed.emit(False)
         self._drain_pending()
 
     def _drain_pending(self) -> None:

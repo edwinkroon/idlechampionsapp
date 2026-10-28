@@ -142,6 +142,29 @@ class AdviceFingerprintTests(unittest.TestCase):
             )
         )
 
+    def test_party_change_refreshes_even_when_degraded(self) -> None:
+        """Party switch must not be swallowed by degraded snapshot gating."""
+        self.assertTrue(
+            should_refresh_advice(
+                force=False,
+                first=False,
+                changed=False,
+                empty_retry=False,
+                degraded=True,
+                party_changed=True,
+            )
+        )
+        self.assertFalse(
+            should_refresh_advice(
+                force=False,
+                first=False,
+                changed=False,
+                empty_retry=False,
+                degraded=True,
+                party_changed=False,
+            )
+        )
+
 
 class CredentialCacheTests(unittest.TestCase):
     def test_caches_until_mtime_changes(self) -> None:

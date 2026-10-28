@@ -1155,8 +1155,9 @@ def _feat_info(payload: dict[str, Any], hero_id: int) -> dict[str, Any]:
             "active_feats": active_feats,
             "active_feat_ids": active_ids,
             "note": (
-                "Alleen actieve feats; niet-actieve feats worden niet geëxporteerd "
-                "omdat feats niet mogen wijzigen in dit advies."
+                "Alleen actieve feats staan in deze export. Feat-verbetervoorstellen "
+                "mogen (may_change_feats=true); noem onzekerheid als de "
+                "alternatieve feat niet in de aangeleverde gegevens staat."
             ),
         }
     return {
@@ -1246,7 +1247,26 @@ def _restriction_block(
                 filt.has_restriction_semantics_conflict or None
             ),
             "banned_hero_ids": sorted(filt.banned_hero_ids) or None,
+            "banned_seat_ids": sorted(filt.banned_seat_ids) or None,
+            "allowed_seat_ids": (
+                sorted(filt.allowed_seat_ids)
+                if filt.allowed_seat_ids is not None
+                else None
+            ),
+            "banned_attack_types": sorted(filt.banned_attack_types) or None,
+            "required_attack_types": (
+                sorted(filt.required_attack_types)
+                if filt.required_attack_types is not None
+                else None
+            ),
+            "unevaluable_rules": list(filt.unevaluable_rules) or None,
             "patron_blocked_hero_ids": sorted(filt.patron_blocked_hero_ids) or None,
+            "has_unevaluable_roster_rules": (
+                filt.has_unevaluable_roster_rules or None
+            ),
+            "has_unevaluable_stat_rules": (
+                filt.has_unevaluable_stat_rules or None
+            ),
             "ilvl_seat_rule": (
                 {
                     "comparison": filt.ilvl_seat_comparison,
@@ -1285,12 +1305,24 @@ def _restriction_block(
             "checked_means": (
                 "Filter is opgebouwd en party is geëvalueerd tegen harde "
                 "ability-score gates (min én max), allow/deny exprs, "
-                "patron-tags en eventuele by_i_levels seat-regel; "
-                "'checked' ≠ bewezen toelating bij unknown."
+                "patron-tags, by_seat, by_attack_types (basisaanval) en "
+                "eventuele by_i_levels seat-regel; "
+                "'checked' ≠ bewezen toelating bij unknown. "
+                "Aanwezigheid in de live formatie is observatie, geen "
+                "eligibility-bewijs. "
+                "party_restriction_ok geldt alleen voor de huidige party, "
+                "niet automatisch voor alle swapkandidaten. "
+                "unevaluable_rules/research_gaps = één compacte regeldefinitie; "
+                "kandidaten blijven unknown tot de regel is opgelost."
             ),
         }
         if selected_hero_ids:
-            party_checks = evaluate_heroes_against_filter(selected_hero_ids, filt)
+            # Presence in the selected party is observation only — do not
+            # treat seated champions as auto-allowed under restrictions.
+            party_checks = evaluate_heroes_against_filter(
+                selected_hero_ids,
+                filt,
+            )
         if filt.has_roster_rules():
             local_evidence.append(
                 "Restrictieregels komen uit active adventure game_changes / patron "
@@ -1509,7 +1541,6 @@ def _formation_block(
     from ic_gamedata.adventure_restrictions import (
         _layout_formation_seat_count,
         player_formation_capacity,
-        reserved_formation_seats,
     )
     from ic_gamedata.formation_advisor.topology import fallback_seat_column
     from ic_gamedata.formation_ai_advice.labels import (
@@ -1518,13 +1549,40 @@ def _formation_block(
         position_display_convention_block,
         sort_positions_for_display,
     )
+    from ic_gamedata.formation_ai_advice.slot_states import (
+        adventure_placeability_known,
+        build_slot_states,
+        derive_position_id_lists,
+    )
+    from ic_gamedata.formation_ai_advice.key_champion import (
+        resolve_key_champion_seat_meta,
+    )
+    from ic_gamedata.formation_position_resolve import resolve_slot_escort_seats
 
     topo = ctx.topology
     layout_seats = _layout_formation_seat_count(payload)
     capacity = ctx.formation_capacity
     if capacity is None:
         capacity = player_formation_capacity(payload, adventure_id)
-    reserved = sorted(reserved_formation_seats(payload, adventure_id))
+    escort_resolution = resolve_slot_escort_seats(payload, adventure_id)
+    key_positions, key_meta, key_warnings = resolve_key_champion_seat_meta(
+        payload, adventure_id
+    )
+    reserved = sorted(set(escort_resolution.position_ids) | set(key_positions))
+    escort_unreliable = not escort_resolution.mapping_reliable
+    # Unresolved key_champion force_slot indices → do not invent free seats.
+    if any(
+        str(w).startswith("key_champion_slot_unresolved")
+        or w
+        in (
+            "key_champion_no_formation_layout",
+            "key_champion_force_slot_missing_slot_id",
+            "no_formation_layout",
+        )
+        for w in key_warnings
+    ):
+        escort_unreliable = True
+    placeability_known = adventure_placeability_known(payload, adventure_id)
 
     # Prefer topology seats that belong to the live/API graph (no 1–12 pad).
     topo_seats = sorted(set(topo.seat_column) | set(topo.seat_adjacency))
@@ -1645,20 +1703,21 @@ def _formation_block(
         for idx, seat in enumerate(ordered):
             row_order[seat] = idx
 
-    active_ids: list[int] = []
-    blocked_ids: list[int] = []
+    # Technical layout includes escorts/NPC seats. Placeability is explicit in
+    # slot_states — do not drop reserved seats from the layout/adjacency.
     for seat in positions:
         col = topo.seat_column.get(seat)
         if col is None:
             col = fallback_seat_column(seat)
         zone = topo.seat_zone.get(seat, "mid")
         hid = hero_at.get(seat)
-        if seat in reserved:
+        # Empty reserved/NPC slots stay blocked. If a live champion is already
+        # there, treat the seat as active so party validation matches occupancy
+        # (structural_ok); escort conflict remains visible via readiness/notes.
+        if seat in reserved and hid is None:
             state = "blocked"
-            blocked_ids.append(seat)
         else:
             state = "active"
-            active_ids.append(seat)
         positions_detail.append(
             {
                 "position_id": seat,
@@ -1684,6 +1743,68 @@ def _formation_block(
         current[str(seat)] = hid
 
     physical_count = layout_seats if layout_seats is not None else len(positions)
+    layout_ids = list(positions)
+    champion_by_position = {
+        seat: hid for seat, hid in hero_at.items() if hid is not None
+    }
+    reserved_meta: dict[int, dict[str, Any]] = {
+        int(k): dict(v)
+        for k, v in (escort_resolution.meta_by_position or {}).items()
+    }
+    for pid, meta in (key_meta or {}).items():
+        # key_champion force_slot overlays escort meta on the same seat.
+        reserved_meta[int(pid)] = dict(meta)
+    # Provisional slot_states (display labels attached after numbering).
+    provisional_states = build_slot_states(
+        layout_ids,
+        champion_by_position=champion_by_position,
+        reserved_seats=reserved,
+        placeability_known=placeability_known,
+        escort_meta_by_position=reserved_meta,
+        escort_mapping_unreliable=escort_unreliable,
+    )
+    derived = derive_position_id_lists(provisional_states)
+    blocked_ids = list(derived["blocked_position_ids"])
+    # Champion-capable seats = technical layout minus confirmed blocks.
+    active_ids = [pid for pid in layout_ids if pid not in set(blocked_ids)]
+
+    for warning in escort_resolution.warnings:
+        geo_issues.append(
+            {
+                "code": "escort_mapping_warning",
+                "severity": "warning",
+                "message": f"slot_escort mapping: {warning}",
+                "fix": "Controleer adventure formation-layout en slot_escort indices.",
+            }
+        )
+    for warning in key_warnings:
+        geo_issues.append(
+            {
+                "code": "key_champion_mapping_warning",
+                "severity": "warning",
+                "message": f"key_champion mapping: {warning}",
+                "fix": (
+                    "Controleer adventure formation-layout en key_champion "
+                    "slot_id indices."
+                ),
+            }
+        )
+    if escort_resolution.unresolved_indices:
+        geo_issues.append(
+            {
+                "code": "escort_indices_unresolved",
+                "severity": "error",
+                "message": (
+                    "slot_escort indices niet omgezet naar technische "
+                    f"position_ids: {list(escort_resolution.unresolved_indices)}"
+                ),
+                "fix": (
+                    "Geen stille seat-interpretatie; placeability blijft "
+                    "onbetrouwbaar tot de actuele formation-layout indices kan mappen."
+                ),
+            }
+        )
+
     from ic_gamedata.formation_ai_advice.geometry import assess_active_graph
 
     graph_report = assess_active_graph(
@@ -1703,6 +1824,8 @@ def _formation_block(
             "Binnen een kolom: laagste row_order / y = bovenste plek."
         ),
     }
+    # Number display for placeable seats; blocked stay in layout without
+    # stealing contiguous display slots from champion places.
     positions_with_display, display_issues = assign_display_positions(
         positions_detail,
         column_direction=front_direction,
@@ -1715,13 +1838,64 @@ def _formation_block(
         column_direction_rule=front_direction["rule"],
     )
 
+    display_by_position: dict[int, str] = {}
+    for row in positions_with_display:
+        if not isinstance(row, dict):
+            continue
+        pid = row.get("position_id")
+        label = row.get("display_position")
+        if isinstance(pid, int) and isinstance(label, str) and label:
+            display_by_position[pid] = label
+
+    slot_states = build_slot_states(
+        layout_ids,
+        champion_by_position=champion_by_position,
+        reserved_seats=reserved,
+        placeability_known=placeability_known,
+        display_by_position=display_by_position,
+        escort_meta_by_position=reserved_meta,
+        escort_mapping_unreliable=escort_unreliable,
+    )
+    derived = derive_position_id_lists(slot_states)
+
+    champion_escort_conflicts = [
+        int(row["position_id"])
+        for row in slot_states
+        if row.get("conflict") == "champion_vs_slot_escort"
+        and isinstance(row.get("position_id"), int)
+    ]
+    if champion_escort_conflicts:
+        geo_issues.append(
+            {
+                "code": "champion_escort_conflict",
+                "severity": "warning",
+                "message": (
+                    "Championbezetting botst met opgeloste slot_escort-posities: "
+                    f"{champion_escort_conflicts}. Live champion behouden."
+                ),
+                "fix": (
+                    "Controleer of slot_escort-indices via de actuele layout "
+                    "correct mappen; verberg het conflict niet."
+                ),
+            }
+        )
+
     return {
         "formation_id": topo.source,
         "geometry_source": topo.source,
         "physical_position_count": physical_count,
+        # Full technical layout (includes escort/NPC seats).
+        "valid_position_ids": layout_ids,
+        # Champion-capable seats only (excludes confirmed blocks).
         "active_position_ids": active_ids,
-        "blocked_position_ids": blocked_ids,
-        "valid_position_ids": active_ids,  # placeable slots only
+        "blocked_position_ids": derived["blocked_position_ids"] or None,
+        "available_position_ids": derived["available_position_ids"] or None,
+        "unknown_placeability_position_ids": (
+            derived["unknown_placeability_position_ids"] or None
+        ),
+        "slot_states": slot_states,
+        "escort_source_indices": list(escort_resolution.raw_indices) or None,
+        "escort_mapping_reliable": escort_resolution.mapping_reliable,
         # Reading order for tables: back column → front, top → bottom in column.
         "positions": positions_with_display,
         "position_display_convention": position_display_convention_block(
@@ -1730,11 +1904,16 @@ def _formation_block(
         "table_order_note": (
             "Tabelvolgorde: display_position kolom-plek (achter→voor, "
             "boven→beneden), bijv. 1-1, 1-2, 2-1. Technisch id blijft "
-            "position_id voor import-JSON."
+            "position_id voor import-JSON. available_position_ids = alleen "
+            "bevestigd lege plaatsbare plekken; niet afleiden uit "
+            "len(valid_position_ids) - len(party)."
         ),
         "column_by_position": column_by_position,
         "front_direction": front_direction,
-        "adjacency_by_position": {str(k): v for k, v in adjacency.items() if k in active_ids},
+        # Physical adjacency keeps escort/NPC seats in the layout graph.
+        "adjacency_by_position": {
+            str(k): v for k, v in adjacency.items() if k in layout_ids
+        },
         "distance_definition": {
             "type": "graph_hops",
             "paths_through_blocked": "excluded",
@@ -1751,12 +1930,14 @@ def _formation_block(
         "formation_capacity": capacity,
         "max_party_size": capacity,
         "reserved_position_ids": reserved or None,
+        "placeability_source_known": placeability_known,
         "geometry_issues": geo_issues or None,
         "position_vs_seat_note": (
             "position_id is the physical formation place (geometry/adjacency key). "
             "champions[].seat is the permanent F-key seat and follows the champion. "
             "A swap changes which champion occupies a position_id; it does not change "
-            "position identity or permanent seat."
+            "position identity or permanent seat. NPCs/escorts are slot_states, not "
+            "party champions."
         ),
     }
 
@@ -1783,6 +1964,7 @@ def build_champion_entry(
     *,
     current_position: int | None = None,
     ilvl: int | None = None,
+    slot_ilvls: dict[int, int] | None = None,
     scores_map: dict[int, Any] | None = None,
     attack_map: dict[int, Any] | None = None,
 ) -> dict[str, Any]:
@@ -1793,6 +1975,12 @@ def build_champion_entry(
             scores_map = default_scores
         if attack_map is None:
             attack_map = default_attacks
+
+    by_slot: dict[int, int] | None = None
+    if slot_ilvls:
+        by_slot = {int(slot_id): int(level) for slot_id, level in sorted(slot_ilvls.items())}
+        if ilvl is None:
+            ilvl = round(sum(by_slot.values()) / len(by_slot))
 
     extra = _hero_tags_extra(hero_id)
     attacks = attack_map.get(hero_id)
@@ -1874,9 +2062,11 @@ def build_champion_entry(
         "item_levels": {
             "value": ilvl,
             "meaning": "average_item_level" if ilvl is not None else None,
+            "by_slot": by_slot,
             "note": (
-                "Gemiddeld itemniveau; geen damage-multipliers afleiden."
-                if ilvl is not None
+                "Gemiddeld en per-slot itemniveau (enchant+1); "
+                "geen damage-multipliers afleiden."
+                if ilvl is not None or by_slot is not None
                 else "Itemniveau onbekend."
             ),
         },
@@ -1894,6 +2084,12 @@ def _champions_block(
 ) -> list[dict[str, Any]]:
     by_id = {h.hero_id: h for h in formation}
     scores_map, attack_map = _ability_score_and_attack_maps()
+    slot_map: dict[int, dict[int, int]] = {}
+    details = payload.get("details")
+    if isinstance(details, dict):
+        from ic_gamedata.party_advisor_formation import _loot_slot_ilvls_by_hero
+
+        slot_map = _loot_slot_ilvls_by_hero(details)
     champions: list[dict[str, Any]] = []
     for hero_id in sorted(ctx.active_hero_ids):
         hero = by_id.get(hero_id)
@@ -1905,6 +2101,7 @@ def _champions_block(
                 hero_id,
                 current_position=ctx.seat_of(hero_id),
                 ilvl=ilvl,
+                slot_ilvls=slot_map.get(hero_id),
                 scores_map=scores_map,
                 attack_map=attack_map,
             )
@@ -2007,6 +2204,9 @@ def _readiness_issues(
         "placement_advice": "sufficient",
         "specialization_advice": "sufficient",
         "numeric_comparison": "sufficient",
+        # Swap / research clarity (independent of party_restriction_ok):
+        "local_swap_coverage": "n_a",
+        "public_research": "not_needed",
         # Legacy mirrors:
         "geometry": "ok",
         "party_identity": "ok",
@@ -2024,12 +2224,41 @@ def _readiness_issues(
     for geo in formation.get("geometry_issues") or []:
         if isinstance(geo, dict):
             issues.append({**geo, "dimension": "geometry"})
+            code = str(geo.get("code") or "")
             if geo.get("severity") == "error":
                 dimensions["geometry"] = "blocked"
                 dimensions["schema_validity"] = "insufficient"
+                if code.startswith("escort_"):
+                    _set_advice("placement_advice", "insufficient")
+            elif code in (
+                "champion_escort_conflict",
+                "escort_mapping_warning",
+            ):
+                _set_advice("placement_advice", "partial")
+                if dimensions.get("geometry") == "ok":
+                    dimensions["geometry"] = "degraded"
 
-    positions = formation.get("valid_position_ids") or formation.get("active_position_ids") or []
-    if not positions:
+    if formation.get("escort_mapping_reliable") is False:
+        _set_advice("placement_advice", "insufficient")
+        if dimensions.get("geometry") not in ("blocked",):
+            dimensions["geometry"] = "degraded"
+
+    # Placeable champion seats — never len(valid) - len(party); escorts stay
+    # in valid_position_ids but are excluded via active / slot_states.
+    placeable_positions = (
+        formation.get("active_position_ids")
+        or [
+            row.get("position_id")
+            for row in (formation.get("slot_states") or [])
+            if isinstance(row, dict) and row.get("placeability") == "placeable"
+        ]
+        or formation.get("valid_position_ids")
+        or []
+    )
+    placeable_positions = [
+        p for p in placeable_positions if isinstance(p, int)
+    ]
+    if not placeable_positions:
         issues.append(
             {
                 "code": "no_active_positions",
@@ -2069,7 +2298,7 @@ def _readiness_issues(
         dimensions["party_identity"] = "blocked"
         dimensions["schema_validity"] = "insufficient"
 
-    if positions and len(champions) > len(positions):
+    if placeable_positions and len(champions) > len(placeable_positions):
         issues.append(
             {
                 "code": "party_exceeds_positions",
@@ -2077,7 +2306,7 @@ def _readiness_issues(
                 "dimension": "geometry",
                 "message": (
                     f"Aantal champions ({len(champions)}) overschrijdt "
-                    f"actieve posities ({len(positions)})."
+                    f"plaatsbare posities ({len(placeable_positions)})."
                 ),
                 "fix": "Formatiegeometrie controleren.",
             }
@@ -2284,18 +2513,22 @@ def _readiness_issues(
                     "dimension": "restrictions",
                     "affected_champion_ids": denied_ids,
                     "message": (
-                        "Bevestigd conflict tussen restrictieregels en championgegevens "
-                        "(geen formation-trust bypass). Party-geldigheid niet bevestigd. "
-                        f"Denied: {', '.join(str(i) for i in denied_ids)}."
+                        "Restrictie-evaluatie markeert party-champions als "
+                        "denied. Aanwezigheid in de formatie is geen bewijs "
+                        "van toelating. Denied: "
+                        f"{', '.join(str(i) for i in denied_ids)}."
                     ),
                     "fix": (
-                        "Kopieer mag; vermeld conflict in het advies en stel legale "
-                        "swaps voor. Geen 'ready' party claimen."
+                        "Stel alleen eindformaties voor zonder denied "
+                        "champions (tenzij een bewezen uitzondering), of "
+                        "vervang hen via een swap. Behoud/verplaats van een "
+                        "denied champion vereist expliciete onderbouwing."
                     ),
                 }
             )
             dimensions["restrictions"] = "conflict"
             dimensions["party_legality"] = "conflict"
+            _set_advice("placement_advice", "partial")
         else:
             # Status said conflict but no champion is denied (e.g. stale label).
             issues.append(
@@ -2352,9 +2585,76 @@ def _readiness_issues(
             _set_advice("numeric_comparison", "partial")
             break
 
+    # --- Swap coverage vs party placement (do not conflate) ---
+    from ic_gamedata.formation_ai_advice.research_mode import (
+        allows_targeted_public_research,
+    )
+
+    meta = export.get("meta") if isinstance(export.get("meta"), dict) else {}
+    research_mode = str(meta.get("research_mode") or "provided_data_only")
+    research_gaps = (
+        export.get("research_gaps")
+        if isinstance(export.get("research_gaps"), dict)
+        else None
+    )
+    structured = (
+        goal.get("structured_restrictions")
+        if isinstance(goal.get("structured_restrictions"), dict)
+        else {}
+    )
+    has_uneval = bool(
+        (isinstance(structured, dict) and structured.get("has_unevaluable_roster_rules"))
+        or (isinstance(structured, dict) and structured.get("unevaluable_rules"))
+        or research_gaps
+    )
+    scope = str(meta.get("scope") or "")
+    swap_scope = "swap" in scope.casefold() or bool(export.get("candidates"))
+    if swap_scope:
+        if has_uneval:
+            dimensions["local_swap_coverage"] = "incomplete_unknown_rules"
+            issues.append(
+                {
+                    "code": "local_swap_coverage_incomplete",
+                    "severity": "warning",
+                    "dimension": "local_swap_coverage",
+                    "message": (
+                        "Lokale swapdekking is incompleet: essentiële restricties "
+                        "zijn unknown. Party-plaatsingsadvies kan bruikbaar blijven; "
+                        "onbekende kandidaten zijn niet volledig beoordeeld."
+                    ),
+                    "fix": (
+                        "Gebruik research_gaps voor gerichte publieke research "
+                        "(hybride modus) of behandel unknown kandidaten voorwaardelijk."
+                    ),
+                }
+            )
+        else:
+            dimensions["local_swap_coverage"] = "complete"
+    if has_uneval:
+        if allows_targeted_public_research(research_mode):
+            dimensions["public_research"] = "recommended"
+        else:
+            dimensions["public_research"] = "needed_but_mode_forbids"
+            issues.append(
+                {
+                    "code": "public_research_needed_but_forbidden",
+                    "severity": "info",
+                    "dimension": "public_research",
+                    "message": (
+                        "Essentiële openbare restrictie/mechanic ontbreekt lokaal, "
+                        "maar research_mode=provided_data_only verbiedt externe research."
+                    ),
+                    "fix": (
+                        "Schakel ‘Export + gerichte research’ in, of accepteer "
+                        "voorwaardelijk advies zonder unknown→allowed."
+                    ),
+                }
+            )
+
     # Overall: geometry/party_identity errors → blocked (export unsafe).
     # Restriction conflicts stay copyable as ready_with_warnings so chat/AI can
     # propose legal swaps; do not hard-block the clipboard on party vs rules.
+    # Incomplete local swap coverage does NOT by itself block party placement advice.
     errors = [i for i in issues if i.get("severity") == "error"]
     hard_block = any(
         i.get("dimension") in ("geometry", "party_identity") and i.get("severity") == "error"
@@ -2377,6 +2677,7 @@ def _readiness_issues(
         or advice_incomplete
         or dimensions["restrictions"] in ("conflict", "unconfirmed")
         or dimensions["party_legality"] in ("conflict", "unknown", "denied")
+        or dimensions.get("local_swap_coverage") == "incomplete_unknown_rules"
     ):
         return "ready_with_warnings", issues, dimensions
     return "ready", issues, dimensions
@@ -2721,8 +3022,9 @@ def build_export_payload(
         adventure_id=adventure_id,
         selected_hero_ids=selected_ids,
     )
-    if research_mode not in ("provided_data_only", "web_research_allowed"):
-        research_mode = "provided_data_only"
+    from ic_gamedata.formation_ai_advice.research_mode import normalize_research_mode
+
+    research_mode = normalize_research_mode(research_mode)
 
     name_by_id = {int(h.hero_id): str(h.name) for h in formation}
     goal_block = build_goal_export_object(
@@ -2762,7 +3064,7 @@ def build_export_payload(
             "may_replace_champions": False,
             "may_add_or_remove_champions": False,
             "must_use_each_selected_champion_once": True,
-            "may_change_feats": False,
+            "may_change_feats": True,
             "may_change_equipment": False,
             "max_one_champion_per_permanent_seat": True,
             "only_active_positions": True,
@@ -2775,6 +3077,7 @@ def build_export_payload(
     }
     _enrich_eligibility(export)
     export["gaps"] = _decision_gaps(export) or None
+    _attach_research_gaps(export, research_mode=research_mode)
     status, issues, dimensions = _readiness_issues(export)
     export["readiness"] = {
         "status": status,
@@ -2787,6 +3090,69 @@ def build_export_payload(
         if isinstance(i, dict) and i.get("severity") != "error"
     ] or None
     return export
+
+
+def _attach_research_gaps(
+    export: dict[str, Any],
+    *,
+    research_mode: str,
+) -> None:
+    """Attach compact research_gaps once per unevaluable essential rule."""
+    from ic_gamedata.formation_ai_advice.research_mode import (
+        allows_targeted_public_research,
+        research_gaps_from_unevaluable_rules,
+    )
+
+    goal = export.get("goal") if isinstance(export.get("goal"), dict) else {}
+    structured = (
+        goal.get("structured_restrictions")
+        if isinstance(goal.get("structured_restrictions"), dict)
+        else {}
+    )
+    rules = structured.get("unevaluable_rules") if isinstance(structured, dict) else None
+    unknown_ids: list[int] = []
+    for champ in export.get("champions") or []:
+        if not isinstance(champ, dict):
+            continue
+        elig = champ.get("eligibility")
+        if not isinstance(elig, dict):
+            continue
+        status = elig.get("effective_eligibility") or elig.get("base_eligibility")
+        hid = champ.get("champion_id")
+        if status == "unknown" and isinstance(hid, int):
+            unknown_ids.append(hid)
+    # Swap candidates may live under candidates[]
+    for champ in export.get("candidates") or []:
+        if not isinstance(champ, dict):
+            continue
+        elig = champ.get("eligibility")
+        if not isinstance(elig, dict):
+            continue
+        status = elig.get("effective_eligibility") or elig.get("base_eligibility")
+        hid = champ.get("champion_id") or champ.get("id")
+        if status == "unknown" and isinstance(hid, int) and hid not in unknown_ids:
+            unknown_ids.append(hid)
+
+    gaps = research_gaps_from_unevaluable_rules(
+        rules if isinstance(rules, list) else None,
+        adventure_id=goal.get("adventure_id"),
+        adventure_name=goal.get("adventure_name"),
+        patron_id=goal.get("patron_id"),
+        patron_name=goal.get("patron_name"),
+        unknown_candidate_count=len(unknown_ids) or None,
+        unknown_candidate_sample_ids=unknown_ids,
+    )
+    if gaps is None:
+        export.pop("research_gaps", None)
+        return
+    gaps["research_mode"] = research_mode
+    gaps["public_research_allowed"] = allows_targeted_public_research(research_mode)
+    gaps["local_eligibility_note"] = (
+        "Exporter-status blijft evidence-based (allowed/denied/unknown). "
+        "Externe AI-bevindingen wijzigen lokale eligibility niet automatisch "
+        "en mogen condition-strings niet gebruiken om importvalidatie te omzeilen."
+    )
+    export["research_gaps"] = gaps
 
 
 def request_fingerprint(export_payload: dict[str, Any]) -> str:

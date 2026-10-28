@@ -529,6 +529,7 @@ class PartyAdvisorTests(unittest.TestCase):
 
     def test_ilvl_is_average_per_slot_not_sum(self) -> None:
         from ic_gamedata.party_advisor import _loot_ilvl_by_hero
+        from ic_gamedata.party_advisor_formation import _loot_slot_ilvls_by_hero
 
         details = {
             "loot": [
@@ -542,6 +543,8 @@ class PartyAdvisorTests(unittest.TestCase):
                 {"hero_id": 1, "slot_id": 1, "enchant": 1446},
             ]
         }
+        slots = _loot_slot_ilvls_by_hero(details)[1]
+        self.assertEqual(slots, {1: 1447, 2: 1447, 3: 1447, 4: 1447, 5: 1447, 6: 1447})
         ilvl = _loot_ilvl_by_hero(details)[1]
         self.assertEqual(ilvl, 1447)
         self.assertLess(ilvl, 2000)
@@ -593,8 +596,13 @@ class PartyAdvisorTests(unittest.TestCase):
             hero(172, "Kyre", 7, ("support",), tags=("buffer",)),
         )
         formation_ids = frozenset({147, 166, 172})
-        self.assertTrue(is_hero_allowed(166, roster_filter, formation_hero_ids=formation_ids))
-        self.assertTrue(is_hero_allowed(172, roster_filter, formation_hero_ids=formation_ids))
+        # Presence does not override hard ability-score gates.
+        self.assertFalse(
+            is_hero_allowed(166, roster_filter, formation_hero_ids=formation_ids)
+        )
+        self.assertFalse(
+            is_hero_allowed(172, roster_filter, formation_hero_ids=formation_ids)
+        )
 
         owned = [
             (147, "Azaka", ("dps",), ()),

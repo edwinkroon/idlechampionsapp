@@ -106,6 +106,33 @@ class SnapshotExportTests(unittest.TestCase):
             cov["owned_known_count"],
         )
 
+    def test_base_snapshot_includes_per_slot_item_levels(self) -> None:
+        from ic_gamedata.party_advisor_formation import _loot_slot_ilvls_by_hero
+
+        details = self.payload.get("details") or {}
+        slot_map = _loot_slot_ilvls_by_hero(details)
+        self.assertTrue(slot_map, "fixture must include loot slots")
+
+        snap = build_base_snapshot(self.payload, formation=self.formation)
+        self.assertIn("item_levels (avg/by_slot)", snap["meta"]["account_state_hash_covers"])
+
+        with_levels = [
+            c
+            for c in snap["champions"]
+            if isinstance(c.get("item_levels"), dict)
+            and c["item_levels"].get("by_slot")
+        ]
+        self.assertTrue(with_levels)
+        sample = with_levels[0]
+        il = sample["item_levels"]
+        by_slot = il["by_slot"]
+        self.assertIsInstance(by_slot, dict)
+        levels = [int(v) for v in by_slot.values()]
+        self.assertEqual(il["avg"], round(sum(levels) / len(levels)))
+        expected = slot_map.get(int(sample["id"])) or {}
+        for slot_id, level in expected.items():
+            self.assertEqual(int(by_slot[str(slot_id)]), level)
+
     def test_blocked_champion_still_in_snapshot(self) -> None:
         """Adventure max-INT gate must not remove owned heroes from BASE."""
         payload = json.loads(json.dumps(self.payload))
@@ -200,6 +227,23 @@ class SnapshotExportTests(unittest.TestCase):
             self.assertIn("position", member)
             self.assertIn("live_state", member)
             self.assertEqual(member["live_state"]["status"], "unknown")
+            # Active feat loadout with short mechanic effect when known.
+            if "active_feats" in member:
+                for feat in member["active_feats"] or []:
+                    self.assertIn("id", feat)
+                    self.assertNotIn("mechanical_text", feat)
+                    self.assertNotIn("effect_facts", feat)
+                    self.assertNotIn("quality", feat)
+            else:
+                self.assertEqual(member.get("feats_status"), "unknown")
+        # Fixture Jarlaxle (id 4) has active_feats in the webRequestLog sample.
+        jarlaxle = next(m for m in req["party"] if m.get("id") == 4)
+        self.assertTrue(jarlaxle.get("active_feats"))
+        self.assertTrue(all(isinstance(f.get("id"), int) for f in jarlaxle["active_feats"]))
+        frugal = jarlaxle["active_feats"][0]
+        self.assertEqual(frugal.get("name"), "Frugal")
+        self.assertIn("effect", frugal)
+        self.assertIn("gold", str(frugal.get("effect") or "").casefold())
         self.assertEqual(
             (req.get("live_state_defaults") or {}).get("status"),
             "unknown",

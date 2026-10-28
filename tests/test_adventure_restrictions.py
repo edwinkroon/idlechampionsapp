@@ -211,10 +211,44 @@ class AdventureRestrictionsTests(unittest.TestCase):
         self.assertNotIn(1, filt.patron_blocked_hero_ids)
         self.assertTrue(is_hero_allowed(1, filt))
 
-    def test_formation_trust_allows_active_formation_heroes(self) -> None:
+    def test_formation_presence_does_not_override_banned_tags(self) -> None:
         filt = AdventureRosterFilter(banned_tags={"event"})
         self.assertFalse(is_hero_allowed(159, filt))
-        self.assertTrue(is_hero_allowed(159, filt, formation_hero_ids=frozenset({159})))
+        # Presence argument is ignored — observation ≠ permission.
+        self.assertFalse(
+            is_hero_allowed(159, filt, formation_hero_ids=frozenset({159}))
+        )
+
+    def test_evaluate_heroes_presence_does_not_override_patron_block(self) -> None:
+        """Seated presence must not force-allow patron_blocked champions."""
+        filt = AdventureRosterFilter(patron_blocked_hero_ids={159, 1})
+        without = {
+            row["champion_id"]: row["status"]
+            for row in evaluate_heroes_against_filter([159, 1, 12], filt)
+        }
+        self.assertEqual(without[159], "denied")
+        self.assertEqual(without[1], "denied")
+
+        with_presence_arg = {
+            row["champion_id"]: row
+            for row in evaluate_heroes_against_filter(
+                [159, 1, 12],
+                filt,
+                formation_hero_ids=frozenset({159}),
+            )
+        }
+        self.assertEqual(with_presence_arg[159]["status"], "denied")
+        self.assertEqual(with_presence_arg[1]["status"], "denied")
+
+    def test_evaluate_heroes_without_filter_is_unknown(self) -> None:
+        rows = evaluate_heroes_against_filter(
+            [156, 159],
+            None,
+            formation_hero_ids=frozenset({156}),
+        )
+        by_id = {row["champion_id"]: row["status"] for row in rows}
+        self.assertEqual(by_id[156], "unknown")
+        self.assertEqual(by_id[159], "unknown")
 
     def test_reserved_formation_seats_from_slot_escort(self) -> None:
         from ic_gamedata.adventure_restrictions import (
@@ -222,13 +256,25 @@ class AdventureRestrictionsTests(unittest.TestCase):
             reserved_formation_seats,
         )
 
+        # slot_ids are 0-based formation-graph indices, not UI seats.
+        # Indices 6 and 7 (empty) map via preferred index+1 → seats 7 and 8
+        # when those preferred seats are free.
+        nodes = [
+            {"x": 0, "y": float(i), "col": i // 3, "adj": []}
+            for i in range(9)
+        ]
         payload = _mock_adventure(
             563,
             game_changes=[
                 {
                     "type": "slot_escort",
-                    "slot_ids": [8, 6, 7],
-                }
+                    "slot_ids": [6, 7],
+                },
+                {
+                    "type": "formation",
+                    "name": "test",
+                    "formation": nodes,
+                },
             ],
         )
         payload["details"] = {
@@ -239,13 +285,11 @@ class AdventureRestrictionsTests(unittest.TestCase):
                     "current_adventure_id": 563,
                     "hero_in_seats": {
                         "1": 67,
-                        "3": 4,
-                        "5": 106,
-                        "6": 86,
-                        "7": 13,
-                        "9": 159,
-                        "10": 177,
-                        "12": 22,
+                        "2": 4,
+                        "3": 159,
+                        "4": 13,
+                        "5": 86,
+                        "6": 106,
                     },
                     "formation": [67, 4, 159, 13, 86, 106, -1, -1, -1],
                 }
@@ -255,8 +299,8 @@ class AdventureRestrictionsTests(unittest.TestCase):
                 for hid in (67, 4, 159, 13, 86, 106)
             ],
         }
-        self.assertEqual(reserved_formation_seats(payload, 563), frozenset({6, 7, 8}))
-        self.assertEqual(player_formation_capacity(payload, 563), 6)
+        self.assertEqual(reserved_formation_seats(payload, 563), frozenset({7, 8}))
+        self.assertEqual(player_formation_capacity(payload, 563), 7)
 
     def test_player_formation_capacity_without_npc_slots(self) -> None:
         from ic_gamedata.adventure_restrictions import player_formation_capacity

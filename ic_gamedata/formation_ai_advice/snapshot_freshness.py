@@ -245,9 +245,9 @@ USER_HELP_NL = """\
 
 **Basisgegevens delen** — eenmaal na een verse export, of na relevante roster-/feat-/mechanicwijzigingen. Voeg het bestand bewust toe aan je AI-chat of projectbronnen.
 
-**Alleen een adviesvraag kopiëren** — als de geëxporteerde snapshot nog klopt voor account/mechanics (lokale check) en je die al hebt gedeeld. De aanvraag bevat altijd verse adventure/party/eligibility.
+**Adviesvraag kopiëren** — als de geëxporteerde snapshot nog klopt voor account/mechanics (lokale check) en je die al hebt gedeeld. De aanvraag vraagt altijd om plaatsing + specialisaties; vink “Zoek ook betere champions” aan als de AI óók tot drie owned vervangingen mag voorstellen.
 
 **Basisgegevens vernieuwen** — bij “Accountgegevens gewijzigd” of “Mechanics gewijzigd”: bouw en exporteer een **nieuw** basisbestand (nieuw ID). Overschrijf niet stil onder hetzelfde ID.
 
-**AI vindt de snapshot niet** — deel het opgeslagen bestand opnieuw; claim niet dat de app kan zien of de AI het nog heeft. Gebruik daarna opnieuw de checkbox alleen als gebruikersverklaring.
+**AI vindt de snapshot niet** — deel het opgeslagen bestand opnieuw; claim niet dat de app kan zien of de AI het nog heeft. Gebruik daarna opnieuw de checkbox ‘gedeeld’ alleen als gebruikersverklaring.
 """.strip()

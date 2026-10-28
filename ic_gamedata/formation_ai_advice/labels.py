@@ -89,6 +89,60 @@ def group_label_from_export_group(group: dict[str, Any]) -> str:
     )
 
 
+def specialization_choice_display(
+    name: str | None,
+    *,
+    advised_option_id: int | None = None,
+    current_option_id: int | None = None,
+    selection_status: str | None = None,
+    required_level: int | None = None,
+) -> str:
+    """One specialization-group fragment for the Specialisatie(s) table column.
+
+    Status labels (Dutch, exact):
+    - new advice → ``Naam (advies)``
+    - same as current → ``Naam (actief)``
+    - current kept, no new advice → ``Naam (behouden)``
+    - no current and no advice → ``Nog te kiezen — geen nieuw advies``
+    - advised but not unlocked → ``Naam (advies vanaf lvl X)`` or
+      ``Naam (advies na ontgrendeling)``
+    Unresolvable names become ``Onbekend`` (never invent from champion name).
+    """
+    label = (name or "").strip() or "Onbekend"
+    not_unlocked = str(selection_status or "").strip().casefold() == "not_unlocked"
+
+    if isinstance(advised_option_id, int):
+        if not_unlocked:
+            if isinstance(required_level, int) and required_level > 0:
+                return f"{label} (advies vanaf lvl {required_level})"
+            return f"{label} (advies na ontgrendeling)"
+        if (
+            isinstance(current_option_id, int)
+            and current_option_id == advised_option_id
+        ):
+            return f"{label} (actief)"
+        return f"{label} (advies)"
+
+    if isinstance(current_option_id, int):
+        return f"{label} (behouden)"
+
+    return "Nog te kiezen — geen nieuw advies"
+
+
+def format_specializations_table_cell(group_fragments: list[str]) -> str:
+    """Join group fragments for the Specialisatie(s) column.
+
+    Single group: fragment as-is. Multiple groups: ``Keuze 1: …; Keuze 2: …``
+    in existing group order.
+    """
+    parts = [str(p).strip() for p in group_fragments if str(p).strip()]
+    if not parts:
+        return "Nog te kiezen — geen nieuw advies"
+    if len(parts) == 1:
+        return parts[0]
+    return "; ".join(f"Keuze {i}: {part}" for i, part in enumerate(parts, start=1))
+
+
 def position_caption(
     *,
     position_id: int,
@@ -358,23 +412,35 @@ POSITION_DISPLAY_AI_INSTRUCTION = (
     "Gebruik voor de leesbare formatietabel de aangeleverde display_position "
     "in het formaat kolom-plek, bijvoorbeeld 1-1. Het eerste nummer telt de "
     "kolommen van achter naar voren; het tweede nummer telt de plekken binnen "
-    "die kolom van boven naar beneden. Gebruik de kolommen ‘Plek’ en "
-    "‘Champion’ en sorteer op display_column en vervolgens display_slot. "
-    "Toon geen technische position_id’s of permanente seats in deze tabel. "
+    "die kolom van boven naar beneden. Gebruik de kolommen ‘Plek’, "
+    "‘Champion’ en ‘Specialisatie(s)’ en sorteer op display_column en "
+    "vervolgens display_slot. In de kolom Champion: ‘Naam (seat N)’ met de "
+    "permanente F-seat uit het veld `seat` (bijv. Hitch (seat 3)). "
+    "Plek = display_position; seat = permanente F-toets — die twee niet "
+    "verwisselen. Toon geen technische position_id’s in de Plek-kolom. "
     "Gebruik in uitleg over verplaatsingen dezelfde notatie. Behoud in het "
     "import-JSON juist de echte position_id’s; vervang deze nooit door de "
-    "weergavenotatie."
+    "weergavenotatie. Vulregels voor Specialisatie(s): "
+    "BASE_SNAPSHOT.answer_contract.display_vs_import."
 )
 
 ADVICE_REPLY_FORMAT_INSTRUCTION = (
     "Antwoordvorm (verplicht, zelfstandig — geen eerdere chat nodig):\n"
-    "1. Een leesbare formatietabel met kolommen ‘Plek’ en ‘Champion’, "
-    "gesorteerd op display_column en daarna display_slot "
-    "(bijv. 1-1, 1-2, 2-1, …).\n"
-    "2. Eventuele korte uitleg en specialisatieadviezen.\n"
+    "1. Een leesbare formatietabel met kolommen ‘Plek’, ‘Champion’ en "
+    "‘Specialisatie(s)’, gesorteerd op display_column en daarna "
+    "display_slot (bijv. 1-1, 1-2, 2-1, …). Champion-cel: Naam (seat N).\n"
+    "2. Eventuele korte uitleg onder de tabel.\n"
     "3. Precies één importeerbaar JSON-object in één afgesloten "
     "Markdown-codeblok met taal json, volgens het bestaande "
     "antwoordschema, met technische position_id’s "
     "(niet de weergavenotatie).\n"
     f"{POSITION_DISPLAY_AI_INSTRUCTION}"
+)
+
+ADVICE_TABLE_HEADER_EXAMPLE = (
+    "| Plek | Champion | Specialisatie(s) |\n"
+    "| --- | --- | --- |\n"
+    "| 1-1 | Hitch (seat 3) | Charismatic (actief) |\n"
+    "| 2-1 | Celeste (seat 2) | Keuze 1: War Domain (advies); "
+    "Keuze 2: Life Domain (behouden) |"
 )

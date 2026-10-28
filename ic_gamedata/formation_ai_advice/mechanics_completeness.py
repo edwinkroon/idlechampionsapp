@@ -50,6 +50,124 @@ def _has_usable_effect(body: dict[str, Any] | None) -> bool:
     return False
 
 
+def delta_row_is_essential_for_request(row: dict[str, Any] | None) -> bool:
+    """True when this delta must keep its effect — BASE does not already cover it.
+
+    Budget shrinkage must not strip or drop these rows while claiming
+    ``delta_omitted_use_BASE_SNAPSHOT``.
+    """
+    if not isinstance(row, dict):
+        return False
+    if row.get("role") == "supplement":
+        return True
+    if row.get("snapshot_had_effect") is False:
+        return True
+    return False
+
+
+def assess_snapshot_mechanics_export_coverage(
+    snapshot: dict[str, Any] | None,
+) -> dict[str, Any]:
+    """Measure whether a BASE_SNAPSHOT actually exported usable mechanic prose.
+
+    Existence of champion rows / option refs / hashes is not enough — consumers
+    need ``shared.abilities`` / ``shared.specialization_options`` bodies with
+    ``effect`` text (or resolvable refs to those bodies).
+    """
+    if not isinstance(snapshot, dict):
+        return {
+            "export_complete": False,
+            "usable_for_qualitative_advice": False,
+            "reason": "no_snapshot",
+            "ability_bodies": 0,
+            "ability_with_effect": 0,
+            "option_bodies": 0,
+            "option_with_effect": 0,
+            "option_missing_effect": 0,
+            "champions_with_ability_refs": 0,
+            "champion_count": 0,
+        }
+
+    shared = snapshot.get("shared") if isinstance(snapshot.get("shared"), dict) else {}
+    abilities = (
+        shared.get("abilities") if isinstance(shared.get("abilities"), dict) else {}
+    )
+    options = (
+        shared.get("specialization_options")
+        if isinstance(shared.get("specialization_options"), dict)
+        else {}
+    )
+    champions = [
+        c for c in (snapshot.get("champions") or []) if isinstance(c, dict)
+    ]
+
+    ab_with = sum(
+        1 for body in abilities.values() if _has_usable_effect(body if isinstance(body, dict) else None)
+    )
+    opt_with = sum(
+        1
+        for body in options.values()
+        if _has_usable_effect(body if isinstance(body, dict) else None)
+    )
+    opt_missing = sum(
+        1
+        for body in options.values()
+        if isinstance(body, dict) and not _has_usable_effect(body)
+    )
+    champs_with_ab = sum(
+        1
+        for c in champions
+        if isinstance(c.get("abilities"), list) and c.get("abilities")
+    )
+
+    # Usable when we exported a real ability catalog and most options have prose.
+    # Empty ability catalog with many champions = export failure, not "no kit".
+    ability_ok = ab_with > 0 and (
+        champs_with_ab > 0 or len(champions) == 0
+    )
+    option_ok = True
+    if options:
+        # Allow a small fraction of truly missing source effects.
+        option_ok = opt_with >= max(1, int(0.5 * len(options)))
+    export_complete = bool(ability_ok and option_ok and ab_with > 0)
+    # Qualitative party advice needs at least some ability prose in the export.
+    usable = bool(ab_with > 0 and (opt_with > 0 or not options))
+
+    reason = None
+    if not abilities and champions:
+        reason = "shared_abilities_catalog_empty"
+    elif ab_with == 0 and champions:
+        reason = "no_usable_ability_effects"
+    elif options and opt_with == 0:
+        reason = "no_usable_specialization_effects"
+    elif options and not option_ok:
+        reason = "majority_specialization_effects_missing"
+    elif champs_with_ab == 0 and champions and abilities:
+        reason = "champions_missing_ability_refs"
+    elif not export_complete:
+        reason = "partial_mechanics_export"
+
+    return {
+        "export_complete": export_complete,
+        "usable_for_qualitative_advice": usable,
+        "reason": reason,
+        "ability_bodies": len(abilities),
+        "ability_with_effect": ab_with,
+        "option_bodies": len(options),
+        "option_with_effect": opt_with,
+        "option_missing_effect": opt_missing,
+        "champions_with_ability_refs": champs_with_ab,
+        "champion_count": len(champions),
+        "note": (
+            "mechanics_hash covers projected shared catalogs as serialized; "
+            "it does not prove prior exports had usable effect prose. "
+            "Use this coverage block before omitting ADVICE_REQUEST deltas."
+            if not export_complete
+            else None
+        ),
+    }
+
+
 def _looks_like_export_preview_truncation(
     snap_effect: str, live_effect: str
 ) -> bool:
@@ -721,7 +839,7 @@ def omit_oversized_effects_for_budget(
 
 
 def compact_mechanics_for_clipboard(block: dict[str, Any] | None) -> dict[str, Any] | None:
-    """Shrink mechanics block for the 15k clipboard budget.
+    """Shrink mechanics block for the clipboard UTF-8 byte budget.
 
     Keeps full canonical ``effect`` prose. Never mid-sentence truncates into a
     preview ellipsis — that previously poisoned Beehive Barrage (15049).
@@ -751,20 +869,35 @@ def compact_mechanics_for_clipboard(block: dict[str, Any] | None) -> dict[str, A
                     "unresolved_parameters": row.get("unresolved_parameters"),
                     "source": row.get("source"),
                     "overrides_snapshot": row.get("overrides_snapshot"),
+                    "snapshot_had_effect": row.get("snapshot_had_effect"),
                     "effect_omitted_for_budget": row.get("effect_omitted_for_budget"),
                     "truncation_cause": row.get("truncation_cause"),
                 }
             )
         )
-    gaps = []
+    # Clipboard budget: keep detail only where it changes advice limits.
+    # Bulk parameter_missing (no spec deps) → id lists (~5k → hundreds).
+    detail: list[dict[str, Any]] = []
+    bulk_ids: dict[str, list[int]] = {}
     for row in out.get("mechanic_gaps") or []:
         if not isinstance(row, dict):
             continue
-        completeness = row.get("completeness")
+        completeness = str(row.get("completeness") or "missing")
+        deps = row.get("dependent_option_ids") or []
+        has_deps = bool(deps)
+        structural = completeness in ("missing", "description_truncated") or has_deps
+        item_id = row.get("id")
+        if (
+            not structural
+            and completeness == "parameter_missing"
+            and (isinstance(item_id, int) or str(item_id).isdigit())
+        ):
+            bulk_ids.setdefault("parameter_missing", []).append(int(item_id))
+            continue
+
         desc_status = row.get("description_status")
         param_status = row.get("parameter_status")
         cause = row.get("cause")
-        # Omit statuses implied by completeness to save clipboard budget.
         if completeness == "parameter_missing" and desc_status == "full":
             desc_status = None
         if completeness == "parameter_missing" and param_status == "unresolved":
@@ -777,23 +910,34 @@ def compact_mechanics_for_clipboard(block: dict[str, Any] | None) -> dict[str, A
             cause = None
         if completeness == "missing" and cause == "effect_missing":
             cause = None
-        gaps.append(
+        detail.append(
             _prune_empty(
                 {
                     "catalog": row.get("catalog"),
-                    "id": row.get("id"),
+                    "id": item_id,
                     "name": row.get("name"),
                     "completeness": completeness,
                     "description_status": desc_status,
                     "parameter_status": param_status,
                     "cause": cause,
-                    "champion_ids": row.get("champion_ids"),
-                    "dependent_option_ids": row.get("dependent_option_ids"),
+                    "dependent_option_ids": deps or None,
                     "limits": row.get("limits"),
                     "note": row.get("note"),
                 }
             )
         )
+
+    for key, ids in list(bulk_ids.items()):
+        bulk_ids[key] = sorted(set(ids))
+
     out["mechanics_delta"] = delta or None
-    out["mechanic_gaps"] = gaps or None
+    out["mechanic_gaps"] = detail or None
+    out["mechanic_gap_ids"] = bulk_ids or None
+    if bulk_ids:
+        out["mechanic_gaps_note"] = (
+            "mechanic_gap_ids.parameter_missing: effectproza beschikbaar "
+            "(snapshot/delta); alleen placeholders onopgelost. "
+            "Spec-vergelijking alleen beperkt waar mechanic_gaps "
+            "dependent_option_ids heeft."
+        )
     return _prune_empty(out)

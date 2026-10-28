@@ -73,6 +73,7 @@ def remap_visual_nodes(
     hero_name_by_id: dict[int, str] | None = None,
     permanent_seat_by_hero: dict[int, int] | None = None,
     position_geometry: dict[int, tuple[float, float, str]] | None = None,
+    bud_hero_id: int | None = None,
 ) -> tuple[VisualSeatNode, ...]:
     """Preview placement: ``seat_by_hero`` maps champion_id → position_id.
 
@@ -84,6 +85,10 @@ def remap_visual_nodes(
     ``position_geometry`` supplies (x, y, zone) for empty slots that have no live
     card yet (e.g. Flint → empty position 1). Without it, missing slots fall back
     to an overflow strip — which stretches the board and looks wrong.
+
+    When ``bud_hero_id`` is set, only that champion gets ``is_bud`` (AI proposal /
+    fixed hoofd-DPS). Otherwise ``is_bud`` is copied from the live card for that
+    champion — which can be wrong after a DPS change.
     """
     names = dict(hero_name_by_id or {})
     for n in nodes:
@@ -127,11 +132,15 @@ def remap_visual_nodes(
         label_seat = int(perm.get(hid) or position_id)
         name = names.get(hid) or f"Champion {hid}"
         src = live_by_hero.get(hid)
+        if bud_hero_id is not None:
+            is_bud = hid == int(bud_hero_id)
+        else:
+            is_bud = bool(src.is_bud) if src is not None else False
         role_kwargs = dict(
             effective_role=src.effective_role if src is not None else None,
             inferred_role=src.inferred_role if src is not None else None,
             chosen_role=src.chosen_role if src is not None else None,
-            is_bud=bool(src.is_bud) if src is not None else False,
+            is_bud=is_bud,
         )
         geom = geom_by_position.get(position_id)
         if geom is not None:

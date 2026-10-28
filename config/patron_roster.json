@@ -1,5 +1,6 @@
 {
   "source": "https://emmotes.github.io/ic_spoilers/patron_roster.html",
+  "scraped_note": "Statuses from visible patron cells; data-sort codes fill empty checkmarks.",
   "patron_ids": {
     "1": "mirt",
     "2": "vajra",
@@ -63,7 +64,7 @@
       "patrons": {
         "mirt": "available",
         "vajra": "available",
-        "strahd": "unavailable",
+        "strahd": "feat",
         "zariel": "available",
         "elminster": "unavailable"
       }
@@ -581,7 +582,7 @@
         "vajra": "unavailable",
         "strahd": "available",
         "zariel": "feat",
-        "elminster": "unavailable"
+        "elminster": "timed"
       }
     },
     {
@@ -605,7 +606,7 @@
         "vajra": "available",
         "strahd": "unavailable",
         "zariel": "unavailable",
-        "elminster": "unavailable"
+        "elminster": "timed"
       }
     },
     {
@@ -617,7 +618,7 @@
         "vajra": "available",
         "strahd": "available",
         "zariel": "feat",
-        "elminster": "unavailable"
+        "elminster": "timed"
       }
     },
     {
@@ -769,10 +770,10 @@
       "name": "Beadle",
       "seat": 8,
       "patrons": {
-        "mirt": "timed",
-        "vajra": "timed",
+        "mirt": "ability",
+        "vajra": "ability",
         "strahd": "available",
-        "zariel": "timed",
+        "zariel": "ability",
         "elminster": "timed"
       }
     },
@@ -783,9 +784,9 @@
       "patrons": {
         "mirt": "unavailable",
         "vajra": "available",
-        "strahd": "unavailable",
+        "strahd": "feat",
         "zariel": "unavailable",
-        "elminster": "unavailable"
+        "elminster": "timed"
       }
     },
     {
@@ -1013,7 +1014,7 @@
         "vajra": "available",
         "strahd": "available",
         "zariel": "available",
-        "elminster": "unavailable"
+        "elminster": "timed"
       }
     },
     {
@@ -1025,7 +1026,7 @@
         "vajra": "feat",
         "strahd": "available",
         "zariel": "available",
-        "elminster": "unavailable"
+        "elminster": "timed"
       }
     },
     {
@@ -1085,7 +1086,7 @@
         "vajra": "unavailable",
         "strahd": "feat",
         "zariel": "available",
-        "elminster": "unavailable"
+        "elminster": "timed"
       }
     },
     {
@@ -1265,7 +1266,7 @@
         "vajra": "available",
         "strahd": "available",
         "zariel": "available",
-        "elminster": "unavailable"
+        "elminster": "timed"
       }
     },
     {
@@ -1300,7 +1301,7 @@
         "mirt": "available",
         "vajra": "available",
         "strahd": "available",
-        "zariel": "timed",
+        "zariel": "ability_feat",
         "elminster": "unavailable"
       }
     },
@@ -1430,10 +1431,10 @@
       "seat": 3,
       "patrons": {
         "mirt": "available",
-        "vajra": "timed",
+        "vajra": "ability",
         "strahd": "available",
-        "zariel": "timed",
-        "elminster": "timed"
+        "zariel": "ability",
+        "elminster": "ability"
       }
     },
     {
@@ -1469,7 +1470,7 @@
         "vajra": "available",
         "strahd": "unavailable",
         "zariel": "unavailable",
-        "elminster": "timed"
+        "elminster": "unavailable"
       }
     },
     {
@@ -1481,7 +1482,7 @@
         "vajra": "available",
         "strahd": "available",
         "zariel": "unavailable",
-        "elminster": "timed"
+        "elminster": "unavailable"
       }
     },
     {
@@ -1505,7 +1506,7 @@
         "vajra": "feat",
         "strahd": "available",
         "zariel": "available",
-        "elminster": "timed"
+        "elminster": "unavailable"
       }
     },
     {
@@ -1517,7 +1518,7 @@
         "vajra": "feat",
         "strahd": "feat",
         "zariel": "available",
-        "elminster": "timed"
+        "elminster": "unavailable"
       }
     },
     {
@@ -1646,7 +1647,7 @@
       "seat": 10,
       "patrons": {
         "mirt": "available",
-        "vajra": "timed",
+        "vajra": "sometimes",
         "strahd": "available",
         "zariel": "available",
         "elminster": "timed"
@@ -1779,7 +1780,7 @@
       "patrons": {
         "mirt": "available",
         "vajra": "available",
-        "strahd": "timed",
+        "strahd": "ability",
         "zariel": "available",
         "elminster": "timed"
       }
@@ -1875,8 +1876,8 @@
       "patrons": {
         "mirt": "available",
         "vajra": "available",
-        "strahd": "unavailable",
-        "zariel": "unavailable",
+        "strahd": "feat",
+        "zariel": "feat",
         "elminster": "timed"
       }
     },
@@ -1983,7 +1984,7 @@
       "patrons": {
         "mirt": "available",
         "vajra": "available",
-        "strahd": "unavailable",
+        "strahd": "ability_feat",
         "zariel": "available",
         "elminster": "timed"
       }

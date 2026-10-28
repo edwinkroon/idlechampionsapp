@@ -92,17 +92,25 @@ def preflight_export(export_payload: dict[str, Any]) -> LocalValidationResult:
     if seats and len(seats) != len(set(seats)):
         errors.append("Dubbele permanente seats in selectie.")
 
+    # Champion-capable seats only — escorts stay in valid_position_ids.
     positions = (
-        formation.get("valid_position_ids")
-        or formation.get("active_position_ids")
+        formation.get("active_position_ids")
+        or [
+            row.get("position_id")
+            for row in (formation.get("slot_states") or [])
+            if isinstance(row, dict) and row.get("placeability") == "placeable"
+        ]
+        or formation.get("valid_position_ids")
         or []
     )
+    positions = [p for p in positions if isinstance(p, int)]
     current = formation.get("current_champion_by_position") or {}
     occupied = [pid for pid, hid in current.items() if hid is not None]
     if positions and len(hero_ids) != len(occupied):
         if len(hero_ids) > len(positions):
             errors.append(
-                f"Aantal champions ({len(hero_ids)}) overschrijdt geldige posities ({len(positions)})."
+                f"Aantal champions ({len(hero_ids)}) overschrijdt "
+                f"plaatsbare posities ({len(positions)})."
             )
         else:
             warnings.append(
@@ -408,20 +416,55 @@ def validate_proposal_against_export(
         )
 
     champions = export_payload.get("champions") or []
+    # ADVICE_REQUEST uses party[].id; legacy export uses champions[].champion_id.
+    party_rows = export_payload.get("party") if isinstance(export_payload.get("party"), list) else []
     selected_ids = {
         row["champion_id"]
         for row in champions
         if isinstance(row, dict) and isinstance(row.get("champion_id"), int)
     }
+    if not selected_ids:
+        selected_ids = {
+            int(row["id"])
+            for row in party_rows
+            if isinstance(row, dict) and isinstance(row.get("id"), int)
+        }
     permanent_seat = {
         row["champion_id"]: row.get("seat")
         for row in champions
         if isinstance(row, dict) and isinstance(row.get("champion_id"), int)
     }
+    for row in party_rows:
+        if isinstance(row, dict) and isinstance(row.get("id"), int):
+            permanent_seat.setdefault(int(row["id"]), row.get("seat"))
+    # Per-champion locks from ADVICE_REQUEST party rows (key_champion etc.).
+    must_remain: dict[int, dict[str, Any]] = {}
+    for row in party_rows:
+        if not isinstance(row, dict):
+            continue
+        hid = row.get("id")
+        if not isinstance(hid, int):
+            continue
+        if row.get("must_remain_in_party") or row.get("replacement_locked") or row.get("locked"):
+            must_remain[hid] = row
+    for row in champions:
+        if not isinstance(row, dict):
+            continue
+        hid = row.get("champion_id")
+        if not isinstance(hid, int):
+            continue
+        if row.get("must_remain_in_party") or row.get("replacement_locked"):
+            must_remain.setdefault(hid, row)
     formation = export_payload.get("formation") or {}
+    geometry = (
+        export_payload.get("geometry")
+        if isinstance(export_payload.get("geometry"), dict)
+        else {}
+    )
     valid_positions = set(
         formation.get("valid_position_ids")
         or formation.get("active_position_ids")
+        or geometry.get("valid_position_ids")
         or []
     )
     if not valid_positions:
@@ -431,16 +474,85 @@ def validate_proposal_against_export(
             if v is not None
         }
 
+    slot_states = (
+        formation.get("slot_states")
+        if isinstance(formation.get("slot_states"), list)
+        else None
+    )
+    if not slot_states and isinstance(geometry.get("slot_states"), list):
+        slot_states = geometry.get("slot_states")
+    from ic_gamedata.formation_ai_advice.slot_states import (
+        format_position_ref,
+        slot_state_by_position,
+    )
+
+    states_by_id = slot_state_by_position(slot_states)
+    # Current champion positions (reassignments stay allowed on those seats).
+    current_champion_positions: set[int] = set()
+    for row in formation.get("positions") or []:
+        if isinstance(row, dict) and isinstance(row.get("position_id"), int):
+            if row.get("current_champion_id") is not None:
+                current_champion_positions.add(int(row["position_id"]))
+    for row in geometry.get("occupied") or []:
+        if isinstance(row, dict) and isinstance(row.get("id"), int):
+            if row.get("champion_id") is not None:
+                current_champion_positions.add(int(row["id"]))
+    # current_champion_by_position is position_id → hero_id.
+    for key, hid in (formation.get("current_champion_by_position") or {}).items():
+        if hid is None:
+            continue
+        try:
+            current_champion_positions.add(int(key))
+        except (TypeError, ValueError):
+            pass
+
     assigned_heroes = [a.champion_id for a in proposal.assignments]
     assigned_positions = [a.position_id for a in proposal.assignments]
+    assigned_pos_by_hero = {
+        a.champion_id: a.position_id for a in proposal.assignments
+    }
 
-    if set(assigned_heroes) != selected_ids:
+    # Replacement-locked / must-remain champions must appear in every full proposal.
+    # Global may_replace_champions must not override these per-champion locks.
+    constraints = (
+        export_payload.get("constraints")
+        if isinstance(export_payload.get("constraints"), dict)
+        else {}
+    )
+    may_replace = bool(constraints.get("may_replace_champions"))
+    for hid, lock_row in must_remain.items():
+        if lock_row.get("must_remain_in_party") or lock_row.get("replacement_locked"):
+            if hid not in set(assigned_heroes):
+                errors.append(
+                    f"Verplichte champion {hid} ontbreekt in voorstel "
+                    f"(replacement_locked; may_replace={may_replace})."
+                )
+            locked_pos = lock_row.get("locked_position_id")
+            if (
+                lock_row.get("position_locked")
+                and isinstance(locked_pos, int)
+                and hid in assigned_pos_by_hero
+                and assigned_pos_by_hero[hid] != locked_pos
+            ):
+                errors.append(
+                    f"Champion {hid} is position-locked op technische positie "
+                    f"{locked_pos}; voorstel heeft {assigned_pos_by_hero[hid]}."
+                )
+
+    if set(assigned_heroes) != selected_ids and not may_replace:
         missing = selected_ids - set(assigned_heroes)
         extra = set(assigned_heroes) - selected_ids
         if missing:
             errors.append(f"Ontbrekende champions in voorstel: {sorted(missing)}")
         if extra:
             errors.append(f"Onbekende/extra champions in voorstel: {sorted(extra)}")
+    elif may_replace:
+        # Swaps allowed, but still reject dropping replacement-locked members
+        # (checked above) and unknown ids outside owned scope when provided.
+        extra = set(assigned_heroes) - selected_ids
+        owned = export_payload.get("roster_eligibility") or {}
+        # Soft: extras are OK for swap mode; hard locks already enforced.
+        _ = (extra, owned)
     if len(assigned_heroes) != len(set(assigned_heroes)):
         errors.append("Dubbele champion in voorstel.")
     if len(assigned_positions) != len(set(assigned_positions)):
@@ -448,6 +560,84 @@ def validate_proposal_against_export(
     for pos in assigned_positions:
         if valid_positions and pos not in valid_positions:
             errors.append(f"Onbekende of niet-actieve positie: {pos}")
+            continue
+        state = states_by_id.get(int(pos))
+        if state is None:
+            # Legacy exports without slot_states: missing placeability ≠ free.
+            # Only reject when we know the seat is outside the placeable set.
+            active = set(
+                formation.get("active_position_ids")
+                or geometry.get("available_position_ids")
+                or []
+            )
+            blocked = set(
+                formation.get("blocked_position_ids")
+                or geometry.get("blocked_position_ids")
+                or []
+            )
+            if blocked and pos in blocked:
+                errors.append(
+                    f"Plaatsing geweigerd op "
+                    f"{format_position_ref(pos, reason='bevestigde blokkade')}."
+                )
+            elif active and pos not in active and pos not in current_champion_positions:
+                errors.append(
+                    f"Plaatsing geweigerd op "
+                    f"{format_position_ref(pos, reason='geen plaatsbare championplek')}."
+                )
+            continue
+        placeability = state.get("placeability")
+        occupancy = state.get("occupancy")
+        display = state.get("display_position")
+        reason = state.get("reason")
+        # Key-champion force_slot may show as npc/blocked while empty; the
+        # replacement-locked champion whose locked_position_id equals this seat
+        # is the only allowed placement onto that overlay.
+        key_slot_exception = False
+        if placeability == "blocked" or occupancy in ("npc", "escort", "object"):
+            for asn in proposal.assignments:
+                if asn.position_id != pos:
+                    continue
+                lock_row = must_remain.get(asn.champion_id) or {}
+                locked_pos = lock_row.get("locked_position_id")
+                blocker = state.get("blocker") if isinstance(state.get("blocker"), dict) else {}
+                btype = str(blocker.get("type") or "").strip().casefold()
+                source = str(state.get("source") or "").casefold()
+                if (
+                    lock_row.get("position_locked")
+                    and isinstance(locked_pos, int)
+                    and locked_pos == pos
+                    and (
+                        btype in ("npc", "key_champion")
+                        or "key_champion" in source
+                    )
+                ):
+                    key_slot_exception = True
+                    break
+        if (
+            (placeability == "blocked" or occupancy in ("npc", "escort", "object"))
+            and not key_slot_exception
+        ):
+            errors.append(
+                "Plaatsing geweigerd op "
+                + format_position_ref(
+                    pos,
+                    display_position=display if isinstance(display, str) else None,
+                    reason=str(reason or f"bezet/geblokkeerd ({occupancy})"),
+                )
+            )
+        elif placeability == "unknown" and pos not in current_champion_positions:
+            errors.append(
+                "Automatische plaatsing geweigerd op "
+                + format_position_ref(
+                    pos,
+                    display_position=display if isinstance(display, str) else None,
+                    reason=str(
+                        reason
+                        or "plaatsbaarheid unknown — geen bevestigde vrije plek"
+                    ),
+                )
+            )
 
     seat_owners: dict[int, int] = {}
     for hid in assigned_heroes:

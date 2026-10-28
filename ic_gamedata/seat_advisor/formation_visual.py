@@ -177,12 +177,12 @@ def load_formation_graph(
     return "Diamond Formation", []
 
 
-# Game formation graphs use a compact coord system (~0–80). Scale up so 96×56
-# seat cards don't sit on top of each other.
-_GRAPH_SCALE_X = 5.0
-_GRAPH_SCALE_Y = 3.5
-_CARD_GAP_X = 110.0
-_CARD_GAP_Y = 72.0
+# Game formation graphs use a compact coord system (~0–80). Scale up so
+# ~136×72 seat cards (avatar + Slot/name) don't sit on top of each other.
+_GRAPH_SCALE_X = 7.0
+_GRAPH_SCALE_Y = 3.6
+_CARD_GAP_X = 150.0
+_CARD_GAP_Y = 80.0
 
 
 def _node_xy(node: dict[str, Any], index: int) -> tuple[float, float]:
@@ -427,3 +427,94 @@ def build_position_geometry(
         zone = topo.seat_zone.get(seat, "mid")
         out[int(seat)] = (float(x), float(y), str(zone))
     return out
+
+
+def _slot_kind_and_label(state: dict[str, Any]) -> tuple[str, str]:
+    """Map a slot_state row to (slot_kind, display name)."""
+    occupancy = str(state.get("occupancy") or "")
+    placeability = str(state.get("placeability") or "")
+    blocker = state.get("blocker") if isinstance(state.get("blocker"), dict) else {}
+    name = blocker.get("name") if isinstance(blocker.get("name"), str) else None
+    btype = str(blocker.get("type") or occupancy or "blocked").lower()
+
+    if placeability == "blocked" or occupancy in ("npc", "escort", "object"):
+        if btype in ("npc", "escort", "object"):
+            kind = btype
+        else:
+            kind = "blocked"
+        if name and name.strip():
+            label = name.strip()
+        elif kind == "escort":
+            label = "Escort"
+        elif kind == "npc":
+            label = "NPC"
+        elif kind == "object":
+            label = "Object"
+        else:
+            label = "Geblokkeerd"
+        return kind, label
+
+    if placeability == "unknown" or occupancy == "unknown":
+        return "unknown_placeability", "Onbekend"
+    return "blocked", "Geblokkeerd"
+
+
+def build_slot_overlay_nodes(
+    slot_states: list[dict[str, Any]] | tuple[dict[str, Any], ...] | None,
+    position_geometry: dict[int, tuple[float, float, str]] | None,
+    *,
+    skip_position_ids: set[int] | frozenset[int] | None = None,
+) -> tuple[VisualSeatNode, ...]:
+    """Visual markers for blocked / unknown-placeability seats.
+
+    Confirmed empty placeable seats are omitted (not shown as free add targets).
+    Champion-occupied seats are omitted (drawn by the normal champion board).
+    Uses the same ``slot_states`` source as export/import validation.
+    """
+    skip = set(skip_position_ids or ())
+    geom = dict(position_geometry or {})
+    nodes: list[VisualSeatNode] = []
+    for row in slot_states or ():
+        if not isinstance(row, dict):
+            continue
+        pid = row.get("position_id")
+        if not isinstance(pid, int) or pid in skip:
+            continue
+        occupancy = row.get("occupancy")
+        placeability = row.get("placeability")
+        if occupancy == "champion":
+            continue
+        if occupancy == "empty" and placeability == "placeable":
+            continue
+        if placeability not in ("blocked", "unknown") and occupancy not in (
+            "npc",
+            "escort",
+            "object",
+            "unknown",
+        ):
+            continue
+        xy = geom.get(pid)
+        if xy is None:
+            # Still show markers even without graph coords (overflow strip).
+            x, y, zone = float(pid) * 20.0, 0.0, "mid"
+        else:
+            x, y, zone = xy
+        kind, label = _slot_kind_and_label(row)
+        nodes.append(
+            VisualSeatNode(
+                seat=pid,
+                x=float(x),
+                y=float(y),
+                zone=str(zone),
+                hero_id=None,
+                hero_name=label,
+                effective_role=None,
+                inferred_role=None,
+                chosen_role=None,
+                is_bud=False,
+                has_issue=kind == "unknown_placeability",
+                is_active=False,
+                slot_kind=kind,
+            )
+        )
+    return tuple(nodes)

@@ -8,7 +8,7 @@ from __future__ import annotations
 import time
 from typing import TYPE_CHECKING, Any
 
-from PySide6.QtCore import Signal
+from PySide6.QtCore import QTimer, Signal
 from PySide6.QtWidgets import (
     QFrame,
     QHBoxLayout,
@@ -45,6 +45,25 @@ from ic_ui.workers.shared_advice import SharedAdviceResult, shared_advice_hub
 
 if TYPE_CHECKING:
     from ic_core.game_data_service import GameDataService, SnapshotEnvelope
+
+
+def _formation_render_key(report: Any) -> tuple[Any, ...] | None:
+    """Stable key for skipping identical auto-refresh board rebuilds."""
+    if report is None:
+        return None
+    seat = getattr(report, "seat_report", None)
+    nodes: tuple[Any, ...] = ()
+    if seat is not None:
+        nodes = tuple(
+            (getattr(n, "seat", None), getattr(n, "hero_id", None))
+            for n in (getattr(seat, "visual_nodes", None) or ())
+        )
+    return (
+        getattr(report, "goal", None),
+        getattr(report, "context", None),
+        getattr(report, "summary", None),
+        nodes,
+    )
 
 
 class FormationTab(QWidget):
@@ -100,6 +119,10 @@ class FormationTab(QWidget):
     def last_formation_empty(self) -> bool:
         return self._last_formation_empty
 
+    @property
+    def analysing(self) -> bool:
+        return self._analysing
+
     def on_snapshot(self, envelope: SnapshotEnvelope) -> None:
         force = "formation" in envelope.force_consumers
         fp = envelope.advice_fp
@@ -115,23 +138,26 @@ class FormationTab(QWidget):
             and self._has_results
             and not self._analysing
         )
+        # Detect party switch before the refresh gate — otherwise degraded polls
+        # can skip re-analysis and Advies keeps showing the previous party.
+        party_changed = (
+            self._last_party_id is not None
+            and envelope.party_id is not None
+            and envelope.party_id != self._last_party_id
+        )
         if not should_refresh_advice(
             force=force,
             first=first,
             changed=changed,
             empty_retry=empty_retry,
             degraded=envelope.degraded,
+            party_changed=party_changed,
         ):
             return
         if envelope.payload is None:
             if force and not envelope.auto_refresh:
                 self._status.setText(envelope.err or "No API data received.")
             return
-        party_changed = (
-            self._last_party_id is not None
-            and envelope.party_id is not None
-            and envelope.party_id != self._last_party_id
-        )
         self.start_analysis(
             envelope.payload,
             envelope.err,
@@ -194,7 +220,7 @@ class FormationTab(QWidget):
         context = read_shared_advice_context()
         self._pending_auto_refresh = auto_refresh
         self._running_advice_fp = advice_fp
-        self._analysing = True
+        self._set_analysing(True)
         self._last_payload = payload
         target = party_id_from_payload(payload)
         if party_changed:
@@ -202,6 +228,8 @@ class FormationTab(QWidget):
             self._status.setText(f"Party switched ({party_txt}) — loading formation…")
         elif not auto_refresh:
             self._status.setText("Loading formation…")
+        else:
+            self._status.setText("Updating formation…")
         shared_advice_hub().submit(
             goal=goal,
             context=context,
@@ -226,6 +254,10 @@ class FormationTab(QWidget):
         hint.setWordWrap(True)
         hint.setStyleSheet(f"color: {ui_theme.TEXT_MUTED};")
         status_row.addWidget(hint, stretch=1)
+        from ic_ui.widgets.busy_indicator import BusySpinner
+
+        self._busy_spinner = BusySpinner(self, size=14)
+        status_row.addWidget(self._busy_spinner, stretch=0)
         self._status = QLabel("Formatie laden… Refresh (F5) voor een update.")
         self._status.setWordWrap(False)
         self._status.setStyleSheet(f"color: {ui_theme.TEXT_MUTED};")
@@ -265,8 +297,10 @@ class FormationTab(QWidget):
         self._on_done((result.payload, result.report, result.err))
 
     def _on_done(self, result) -> None:
-        self._analysing = False
+        auto_refresh = self._pending_auto_refresh
+        self._set_analysing(False)
         payload, report, err = result
+        prev_key = _formation_render_key(self._last_report)
         self._last_report = report
         self._last_payload = payload
         self._has_results = True
@@ -285,8 +319,24 @@ class FormationTab(QWidget):
         if err:
             status = f"{status} · {err}"
         self._status.setText(status)
-        self._render_report(report, reset_scroll=True)
+        new_key = _formation_render_key(report)
+        if auto_refresh and prev_key is not None and prev_key == new_key:
+            # Same board — skip widget rebuild; still notify Advies for freshness.
+            self.formation_updated.emit()
+            self._drain_pending_analysis()
+        else:
+            # Yield so the title bar can paint before board/portrait rebuild.
+            QTimer.singleShot(
+                0,
+                lambda r=report, rs=not auto_refresh: self._finish_render(r, rs),
+            )
+
+    def _finish_render(self, report, reset_scroll: bool) -> None:
+        self._render_report(report, reset_scroll=reset_scroll)
         self.formation_updated.emit()
+        self._drain_pending_analysis()
+
+    def _drain_pending_analysis(self) -> None:
         pending = self._pending_analysis
         self._pending_analysis = None
         if pending is not None:
@@ -300,7 +350,7 @@ class FormationTab(QWidget):
             )
 
     def _on_error(self, msg: str) -> None:
-        self._analysing = False
+        self._set_analysing(False)
         self._running_advice_fp = None
         self._status.setText(msg)
         pending = self._pending_analysis
@@ -314,6 +364,13 @@ class FormationTab(QWidget):
                 party_changed=p_changed,
                 advice_fp=p_fp,
             )
+
+    def _set_analysing(self, busy: bool) -> None:
+        self._analysing = busy
+        if busy:
+            self._busy_spinner.start()
+        else:
+            self._busy_spinner.stop()
 
     def _render_report(self, report, *, reset_scroll: bool) -> None:
         self._clear()

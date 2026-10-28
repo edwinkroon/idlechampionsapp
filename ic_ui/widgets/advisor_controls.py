@@ -5,6 +5,7 @@ from __future__ import annotations
 import weakref
 
 from PySide6.QtCore import QSettings, Signal
+from PySide6.QtGui import QColor, QPalette
 from PySide6.QtWidgets import (
     QCheckBox,
     QComboBox,
@@ -13,6 +14,8 @@ from PySide6.QtWidgets import (
     QSizePolicy,
     QWidget,
 )
+
+from ic_ui import theme as ui_theme
 
 from ic_gamedata.advice_goals import (
     GOAL_COMBO_ITEMS,
@@ -96,12 +99,15 @@ class AdvisorGoalContextBar(QWidget):
         layout = QHBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(6)
-        self.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Fixed)
+        self.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
 
         self._goal = QComboBox()
         self._goal.setMinimumContentsLength(16)
         self._goal.setSizeAdjustPolicy(
             QComboBox.SizeAdjustPolicy.AdjustToMinimumContentsLengthWithIcon
+        )
+        self._goal.setSizePolicy(
+            QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed
         )
         self._goal.addItem("Kies doel…", None)
         for label, value in GOAL_COMBO_ITEMS:
@@ -112,8 +118,14 @@ class AdvisorGoalContextBar(QWidget):
         self._context.setSizeAdjustPolicy(
             QComboBox.SizeAdjustPolicy.AdjustToMinimumContentsLengthWithIcon
         )
+        self._context.setSizePolicy(
+            QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed
+        )
         for label, value in CONTEXT_ITEMS:
             self._context.addItem(label, value)
+
+        self._apply_combo_readable_palette(self._goal)
+        self._apply_combo_readable_palette(self._context)
 
         self._formation: QCheckBox | None = None
         if include_formation:
@@ -127,10 +139,14 @@ class AdvisorGoalContextBar(QWidget):
         self._goal.activated.connect(self._on_goal_activated)
         self._context.currentIndexChanged.connect(self._on_changed)
 
-        layout.addWidget(QLabel("Doel"))
+        self._goal_lbl = QLabel("Doel")
+        self._context_lbl = QLabel("Context")
+        layout.addWidget(self._goal_lbl)
         layout.addWidget(self._goal)
-        layout.addWidget(QLabel("Context"))
+        layout.addWidget(self._context_lbl)
         layout.addWidget(self._context)
+        self._apply_local_theme()
+        ui_theme.on_theme_changed(self._on_theme_changed)
         if self._formation is not None:
             layout.addWidget(self._formation)
 
@@ -146,6 +162,34 @@ class AdvisorGoalContextBar(QWidget):
 
         self._load_prefs()
         AdvisorGoalContextBar._live.add(self)
+
+    def _on_theme_changed(self, _mode: str) -> None:
+        self._apply_local_theme()
+
+    def _apply_local_theme(self) -> None:
+        muted = f"color: {ui_theme.TEXT_MUTED};"
+        self._goal_lbl.setStyleSheet(muted)
+        self._context_lbl.setStyleSheet(muted)
+        self._apply_combo_readable_palette(self._goal)
+        self._apply_combo_readable_palette(self._context)
+
+    @staticmethod
+    def _apply_combo_readable_palette(combo: QComboBox) -> None:
+        """Keep closed-state text readable under Windows QSS focus painting."""
+        palette = combo.palette()
+        text = QColor(ui_theme.TEXT_PRIMARY)
+        base = QColor(ui_theme.BG_INPUT)
+        for group in (QPalette.ColorGroup.Active, QPalette.ColorGroup.Inactive):
+            palette.setColor(group, QPalette.ColorRole.Text, text)
+            palette.setColor(group, QPalette.ColorRole.WindowText, text)
+            palette.setColor(group, QPalette.ColorRole.ButtonText, text)
+            palette.setColor(group, QPalette.ColorRole.Base, base)
+            palette.setColor(group, QPalette.ColorRole.Button, base)
+            palette.setColor(group, QPalette.ColorRole.Window, base)
+            # Focused closed combo must not flip to system HighlightedText.
+            palette.setColor(group, QPalette.ColorRole.HighlightedText, text)
+            palette.setColor(group, QPalette.ColorRole.Highlight, base)
+        combo.setPalette(palette)
 
     def _pref(self, name: str, *, key: str | None = None) -> str:
         return f"{key or self._settings_key}/{name}"
@@ -202,21 +246,25 @@ class AdvisorGoalContextBar(QWidget):
     def _apply_values(
         self, goal: str | None, context: str, *, emit: bool
     ) -> None:
+        changed = False
         self._syncing = True
         try:
             if goal is None:
                 if self._goal.currentIndex() != 0:
                     self._goal.setCurrentIndex(0)
+                    changed = True
             else:
                 g_idx = self._goal.findData(goal)
                 if g_idx >= 0 and self._goal.currentIndex() != g_idx:
                     self._goal.setCurrentIndex(g_idx)
+                    changed = True
             c_idx = self._context.findData(context)
             if c_idx >= 0 and self._context.currentIndex() != c_idx:
                 self._context.setCurrentIndex(c_idx)
+                changed = True
         finally:
             self._syncing = False
-        if emit:
+        if emit and changed:
             self.changed.emit()
 
     def _confirm_goal_choice(self, goal: str | None) -> None:
@@ -231,10 +279,17 @@ class AdvisorGoalContextBar(QWidget):
         self._update_migration_hint()
 
     def _on_goal_activated(self, index: int) -> None:
+        """Confirm migration when the same goal is re-chosen (no index change).
+
+        A real index change already went through ``currentIndexChanged`` →
+        ``_on_changed``; emitting again here caused a double refresh cascade.
+        """
         if self._syncing:
             return
         data = self._goal.itemData(index)
         if data is None:
+            return
+        if not self._needs_confirm:
             return
         self._confirm_goal_choice(str(data))
         for other in list(AdvisorGoalContextBar._live):
@@ -264,6 +319,7 @@ class AdvisorGoalContextBar(QWidget):
                 continue
             other._needs_confirm = self._needs_confirm
             other._migration_message = self._migration_message
+            # Emit only when sibling values actually change — source emits below.
             other._apply_values(goal, context, emit=True)
             other._update_migration_hint()
         self.changed.emit()

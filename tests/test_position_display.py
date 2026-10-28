@@ -13,7 +13,7 @@ from ic_gamedata.formation_ai_advice.clipboard_export import (
     extract_json_object,
     format_clipboard_markdown,
 )
-from ic_gamedata.formation_ai_advice.compact_clipboard import (
+from ic_gamedata.formation_ai_advice.export_clipboard import (
     ADVICE_TABLE_FORMAT,
     PROJECT_INSTRUCTIONS,
     build_advice_request_clipboard_text,
@@ -264,9 +264,12 @@ class ExportAndInstructionTests(unittest.TestCase):
         )
 
         md = format_clipboard_markdown(export, output_mode="json")
-        self.assertIn("| Plek | Champion |", md)
+        self.assertIn("| Plek | Champion | Specialisatie(s) |", md)
         self.assertIn(POSITION_DISPLAY_AI_INSTRUCTION[:40], md)
         self.assertIn("display_position", md.casefold())
+        self.assertIn("Hitch (seat 3)", md)
+        self.assertIn("Specialisatie(s)", POSITION_DISPLAY_AI_INSTRUCTION)
+        self.assertIn("Naam (seat N)", POSITION_DISPLAY_AI_INSTRUCTION)
 
     def test_advice_request_includes_mapping_and_instruction(self) -> None:
         snap = build_base_snapshot(self.payload, formation=self.formation)
@@ -280,33 +283,38 @@ class ExportAndInstructionTests(unittest.TestCase):
             fixed_main_dps_id=4,
         )
         geom = req["geometry"]
-        self.assertIn("position_display_convention", geom)
-        self.assertEqual(geom["position_display_convention"]["example"], "1-1")
-        positions = geom.get("positions") or []
+        # Same layout → thin live occupancy; display convention lives on BASE.
+        self.assertEqual(geom.get("ref"), "BASE_SNAPSHOT.geometry")
+        self.assertTrue(geom.get("layout_matches_base"))
+        self.assertIn("occupied", geom)
+        self.assertIn("position_display_convention", snap["geometry"])
+        self.assertEqual(
+            snap["geometry"]["position_display_convention"]["example"], "1-1"
+        )
+        positions = snap["geometry"].get("positions") or []
         self.assertTrue(any(p.get("display_position") for p in positions))
 
         text = build_advice_request_clipboard_text(req, mode="project")
-        self.assertIn("| Plek | Champion |", text)
-        self.assertIn("display_position", text.casefold())
+        self.assertIn("| Plek | Champion | Specialisatie(s) |", text)
         self.assertIn("kolom-plek", text.casefold())
         self.assertIn(ADVICE_TABLE_FORMAT[:50], text)
 
         project = build_project_instructions_clipboard_text()
-        self.assertIn("| Plek | Champion |", project)
+        self.assertIn("| Plek | Champion | Specialisatie(s) |", project)
         self.assertIn("import-JSON", project)
         self.assertIn(POSITION_DISPLAY_AI_INSTRUCTION[:30], PROJECT_INSTRUCTIONS)
 
     def test_table_plus_json_still_imports(self) -> None:
         pasted = """
-| Plek | Champion |
-| --- | --- |
-| 1-1 | Nayeli |
-| 2-1 | Celeste |
+| Plek | Champion | Specialisatie(s) |
+| --- | --- | --- |
+| 1-1 | Nayeli (seat 3) | Oath of Vengeance (advies) |
+| 2-1 | Celeste (seat 2) | War Domain (actief) |
 
 Korte uitleg: baseline behouden.
 
 ```json
-{"schema_version": "1.9", "request_id": "abc", "placements": [{"position_id": 1, "champion_id": 3}]}
+{"schema_version": "1.9", "request_id": "abc", "placements": [{"position_id": 1, "champion_id": 3}], "specializations": [{"champion_id": 3, "group_id": "tier_0", "option_id": 43}]}
 ```
 """
         data = extract_json_object(pasted)
@@ -315,6 +323,11 @@ Korte uitleg: baseline behouden.
         self.assertEqual(data["placements"][0]["position_id"], 1)
         # Import JSON must keep technical ids, not display notation.
         self.assertNotIn("display_position", data["placements"][0])
+        self.assertNotIn("name", data["placements"][0])
+        self.assertEqual(
+            data["specializations"][0],
+            {"champion_id": 3, "group_id": "tier_0", "option_id": 43},
+        )
 
 
 if __name__ == "__main__":

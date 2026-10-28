@@ -1,0 +1,92 @@
+{
+  "meta": {
+    "export_kind": "advice_request",
+    "export_schema_version": "1.1",
+    "note": "Synthetic example — not a live adventure state. Illustrates nine technical positions, seven champions, two escort blocks."
+  },
+  "party_size": 7,
+  "geometry": {
+    "ref": "BASE_SNAPSHOT.geometry",
+    "layout_matches_base": true,
+    "source": "example_slot_escort",
+    "valid_position_ids": [1, 2, 3, 4, 5, 6, 7, 8, 9],
+    "occupied": [
+      {"id": 1, "champion_id": 101},
+      {"id": 2, "champion_id": 102},
+      {"id": 3, "champion_id": 103},
+      {"id": 4, "champion_id": 104},
+      {"id": 5, "champion_id": 105},
+      {"id": 6, "champion_id": 106},
+      {"id": 7, "champion_id": 107}
+    ],
+    "slot_states": [
+      {
+        "position_id": 1,
+        "occupancy": "champion",
+        "placeability": "placeable",
+        "source": "party.position"
+      },
+      {
+        "position_id": 2,
+        "occupancy": "champion",
+        "placeability": "placeable",
+        "source": "party.position"
+      },
+      {
+        "position_id": 3,
+        "occupancy": "champion",
+        "placeability": "placeable",
+        "source": "party.position"
+      },
+      {
+        "position_id": 4,
+        "occupancy": "champion",
+        "placeability": "placeable",
+        "source": "party.position"
+      },
+      {
+        "position_id": 5,
+        "occupancy": "champion",
+        "placeability": "placeable",
+        "source": "party.position"
+      },
+      {
+        "position_id": 6,
+        "occupancy": "champion",
+        "placeability": "placeable",
+        "source": "party.position"
+      },
+      {
+        "position_id": 7,
+        "occupancy": "champion",
+        "placeability": "placeable",
+        "source": "party.position"
+      },
+      {
+        "position_id": 8,
+        "occupancy": "escort",
+        "placeability": "blocked",
+        "blocker": {"type": "escort"},
+        "reason": "Occupied by adventure escort (slot_escort)",
+        "source": "defines.adventure_defines.game_changes.slot_escort"
+      },
+      {
+        "position_id": 9,
+        "occupancy": "escort",
+        "placeability": "blocked",
+        "blocker": {"type": "escort"},
+        "reason": "Occupied by adventure escort (slot_escort)",
+        "source": "defines.adventure_defines.game_changes.slot_escort"
+      }
+    ],
+    "blocked_position_ids": [8, 9],
+    "available_position_ids": null,
+    "unknown_placeability_position_ids": null
+  },
+  "notes": [
+    "valid_position_ids is the full technical layout (includes escort seats).",
+    "available_position_ids is empty — do not treat 9 - 7 as two free champion slots.",
+    "NPC/escort id and name are null/omitted when the API does not supply them.",
+    "geometry.ref reuses BASE layout only; slot_states and occupied are always current."
+  ]
+}

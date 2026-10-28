@@ -92,6 +92,9 @@ class VisualSeatNode:
     is_bud: bool
     has_issue: bool
     is_active: bool
+    # Placeability overlay (NPC/escort/unknown). None = normal champion card.
+    # Values: "escort" | "npc" | "object" | "blocked" | "unknown_placeability"
+    slot_kind: str | None = None
 
 
 @dataclass(frozen=True)

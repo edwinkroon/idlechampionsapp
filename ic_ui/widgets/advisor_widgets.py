@@ -136,6 +136,7 @@ class FormationSeatCard(QFrame):
         clickable: bool = True,
     ) -> None:
         super().__init__(parent)
+        self.setObjectName("formationSeatCard")
         self._seat = seat
         self._clickable = clickable
         if clickable:
@@ -152,7 +153,7 @@ def _legend_swatch(color: str, *, border: str | None = None) -> QLabel:
     swatch.setFixedSize(12, 12)
     edge = border or color
     swatch.setStyleSheet(
-        f"background: {color}; border: 2px solid {edge}; border-radius: 3px;"
+        f"background: {color}; border: 1px solid {edge}; border-radius: 3px;"
     )
     return swatch
 
@@ -169,68 +170,78 @@ def _legend_item(color: str, label: str, *, border: str | None = None) -> QWidge
 
 def formation_board_legend(
     *,
-    issue_border_label: str = "aandachtspunt",
+    issue_border_label: str = "Aandacht",
     lang: str = "nl",
 ) -> QWidget:
-    """Explain zone backgrounds and border colors used on formation cards."""
+    """Compact legend: border meaning only (BUD / attention / normal)."""
     if lang == "en":
-        zone_labels = (
-            ("back", "back (away from enemies)"),
-            ("mid", "mid"),
-            ("front", "front (toward enemies)"),
-        )
-        border_items = (
-            (ui_theme.BUD_BORDER, "BUD / carry", ui_theme.BG_HOVER),
-            (ui_theme.ISSUE_BORDER, issue_border_label, ui_theme.BG_HOVER),
-            (ui_theme.BORDER_HOVER, "normal", ui_theme.BG_HOVER),
-        )
-        title = "Legend"
-        note = "Card colors only — no connection lines are drawn between seats."
+        short_issue = (issue_border_label or "Attention").split("(")[0].strip() or "Attention"
+        if len(short_issue) > 14:
+            short_issue = "Attention"
+        short_issue = short_issue[:1].upper() + short_issue[1:]
+        normal_label = "Normal"
     else:
-        zone_labels = (
-            ("back", "back (van vijanden af)"),
-            ("mid", "mid"),
-            ("front", "front (richting vijanden)"),
-        )
-        border_items = (
-            (ui_theme.BUD_BORDER, "BUD / carry", ui_theme.BG_HOVER),
-            (ui_theme.ISSUE_BORDER, issue_border_label, ui_theme.BG_HOVER),
-            (ui_theme.BORDER_HOVER, "normaal", ui_theme.BG_HOVER),
-        )
-        title = "Legenda"
-        note = (
-            "Alleen kaartkleuren betekenen iets — er worden geen "
-            "verbindingslijnen tussen seats getekend."
-        )
+        short_issue = (issue_border_label or "Aandacht").split("(")[0].strip() or "Aandacht"
+        if len(short_issue) > 14:
+            short_issue = "Aandacht"
+        short_issue = short_issue[:1].upper() + short_issue[1:]
+        normal_label = "Normaal"
 
     box = QWidget()
-    root = QVBoxLayout(box)
-    root.setContentsMargins(0, 4, 0, 0)
-    root.setSpacing(4)
-    root.addWidget(advisor_lbl(title, kind="muted"))
-
-    zones = QWidget()
-    zone_row = QHBoxLayout(zones)
-    zone_row.setContentsMargins(0, 0, 0, 0)
-    zone_row.setSpacing(10)
-    zone_row.addWidget(advisor_lbl("Zone:" if lang == "en" else "Zone:", kind="muted"))
-    for zone_key, zone_label in zone_labels:
-        bg = ui_theme.FORMATION_ZONE_BG.get(zone_key, ui_theme.BG_HOVER)
-        zone_row.addWidget(_legend_item(bg, zone_label, border=ui_theme.BORDER_HOVER))
-    zone_row.addStretch(1)
-    root.addWidget(zones)
-
-    borders = QWidget()
-    border_row = QHBoxLayout(borders)
-    border_row.setContentsMargins(0, 0, 0, 0)
-    border_row.setSpacing(10)
-    border_row.addWidget(advisor_lbl("Rand:" if lang != "en" else "Border:", kind="muted"))
-    for edge, label, fill in border_items:
-        border_row.addWidget(_legend_item(fill, label, border=edge))
-    border_row.addStretch(1)
-    root.addWidget(borders)
-    root.addWidget(advisor_lbl(note, kind="muted"))
+    row = QHBoxLayout(box)
+    row.setContentsMargins(0, 6, 0, 0)
+    row.setSpacing(12)
+    fill = ui_theme.BG_CARD
+    for edge, label in (
+        (ui_theme.BUD_BORDER, "BUD"),
+        (ui_theme.ISSUE_BORDER, short_issue),
+        (ui_theme.BORDER_HOVER, normal_label),
+    ):
+        row.addWidget(_legend_item(fill, label, border=edge))
+    row.addStretch(1)
     return box
+
+
+def _formation_board_spaced_xy(
+    nodes,
+    *,
+    card_w: int,
+    card_h: int,
+    gap: int = 10,
+) -> dict[int, tuple[float, float]]:
+    """Map seat → (x, y) for a staggered (diamond) formation.
+
+    Idle Champions boards alternate rows: same-column neighbors are typically
+    *two* y-steps apart (e.g. Thellora ↔ Shandie with Diana's row between).
+    Use a half-row vertical pitch so that same-column edge gap ≈ ``gap``,
+    matching the horizontal column gap — not ``2 × (card_h + gap)``.
+    """
+    if not nodes:
+        return {}
+    target_dx = float(card_w + gap)
+    # Half-row: two steps ⇒ card_h + gap between same-column origins ⇒ ~gap clear.
+    target_dy = float(card_h + gap) / 2.0
+    xs = sorted({float(n.x) for n in nodes})
+    ys = sorted({float(n.y) for n in nodes})
+    scale_x = 1.0
+    if len(xs) >= 2:
+        seps = [xs[i + 1] - xs[i] for i in range(len(xs) - 1) if xs[i + 1] > xs[i]]
+        if seps and min(seps) > 0:
+            scale_x = target_dx / min(seps)
+    scale_y = 1.0
+    if len(ys) >= 2:
+        seps = [ys[i + 1] - ys[i] for i in range(len(ys) - 1) if ys[i + 1] > ys[i]]
+        if seps and min(seps) > 0:
+            scale_y = target_dy / min(seps)
+    origin_x = min(float(n.x) for n in nodes)
+    origin_y = min(float(n.y) for n in nodes)
+    return {
+        int(n.seat): (
+            (float(n.x) - origin_x) * scale_x,
+            (float(n.y) - origin_y) * scale_y,
+        )
+        for n in nodes
+    }
 
 
 def add_formation_board(
@@ -250,12 +261,11 @@ def add_formation_board(
     """Render a formation grid board into ``layout`` (active or recommended).
 
     ``node_caption(node)`` / ``node_subcaption(node)`` override the default
-    ``Slot {seat} · {zone}`` header when provided (e.g. AI preview separates
+    ``Slot {seat}`` header when provided (e.g. AI preview separates
     physical position from champion F-seat).
 
-    Card background = formation zone (back/mid/front). Border: blue = BUD,
-    red = issue/changed (see ``issue_border_label``), grey = normal.
-    No adjacency lines are drawn between seats.
+    Neutral card fill; border: blue = BUD, red = issue/changed
+    (see ``issue_border_label``), grey = normal.
     """
     if not nodes:
         card = advisor_card()
@@ -266,83 +276,149 @@ def add_formation_board(
         return
 
     pad = 16
-    card_w, card_h = (112, 72) if node_caption is not None else (100, 58)
-    min_x = min(n.x for n in nodes)
-    min_y = min(n.y for n in nodes)
-    width = int(max(n.x for n in nodes) - min_x + card_w + pad * 2)
-    height = int(max(n.y for n in nodes) - min_y + card_h + pad * 2)
-    height = max(180, min(height, 520))
-    width = max(320, width)
+    gap = 10  # clear space between nearest card edges (incl. same-column pairs)
+    # Room for avatar + Slot/name/role; avatar matches text block height.
+    card_w, card_h = (156, 72) if node_caption is not None else (148, 68)
+    margin = 6
+    avatar_size = card_h - margin * 2
+    spaced = _formation_board_spaced_xy(
+        nodes, card_w=card_w, card_h=card_h, gap=gap
+    )
+    max_sx = max(xy[0] for xy in spaced.values()) if spaced else 0.0
+    max_sy = max(xy[1] for xy in spaced.values()) if spaced else 0.0
+    width = int(max_sx + card_w + pad * 2)
+    height = int(max_sy + card_h + pad * 2)
+    height = max(200, height)
+    width = max(360, width)
 
     shell = advisor_card()
     shell_lyt = advisor_card_layout(shell)
     if title:
         shell_lyt.addWidget(advisor_lbl(title, kind="subtitle"))
-    shell_lyt.addWidget(advisor_lbl(intro, kind="muted"))
+    if intro:
+        shell_lyt.addWidget(advisor_lbl(intro, kind="muted"))
 
     scroll = QScrollArea()
     scroll.setWidgetResizable(False)
     scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
-    scroll.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+    scroll.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
     scroll.setFrameShape(QFrame.Shape.NoFrame)
-    scroll.setFixedHeight(height)
+    # Show the full board when reasonable; scroll only for very tall layouts.
+    scroll.setFixedHeight(min(height, 560))
     scroll.setStyleSheet("QScrollArea { background: transparent; border: none; }")
 
     board = QWidget()
     board.setFixedSize(width, height)
     board.setStyleSheet(formation_board_stylesheet())
 
+    card_bg = ui_theme.BG_CARD
     clickable = on_seat_clicked is not None
     for node in nodes:
-        x = int((node.x - min_x) + pad)
-        y = int((node.y - min_y) + pad)
-        zone_bg = ui_theme.FORMATION_ZONE_BG.get(node.zone, ui_theme.BG_HOVER)
-        border = (
-            ui_theme.ISSUE_BORDER
-            if node.has_issue
-            else (ui_theme.BUD_BORDER if node.is_bud else ui_theme.BORDER_HOVER)
+        sx, sy = spaced.get(node.seat, (0.0, 0.0))
+        x = int(sx + pad)
+        y = int(sy + pad)
+        slot_kind = getattr(node, "slot_kind", None)
+        is_blocker = slot_kind in (
+            "npc",
+            "escort",
+            "object",
+            "blocked",
+            "unknown_placeability",
         )
+        if is_blocker:
+            if slot_kind == "unknown_placeability":
+                border = ui_theme.ISSUE_BORDER
+            else:
+                border = ui_theme.BORDER_HOVER
+        else:
+            border = (
+                ui_theme.ISSUE_BORDER
+                if node.has_issue
+                else (ui_theme.BUD_BORDER if node.is_bud else ui_theme.BORDER_HOVER)
+            )
         role = node.effective_role or node.inferred_role or "flex"
+        hero_id = getattr(node, "hero_id", None)
+        # Blocked / unknown seats are never clickable champion-add targets.
+        node_clickable = clickable and not is_blocker
 
-        seat_frame = FormationSeatCard(node.seat, board, clickable=clickable)
+        seat_frame = FormationSeatCard(node.seat, board, clickable=node_clickable)
         seat_frame.setGeometry(x, y, card_w, card_h)
         hover = (
-            f"QFrame:hover {{ border-color: {ui_theme.ACCENT}; }}" if clickable else ""
+            f"QFrame#formationSeatCard:hover {{ border-color: {ui_theme.ACCENT}; }}"
+            if node_clickable
+            else ""
         )
+        blocker_bg = ui_theme.BG_CARD_BOTTOM if is_blocker else card_bg
+        # Scope styles to the card only — child labels must stay borderless.
         seat_frame.setStyleSheet(
-            f"QFrame {{ background: {zone_bg}; border: 1px solid {border}; border-radius: 8px; }}"
+            f"QFrame#formationSeatCard {{"
+            f" background: {blocker_bg if is_blocker else card_bg};"
+            f" border: 1px solid {border};"
+            f" border-radius: 10px;"
+            f" {'border-style: dashed;' if is_blocker else ''}"
+            f"}}"
+            f"QFrame#formationSeatCard QLabel {{"
+            f" border: none;"
+            f" background: transparent;"
+            f" padding: 0;"
+            f" margin: 0;"
+            f"}}"
             f"{hover}"
         )
-        if on_seat_clicked is not None:
+        if node_clickable and on_seat_clicked is not None:
             seat_frame.clicked.connect(on_seat_clicked)
 
-        seat_lyt = QVBoxLayout(seat_frame)
-        seat_lyt.setContentsMargins(6, 4, 6, 4)
-        seat_lyt.setSpacing(2)
+        seat_lyt = QHBoxLayout(seat_frame)
+        seat_lyt.setContentsMargins(margin, margin, 8, margin)
+        seat_lyt.setSpacing(8)
+        if isinstance(hero_id, int) and hero_id > 0:
+            seat_lyt.addWidget(
+                advisor_portrait(hero_id, width=avatar_size, height=avatar_size),
+                alignment=Qt.AlignmentFlag.AlignVCenter,
+            )
+
+        text_col = QVBoxLayout()
+        text_col.setContentsMargins(0, 0, 0, 0)
+        text_col.setSpacing(1)
         if node_caption is not None:
             caption = str(node_caption(node) or "")
         else:
-            caption = f"Slot {node.seat} · {node.zone}"
-        seat_lyt.addWidget(advisor_lbl(caption, kind="muted"))
+            caption = f"Slot {node.seat}"
+        if caption:
+            text_col.addWidget(_formation_seat_label(caption, kind="muted"))
         if node_subcaption is not None:
             sub = str(node_subcaption(node) or "")
             if sub:
-                seat_lyt.addWidget(advisor_lbl(sub, kind="muted"))
-        name_lbl = advisor_lbl((node.hero_name or "?")[:14], kind="subtitle")
+                text_col.addWidget(_formation_seat_label(sub, kind="muted"))
+        name_lbl = _formation_seat_label((node.hero_name or "?")[:14], kind="subtitle")
         if node.is_bud:
             name_lbl.setProperty("advisorKind", "seat_name")
-            name_lbl.setStyleSheet(advisor_text_styles()["seat_name"])
-        seat_lyt.addWidget(name_lbl)
-        seat_lyt.addWidget(advisor_lbl(role_label(role), kind="muted"))
+            name_lbl.setStyleSheet(
+                advisor_text_styles()["seat_name"]
+                + " border: none; background: transparent; padding: 0;"
+            )
+        text_col.addWidget(name_lbl)
+        if is_blocker:
+            kind_label = {
+                "npc": "NPC",
+                "escort": "Escort",
+                "object": "Object",
+                "blocked": "Geblokkeerd",
+                "unknown_placeability": "Plaatsbaarheid onbekend",
+            }.get(str(slot_kind), "Geblokkeerd")
+            text_col.addWidget(_formation_seat_label(kind_label, kind="muted"))
+        else:
+            text_col.addWidget(_formation_seat_label(role_label(role), kind="muted"))
+        seat_lyt.addLayout(text_col, stretch=1)
 
     scroll.setWidget(board)
     shell_lyt.addWidget(scroll)
     if show_legend:
         if issue_border_label is None:
             issue_border_label = (
-                "attention / mismatch"
+                "Attention"
                 if legend_lang == "en"
-                else "aandachtspunt"
+                else "Aandacht"
             )
         shell_lyt.addWidget(
             formation_board_legend(
@@ -351,6 +427,17 @@ def add_formation_board(
             )
         )
     layout.addWidget(shell)
+
+
+def _formation_seat_label(text: str, *, kind: str = "body") -> QLabel:
+    """Label inside a seat card — no frame/border (outer card border is enough)."""
+    lbl = QLabel(text)
+    lbl.setWordWrap(False)
+    lbl.setProperty("advisorKind", kind)
+    styles = advisor_text_styles()
+    base = styles.get(kind, styles["body"])
+    lbl.setStyleSheet(f"{base} border: none; background: transparent; padding: 0;")
+    return lbl
 
 
 def advisor_lbl(text: str, *, kind: str = "body") -> QLabel:
@@ -437,10 +524,11 @@ def advisor_card_layout(card: QFrame, *, compact: bool = False) -> QVBoxLayout:
     if compact:
         # Slightly less bottom than top: last widgets (labels/buttons) already
         # carry font descent / button padding, which otherwise looks heavier.
-        lyt.setContentsMargins(0, 8, 12, 6)
+        lyt.setContentsMargins(4, 8, 12, 6)
         lyt.setSpacing(4)
     else:
-        lyt.setContentsMargins(0, 14, 16, 10)
+        # Left inset so content/tiles don't sit flush against the accent bar.
+        lyt.setContentsMargins(4, 14, 16, 12)
         lyt.setSpacing(8)
     return lyt
 

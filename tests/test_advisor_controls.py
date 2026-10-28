@@ -61,6 +61,38 @@ class AdvisorGoalContextBarTests(unittest.TestCase):
         # Scoring fallback must not invent gem_farm.
         self.assertEqual(bar.goal(), "push")
 
+    def test_goal_activated_does_not_double_emit_on_index_change(self) -> None:
+        """currentIndexChanged already emits; activated must not fire again."""
+        self._settings.setValue(f"{_SHARED_SETTINGS_KEY}/goal", "push")
+        self._settings.setValue(f"{_SHARED_SETTINGS_KEY}/goal_confirmed", True)
+        bar = AdvisorGoalContextBar()
+        self.addCleanup(lambda: AdvisorGoalContextBar._live.clear())
+        seen: list[str] = []
+        bar.changed.connect(lambda: seen.append(bar.goal()))
+
+        idx = bar._goal.findData("favor_farm")
+        self.assertGreaterEqual(idx, 0)
+        bar._goal.setCurrentIndex(idx)
+        # Simulate activated after index change (Qt order).
+        bar._on_goal_activated(idx)
+
+        self.assertEqual(seen, ["favor_farm"])
+
+    def test_goal_activated_emits_when_confirming_same_index(self) -> None:
+        """Re-selecting the proposed migration goal only fires activated."""
+        self._settings.setValue("advisor/goal", "bud")
+        bar = AdvisorGoalContextBar()
+        self.addCleanup(lambda: AdvisorGoalContextBar._live.clear())
+        self.assertTrue(bar.needs_goal_confirm())
+        seen: list[str] = []
+        bar.changed.connect(lambda: seen.append(bar.goal() or ""))
+
+        idx = bar._goal.currentIndex()
+        bar._on_goal_activated(idx)
+
+        self.assertFalse(bar.needs_goal_confirm())
+        self.assertEqual(len(seen), 1)
+
 
 class ClearAdvisorLayoutTests(unittest.TestCase):
     @classmethod

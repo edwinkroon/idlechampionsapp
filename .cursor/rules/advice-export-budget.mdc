@@ -1,0 +1,37 @@
+---
+description: Keep ADVICE_REQUEST clipboard exports within 17k UTF-8 bytes
+globs: "**/formation_ai_advice/**,**/advice_inline_export.py,**/advice_tab.py,**/test_*budget*,**/test_export_clipboard.py,**/test_advice_request*,**/test_export_flow.py"
+alwaysApply: false
+---
+
+# Advice export UTF-8 byte budget (17k)
+
+Product norm: the **entire** ADVICE_REQUEST clipboard string (instructions + fences + JSON) must stay ≤ **17 000 UTF-8 bytes** (`count_utf8_bytes` / `TextEncoder`). Soft target ~16 000 with reserve. Do not gate on `string.length` / `count_chars` alone — non-ASCII inflates bytes.
+
+Source of truth: `MAX_EXPORT_BYTES` / `DEFAULT_CHAR_BUDGET` in `ic_gamedata/formation_ai_advice/export_budget.py` (limit name `max_chars` is historical; the hard gate is UTF-8 bytes).
+
+Applies to **export mode** partijsetup copy only. BASE_SNAPSHOT / Basis bijwerken may exceed 17k.
+
+## Do
+
+- Treat 17k UTF-8 bytes as a hard product limit for typical 7-champ parties (including optional swap scope); aim ~16k with reserve (`TARGET_EXPORT_BYTES`).
+- When adding fields to ADVICE_REQUEST / export clipboard shape: shrink elsewhere, omit, or move stable data to BASE_SNAPSHOT — do not grow past budget.
+- Prefer drop/compact over silent truncation. Never mid-cut `effect` prose; use full omit + gap flags. Budget buff priority: A head / B condition / C own before D modifiers / E support noise.
+- Keep champion-details / large catalogs out of the request clipboard (BASE or optional details export).
+- After shape changes, keep budget tests / proof scripts green under 17k UTF-8 bytes (payloads in 16 001–17 000 must not be rejected solely for exceeding 16k).
+
+## Don't
+
+- Do not raise `MAX_EXPORT_BYTES` further to “make room” for new fields without an explicit product decision.
+- Do not rely on the UI spinbox / user prefs going above 17k as an excuse to ship larger defaults.
+- Do not embed full `answer_contract` or `goal_catalog` prose in REQUEST (thin refs to BASE only).
+- Do not embed full geometry layout in REQUEST when `layout_matches_base` (thin `geometry.ref` only). When the actuele layout differs, a full current geometry block is required and overrides BASE layout as a whole — still keep it lean (no invented coords; drop convention prose via `request_for_export` shrink).
+- Do not add verbose readiness/uncertainty prose when codes + ids suffice.
+- Do not apply the 17k gate to Basis bijwerken / BASE_SNAPSHOT.
+- Do not drop A/B hoofdbuffs to keep low-priority uncertain support noise.
+
+## Split reminder
+
+- **BASE_SNAPSHOT**: stable mechanics, catalogs, contract, standaard geometry layout, goal catalog.
+- **ADVICE_REQUEST**: live party, occupied seats, **slot_states / placeability** (NPC/escort blocks), specs, locks, goal/restrictions, constraints, eligibility, real mechanics deltas; plus full actuele geometry only when layout ≠ BASE (`overrides_base_snapshot_geometry` / `expected_state_override`). Thin `geometry.ref` still carries current `occupied` + `slot_states` — never inherit placeability from BASE.
+- **LLM**: phrasing, ranking judgments, boilerplate the model can infer from facts already present.

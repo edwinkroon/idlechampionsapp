@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from ic_gamedata.formation_ai_advice.compact_clipboard import (
+from ic_gamedata.formation_ai_advice.export_clipboard import (
     build_advice_request_clipboard_text,
     build_project_instructions_clipboard_text,
 )

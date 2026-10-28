@@ -1,4 +1,4 @@
-"""Acceptance tests for improved compact ADVICE_REQUEST export."""
+"""Acceptance tests for ADVICE_REQUEST export mode."""
 
 from __future__ import annotations
 
@@ -8,10 +8,10 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from ic_gamedata.formation_ai_advice.compact_clipboard import (
+from ic_gamedata.formation_ai_advice.export_clipboard import (
     AdviceRequestBudgetError,
     build_advice_request_clipboard_text,
-    compact_request_for_clipboard,
+    request_for_export,
 )
 from ic_gamedata.formation_ai_advice.export import gender_from_raw_tags
 from ic_gamedata.formation_ai_advice.export_budget import DEFAULT_CHAR_BUDGET, count_chars
@@ -22,7 +22,6 @@ from ic_gamedata.formation_ai_advice.export_validation import (
 from ic_gamedata.formation_ai_advice.models import SCHEMA_VERSION
 from ic_gamedata.formation_ai_advice.reply_contract import (
     build_answer_contract,
-    snapshot_expected_filename,
 )
 from ic_gamedata.formation_ai_advice.schema import FORMATION_ADVICE_JSON_SCHEMA
 from ic_gamedata.formation_ai_advice.snapshot_export import (
@@ -152,7 +151,7 @@ class AdviceRequestExportImprovementsTests(unittest.TestCase):
                 base_snapshot=snap,
             ), snap
 
-    def test_full_export_within_15k_with_warnings_and_full_party(self) -> None:
+    def test_full_export_within_16k_with_warnings_and_full_party(self) -> None:
         # Inject adventure that denies low DEX → many warnings when dex low.
         defines = self.payload.setdefault("defines", {})
         adventures = list(defines.get("adventure_defines") or [])
@@ -189,13 +188,14 @@ class AdviceRequestExportImprovementsTests(unittest.TestCase):
             labeled = mark_request_unvalidated(req, validation)
             text = build_advice_request_clipboard_text(labeled, mode="project")
             chars = count_chars(text)
+            utf8 = len(text.encode("utf-8"))
             self.assertLessEqual(
-                chars,
+                utf8,
                 DEFAULT_CHAR_BUDGET,
-                msg=f"swap={swap} chars={chars}",
+                msg=f"swap={swap} utf8={utf8} chars={chars}",
             )
             self.assertIn("answer_contract", text)
-            self.assertIn("expected_filename", text)
+            self.assertIn("snapshot_ref", text)
 
     def test_over_budget_raises_explicit_error_no_truncation(self) -> None:
         req, snap = self._build(swap=False)
@@ -226,25 +226,32 @@ class AdviceRequestExportImprovementsTests(unittest.TestCase):
         ref = req["meta"]["snapshot_ref"]
         sid = snap["meta"]["snapshot_id"]
         self.assertEqual(ref["snapshot_id"], sid)
-        self.assertEqual(ref["expected_filename"], snapshot_expected_filename(sid))
+        # No registry save in this helper → filename unknown (not invented from id).
+        self.assertIsNone(ref["expected_filename"])
         self.assertFalse(ref["contains_snapshot_body"])
         self.assertIn("mechanics_hash", ref)
         self.assertIn("account_state_hash", ref)
         safety = build_advice_request_clipboard_text(req, mode="project")
-        self.assertIn(ref["expected_filename"], safety)
+        self.assertIn("bestand onbekend", safety.casefold())
         self.assertIn("bevat die inhoud niet", safety.casefold())
+        self.assertNotIn(f"{sid}.json", safety)
 
     def test_display_position_not_confused_with_position_id(self) -> None:
-        req, _ = self._build()
-        contract = req["answer_contract"]
+        req, snap = self._build()
         self.assertEqual(
-            contract["semantics"]["position_id"],
+            snap["answer_contract"]["semantics"]["position_id"],
             "technisch_formatie_id_niet_display_niet_seat",
         )
-        for pos in req["geometry"]["positions"]:
+        self.assertEqual(req["answer_contract"].get("ref"), "BASE_SNAPSHOT.answer_contract")
+        self.assertEqual(req["geometry"].get("ref"), "BASE_SNAPSHOT.geometry")
+        for pos in snap["geometry"]["positions"]:
             self.assertIn("id", pos)
             self.assertIn("display_position", pos)
             self.assertNotEqual(pos.get("display_position"), pos.get("id"))
+        for occ in req["geometry"].get("occupied") or []:
+            self.assertIn("id", occ)
+            self.assertIn("champion_id", occ)
+            self.assertNotIn("display_position", occ)
         text = build_advice_request_clipboard_text(req, mode="project")
         self.assertIn("display_position", text.casefold())
         self.assertIn("technische position_id", text.casefold())
@@ -431,7 +438,7 @@ class AdviceRequestExportImprovementsTests(unittest.TestCase):
 
     def test_clipboard_keeps_required_fields(self) -> None:
         req, _ = self._build()
-        compact = compact_request_for_clipboard(req)
+        compact = request_for_export(req)
         self.assertIn("answer_contract", compact)
         self.assertNotIn("reply_contract", compact)
         self.assertIn("geometry", compact)

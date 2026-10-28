@@ -229,6 +229,45 @@ def _seat_by_hero(instance: dict[str, Any]) -> dict[int, int]:
 
 
 
+def formation_index_to_position_id(
+    nodes: list[dict[str, Any]],
+    formation_ids: list[int],
+    seat_by_hero: dict[int, int],
+) -> dict[int, int]:
+    """Map 0-based formation graph indices → technical position_ids (UI seats 1–12).
+
+    ``slot_escort.slot_ids`` / ``slot_id`` use this index space — never display
+    labels and never permanent F-keys as a separate namespace. Occupied grid
+    cells take ``hero_in_seats``; empty cells prefer ``index + 1`` then the
+    next free seat in 1..12 (same rule as the live topology bridge).
+    """
+    index_to_seat: dict[int, int] = {}
+    used_seats: set[int] = set()
+
+    for index, hero_id in enumerate(formation_ids):
+        if index >= len(nodes) or hero_id <= 0:
+            continue
+        seat = seat_by_hero.get(hero_id)
+        if seat is not None and seat not in used_seats:
+            index_to_seat[index] = seat
+            used_seats.add(seat)
+
+    for index in range(len(nodes)):
+        if index in index_to_seat:
+            continue
+        preferred = index + 1
+        if preferred not in used_seats and 1 <= preferred <= 12:
+            seat = preferred
+        else:
+            seat = next((s for s in range(1, 13) if s not in used_seats), None)
+            if seat is None:
+                continue
+        index_to_seat[index] = seat
+        used_seats.add(seat)
+
+    return index_to_seat
+
+
 def _bridge_seat_layout(
 
     nodes: list[dict[str, Any]],
@@ -246,30 +285,7 @@ def _bridge_seat_layout(
     Empty grid slots get a free seat id so adjacency stays complete and symmetric.
     """
 
-    index_to_seat: dict[int, int] = {}
-    used_seats: set[int] = set()
-
-    for index, hero_id in enumerate(formation_ids):
-        if index >= len(nodes) or hero_id <= 0:
-            continue
-        seat = seat_by_hero.get(hero_id)
-        if seat is not None and seat not in used_seats:
-            index_to_seat[index] = seat
-            used_seats.add(seat)
-
-    # Assign free seat ids to empty / unmapped node indices (prefer index+1).
-    for index in range(len(nodes)):
-        if index in index_to_seat:
-            continue
-        preferred = index + 1
-        if preferred not in used_seats and 1 <= preferred <= 12:
-            seat = preferred
-        else:
-            seat = next((s for s in range(1, 13) if s not in used_seats), None)
-            if seat is None:
-                continue
-        index_to_seat[index] = seat
-        used_seats.add(seat)
+    index_to_seat = formation_index_to_position_id(nodes, formation_ids, seat_by_hero)
 
     seat_column: dict[int, int] = {}
     seat_adjacency: dict[int, set[int]] = {}

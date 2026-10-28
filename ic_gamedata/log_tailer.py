@@ -31,6 +31,18 @@ class WebRequestLogTailer:
         self._carry = ""
         return snap
 
+    def adopt_bootstrap(
+        self,
+        snap: GameSnapshot | None,
+        *,
+        byte_offset: int,
+    ) -> GameSnapshot | None:
+        """Apply a bootstrap snapshot computed off the UI thread."""
+        self.last_snapshot = snap
+        self._offset = max(0, int(byte_offset))
+        self._carry = ""
+        return snap
+
     def reset(self) -> None:
         """Forget offset/carry after truncation or path change."""
         self._offset = 0

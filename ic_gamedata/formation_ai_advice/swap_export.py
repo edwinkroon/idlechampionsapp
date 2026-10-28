@@ -1,4 +1,4 @@
-"""Owned champion-swap advice export (auto roster coverage, max one swap).
+"""Owned champion-swap advice export (auto roster coverage, up to 3 swaps).
 
 Builds on the standard formation advice export without changing its behaviour.
 The AI selects which external owned champions to consider; the app supplies
@@ -25,8 +25,9 @@ from ic_gamedata.formation_advisor.context_builder import build_formation_layout
 from ic_gamedata.parsing import parse_int as _parse_int
 from ic_gamedata.party_advisor_models import FormationHero
 
-SWAP_SCOPE = "owned_roster_one_swap_search"
-SWAP_PROMPT_VERSION = f"{PROMPT_VERSION}-swap-auto1"
+MAX_SWAPS_PER_PROPOSAL = 3
+SWAP_SCOPE = "owned_roster_up_to_3_swap_search"
+SWAP_PROMPT_VERSION = f"{PROMPT_VERSION}-swap-auto3"
 
 EligibilityStatus = Literal["allowed", "denied", "unknown", "conflict"]
 InclusionClass = Literal[
@@ -74,6 +75,17 @@ def _loot_ilvl_map(payload: dict[str, Any]) -> dict[int, int]:
     if not isinstance(details, dict):
         return {}
     return _loot_ilvl_by_hero(details)
+
+
+def _loot_slot_ilvl_map(payload: dict[str, Any]) -> dict[int, dict[int, int]]:
+    try:
+        from ic_gamedata.party_advisor_formation import _loot_slot_ilvls_by_hero
+    except Exception:
+        return {}
+    details = payload.get("details")
+    if not isinstance(details, dict):
+        return {}
+    return _loot_slot_ilvls_by_hero(details)
 
 
 def _other_party_instance(
@@ -124,6 +136,7 @@ def _base_eligibility_for_heroes(
     hero_ids: list[int],
     *,
     adventure_id: int | None,
+    formation_hero_ids: frozenset[int] | None = None,
 ) -> dict[int, dict[str, Any]]:
     out: dict[int, dict[str, Any]] = {}
     if not hero_ids:
@@ -135,7 +148,11 @@ def _base_eligibility_for_heroes(
         )
 
         filt = build_adventure_roster_filter(payload, adventure_id)
-        for row in evaluate_heroes_against_filter(hero_ids, filt):
+        for row in evaluate_heroes_against_filter(
+            hero_ids,
+            filt,
+            formation_hero_ids=formation_hero_ids,
+        ):
             if isinstance(row, dict) and isinstance(row.get("champion_id"), int):
                 out[int(row["champion_id"])] = row
     except Exception:
@@ -236,7 +253,7 @@ def _seat_conflict_for_candidate(
             "status": "blocked_by_lock",
             "reason": (
                 f"Seat {candidate_seat} is bezet door vastgezette champion "
-                f"{occ_name or occ_id}; binnen één wissel niet inpasbaar."
+                f"{occ_name or occ_id}; niet inpasbaar zolang die seat gelockt is."
             ),
             "valid_one_swap": False,
             "must_replace_champion_id": occ_id,
@@ -246,7 +263,7 @@ def _seat_conflict_for_candidate(
         "status": "occupied_replaceable",
         "reason": (
             f"Seat {candidate_seat} is bezet door {occ_name or occ_id}; "
-            "bij één wissel moet die champion de verwijderde zijn."
+            "bij inbrengen moet die champion tot de verwijderde behoren."
         ),
         "valid_one_swap": True,
         "must_replace_champion_id": occ_id,
@@ -268,7 +285,8 @@ def _candidate_loadout_notes(champ: dict[str, Any]) -> dict[str, Any]:
         feats_status = "known"
         feats_note = (
             "Alleen bekende actieve feats; niet-actieve bezeten feats zijn niet "
-            "meegenomen (feats mogen niet wijzigen)."
+            "meegenomen. Feat-verbetervoorstellen mogen (may_change_feats=true); "
+            "noem onzekerheid als het alternatief ontbreekt in de gegevens."
         )
 
     specs = champ.get("specialization_groups") or []
@@ -299,8 +317,8 @@ def _candidate_loadout_notes(champ: dict[str, Any]) -> dict[str, Any]:
         "specialization_note": spec_note,
         "equipment_status": champ.get("equipment_status") or "unknown",
         "equipment_note": (
-            "Equipment-effecten ontbreken; gemiddeld itemniveau is geen "
-            "damagevermenigvuldiger."
+            "Equipment-effecten ontbreken; itemniveaus (gemiddeld/per slot) "
+            "zijn geen damagevermenigvuldigers."
         ),
         "live_stacks_status": "unknown",
         "live_stacks_note": (
@@ -348,7 +366,7 @@ def _classify_external(
             "excluded",
             str(
                 seat_vs.get("reason")
-                or "Permanente seat bezet door gelockte champion (één-wisselscope)."
+                or "Permanente seat bezet door gelockte champion (niet vervangbaar)."
             ),
         )
 
@@ -567,6 +585,7 @@ def build_swap_export_payload(
 
     scores_map, attack_map = _ability_score_and_attack_maps()
     ilvl_map = _loot_ilvl_map(payload)
+    slot_map = _loot_slot_ilvl_map(payload)
 
     goal_block = export.get("goal") if isinstance(export.get("goal"), dict) else {}
     campaign_id = (
@@ -635,6 +654,7 @@ def build_swap_export_payload(
                 payload,
                 hid,
                 ilvl=ilvl_map.get(hid),
+                slot_ilvls=slot_map.get(hid),
                 data_version=data_version,
             )
 
@@ -647,6 +667,7 @@ def build_swap_export_payload(
                     _hid,
                     current_position=None,
                     ilvl=ilvl_map.get(_hid),
+                    slot_ilvls=slot_map.get(_hid),
                     scores_map=scores_map,
                     attack_map=attack_map,
                 )
@@ -677,10 +698,11 @@ def build_swap_export_payload(
                 campaign_id=campaign_id,
                 campaign_name=campaign_name,
             )
+            candidate_seat = _permanent_seat(hid)
+            if candidate_seat is not None:
+                entry["seat"] = candidate_seat
             seat_vs = _seat_conflict_for_candidate(
-                candidate_seat=entry.get("seat")
-                if isinstance(entry.get("seat"), int)
-                else None,
+                candidate_seat=candidate_seat,
                 party_by_seat=party_by_seat,
                 locked_ids=locked,
                 main_dps_id=carry if isinstance(carry, int) else None,
@@ -699,8 +721,9 @@ def build_swap_export_payload(
                 "effective_reason": check.get("reason"),
                 "base_eligibility": check.get("status"),
             }
+            candidate_seat = _permanent_seat(hid)
             seat_vs = _seat_conflict_for_candidate(
-                candidate_seat=_permanent_seat(hid),
+                candidate_seat=candidate_seat,
                 party_by_seat=party_by_seat,
                 locked_ids=locked,
                 main_dps_id=carry if isinstance(carry, int) else None,
@@ -727,9 +750,7 @@ def build_swap_export_payload(
         class_row = {
             "champion_id": hid,
             "name": (entry or {}).get("name") or name,
-            "seat": (entry or {}).get("seat")
-            if entry is not None
-            else _permanent_seat(hid),
+            "seat": _permanent_seat(hid),
             "classification": klass,
             "reason": klass_reason,
             "eligibility": (
@@ -849,7 +870,7 @@ def build_swap_export_payload(
 
     export["constraints"] = {
         "may_replace_champions": True,
-        "max_swaps_per_proposal": 1,
+        "max_swaps_per_proposal": MAX_SWAPS_PER_PROPOSAL,
         "proposals_are_independent": True,
         "proposals_must_start_from_same_baseline_party": True,
         "may_add_or_remove_champions": False,
@@ -861,7 +882,7 @@ def build_swap_export_payload(
         "main_dps_id": carry,
         "fixed_main_dps_id": carry,
         "main_dps_locked": isinstance(carry, int),
-        "may_change_feats": False,
+        "may_change_feats": True,
         "may_change_equipment": False,
         "may_change_main_dps": not isinstance(carry, int),
         "max_one_champion_per_permanent_seat": True,
@@ -877,11 +898,11 @@ def build_swap_export_payload(
     }
 
     export["swap"] = {
-        "mode": "one_owned_champion_swap_auto_roster",
+        "mode": "owned_champion_swap_auto_roster",
         "candidate_selection": (
             "automatic_owned_external" if subset is None else "optional_advanced_subset"
         ),
-        "max_swaps_per_proposal": 1,
+        "max_swaps_per_proposal": MAX_SWAPS_PER_PROPOSAL,
         "max_proposals_suggested": 3,
         "fixed_champion_ids": sorted(locked),
         "main_dps_id": carry,
@@ -932,6 +953,17 @@ def build_swap_export_payload(
     export["candidates"] = candidates_out
 
     export["gaps"] = _decision_gaps(export) or None
+    from ic_gamedata.formation_ai_advice.export import _attach_research_gaps
+    from ic_gamedata.formation_ai_advice.research_mode import normalize_research_mode
+
+    mode = normalize_research_mode(
+        (export.get("meta") or {}).get("research_mode")
+        if isinstance(export.get("meta"), dict)
+        else research_mode
+    )
+    if isinstance(export.get("meta"), dict):
+        export["meta"]["research_mode"] = mode
+    _attach_research_gaps(export, research_mode=mode)
     status, issues, dimensions = _readiness_issues(export)
     export["readiness"] = {
         "status": status,

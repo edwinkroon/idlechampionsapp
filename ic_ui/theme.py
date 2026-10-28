@@ -521,22 +521,48 @@ def _write_combo_down_arrow_png(path: Path, color: str) -> None:
     image.save(str(path), "PNG")
 
 
-def _indicator_image_urls() -> tuple[str, str, str]:
-    """Checked checkbox / radio / combo-arrow images for QSS."""
+def _write_spin_arrow_png(path: Path, color: str, *, direction: str) -> None:
+    """Up/down chevron for QSpinBox — native arrows vanish under QSS."""
+    from PySide6.QtCore import QPointF, Qt
+    from PySide6.QtGui import QBrush, QImage, QPainter, QPolygonF
+
+    image = QImage(16, 10, QImage.Format.Format_ARGB32)
+    image.fill(Qt.GlobalColor.transparent)
+    painter = QPainter(image)
+    painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+    painter.setPen(Qt.PenStyle.NoPen)
+    painter.setBrush(QBrush(QColor(color)))
+    if direction == "up":
+        points = [QPointF(2, 8), QPointF(14, 8), QPointF(8, 2)]
+    else:
+        points = [QPointF(2, 2), QPointF(14, 2), QPointF(8, 8)]
+    painter.drawPolygon(QPolygonF(points))
+    painter.end()
+    image.save(str(path), "PNG")
+
+
+def _indicator_image_urls() -> tuple[str, str, str, str, str]:
+    """Checked checkbox / radio / combo + spin arrow images for QSS."""
     assets = _assets_dir()
     check_path = assets / "checkbox_checked.png"
     radio_path = assets / "radio_checked.png"
     arrow_path = assets / "combo_down_arrow.png"
+    spin_up_path = assets / "spin_up_arrow.png"
+    spin_down_path = assets / "spin_down_arrow.png"
     if not check_path.exists():
         _write_checkbox_checked_png(check_path)
     if not radio_path.exists():
         _write_radio_checked_png(radio_path)
     # Always rewrite: arrow color follows the active theme's muted text.
     _write_combo_down_arrow_png(arrow_path, TEXT_MUTED)
+    _write_spin_arrow_png(spin_up_path, TEXT_MUTED, direction="up")
+    _write_spin_arrow_png(spin_down_path, TEXT_MUTED, direction="down")
     return (
         _qss_image_url(check_path),
         _qss_image_url(radio_path),
         _qss_image_url(arrow_path),
+        _qss_image_url(spin_up_path),
+        _qss_image_url(spin_down_path),
     )
 
 
@@ -546,7 +572,7 @@ def global_app_stylesheet() -> str:
         f"stop:0 {BG_PAGE_TOP}, stop:1 {BG_PAGE_BOTTOM})"
     )
     card_bg = card_background_qss()
-    check_img, radio_img, combo_arrow = _indicator_image_urls()
+    check_img, radio_img, combo_arrow, spin_up, spin_down = _indicator_image_urls()
     font_family = resolve_ui_font_family()
     return f"""
 QMainWindow, QDialog {{
@@ -705,12 +731,38 @@ QComboBox, QLineEdit, QSpinBox, QDoubleSpinBox {{
 }}
 QComboBox {{
   padding-right: 28px;
+  /* Closed-state text: Windows+QSS often paints focus as HighlightedText.
+     Keep selected text readable on the input background (not system highlight). */
+  selection-background-color: {BG_INPUT};
+  selection-color: {TEXT_PRIMARY};
+}}
+QComboBox:!editable, QComboBox:!editable:on, QComboBox:!editable:focus {{
+  background: {BG_INPUT};
+  color: {TEXT_PRIMARY};
+  selection-background-color: {BG_INPUT};
+  selection-color: {TEXT_PRIMARY};
+}}
+QComboBox:editable, QComboBox:editable:on, QComboBox:editable:focus {{
+  background: {BG_INPUT};
+  color: {TEXT_PRIMARY};
+}}
+QComboBox QLineEdit {{
+  background: transparent;
+  color: {TEXT_PRIMARY};
+  border: none;
+  padding: 0;
+  selection-background-color: {ACCENT};
+  selection-color: #ffffff;
+}}
+QSpinBox, QDoubleSpinBox {{
+  padding-right: 22px;
 }}
 QComboBox:hover, QLineEdit:hover, QSpinBox:hover, QDoubleSpinBox:hover {{
   border-color: {BORDER_HOVER};
 }}
 QComboBox::drop-down {{
   border: none;
+  background: transparent;
   width: 22px;
   subcontrol-origin: padding;
   subcontrol-position: center right;
@@ -719,6 +771,38 @@ QComboBox::down-arrow {{
   image: url("{combo_arrow}");
   width: 12px;
   height: 12px;
+}}
+QSpinBox::up-button, QDoubleSpinBox::up-button {{
+  subcontrol-origin: border;
+  subcontrol-position: top right;
+  width: 18px;
+  border: none;
+  border-left: 1px solid {BORDER};
+  border-top-right-radius: 7px;
+  background: {BG_BADGE};
+}}
+QSpinBox::down-button, QDoubleSpinBox::down-button {{
+  subcontrol-origin: border;
+  subcontrol-position: bottom right;
+  width: 18px;
+  border: none;
+  border-left: 1px solid {BORDER};
+  border-bottom-right-radius: 7px;
+  background: {BG_BADGE};
+}}
+QSpinBox::up-button:hover, QDoubleSpinBox::up-button:hover,
+QSpinBox::down-button:hover, QDoubleSpinBox::down-button:hover {{
+  background: {BG_HOVER};
+}}
+QSpinBox::up-arrow, QDoubleSpinBox::up-arrow {{
+  image: url("{spin_up}");
+  width: 10px;
+  height: 6px;
+}}
+QSpinBox::down-arrow, QDoubleSpinBox::down-arrow {{
+  image: url("{spin_down}");
+  width: 10px;
+  height: 6px;
 }}
 QComboBox QAbstractItemView {{
   background: {BG_CARD};
@@ -897,20 +981,36 @@ QFrame#advisorCard QComboBox#advisorRoleCombo {{
   min-height: 26px;
   min-width: 72px;
   max-width: 108px;
+  selection-background-color: {BG_INPUT};
+  selection-color: {TEXT_PRIMARY};
+}}
+QFrame#advisorCard QComboBox:!editable,
+QFrame#advisorCard QComboBox:!editable:on,
+QFrame#advisorCard QComboBox:!editable:focus,
+QFrame#advisorCard QComboBox#advisorRoleCombo:!editable,
+QFrame#advisorCard QComboBox#advisorRoleCombo:!editable:on,
+QFrame#advisorCard QComboBox#advisorRoleCombo:!editable:focus {{
+  background: {BG_INPUT};
+  color: {TEXT_PRIMARY};
+  selection-background-color: {BG_INPUT};
+  selection-color: {TEXT_PRIMARY};
 }}
 QFrame#advisorCard QComboBox:hover,
 QFrame#advisorCard QComboBox#advisorRoleCombo:hover {{
   border: 1px solid {BORDER};
   background: {BG_HOVER};
+  color: {TEXT_PRIMARY};
 }}
 QFrame#advisorCard QComboBox:on,
 QFrame#advisorCard QComboBox#advisorRoleCombo:on {{
   border: 1px solid {BORDER};
+  color: {TEXT_PRIMARY};
 }}
 QFrame#advisorCard QComboBox:focus,
 QFrame#advisorCard QComboBox#advisorRoleCombo:focus {{
   border: 1px solid {BORDER};
   outline: none;
+  color: {TEXT_PRIMARY};
 }}
 QFrame#advisorCard QComboBox::drop-down,
 QFrame#advisorCard QComboBox#advisorRoleCombo::drop-down {{
@@ -1034,7 +1134,8 @@ def portrait_placeholder_stylesheet() -> str:
 
 
 def formation_board_stylesheet() -> str:
-    return f"background: {BG_INPUT}; border: 1px solid {BORDER}; border-radius: 8px;"
+    """Transparent board so seat cards read as separate tiles, not one slab."""
+    return "background: transparent; border: none;"
 
 
 def area_progress_bar_stylesheet(*, complete: bool = False) -> str:

@@ -2,11 +2,14 @@ from __future__ import annotations
 
 import os
 import sys
+from collections.abc import Callable
 
 from PySide6.QtCore import QProcess, QSettings, QTimer, Qt, Signal
-from PySide6.QtGui import QAction, QActionGroup, QKeySequence
+from PySide6.QtGui import QAction, QActionGroup, QClipboard, QGuiApplication, QKeySequence
 from PySide6.QtWidgets import (
     QApplication,
+    QDialog,
+    QDialogButtonBox,
     QHBoxLayout,
     QLabel,
     QMainWindow,
@@ -16,6 +19,8 @@ from PySide6.QtWidgets import (
     QPushButton,
     QStatusBar,
     QTabWidget,
+    QToolButton,
+    QVBoxLayout,
     QWidget,
 )
 
@@ -26,7 +31,6 @@ from ic_ui.tabs.automation_tab import AutomationTab
 from ic_ui.tabs.dashboard_tab import DashboardTab
 from ic_ui.tabs.formation_tab import FormationTab
 from ic_ui.tabs.sources_tab import SourcesTab
-from ic_ui.tabs.specializations_tab import SpecializationsTab
 from ic_ui.theme import (
     ThemeMode,
     apply_button_icon,
@@ -37,8 +41,9 @@ from ic_ui.theme import (
 )
 from ic_ui import theme as ui_theme
 from ic_ui.button_icons import status_dot_icon
+from ic_ui.ui_action_log import format_diagnose_clipboard, note_ui_action
 
-_ALL_ADVICE_CONSUMERS = frozenset({"advisor", "specializations", "formation"})
+_ALL_ADVICE_CONSUMERS = frozenset({"advisor", "formation"})
 _REFRESH_DONE_MS = 2500
 
 
@@ -46,6 +51,9 @@ _SETTINGS_ORG = "IdleChampions"
 _SETTINGS_APP = "Companion"
 _THEME_KEY = "ui/theme"
 _TAB_KEY = "ui/last_tab"
+_TAB_LAYOUT_VERSION_KEY = "ui/tab_layout_version"
+# Bump when visible tabs change so old last_tab indices are not reused blindly.
+_TAB_LAYOUT_VERSION = 3
 _GEOMETRY_KEY = "ui/geometry"
 _GEOMETRY_VERSION_KEY = "ui/geometry_version"
 # Bump when default size changes so existing installs pick up the new height once.
@@ -60,22 +68,36 @@ class IdleChampionsMainWindow(QMainWindow):
     _caption_refresh = Signal()
     _formation_sync = Signal(object)
 
-    def __init__(self) -> None:
+    def __init__(
+        self,
+        *,
+        on_progress: Callable[[str], None] | None = None,
+    ) -> None:
         super().__init__()
+        report = on_progress or (lambda _msg: None)
+
+        def step(message: str) -> None:
+            report(message)
+            QApplication.processEvents()
+
         self.setWindowTitle("Idle Champions")
         self.resize(_DEFAULT_WIDTH, _DEFAULT_HEIGHT)
         self.setMinimumSize(_MIN_WIDTH, _MIN_HEIGHT)
         self._caption_refresh.connect(self._refresh_app_caption_from_snapshots)
         self._settings = QSettings(_SETTINGS_ORG, _SETTINGS_APP)
 
+        step("Preparing data service…")
         self._data = GameDataService(self)
         self._fetch_inflight = False
         self._data.snapshot_updated.connect(self._on_snapshot_updated)
         self._data.fetch_failed.connect(self._on_fetch_failed)
         self._data.fetch_state_changed.connect(self._on_fetch_state_changed)
 
-        self._sources_tab = SourcesTab()
+        step("Loading sources…")
+        self._sources_tab = SourcesTab(self)
+        self._sources_tab.hide()
 
+        step("Loading Automation…")
         self._automation_tab = AutomationTab()
         self._automation_tab.indicator_changed.connect(self._set_automation_tab_indicator)
         self._automation_tab.api_poll_requested.connect(
@@ -83,6 +105,7 @@ class IdleChampionsMainWindow(QMainWindow):
         )
         self._formation_sync.connect(self._automation_tab.sync_fkeys_from_payload)
 
+        step("Loading Dashboard…")
         self._dashboard_tab = DashboardTab(self._sources_tab, data_service=self._data)
         self._dashboard_tab.payload_updated.connect(self._on_dashboard_payload)
         self._dashboard_tab.caption_refresh.connect(self._refresh_app_caption_from_snapshots)
@@ -93,33 +116,32 @@ class IdleChampionsMainWindow(QMainWindow):
         self._sources_tab.connect_refresh(self._dashboard_tab.refresh_install)
 
         tabs = QTabWidget()
+        step("Loading Coach…")
         self._advisor_tab = AdvisorTab(self._dashboard_tab, data_service=self._data)
-        self._specializations_tab = SpecializationsTab(
-            self._dashboard_tab, data_service=self._data
+        # Formation analysis still feeds Advies; no longer a visible tab.
+        step("Loading formation tools…")
+        self._formation_tab = FormationTab(
+            self._dashboard_tab, parent=self, data_service=self._data
         )
-        self._formation_tab = FormationTab(self._dashboard_tab, data_service=self._data)
+        self._formation_tab.hide()
+        step("Loading Advies…")
         self._advice_tab = AdviceTab(self._formation_tab)
         self._advisor_tab.advice_resync_requested.connect(self._resync_advice_after_role_change)
 
         tabs.addTab(self._automation_tab, "Automation")
         tabs.addTab(self._dashboard_tab, "Dashboard")
-        tabs.addTab(self._formation_tab, "Formation")
         tabs.addTab(self._advice_tab, "Advies")
-        tabs.addTab(self._advisor_tab, "Party Advisor")
-        tabs.addTab(self._specializations_tab, "Specializations")
-        tabs.addTab(self._sources_tab, "Sources")
+        tabs.addTab(self._advisor_tab, "Coach")
         tabs.setTabToolTip(0, "Auto-level, progress, abilities (Ctrl+1)")
         tabs.setTabToolTip(1, "Live party status, Modron progress, rates (Ctrl+2)")
-        tabs.setTabToolTip(2, "Active and optimal formation (Ctrl+3)")
-        tabs.setTabToolTip(3, "Externe AI: export, plak, voor/na (Ctrl+4)")
-        tabs.setTabToolTip(4, "Seat roles, tips, and feats (Ctrl+5)")
-        tabs.setTabToolTip(5, "Specialization choices and tips (Ctrl+6)")
-        tabs.setTabToolTip(6, "Install path, log, and memory hint (Ctrl+7)")
+        tabs.setTabToolTip(2, "Externe AI: kopieer partijsetup, plak voorstel (Ctrl+3)")
+        tabs.setTabToolTip(3, "Seats, feats, better champs, specializations (Ctrl+4)")
         self._tabs = tabs
         self._set_automation_tab_indicator("off")
         on_theme_changed(lambda _mode: self._set_automation_tab_indicator())
         self._install_global_refresh_button(tabs)
         self.setCentralWidget(tabs)
+        step("Finishing window…")
         self._build_menu_bar()
         self._build_status_bar()
         self._restore_geometry()
@@ -127,13 +149,30 @@ class IdleChampionsMainWindow(QMainWindow):
         tabs.currentChanged.connect(self._on_tab_changed)
 
         self._data.start_polling()
-        from PySide6.QtCore import QTimer
+        # Install detect + credentials can take a while — run after the window
+        # is visible so startup does not sit on a blank/hung frame.
+        QTimer.singleShot(0, self._startup_after_show)
 
-        QTimer.singleShot(300, self._dashboard_tab.auto_start)
-        self._dashboard_tab.refresh_install()
+    def _startup_after_show(self) -> None:
+        bar = self.statusBar()
+        if bar is not None:
+            bar.showMessage("Detecting game install and credentials…", 0)
+        # Install detect runs on a worker; clear the status once it finishes.
+        dash = self._dashboard_tab
+
+        def _clear_when_idle() -> None:
+            if getattr(dash, "_install_detect_inflight", False):
+                QTimer.singleShot(150, _clear_when_idle)
+                return
+            if bar is not None:
+                bar.clearMessage()
+            dash.auto_start()
+
+        dash.refresh_install()
+        QTimer.singleShot(150, _clear_when_idle)
 
     def _install_global_refresh_button(self, tabs: QTabWidget) -> None:
-        """Refresh control at the far right of the tab bar — updates every tab."""
+        """Refresh + diagnose-copy at the far right of the tab bar."""
         self._global_refresh_pending = False
         self._refresh_done_timer = QTimer(self)
         self._refresh_done_timer.setSingleShot(True)
@@ -142,7 +181,21 @@ class IdleChampionsMainWindow(QMainWindow):
         corner = QWidget()
         row = QHBoxLayout(corner)
         row.setContentsMargins(0, 2, 8, 2)
-        row.setSpacing(0)
+        row.setSpacing(4)
+        row.setAlignment(Qt.AlignmentFlag.AlignRight)
+
+        copy_btn = QToolButton()
+        copy_btn.setAutoRaise(True)
+        copy_btn.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonIconOnly)
+        apply_button_icon(copy_btn, "copy", size=16)
+        copy_btn.setToolTip(
+            "Kopieer UI-diagnose naar het klembord (laatste actie + tab-status).\n"
+            "Plak dat in de Cursor-chat bij Not Responding / haperingen."
+        )
+        copy_btn.clicked.connect(self._copy_ui_diagnose)
+        row.addWidget(copy_btn)
+        self._btn_diag_copy = copy_btn
+
         btn = QPushButton("Refresh")
         style_primary_button(btn)
         apply_button_icon(btn, "refresh")
@@ -160,8 +213,7 @@ class IdleChampionsMainWindow(QMainWindow):
     @staticmethod
     def _global_refresh_idle_tooltip() -> str:
         return (
-            "Refresh all game data: Dashboard, Formation, Party Advisor, and "
-            "Specializations (F5).\n"
+            "Refresh all game data: Dashboard, Advies, and Coach (F5).\n"
             "Fetches getuserdetails from the game API — usually a second or two, "
             "not instantaneous."
         )
@@ -190,10 +242,82 @@ class IdleChampionsMainWindow(QMainWindow):
         # GameDataService does not expose inflight; mirror via button/fetch signals.
         return bool(getattr(self, "_fetch_inflight", False))
 
+    def _copy_ui_diagnose(self) -> None:
+        """Copy a paste-ready diagnose block for the AI chat."""
+        note_ui_action("Diagnose gekopieerd")
+        text = format_diagnose_clipboard(
+            active_tab=self._active_tab_label(),
+            extra_lines=self._diagnose_extra_lines(),
+        )
+        clipboard = QGuiApplication.clipboard()
+        ok = False
+        if clipboard is not None:
+            try:
+                clipboard.setText(text, QClipboard.Mode.Clipboard)
+                ok = True
+            except Exception:
+                ok = False
+        bar = self.statusBar()
+        if bar is not None:
+            if ok:
+                bar.showMessage(
+                    "UI-diagnose gekopieerd — plak in de Cursor-chat.",
+                    5000,
+                )
+            else:
+                bar.showMessage("Klembord schrijven mislukt.", 5000)
+
+    def _active_tab_label(self) -> str:
+        idx = self._tabs.currentIndex()
+        if idx < 0:
+            return "(geen)"
+        return self._tabs.tabText(idx) or f"tab {idx}"
+
+    def _diagnose_extra_lines(self) -> tuple[str, ...]:
+        lines: list[str] = []
+        try:
+            from ic_ui.widgets.advisor_controls import (
+                read_shared_advice_context,
+                read_shared_advice_goal,
+            )
+
+            goal = read_shared_advice_goal() or "(niet bevestigd)"
+            ctx = read_shared_advice_context()
+            lines.append(f"Doel/context: {goal} / {ctx}")
+        except Exception:
+            pass
+        lines.append(
+            f"API fetch bezig: {'ja' if self._data_fetch_inflight() else 'nee'}"
+        )
+        lines.append(
+            f"Global refresh pending: {'ja' if self._global_refresh_pending else 'nee'}"
+        )
+        for label, tab in (
+            ("Formation analysing", self._formation_tab),
+            ("Coach analysing", self._advisor_tab),
+        ):
+            analysing = bool(getattr(tab, "analysing", False))
+            lines.append(f"{label}: {'ja' if analysing else 'nee'}")
+        latest = self._data.latest
+        if latest is not None:
+            age = ""
+            if latest.last_success_at:
+                import time as _time
+
+                age = f", leeftijd {max(0, int(_time.time() - latest.last_success_at))}s"
+            lines.append(
+                f"Snapshot v{latest.version}{age}"
+                + (f", degraded={latest.degraded}" if latest.degraded else "")
+            )
+        else:
+            lines.append("Snapshot: (nog geen)")
+        return tuple(lines)
+
     def _refresh_all(self) -> None:
         """One poll + forced re-analyze for every advice surface."""
         if self._global_refresh_pending or not self._btn_global_refresh.isEnabled():
             return
+        note_ui_action("Refresh all (F5)")
         self._refresh_done_timer.stop()
         self._global_refresh_pending = True
         self._set_global_refresh_visual("busy")
@@ -218,23 +342,16 @@ class IdleChampionsMainWindow(QMainWindow):
             from ic_gamedata.advice_fingerprint import advice_fingerprint
 
             fp = advice_fingerprint(cached)
-            # Shared hub coalesces identical jobs — all three tabs join one analyze.
+            # Shared hub coalesces — Formation (hidden) + Coach join one analyze.
             self._formation_tab.start_analysis(
-                cached, None, auto_refresh=False, advice_fp=fp
-            )
-            self._specializations_tab.start_analysis(
                 cached, None, auto_refresh=False, advice_fp=fp
             )
             self._advisor_tab.start_analysis(
                 cached, None, auto_refresh=False, advice_fp=fp
             )
         else:
-            for tab in (
-                self._advisor_tab,
-                self._formation_tab,
-                self._specializations_tab,
-            ):
-                tab.notify_waiting_for_data()
+            self._advisor_tab.notify_waiting_for_data()
+            self._formation_tab.notify_waiting_for_data()
 
         self._data.request_poll(
             reason="global_refresh",
@@ -308,7 +425,7 @@ class IdleChampionsMainWindow(QMainWindow):
         self._formation_sync.emit(payload)
 
     def _resync_advice_after_role_change(self) -> None:
-        """Role prefs changed: one shared analyze for Formation / Advisor / Specs."""
+        """Role prefs changed: one shared analyze for Formation (hidden) + Coach."""
         payload = self._data.last_payload
         if payload is None:
             return
@@ -318,16 +435,23 @@ class IdleChampionsMainWindow(QMainWindow):
         self._formation_tab.start_analysis(
             payload, None, auto_refresh=True, advice_fp=fp
         )
-        self._specializations_tab.start_analysis(
-            payload, None, auto_refresh=True, advice_fp=fp
-        )
         self._advisor_tab.start_analysis(
             payload, None, auto_refresh=True, advice_fp=fp
         )
 
     def _on_snapshot_updated(self, envelope: SnapshotEnvelope) -> None:
+        """Apply a new API snapshot without blocking the title bar in one chunk.
+
+        First-poll ingest + Coach/Formation kickoff can be heavy; yield to the
+        event loop between steps so Windows does not mark the window hung.
+        """
         if envelope.credentials is not None:
             self._dashboard_tab.credentials = envelope.credentials
+        self._finish_global_refresh(envelope)
+        # Defer heavy consumers so fetch_state / paint can run first.
+        QTimer.singleShot(0, lambda env=envelope: self._apply_snapshot_deferred(env))
+
+    def _apply_snapshot_deferred(self, envelope: SnapshotEnvelope) -> None:
         if envelope.degraded:
             # Keep serving cached party data; only refresh status text.
             self._dashboard_tab.api_detail = envelope.api_detail or ""
@@ -343,10 +467,9 @@ class IdleChampionsMainWindow(QMainWindow):
             )
             if envelope.payload is not None:
                 self._caption_refresh.emit()
-        self._advisor_tab.on_snapshot(envelope)
-        self._specializations_tab.on_snapshot(envelope)
-        self._formation_tab.on_snapshot(envelope)
-        self._finish_global_refresh(envelope)
+        # Stagger advice tabs so their first start_analysis/render do not stack.
+        QTimer.singleShot(0, lambda env=envelope: self._formation_tab.on_snapshot(env))
+        QTimer.singleShot(0, lambda env=envelope: self._advisor_tab.on_snapshot(env))
 
     def _on_fetch_failed(self, err: str) -> None:
         self._dashboard_tab.api_detail = err
@@ -421,6 +544,11 @@ class IdleChampionsMainWindow(QMainWindow):
         self._theme_light_action = light_action
         self._sync_theme_menu()
         view_menu.addSeparator()
+        settings_action = QAction("Settings…", self)
+        settings_action.setToolTip("Install path, log, and memory hint")
+        settings_action.triggered.connect(self._show_settings_dialog)
+        view_menu.addAction(settings_action)
+        view_menu.addSeparator()
         reload_action = QAction("Reload app", self)
         reload_action.setShortcut(QKeySequence("Ctrl+R"))
         reload_action.setToolTip("Close the app and start again")
@@ -440,6 +568,27 @@ class IdleChampionsMainWindow(QMainWindow):
         self.setMenuBar(menu_bar)
         self._bind_tab_shortcuts()
 
+    def _show_settings_dialog(self) -> None:
+        """Former Sources tab — install path / memory hint."""
+        dialog = QDialog(self)
+        dialog.setWindowTitle("Settings")
+        dialog.resize(520, 360)
+        layout = QVBoxLayout(dialog)
+        layout.addWidget(self._sources_tab)
+        self._sources_tab.show()
+        buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Close)
+        close_btn = buttons.button(QDialogButtonBox.StandardButton.Close)
+        if close_btn is not None:
+            close_btn.clicked.connect(dialog.accept)
+        buttons.rejected.connect(dialog.reject)
+        layout.addWidget(buttons)
+        try:
+            dialog.exec()
+        finally:
+            # Keep SourcesTab owned by the main window (not destroyed with dialog).
+            self._sources_tab.setParent(self)
+            self._sources_tab.hide()
+
     def _bind_tab_shortcuts(self) -> None:
         for index in range(min(9, self._tabs.count())):
             action = QAction(self)
@@ -452,7 +601,7 @@ class IdleChampionsMainWindow(QMainWindow):
         self._status_theme = QLabel("")
         self._status_version = QLabel("")
         self._status_hint = QLabel(
-            "F5 refresh all · Ctrl+1…7 tabs · Ctrl+R reload · Help → Keyboard shortcuts"
+            "F5 refresh · Ctrl+1…4 tabs · View → Settings · Ctrl+R reload"
         )
         bar.addWidget(self._status_theme, 0)
         bar.addWidget(self._status_version, 0)
@@ -486,16 +635,27 @@ class IdleChampionsMainWindow(QMainWindow):
         self._settings.setValue(_GEOMETRY_VERSION_KEY, _GEOMETRY_VERSION)
 
     def _restore_last_tab(self) -> None:
+        try:
+            layout_ver = int(self._settings.value(_TAB_LAYOUT_VERSION_KEY, 0) or 0)
+        except (TypeError, ValueError):
+            layout_ver = 0
         raw = self._settings.value(_TAB_KEY, 1)
         try:
             index = int(raw)
         except (TypeError, ValueError):
             index = 1
+        if layout_ver < _TAB_LAYOUT_VERSION:
+            # Old layout had Formation/Specs/Sources — default to Dashboard.
+            index = 1
+            self._settings.setValue(_TAB_LAYOUT_VERSION_KEY, _TAB_LAYOUT_VERSION)
         if 0 <= index < self._tabs.count():
             self._tabs.setCurrentIndex(index)
+        self._settings.setValue(_TAB_LAYOUT_VERSION_KEY, _TAB_LAYOUT_VERSION)
 
     def _on_tab_changed(self, index: int) -> None:
         self._settings.setValue(_TAB_KEY, index)
+        name = self._tabs.tabText(index) if 0 <= index < self._tabs.count() else "?"
+        note_ui_action(f"Tab → {name}")
 
     def _sync_theme_menu(self) -> None:
         mode = current_theme()
@@ -547,8 +707,9 @@ class IdleChampionsMainWindow(QMainWindow):
             self,
             "Keyboard shortcuts",
             "F5 — refresh all game data and advice\n"
-            "Ctrl+1 … Ctrl+7 — switch tabs\n"
+            "Ctrl+1 … Ctrl+4 — Automation / Dashboard / Advies / Coach\n"
             "Ctrl+R — reload app\n"
+            "View → Settings — install path & memory hint\n"
             "View → Dark/Light — switch theme\n\n"
             "Automation:\n"
             "• Ctrl held = pause\n"
@@ -614,9 +775,35 @@ def _load_saved_theme() -> ThemeMode:
 
 
 def run_pyside_app() -> int:
+    # Prefer the newly started process: close any leftover companion instance
+    # (older exe / previous pythonw app_launcher) before the splash/UI appears.
+    try:
+        from ic_ui.single_instance import ensure_single_instance
+
+        ensure_single_instance()
+    except Exception:
+        # Startup must not fail if process enumeration is unavailable.
+        pass
+
     app = QApplication.instance() or QApplication(sys.argv)
     app.setStyle("Fusion")
     apply_theme(_load_saved_theme(), app)
-    window = IdleChampionsMainWindow()
-    window.show()
+
+    from ic_ui.widgets.startup_splash import StartupSplash
+
+    splash = StartupSplash()
+    splash.present()
+    splash.set_status("Starting…")
+
+    # Keep a reference so the window is not GC'd; build after the splash has
+    # mapped so Windows actually shows it (sync construction before exec hid it).
+    hold: dict[str, IdleChampionsMainWindow] = {}
+
+    def _build_main_window() -> None:
+        window = IdleChampionsMainWindow(on_progress=splash.set_status)
+        hold["window"] = window
+        window.show()
+        splash.finish(window)
+
+    QTimer.singleShot(50, _build_main_window)
     return app.exec()

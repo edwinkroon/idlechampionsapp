@@ -32,6 +32,8 @@ class SharedAdviceHubTests(unittest.TestCase):
         started: list[object] = []
         done_a: list[SharedAdviceResult] = []
         done_b: list[SharedAdviceResult] = []
+        busy_events: list[bool] = []
+        hub.busy_changed.connect(busy_events.append)
 
         with mock.patch("ic_ui.workers.shared_advice.QThreadPool") as pool_cls:
             pool_cls.globalInstance.return_value.start.side_effect = started.append
@@ -44,6 +46,7 @@ class SharedAdviceHubTests(unittest.TestCase):
                 on_done=done_a.append,
                 on_error=lambda _m: None,
             )
+            self.assertTrue(hub.busy)
             hub.submit(
                 goal="bud",
                 context="campaign",
@@ -55,6 +58,7 @@ class SharedAdviceHubTests(unittest.TestCase):
             )
 
         self.assertEqual(len(started), 1)
+        self.assertEqual(busy_events, [True])
         result = SharedAdviceResult(
             payload=payload,
             report=object(),
@@ -68,6 +72,8 @@ class SharedAdviceHubTests(unittest.TestCase):
         self.assertEqual(len(done_b), 1)
         self.assertIs(done_a[0], result)
         self.assertIs(done_b[0], result)
+        self.assertFalse(hub.busy)
+        self.assertEqual(busy_events, [True, False])
 
     def test_different_fingerprint_queues_next_job(self) -> None:
         hub = AdviceAnalysisHub()

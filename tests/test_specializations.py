@@ -13,6 +13,7 @@ from ic_gamedata.specializations import (
     _current_choices,
     format_specialization_advice,
     load_specialization_rules,
+    hero_has_open_specialization_prompt,
     pending_specializations,
 )
 
@@ -81,6 +82,25 @@ class SpecializationsTests(unittest.TestCase):
 
         pending = pending_specializations(payload, self.rules)
         self.assertEqual(pending, [])
+
+    def test_hero_has_open_specialization_prompt_for_fkey(self) -> None:
+        payload = json.loads(json.dumps(self.payload))
+        gale = next(h for h in payload["details"]["heroes"] if int(h["hero_id"]) == 147)
+        gale["level"] = 300
+        gale["specialization_choices"] = ["14576"]
+        gale["upgrades"] = []
+        self.assertTrue(hero_has_open_specialization_prompt(payload, 147))
+        gale["specialization_choices"] = [14576, 14580]
+        self.assertFalse(hero_has_open_specialization_prompt(payload, 147))
+        self.assertFalse(hero_has_open_specialization_prompt(None, 147))
+
+    def test_open_spec_prompt_when_bench_level_missing(self) -> None:
+        payload = json.loads(json.dumps(self.payload))
+        gale = next(h for h in payload["details"]["heroes"] if int(h["hero_id"]) == 147)
+        gale["level"] = 0
+        gale["specialization_choices"] = []
+        gale["upgrades"] = []
+        self.assertTrue(hero_has_open_specialization_prompt(payload, 147))
 
     def test_pending_clears_tier_when_choice_only_in_upgrades(self) -> None:
         payload = json.loads(json.dumps(self.payload))

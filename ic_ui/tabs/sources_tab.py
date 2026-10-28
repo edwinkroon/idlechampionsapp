@@ -46,8 +46,8 @@ class SourcesTab(QWidget):
         root.addWidget(source)
 
         tip = QLabel(
-            "Tip: start Idle Champions first. If credentials or memory offsets are missing, "
-            "use Search again. Manual path is only needed when auto-detect fails."
+            "Start Idle Champions first. Search again als auto-detect faalt; "
+            "Memory UI hint is optioneel."
         )
         tip.setWordWrap(True)
         tip.setObjectName("sourcesTip")

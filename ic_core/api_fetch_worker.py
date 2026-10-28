@@ -48,6 +48,25 @@ class ApiFetchRunnable(QRunnable):
                 self._log_path,
                 self._tailer,
             )
+            # Fingerprint / quality on the worker so the UI slot stays light.
+            advice_fp = None
+            party_id = None
+            quality = None
+            if isinstance(payload, dict):
+                try:
+                    from ic_gamedata.advice_fingerprint import (
+                        advice_fingerprint,
+                        party_id_from_payload,
+                    )
+                    from ic_gamedata.payload_quality import assess_payload_quality
+
+                    advice_fp = advice_fingerprint(payload)
+                    party_id = party_id_from_payload(payload)
+                    quality = assess_payload_quality(payload)
+                except Exception:
+                    advice_fp = None
+                    party_id = None
+                    quality = None
             self.signals.done.emit(
                 {
                     "generation": self._generation,
@@ -57,6 +76,9 @@ class ApiFetchRunnable(QRunnable):
                     "snap": snap,
                     "err": err,
                     "api_detail": api_detail,
+                    "advice_fp": advice_fp,
+                    "party_id": party_id,
+                    "quality": quality,
                 }
             )
         except Exception as exc:

@@ -1,4 +1,4 @@
-"""Tests for compact clipboard budget, preview identity, and part splits."""
+"""Tests for export clipboard budget, preview identity, and part splits."""
 
 from __future__ import annotations
 
@@ -8,7 +8,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from ic_gamedata.formation_ai_advice.compact_clipboard import (
+from ic_gamedata.formation_ai_advice.export_clipboard import (
     ADVICE_TABLE_FORMAT,
     build_advice_request_clipboard_text,
     build_champion_details_clipboard_text,
@@ -117,8 +117,8 @@ class CompactClipboardBuildersTests(unittest.TestCase):
         self._tmpdir.cleanup()
 
     def test_headers_and_instructions_count_toward_budget(self) -> None:
-        from ic_gamedata.formation_ai_advice.compact_clipboard import (
-            compact_request_for_clipboard,
+        from ic_gamedata.formation_ai_advice.export_clipboard import (
+            request_for_export,
         )
         from ic_gamedata.formation_ai_advice.snapshot_export import minify_json
 
@@ -131,7 +131,7 @@ class CompactClipboardBuildersTests(unittest.TestCase):
             goal="push",
             fixed_main_dps_id=4,
         )
-        body_only = minify_json(compact_request_for_clipboard(req))
+        body_only = minify_json(request_for_export(req))
         full = build_advice_request_clipboard_text(req, mode="standalone")
         self.assertGreater(count_chars(full), count_chars(body_only))
         self.assertIn(safety_instruction(snap["meta"]["snapshot_id"]), full)
@@ -152,7 +152,9 @@ class CompactClipboardBuildersTests(unittest.TestCase):
         # Dialog uses try_loss_free_shrink then copies that exact string.
         again = try_loss_free_shrink(text)
         self.assertEqual(shrunk, again)
-        info = evaluate_clipboard_budget(shrunk, max_chars=count_chars(shrunk))
+        info = evaluate_clipboard_budget(
+            shrunk, max_chars=count_utf8_bytes(shrunk)
+        )
         self.assertTrue(info["within_budget"])
 
     def test_advice_request_requires_position_table_format(self) -> None:
@@ -165,15 +167,17 @@ class CompactClipboardBuildersTests(unittest.TestCase):
             goal="push",
             fixed_main_dps_id=4,
         )
-        header = "| Plek | Champion |"
+        header = "| Plek | Champion | Specialisatie(s) |"
         for mode in ("project", "standalone"):
             text = build_advice_request_clipboard_text(req, mode=mode)
             self.assertIn(header, text)
             self.assertIn(ADVICE_TABLE_FORMAT, text)
             self.assertIn("display_position", text.casefold())
+            self.assertIn("specialisatie", text.casefold())
         project = build_project_instructions_clipboard_text()
         self.assertIn(header, project)
         self.assertIn("kolom-plek", project.casefold())
+        self.assertIn("Specialisatie(s)", project)
 
     def test_no_snapshot_means_no_silent_ai_availability_claim(self) -> None:
         # Registry empty → no last snapshot.
@@ -181,7 +185,7 @@ class CompactClipboardBuildersTests(unittest.TestCase):
         self.assertIsNone(reg.get("last_snapshot_id"))
         # Safety text never claims the AI has the file.
         note = safety_instruction("snap_abc")
-        self.assertIn("ontbreekt of onleesbaar", note.casefold())
+        self.assertIn("onleesbaar", note.casefold())
         self.assertIn("verzin geen mechanics", note.casefold())
         self.assertNotIn("ai heeft", note.casefold())
 
@@ -247,6 +251,82 @@ class CompactClipboardBuildersTests(unittest.TestCase):
         self.assertIn("permanente seat", folded)
         self.assertIn("geen automatische hoofd-dps-lock", folded)
         self.assertIn("verzin geen schadewinst", folded)
+
+    def test_project_instructions_include_swap_workflow(self) -> None:
+        from ic_gamedata.formation_ai_advice.export_clipboard import (
+            SWAP_ADVICE_WORKFLOW,
+            SWAP_SCOPE_TOKEN,
+        )
+
+        text = build_project_instructions_clipboard_text()
+        self.assertIn(SWAP_SCOPE_TOKEN, text)
+        self.assertIn(SWAP_ADVICE_WORKFLOW, text)
+        folded = text.casefold()
+        self.assertIn("swapafweging", folded)
+        self.assertIn("included_candidate_ids", folded)
+        self.assertIn("geen webresearch", folded)
+
+    def test_swap_scope_clipboard_embeds_workflow(self) -> None:
+        from ic_gamedata.formation_ai_advice.export_budget import (
+            MAX_EXPORT_BYTES,
+            count_utf8_bytes,
+        )
+        from ic_gamedata.formation_ai_advice.export_clipboard import (
+            SWAP_ADVICE_WORKFLOW_CLIPBOARD,
+            SWAP_SCOPE_TOKEN,
+        )
+
+        snap = build_base_snapshot(self.payload, formation=self.formation)
+        req = build_advice_request(
+            self.payload,
+            self.formation,
+            snapshot_id=snap["meta"]["snapshot_id"],
+            snapshot_meta=snap["meta"],
+            base_snapshot=snap,
+            goal="push",
+            fixed_main_dps_id=4,
+            include_swap_scope=True,
+        )
+        self.assertEqual(
+            (req.get("meta") or {}).get("scope"),
+            SWAP_SCOPE_TOKEN,
+        )
+        for mode in ("project", "standalone"):
+            text = build_advice_request_clipboard_text(req, mode=mode)
+            self.assertIn(SWAP_SCOPE_TOKEN, text)
+            self.assertIn(SWAP_ADVICE_WORKFLOW_CLIPBOARD, text)
+            folded = text.casefold()
+            self.assertIn("swapafweging", folded)
+            self.assertIn("included_candidate_ids", folded)
+            self.assertIn("max_swaps_per_proposal", text)
+            self.assertIn("provided_data_only", folded)
+            self.assertIn("geen webresearch", folded)
+            # Prompt workflow itself must stay compact (JSON may still cite defs).
+            self.assertLess(
+                count_utf8_bytes(SWAP_ADVICE_WORKFLOW_CLIPBOARD),
+                2_000,
+            )
+            self.assertLessEqual(count_utf8_bytes(text), MAX_EXPORT_BYTES)
+
+    def test_selected_only_clipboard_omits_swap_workflow(self) -> None:
+        from ic_gamedata.formation_ai_advice.export_clipboard import (
+            SWAP_ADVICE_WORKFLOW,
+        )
+
+        snap = build_base_snapshot(self.payload, formation=self.formation)
+        req = build_advice_request(
+            self.payload,
+            self.formation,
+            snapshot_id=snap["meta"]["snapshot_id"],
+            snapshot_meta=snap["meta"],
+            base_snapshot=snap,
+            goal="push",
+            fixed_main_dps_id=4,
+            include_swap_scope=False,
+        )
+        text = build_advice_request_clipboard_text(req, mode="project")
+        self.assertNotIn(SWAP_ADVICE_WORKFLOW, text)
+        self.assertNotIn("Swapzoekopdracht", text)
 
 
 if __name__ == "__main__":

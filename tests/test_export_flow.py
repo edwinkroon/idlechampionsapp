@@ -8,7 +8,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from ic_gamedata.formation_ai_advice.compact_clipboard import (
+from ic_gamedata.formation_ai_advice.export_clipboard import (
     build_advice_request_clipboard_text,
     evaluate_clipboard_budget,
 )
@@ -29,6 +29,7 @@ from ic_gamedata.formation_ai_advice.snapshot_freshness import (
 from ic_gamedata.formation_ai_advice.snapshot_store import (
     get_exported_snapshot_meta,
     load_snapshot_registry,
+    save_base_snapshot_to_basisgegevens,
     save_snapshot_to_path,
     set_user_declared_shared,
 )
@@ -78,7 +79,7 @@ def _mutate_active_feats(payload: dict, hero_id: int) -> None:
         return
 
 
-class CompactExportFlowTests(unittest.TestCase):
+class ExportFlowTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
         path = Path(__file__).resolve().parent / "fixtures" / "webRequestLog_example.json"
@@ -95,6 +96,7 @@ class CompactExportFlowTests(unittest.TestCase):
         root = Path(self._tmpdir.name)
         self.registry_path = root / "advice_snapshot_registry.json"
         self.snapshots_dir = root / "advice_snapshots"
+        self.basisgegevens_dir = root / "basisgegevens"
         self.cache_path = root / "owned_roster_cache.json"
         self._patches = [
             patch(
@@ -104,6 +106,10 @@ class CompactExportFlowTests(unittest.TestCase):
             patch(
                 "ic_gamedata.formation_ai_advice.snapshot_store.ADVICE_SNAPSHOTS_DIR",
                 self.snapshots_dir,
+            ),
+            patch(
+                "ic_gamedata.formation_ai_advice.snapshot_store.BASISGEGEVENS_DIR",
+                self.basisgegevens_dir,
             ),
             patch(
                 "ic_gamedata.formation_ai_advice.owned_roster_cache.OWNED_ROSTER_CACHE_PATH",
@@ -179,7 +185,7 @@ class CompactExportFlowTests(unittest.TestCase):
                 {
                     "chars": chars1,
                     "budget": DEFAULT_CHAR_BUDGET,
-                    "within_15k": chars1 <= DEFAULT_CHAR_BUDGET,
+                    "within_16k": chars1 <= DEFAULT_CHAR_BUDGET,
                     "party_size": len(req1["party"]),
                     "owned_in_fixture": len(
                         [
@@ -383,6 +389,30 @@ class CompactExportFlowTests(unittest.TestCase):
         empty = assess_snapshot_freshness(self.payload, self.formation)
         self.assertEqual(empty.status, SnapshotFreshnessStatus.NO_SNAPSHOT)
 
+    def test_basisgegevens_export_clears_old_files(self) -> None:
+        """Basis bijwerken always writes to basisgegevens and drops prior files."""
+        from datetime import datetime
+
+        self.basisgegevens_dir.mkdir(parents=True, exist_ok=True)
+        stale = self.basisgegevens_dir / "basicdata_01012026_120000.json"
+        stale.write_text('{"meta":{"snapshot_id":"snap_old"}}\n', encoding="utf-8")
+        nested = self.basisgegevens_dir / "sub"
+        nested.mkdir()
+        (nested / "extra.json").write_text("{}", encoding="utf-8")
+
+        snap = build_base_snapshot(self.payload, formation=self.formation)
+        sid = snap["meta"]["snapshot_id"]
+        when = datetime(2026, 10, 21, 9, 48, 15)
+        saved = save_base_snapshot_to_basisgegevens(snap, when=when)
+        expected_name = "basicdata_21102026_094815.json"
+        self.assertEqual(saved, self.basisgegevens_dir / expected_name)
+        self.assertTrue(saved.is_file())
+        remaining = sorted(p.name for p in self.basisgegevens_dir.iterdir())
+        self.assertEqual(remaining, [expected_name])
+        reg = load_snapshot_registry()
+        self.assertEqual(reg["last_exported_snapshot_id"], sid)
+        self.assertEqual(Path(reg["last_exported_path"]), saved)
+
     def test_request_does_not_inherit_stale_party_from_snapshot(self) -> None:
         snap = build_base_snapshot(self.payload, formation=self.formation)
         save_snapshot_to_path(snap, Path(self._tmpdir.name) / "a.json")
@@ -452,23 +482,31 @@ class CompactExportFlowTests(unittest.TestCase):
         elig = req["roster_eligibility"]
         allowed = set(elig.get("allowed_ids") or [])
         denied_ids = {row["id"] for row in (elig.get("denied") or [])}
+        for group in elig.get("denied_groups") or []:
+            if isinstance(group, dict):
+                denied_ids.update(group.get("ids") or [])
         summary = (req.get("goal") or {}).get("restriction_text") or ""
         structured = (req.get("goal") or {}).get("structured_restrictions") or {}
         # Label path: Max not Min.
         blob = json.dumps(structured) + summary
         self.assertNotIn("Min. INT 11", blob)
+        party_ids = {h.hero_id for h in self.formation}
         if 59 in {
             int(h["hero_id"])
             for h in payload["details"]["heroes"]
             if h.get("owned") in ("1", 1, True)
         }:
+            # Non-party high INT stays denied by the static gate.
             self.assertIn(59, denied_ids)
             self.assertNotIn(59, allowed)
-        # INT 11 allowed, INT 12 denied when those ids are owned/evaluated.
-        if 3 in allowed or 3 in denied_ids:
-            self.assertIn(3, allowed)
-        if 4 in allowed or 4 in denied_ids:
-            self.assertIn(4, denied_ids)
+        # Presence ≠ permission: Jarlaxle INT 12 fails max INT 11; others pass.
+        self.assertIn(4, denied_ids)
+        self.assertNotIn(4, allowed)
+        self.assertIn(2, allowed)
+        self.assertIn(3, allowed)
+        self.assertNotIn(2, denied_ids)
+        self.assertNotIn(3, denied_ids)
+        self.assertEqual(party_ids, {2, 3, 4})
 
 
 class ExportValidationUnitTests(unittest.TestCase):

@@ -8,7 +8,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from ic_gamedata.formation_ai_advice.compact_clipboard import (
+from ic_gamedata.formation_ai_advice.export_clipboard import (
     AdviceRequestBudgetError,
     build_advice_request_clipboard_text,
 )
@@ -151,26 +151,41 @@ class AnswerContractInRequestTests(unittest.TestCase):
         return req, snap
 
     def test_every_advice_request_contains_answer_contract(self) -> None:
-        req, _ = self._request()
+        req, snap = self._request()
         self.assertEqual(req["meta"]["export_kind"], "advice_request")
         self.assertIn("answer_contract", req)
         self.assertNotIn("reply_contract", req)
         contract = req["answer_contract"]
+        self.assertEqual(contract["ref"], "BASE_SNAPSHOT.answer_contract")
         self.assertEqual(contract["request_id_exact"], req["meta"]["request_id"])
         self.assertEqual(
             contract["snapshot_id_echo"], req["meta"]["snapshot_ref"]["snapshot_id"]
         )
-        # Example uses current party technical ids, not display positions.
-        example = contract["structure_example"]["json"]
-        party_ids = {p["id"] for p in req["party"]}
-        for row in example["placements"]:
-            self.assertIn(row["champion_id"], party_ids)
-            self.assertIsInstance(row["position_id"], int)
-            self.assertNotIsInstance(row["position_id"], str)
+        # Full importer rules live on the snapshot, not duplicated in the request.
+        self.assertIn("answer_contract", snap)
+        self.assertIn("compact", snap["answer_contract"])
+        self.assertIn("semantics", snap["answer_contract"])
+        self.assertNotIn("structure_example", contract)
+        self.assertNotIn("label", req.get("goal") or {})
+        self.assertNotIn("priorities", req.get("goal") or {})
+        self.assertEqual(
+            (req.get("goal") or {}).get("catalog_ref"), "BASE_SNAPSHOT.goal_catalog"
+        )
+        self.assertIn("goal_catalog", snap)
+        geo = req["geometry"]
+        self.assertEqual(geo.get("ref"), "BASE_SNAPSHOT.geometry")
+        self.assertIn("valid_position_ids", geo)
+        self.assertNotIn("adjacency", geo)
+        self.assertNotIn("position_display_convention", geo)
 
     def test_example_accepted_by_parse_and_semantic_validator(self) -> None:
         req, snap = self._request()
-        example = req["answer_contract"]["structure_example"]["json"]
+        example = build_answer_contract(
+            req["meta"]["request_id"],
+            party=req["party"],
+            valid_position_ids=req["geometry"].get("valid_position_ids"),
+            snapshot_id=req["meta"]["snapshot_ref"]["snapshot_id"],
+        )["structure_example"]["json"]
         proposal, errors = parse_proposal_json(
             json.dumps(example),
             expected_request_id=req["meta"]["request_id"],
@@ -271,16 +286,16 @@ class AnswerContractInRequestTests(unittest.TestCase):
         )
 
     def test_display_position_not_used_as_position_id(self) -> None:
-        req, _ = self._request()
-        contract = req["answer_contract"]
+        req, snap = self._request()
         self.assertEqual(
-            contract["semantics"]["position_id"],
+            snap["answer_contract"]["semantics"]["position_id"],
             "technisch_formatie_id_niet_display_niet_seat",
         )
         text = build_advice_request_clipboard_text(req, mode="project")
         self.assertIn("answer_contract", text)
         self.assertIn("technische position_id", text.casefold())
         self.assertIn("display_position", text.casefold())
+        self.assertIn("BASE_SNAPSHOT.answer_contract", text)
 
     def test_omission_and_completeness_described(self) -> None:
         contract = build_answer_contract("r")
@@ -293,14 +308,34 @@ class AnswerContractInRequestTests(unittest.TestCase):
         )
         self.assertIn("needs_information", sem["missing_essential_data"])
 
-    def test_full_export_within_15k(self) -> None:
+    def test_display_vs_import_includes_specialization_column(self) -> None:
+        contract = build_answer_contract("r")
+        display = contract["display_vs_import"]
+        self.assertEqual(
+            display["table_columns"],
+            ["Plek", "Champion", "Specialisatie(s)"],
+        )
+        self.assertIn("specialization_status_labels", display)
+        self.assertIn("table_json_parity", display)
+        # Presentation-only: compact JSON shape unchanged.
+        self.assertEqual(
+            contract["compact"]["specializations_item"]["required"],
+            ["champion_id", "group_id", "option_id"],
+        )
+        self.assertEqual(
+            contract["compact"]["placements_item"]["required"],
+            ["position_id", "champion_id"],
+        )
+
+    def test_full_export_within_16k(self) -> None:
         for swap in (False, True):
             req, _ = self._request(swap=swap)
             text = build_advice_request_clipboard_text(req, mode="project")
+            utf8 = len(text.encode("utf-8"))
             self.assertLessEqual(
-                count_chars(text),
+                utf8,
                 DEFAULT_CHAR_BUDGET,
-                msg=f"swap={swap} chars={count_chars(text)}",
+                msg=f"swap={swap} utf8={utf8} chars={count_chars(text)}",
             )
             self.assertIn('"answer_contract"', text)
 

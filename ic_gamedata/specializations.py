@@ -897,6 +897,61 @@ def _desired_choice_ids(
     return [], "no rule", None
 
 
+def hero_has_open_specialization_prompt(
+    payload: dict[str, Any] | None,
+    hero_id: int,
+) -> bool:
+    """True if selecting this hero via F-key is likely to open the spec dialog.
+
+    Uses live hero level + known specialization tiers: any unlocked tier without
+    a recorded choice means Idle Champions will prompt. Does not require the
+    hero to already be in the formation (bench unlock via seat F-key).
+    """
+    if not isinstance(payload, dict):
+        return False
+    try:
+        hid = int(hero_id)
+    except (TypeError, ValueError):
+        return False
+    try:
+        hero = resolve_hero_record(payload, hid)
+        if hero is None:
+            details = payload.get("details")
+            if isinstance(details, dict):
+                for row in details.get("heroes") or []:
+                    if isinstance(row, dict) and _parse_int(row.get("hero_id")) == hid:
+                        hero = row
+                        break
+        if not isinstance(hero, dict):
+            return False
+        rules = load_specialization_rules()
+        known_options = _merge_known_options(payload, rules).get(hid) or []
+        if not known_options:
+            return False
+        level = _parse_int(hero.get("level"))
+        level_n = int(level) if level is not None else 0
+        # Bench rows sometimes omit a usable level (0/missing) while the game
+        # still opens the dialog from the real account level.
+        level_unknown = level is None or level_n <= 0
+        tiers: dict[int, list[SpecializationOption]] = {}
+        for opt in known_options:
+            tiers.setdefault(opt.tier_index, []).append(opt)
+        for tier_index in sorted(tiers):
+            options = tuple(
+                sorted(tiers[tier_index], key=lambda opt: opt.upgrade_id)
+            )
+            if not options:
+                continue
+            required = int(options[0].required_level)
+            if not level_unknown and level_n < required:
+                continue
+            if not _tier_is_chosen(hero, options, known_options):
+                return True
+        return False
+    except Exception:
+        return False
+
+
 def pending_specializations(
     payload: dict[str, Any],
     rules: dict[str, Any] | None = None,

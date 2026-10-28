@@ -205,8 +205,15 @@ def should_refresh_advice(
     changed: bool,
     empty_retry: bool,
     degraded: bool,
+    party_changed: bool = False,
 ) -> bool:
-    """Whether a snapshot should re-run advisor/specializations analysis."""
+    """Whether a snapshot should re-run advisor/specializations analysis.
+
+    ``party_changed`` always refreshes — active party switches must not be
+    swallowed by degraded/fingerprint gating (Advies/Coach stay on the old party).
+    """
+    if party_changed:
+        return True
     if degraded and not (force or first or changed or empty_retry):
         return False
     return bool(force or first or changed or empty_retry)

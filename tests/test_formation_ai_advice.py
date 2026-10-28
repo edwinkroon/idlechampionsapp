@@ -242,7 +242,7 @@ class FormationAiAdviceTests(unittest.TestCase):
 
     def test_clipboard_table_mode_includes_plek_table_and_import_json(self) -> None:
         md = format_clipboard_markdown(self._export(), output_mode="table")
-        self.assertIn("| Plek | Champion |", md)
+        self.assertIn("| Plek | Champion | Specialisatie(s) |", md)
         self.assertIn("display_position", md.casefold())
         self.assertIn("kolom-plek", md.casefold())
         # Readable table + one import JSON (no longer table-only).
@@ -1614,6 +1614,22 @@ class FormationAiAdviceTests(unittest.TestCase):
         self.assertEqual(by_hero[118].y, nodes[0].y)
         self.assertEqual(by_hero[178].x, 15.0)
 
+    def test_remap_bud_follows_explicit_hoofd_dps_not_live(self) -> None:
+        """AI preview must highlight fixed hoofd-DPS, not the live board BUD."""
+        from dataclasses import replace
+
+        birdsong = replace(_node(9, 111, "Birdsong"), is_bud=True)
+        cazrin = _node(10, 166, "Cazrin")
+        nodes = (birdsong, cazrin)
+        remapped = remap_visual_nodes(
+            nodes,
+            {111: 9, 166: 10},
+            bud_hero_id=166,
+        )
+        by_hero = {n.hero_id: n for n in remapped}
+        self.assertFalse(by_hero[111].is_bud)
+        self.assertTrue(by_hero[166].is_bud)
+
     def test_parse_request_id_mismatch(self) -> None:
         text = json.dumps(
             {
@@ -1862,11 +1878,14 @@ class FormationAiAdviceTests(unittest.TestCase):
         )
         self.assertNotEqual(status, "blocked")
 
-    def test_blocked_positions_not_in_valid_ids(self) -> None:
+    def test_blocked_positions_subset_of_valid_not_available(self) -> None:
         export = self._export()
         valid = set(export["formation"]["valid_position_ids"])
         blocked = set(export["formation"].get("blocked_position_ids") or [])
-        self.assertFalse(valid & blocked)
+        available = set(export["formation"].get("available_position_ids") or [])
+        # Technical layout keeps escort seats; they are not available.
+        self.assertTrue(blocked.issubset(valid) or not blocked)
+        self.assertFalse(blocked & available)
 
     def test_readiness_has_dimensions(self) -> None:
         export = self._export()
@@ -1925,7 +1944,7 @@ class FormationAiAdviceTests(unittest.TestCase):
         self.assertIn("idle champions-formatieadviseur", low)
         self.assertIn("zelfstandige game-adviesaanvraag", low)
         self.assertIn("geen programmeer", low)
-        self.assertIn("zoek niet op internet", low)
+        self.assertIn("zoek standaard niet op internet", low)
         self.assertIn("hoofd-dps", low)
         self.assertIn("jarlaxle", low)
         self.assertIn("| plek | champion |", low)

@@ -15,7 +15,9 @@ from ic_gamedata.formation_ai_advice.models import SCHEMA_VERSION
 
 OutputMode = Literal["table", "json"]
 
-_KEEP_EMPTY_LIST_KEYS = frozenset({"affiliations"})
+_KEEP_EMPTY_LIST_KEYS = frozenset(
+    {"affiliations", "active_feats", "active_feat_ids"}
+)
 
 
 def _goal_label_from_block(goal: dict[str, Any] | None) -> str:
@@ -421,6 +423,32 @@ def _collect_uncertainties(
     return rows
 
 
+def _project_item_levels(raw: Any) -> dict[str, Any] | None:
+    """Compact avg + per-slot ilvls for BASE / projected champion rows."""
+    if not isinstance(raw, dict):
+        return None
+    avg = raw.get("value")
+    if avg is None:
+        avg = raw.get("avg")
+    by_slot_raw = raw.get("by_slot")
+    by_slot: dict[str, int] | None = None
+    if isinstance(by_slot_raw, dict) and by_slot_raw:
+        parsed: dict[str, int] = {}
+        for slot_id, level in by_slot_raw.items():
+            try:
+                parsed[str(int(slot_id))] = int(level)
+            except (TypeError, ValueError):
+                continue
+        if parsed:
+            by_slot = {
+                slot: parsed[slot]
+                for slot in sorted(parsed.keys(), key=lambda s: int(s))
+            }
+    if avg is None and by_slot is None:
+        return None
+    return _prune_empty({"avg": avg, "by_slot": by_slot})
+
+
 def _project_champion_for_advice(
     champ: dict[str, Any],
     *,
@@ -557,6 +585,7 @@ def _project_champion_for_advice(
         "specializations": groups or None,
         "active_feats": active_feats or None,
         "equipment": champ.get("equipment_status") or "unknown",
+        "item_levels": _project_item_levels(champ.get("item_levels")),
         "locked": champ.get("locked") or None,
         "lock_reason": champ.get("lock_reason"),
     }
@@ -830,7 +859,7 @@ def _format_priorities(priorities: Any) -> str:
 def _readable_table_format_lines() -> list[str]:
     from ic_gamedata.formation_ai_advice.labels import (
         ADVICE_REPLY_FORMAT_INSTRUCTION,
-        POSITION_DISPLAY_AI_INSTRUCTION,
+        ADVICE_TABLE_HEADER_EXAMPLE,
     )
 
     return [
@@ -838,12 +867,9 @@ def _readable_table_format_lines() -> list[str]:
         "",
         ADVICE_REPLY_FORMAT_INSTRUCTION,
         "",
-        "Tabelkop:",
+        "Tabelkop (Champion = Naam (seat N); Specialisatie(s) = catalogusnamen):",
         "",
-        "| Plek | Champion |",
-        "| --- | --- |",
-        "",
-        POSITION_DISPLAY_AI_INSTRUCTION,
+        ADVICE_TABLE_HEADER_EXAMPLE,
         "",
     ]
 
@@ -943,7 +969,8 @@ def _instruction_block(
         "",
         "Adviseer de plaatsing en specialisaties van uitsluitend de geselecteerde "
         "champions voor het hieronder genoemde gebruikersdoel.",
-        "Vervang geen champions. Wijzig geen feats of equipment.",
+        "Vervang geen champions. Wijzig geen equipment. "
+        "Feat-verbetervoorstellen mogen.",
         "",
         f"Doel: {doel}.",
     ]
@@ -956,9 +983,11 @@ def _instruction_block(
             hoofd_line,
             f"Prioriteiten: {priorities}.",
             "",
-            "Gebruik uitsluitend de aangeleverde gegevens.",
-            "Zoek niet op internet en vul ontbrekende mechanics niet in op basis van "
-            "abilitynamen, flavor of herinneringen.",
+            "Gebruik BASE_SNAPSHOT en ADVICE_REQUEST als primaire bronnen.",
+            "Zoek standaard niet op internet en vul ontbrekende mechanics niet in "
+            "op basis van abilitynamen, flavor of herinneringen "
+            "(tenzij de research_mode hieronder gerichte research toestaat).",
+            "Behandel lokale eligibility=unknown niet automatisch als allowed.",
             "",
             "Wat jij als adviseur zelf moet doen:",
             "- Plaatsingen vergelijken.",
@@ -976,7 +1005,9 @@ def _instruction_block(
             "- Gebruik uitsluitend geldige actieve posities.",
             "- Maximaal één champion per permanente seat.",
             "- Position_id is niet hetzelfde als permanente seat.",
-            "- Wijzig geen champions, feats of equipment.",
+            "- Wijzig geen champions of equipment.",
+            "- Feat-verbetervoorstellen mogen; noem onzekerheid als het "
+            "alternatief niet in de aangeleverde gegevens staat.",
             "- Specialisaties mogen worden geadviseerd binnen hun echte keuzegroepen "
             "en prerequisites.",
             "- Beoordeel een alternatief inclusief relevante veranderingen aan "
@@ -1011,7 +1042,7 @@ def _instruction_block(
             "",
         ]
     )
-    # Both modes: readable Plek/Champion table + one import JSON block.
+    # Both modes: readable Plek/Champion/Specialisatie(s) table + one import JSON.
     # Table-only mode previously forbade JSON; that conflicted with paste/import.
     if output_mode == "json":
         lines.extend(_json_reply_format_lines(request_id=request_id))
@@ -1019,8 +1050,7 @@ def _instruction_block(
         lines.extend(_readable_table_format_lines())
         lines.extend(
             [
-                "Specialisaties: vermeld kort onder of naast de tabel "
-                "(behouden / nieuw / wijzigen). "
+                "Extra toelichting kort onder de tabel. "
                 "Gebruik A → B alleen als de actuele keuze A daadwerkelijk bekend is.",
                 "Vermeld onzekerheden kort bij de betreffende champion.",
                 "",
@@ -1034,15 +1064,11 @@ def _instruction_block(
                 f"position_id’s (request_id=`{request_id}`).",
             ]
         )
-    # Default: no web research. Only mention if explicitly allowed.
-    if research_mode == "web_research_allowed":
-        lines.extend(
-            [
-                "",
-                "Aanvullend webonderzoek is voor deze aanvraag toegestaan; "
-                "claims herleidbaar houden; geen verzonnen URL’s.",
-            ]
-        )
+    from ic_gamedata.formation_ai_advice.research_mode import (
+        research_mode_instruction_lines,
+    )
+
+    lines.extend(research_mode_instruction_lines(research_mode))
     if char_count >= 120_000:
         lines.extend(
             [
@@ -1211,7 +1237,7 @@ def build_swap_advice_payload(export_payload: dict[str, Any]) -> dict[str, Any]:
     base["constraints"] = _prune_empty(
         {
             "may_replace_champions": True,
-            "max_swaps_per_proposal": constraints.get("max_swaps_per_proposal") or 1,
+            "max_swaps_per_proposal": constraints.get("max_swaps_per_proposal") or 3,
             "proposals_are_independent": True,
             "fixed_champion_ids": fixed_out or None,
             "main_dps_locked": bool(
@@ -1224,7 +1250,7 @@ def build_swap_advice_payload(export_payload: dict[str, Any]) -> dict[str, Any]:
                     else False
                 )
             ),
-            "may_change_feats": False,
+            "may_change_feats": True,
             "may_change_equipment": False,
             "must_keep_same_party_size": True,
             "max_one_champion_per_permanent_seat": True,
@@ -1265,8 +1291,8 @@ def build_swap_advice_payload(export_payload: dict[str, Any]) -> dict[str, Any]:
         str(base.get("bronregels") or "")
         + " Externe champions zijn automatisch opgenomen owned alternatieven "
         "(geen handmatige voorselectie, geen tierlijst). De AI kiest zelf tot "
-        "drie één-wisselvoorstellen. Niet iedereen hoeft in de eindparty. "
-        "Per voorstel: max. één wissel. Equipment-effecten ontbreken."
+        "drie onafhankelijke voorstellen. Niet iedereen hoeft in de eindparty. "
+        "Per voorstel: max. drie wissels. Equipment-effecten ontbreken."
     ).strip()
     return _prune_empty(base)
 
@@ -1291,13 +1317,18 @@ def _swap_instruction_block(
         hoofd_line = (
             f"Vaste hoofd-DPS (niet vervangbaar): {main_dps_name} (`{main_dps_id}`)."
         )
-        dps_rule = "- Wijzig geen feats, equipment of vaste hoofd-DPS."
+        dps_rule = (
+            "- Wijzig geen equipment of vaste hoofd-DPS. "
+            "Feat-verbetervoorstellen mogen."
+        )
     else:
         hoofd_line = (
             "Geen vaste hoofd-DPS: vergelijk kandidaten op het gekozen doel; "
             "schakel geen automatische DPS-lock in."
         )
-        dps_rule = "- Wijzig geen feats of equipment."
+        dps_rule = (
+            "- Wijzig geen equipment. Feat-verbetervoorstellen mogen."
+        )
     vast = (
         ", ".join(fixed_names)
         if fixed_names
@@ -1338,15 +1369,19 @@ def _swap_instruction_block(
             f"Prioriteiten: {priorities}.",
             cov_line,
             "",
-            "Gebruik uitsluitend de aangeleverde gegevens.",
-            "Zoek niet op internet en vul ontbrekende mechanics niet in op basis van "
-            "namen, flavor of herinneringen.",
+            "Gebruik BASE_SNAPSHOT en ADVICE_REQUEST als primaire bronnen.",
+            "Zoek standaard niet op internet en vul ontbrekende mechanics niet in "
+            "op basis van namen, flavor of herinneringen "
+            "(tenzij research_mode gerichte research toestaat).",
+            "Behandel lokale eligibility=unknown niet automatisch als allowed; "
+            "sluit vervangingen niet definitief uit alleen omdat de lokale parser "
+            "een regel niet ondersteunt — zie research_gaps.",
             "",
             "Werkwijze:",
             "- Gebruik de huidige party als baseline.",
             "- Zoek zelf relevante alternatieven in de opgenomen externe champions.",
-            "- Bepaal zelf de kandidaat en de te vervangen champion.",
-            "- Benoem welke champion eruit gaat en welke erin komt.",
+            "- Bepaal zelf welke champions erin/eruit gaan (1–3 wissels).",
+            "- Benoem per wissel welke champion eruit gaat en welke erin komt.",
             "- Controleer toelating, permanente seats, locks en partygrootte.",
             "- Vergelijk kandidaten op het gekozen gebruikersdoel "
             "(push ≠ gems ≠ favor ≠ quest).",
@@ -1356,15 +1391,15 @@ def _swap_instruction_block(
             "- Verkoop pure baseline-herplaatsingswinst niet als championwinst.",
             "- Kandidaten hoeven niet dezelfde fysieke plek over te nemen.",
             "- Permanente seat ≠ fysieke formatiepositie.",
-            "- Als de permanente seat van de kandidaat bezet is, moet die bezetter "
-            "bij één wissel de verwijderde champion zijn (tenzij gelockt — dan "
-            "ongeldig binnen deze scope).",
+            "- Als de permanente seat van een inkomende kandidaat bezet is, moet "
+            "die bezetter tot de verwijderde champions in ditzelfde voorstel "
+            "behoren (tenzij gelockt — dan ongeldig).",
             "- Als die seat vrij is, mag een andere niet-gelockte champion eruit.",
             "- Alleen echte locks en harde vereisten sluiten een seat uit; "
             "zonder lock blijft die seat in de rosterdekking.",
             "- Ieder voorstel is onafhankelijk en begint bij dezelfde baseline.",
             "- Voorstellen niet cumulatief toepassen.",
-            "- Maximaal één championwissel per voorstel.",
+            "- Maximaal drie championwissels per voorstel (minder mag).",
             "- Geen wissel is een geldig resultaat.",
             "",
             "Harde regels:",
@@ -1394,26 +1429,30 @@ def _swap_instruction_block(
             "Begin met één korte conclusie: “Wissel aanbevolen”, "
             "“Voorwaardelijke wissel” of “Geen onderbouwde wissel”, plus één zin.",
             "",
-            "Daarna max. drie sterkste onafhankelijke één-wisselvoorstellen "
-            "(minder of nul mag; niet iedere kandidaat bespreken):",
+            "Daarna max. drie sterkste onafhankelijke voorstellen "
+            "(minder of nul mag; niet iedere kandidaat bespreken; "
+            "per voorstel tot drie wissels, komma-gescheiden in Eruit/Erin):",
             "",
             "| Voorstel | Eruit (Plek) | Erin (Plek) | Verwacht voordeel | Verlies / onzekerheid |",
             "| --- | --- | --- | --- | --- |",
             "",
             "Per aanbevolen of expliciet voorwaardelijk voorstel: complete "
-            "eindformatietabel:",
-            "",
-            "| Plek | Champion |",
-            "| --- | --- |",
+            "eindformatietabel (Champion = Naam (seat N); "
+            "Specialisatie(s) = catalogusnamen):",
             "",
         ]
     )
-    from ic_gamedata.formation_ai_advice.labels import POSITION_DISPLAY_AI_INSTRUCTION
+    from ic_gamedata.formation_ai_advice.labels import (
+        ADVICE_TABLE_HEADER_EXAMPLE,
+        POSITION_DISPLAY_AI_INSTRUCTION,
+    )
 
     lines.extend(
         [
+            ADVICE_TABLE_HEADER_EXAMPLE,
+            "",
             POSITION_DISPLAY_AI_INSTRUCTION,
-            "Specs: behouden / nieuw / wijzigen; A→B alleen als A bekend is.",
+            "A→B alleen als A bekend is.",
             "Geen verzonnen exacte winstpercentages.",
             "",
             "Bij geen onderbouwde wissel: kort waarom; geef één geoptimaliseerde "
@@ -1424,14 +1463,11 @@ def _swap_instruction_block(
             "position_id’s.",
         ]
     )
-    if research_mode == "web_research_allowed":
-        lines.extend(
-            [
-                "",
-                "Aanvullend webonderzoek is voor deze aanvraag toegestaan; "
-                "claims herleidbaar houden; geen verzonnen URL’s.",
-            ]
-        )
+    from ic_gamedata.formation_ai_advice.research_mode import (
+        research_mode_instruction_lines,
+    )
+
+    lines.extend(research_mode_instruction_lines(research_mode))
     if char_count >= 120_000:
         lines.extend(
             [

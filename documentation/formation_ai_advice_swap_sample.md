@@ -60,11 +60,14 @@ Daarna max. drie sterkste onafhankelijke één-wisselvoorstellen (minder of nul 
 
 Per aanbevolen of expliciet voorwaardelijk voorstel: complete eindformatietabel:
 
-| Positie (ID + kolom/rij) | Champion | Seat | Specialisaties | Reden / onzekerheid |
-| --- | --- | --- | --- | --- |
+| Plek | Champion | Specialisatie(s) |
+| --- | --- | --- |
+| 1-1 | Championnaam (seat N) | Specialisatienaam |
+| 2-1 | Championnaam (seat N) | Keuze 1: Naam; Keuze 2: Naam |
 
-Sorteer achterste kolom eerst, binnen de kolom boven naar beneden.
-Specs: behouden / nieuw / wijzigen; A→B alleen als A bekend is.
+Sorteer op display_column daarna display_slot.
+Specialisatie(s): catalogusnamen met statuslabels (advies)/(actief)/(behouden)/…
+A→B alleen als A bekend is.
 Geen verzonnen exacte winstpercentages.
 
 Bij geen onderbouwde wissel: kort waarom; geef één geoptimaliseerde baselineformatietabel. Optioneel één korte dekkingsbeperking als coverage_complete false is.

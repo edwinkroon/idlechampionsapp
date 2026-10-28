@@ -260,8 +260,8 @@ def _gear_stats(stats: dict[str, Any], hero_id: int) -> tuple[float, float, floa
     return score, dps, d_mult, hit_mult
 
 
-def _loot_ilvl_by_hero(details: dict[str, Any]) -> dict[int, int]:
-    """Average item level per hero — matches in-game bench ilvl (avg per gear slot)."""
+def _loot_slot_ilvls_by_hero(details: dict[str, Any]) -> dict[int, dict[int, int]]:
+    """Per-slot item level per hero (enchant+1; best row wins a slot)."""
     slot_levels: dict[int, dict[int, int]] = {}
     loot = details.get("loot")
     if not isinstance(loot, list):
@@ -277,9 +277,13 @@ def _loot_ilvl_by_hero(details: dict[str, Any]) -> dict[int, int]:
         slot_level = max(enchant, 0) + 1
         by_slot = slot_levels.setdefault(hero_id, {})
         by_slot[slot_id] = max(by_slot.get(slot_id, 0), slot_level)
+    return slot_levels
 
+
+def _loot_ilvl_by_hero(details: dict[str, Any]) -> dict[int, int]:
+    """Average item level per hero — matches in-game bench ilvl (avg per gear slot)."""
     averages: dict[int, int] = {}
-    for hero_id, by_slot in slot_levels.items():
+    for hero_id, by_slot in _loot_slot_ilvls_by_hero(details).items():
         if not by_slot:
             continue
         averages[hero_id] = round(sum(by_slot.values()) / len(by_slot))
@@ -344,6 +348,78 @@ def _hero_on_field(
     return True
 
 
+def resolve_live_formation(
+    payload: dict[str, Any] | None,
+    *,
+    fallback: tuple[FormationHero, ...] | None = None,
+) -> tuple[FormationHero, ...]:
+    """Prefer heroes re-parsed from the live payload over a cached report tuple.
+
+    UI paths often pass ``last_report.formation_heroes``, which can lag behind
+    ``last_payload`` (or freeze inside a long-lived export dialog). Swap/advice
+    exports must use the board that is actually live in the payload.
+    """
+    if isinstance(payload, dict):
+        live = _formation_heroes(payload)
+        if live:
+            return live
+    return tuple(fallback or ())
+
+
+def _complete_grid_seat_map(
+    formation_ids: list[int],
+    seat_by_hero: dict[int, int],
+    *,
+    permanent_seats: dict[int, int],
+    reserved_seats: set[int] | frozenset[int] | None = None,
+) -> dict[int, int]:
+    """Assign formation seats for grid heroes missing from ``hero_in_seats``.
+
+    Prefer a free permanent seat, else grid-index+1, else the next free F-key.
+    Never reuse an occupied seat or (when avoidable) a reserved/NPC slot.
+    """
+    result = {
+        hid: seat
+        for hid, seat in seat_by_hero.items()
+        if isinstance(hid, int) and hid > 0 and isinstance(seat, int) and 1 <= seat <= 12
+    }
+    used = set(result.values())
+    reserved = set(reserved_seats or ())
+
+    def _pick(hero_id: int, index: int) -> int | None:
+        candidates: list[int] = []
+        permanent = permanent_seats.get(hero_id)
+        if isinstance(permanent, int) and 1 <= permanent <= 12:
+            candidates.append(permanent)
+        preferred = index + 1
+        if 1 <= preferred <= 12:
+            candidates.append(preferred)
+        candidates.extend(range(1, 13))
+        # Pass 1: free non-reserved. Pass 2: any free (last resort).
+        for allow_reserved in (False, True):
+            seen: set[int] = set()
+            for seat in candidates:
+                if seat in seen or seat in used:
+                    continue
+                seen.add(seat)
+                if not allow_reserved and seat in reserved:
+                    continue
+                return seat
+        return None
+
+    for index, hero_id in enumerate(formation_ids):
+        if not isinstance(hero_id, int) or hero_id <= 0:
+            continue
+        if hero_id in result:
+            continue
+        seat = _pick(hero_id, index)
+        if seat is None:
+            continue
+        result[hero_id] = seat
+        used.add(seat)
+    return result
+
+
 def _formation_heroes(payload: dict[str, Any]) -> tuple[FormationHero, ...]:
     details = payload.get("details")
     if not isinstance(details, dict):
@@ -368,7 +444,7 @@ def _formation_heroes(payload: dict[str, Any]) -> tuple[FormationHero, ...]:
         for seat_raw, hero_raw in hero_in_seats.items():
             seat = _parse_int(seat_raw)
             hero_id = _parse_int(hero_raw)
-            if seat is not None and hero_id is not None:
+            if seat is not None and hero_id is not None and hero_id > 0:
                 seat_by_hero[hero_id] = seat
 
     try:
@@ -376,23 +452,36 @@ def _formation_heroes(payload: dict[str, Any]) -> tuple[FormationHero, ...]:
     except ImportError:
         active_seats: frozenset[int] = frozenset()
         grid_hero_ids: set[int] = set()
+        formation_ids: list[int] = []
     else:
         _active_id, active_seats = active_formation_seats(payload)
-        grid_hero_ids = {hid for hid in live_formation_hero_ids(payload) if hid > 0}
+        formation_ids = list(live_formation_hero_ids(payload))
+        grid_hero_ids = {hid for hid in formation_ids if hid > 0}
 
-    # Permanent seat_id only for heroes actually on the live grid — never for the
-    # whole roster (that pulled Bruenor/Celeste/… onto seats already filled by
-    # other champions and made the Formatie tab show the wrong party).
+    # Complete missing seats for grid heroes without colliding or using a
+    # reserved/NPC slot. Blind permanent-seat fallback put e.g. Baeloth on F4
+    # even when that slot is escort-blocked or already taken — advice export
+    # then failed structural validation (position_not_active).
+    reserved: set[int] = set()
+    try:
+        from ic_gamedata.adventure_restrictions import reserved_formation_seats
+
+        adv_id = _parse_int(instance.get("current_adventure_id"))
+        reserved = set(reserved_formation_seats(payload, adv_id))
+    except Exception:
+        reserved = set()
     try:
         from ic_gamedata.specialization_data import hero_seat_id_map_from_cached_definitions
 
         defs = hero_seat_id_map_from_cached_definitions()
     except ImportError:
         defs = {}
-    for hero_id in grid_hero_ids:
-        seat = defs.get(hero_id)
-        if seat is not None and 1 <= seat <= 12:
-            seat_by_hero.setdefault(hero_id, seat)
+    seat_by_hero = _complete_grid_seat_map(
+        formation_ids,
+        seat_by_hero,
+        permanent_seats=defs,
+        reserved_seats=reserved,
+    )
 
     heroes_raw = details.get("heroes")
     if not isinstance(heroes_raw, list):

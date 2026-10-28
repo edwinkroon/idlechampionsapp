@@ -4,8 +4,10 @@ Counting rules (used everywhere — preview, counter, clipboard):
 - ``count_chars`` = number of Unicode code points in the Python ``str``
   (``len(text)``). Newlines count as one character each (``\\n``).
 - ``count_utf8_bytes`` = UTF-8 encoded byte length of the same string.
-- The configured maximum applies to the **entire** clipboard string:
-  instructions, headers, fences, and JSON.
+- ``MAX_EXPORT_BYTES`` is the hard UTF-8 byte limit on the **entire**
+  clipboard string: instructions, headers, fences, and JSON.
+- ``DEFAULT_CHAR_BUDGET`` is an alias of ``MAX_EXPORT_BYTES`` (historical name
+  kept for call sites that still pass ``max_chars``).
 """
 
 from __future__ import annotations
@@ -13,7 +15,12 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
-DEFAULT_CHAR_BUDGET = 15_000
+# Hard ceiling for the full ADVICE_REQUEST clipboard payload (UTF-8 bytes).
+MAX_EXPORT_BYTES = 17_000
+# Soft target with reserve under the hard ceiling.
+TARGET_EXPORT_BYTES = 16_000
+# Historical alias — same hard gate as MAX_EXPORT_BYTES.
+DEFAULT_CHAR_BUDGET = MAX_EXPORT_BYTES
 MIN_CHAR_BUDGET = 2_000
 MAX_CHAR_BUDGET = 500_000
 
@@ -48,30 +55,32 @@ class BudgetStatus:
     def label(self) -> str:
         status = "binnen budget" if self.within_budget else "boven budget"
         return (
-            f"{self.chars:,} tekens · {self.utf8_bytes:,} bytes · "
-            f"max {self.max_chars:,} · {status}"
+            f"{self.chars:,} tekens · {self.utf8_bytes:,} UTF-8-bytes · "
+            f"max {self.max_chars:,} bytes · {status}"
         ).replace(",", ".")
 
 
 def budget_status(text: str, max_chars: int) -> BudgetStatus:
-    """Evaluate ``text`` against ``max_chars`` (no silent truncation).
+    """Evaluate ``text`` against the UTF-8 byte limit (no silent truncation).
 
-    Does not clamp the limit here — callers that read user prefs should use
+    ``max_chars`` is the historical parameter name; the hard gate is
+    ``utf8_bytes <= max_chars``. Callers that read user prefs should use
     ``clamp_char_budget`` before passing the value (UI spinbox / settings).
     """
     chars = count_chars(text)
+    utf8 = count_utf8_bytes(text)
     try:
         limit = int(max_chars)
     except (TypeError, ValueError):
         limit = DEFAULT_CHAR_BUDGET
     if limit < 1:
         limit = 1
-    over = max(0, chars - limit)
+    over = max(0, utf8 - limit)
     return BudgetStatus(
         chars=chars,
-        utf8_bytes=count_utf8_bytes(text),
+        utf8_bytes=utf8,
         max_chars=limit,
-        within_budget=chars <= limit,
+        within_budget=utf8 <= limit,
         over_by=over,
     )
 

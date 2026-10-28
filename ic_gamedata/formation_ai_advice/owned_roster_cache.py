@@ -17,8 +17,97 @@ from typing import Any
 from ic_gamedata.parsing import parse_int as _parse_int
 from ic_gamedata.paths import OWNED_ROSTER_CACHE_PATH
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 DEFAULT_TTL_SECONDS = 24 * 60 * 60
+
+
+def _definitions_checksum() -> str | None:
+    """Stable definitions identity — cache must invalidate when defs change."""
+    try:
+        from ic_gamedata.specialization_data import cached_definitions_data
+
+        data = cached_definitions_data()
+    except Exception:
+        return None
+    if not isinstance(data, dict):
+        return None
+    checksum = data.get("checksum")
+    if checksum is None:
+        return None
+    return str(checksum)
+
+
+def _definition_seat_for_hero(hero_id: int) -> int | None:
+    """Permanent F-key seat from hero_defines, or None when unavailable."""
+    try:
+        from ic_gamedata.specialization_data import hero_seat_id_map_from_cached_definitions
+
+        seat = hero_seat_id_map_from_cached_definitions().get(int(hero_id))
+    except Exception:
+        return None
+    if isinstance(seat, int) and 1 <= seat <= 12:
+        return seat
+    return None
+
+
+def _apply_definition_seat(entry: dict[str, Any], hero_id: int) -> dict[str, Any]:
+    """Overwrite ``entry['seat']`` from hero_defines when a permanent seat is known."""
+    seat = _definition_seat_for_hero(hero_id)
+    if seat is not None:
+        entry["seat"] = seat
+    return entry
+
+
+def _seat_matches_definitions(entry: dict[str, Any], hero_id: int) -> bool:
+    """False when cached seat disagrees with hero_defines.seat_id."""
+    expected = _definition_seat_for_hero(hero_id)
+    if expected is None:
+        return True  # cannot verify — do not force rebuild on seat alone
+    actual = entry.get("seat")
+    return isinstance(actual, int) and actual == expected
+
+
+def _entry_looks_mechanics_complete(entry: dict[str, Any], hero_id: int) -> bool:
+    """Reject cached rows that lack kit abilities while definitions have them.
+
+    Prevents a stale incomplete cache (defs unloaded at build time) from
+    poisoning BASE_SNAPSHOT exports after definitions become available.
+    Also rejects rows whose permanent ``seat`` disagrees with hero_defines
+    (e.g. stub/poisoned seat=1 for newer champions).
+    """
+    if not _seat_matches_definitions(entry, hero_id):
+        return False
+    abilities = entry.get("abilities")
+    if isinstance(abilities, list) and abilities:
+        # At least one ability should carry mechanical prose when defs are rich.
+        if any(
+            isinstance(a, dict)
+            and (
+                a.get("mechanical_text")
+                or a.get("text")
+                or a.get("effect")
+            )
+            for a in abilities
+        ):
+            return True
+        # Named abilities without prose still count as "attempted" export.
+        if any(isinstance(a, dict) and a.get("name") for a in abilities):
+            return True
+    try:
+        from ic_gamedata.formation_ai_advice.export import _upgrades_by_hero_id
+
+        rows = _upgrades_by_hero_id().get(int(hero_id), ())
+    except Exception:
+        return True  # cannot verify — keep cache
+    kit = [
+        r
+        for r in rows
+        if isinstance(r, dict) and not r.get("specialization_name")
+    ]
+    if not kit:
+        return True  # hero truly has no kit upgrades in defs
+    # Definitions have kit upgrades but cache entry has none — stale/incomplete.
+    return False
 
 
 def _hero_row(payload: dict[str, Any], hero_id: int) -> dict[str, Any] | None:
@@ -38,6 +127,7 @@ def loadout_fingerprint(
     hero_id: int,
     *,
     ilvl: int | None = None,
+    slot_ilvls: dict[int, int] | None = None,
     data_version: str | None = None,
 ) -> str:
     """Stable key for whether a cached champion row is still valid."""
@@ -63,6 +153,11 @@ def loadout_fingerprint(
             if uid is not None:
                 upgrade_sig.append(uid)
         upgrade_sig.sort()
+    slot_sig = (
+        [[int(slot_id), int(level)] for slot_id, level in sorted(slot_ilvls.items())]
+        if slot_ilvls
+        else None
+    )
     return json.dumps(
         {
             "v": SCHEMA_VERSION,
@@ -71,7 +166,9 @@ def loadout_fingerprint(
             "specs": specs,
             "upgrades": upgrade_sig,
             "ilvl": ilvl,
+            "slot_ilvls": slot_sig,
             "data_version": data_version,
+            "definitions_checksum": _definitions_checksum(),
         },
         separators=(",", ":"),
         sort_keys=True,
@@ -154,11 +251,12 @@ def save_owned_roster_cache(
     )
 
 
-def get_cached_champion_entry(
+def _raw_cached_entry(
     cache: dict[str, Any],
     hero_id: int,
     fingerprint: str,
 ) -> dict[str, Any] | None:
+    """Return the stored entry dict when fingerprint matches (no copy/sanitize)."""
     entries = cache.get("entries")
     if not isinstance(entries, dict):
         return None
@@ -170,7 +268,18 @@ def get_cached_champion_entry(
     entry = row.get("entry")
     if not isinstance(entry, dict):
         return None
-    return copy.deepcopy(entry)
+    return entry
+
+
+def get_cached_champion_entry(
+    cache: dict[str, Any],
+    hero_id: int,
+    fingerprint: str,
+) -> dict[str, Any] | None:
+    entry = _raw_cached_entry(cache, hero_id, fingerprint)
+    if entry is None:
+        return None
+    return _apply_definition_seat(copy.deepcopy(entry), hero_id)
 
 
 def put_cached_champion_entry(
@@ -200,6 +309,7 @@ def put_cached_champion_entry(
         "lock_reason",
     ):
         stored.pop(key, None)
+    _apply_definition_seat(stored, hero_id)
     entries[str(hero_id)] = {
         "fingerprint": fingerprint,
         "entry": stored,
@@ -230,9 +340,11 @@ def resolve_champion_entry(
 ) -> tuple[dict[str, Any], str]:
     """Return ``(entry, source)`` where source is ``cache`` or ``built``."""
     if not force_refresh:
-        cached = get_cached_champion_entry(cache, hero_id, fingerprint)
-        if cached is not None:
-            return cached, "cache"
+        # Completeness (incl. seat vs defines) on the raw stored row — sanitizing
+        # seat first would hide poisoned seat=1 stubs and skip a needed rebuild.
+        raw = _raw_cached_entry(cache, hero_id, fingerprint)
+        if raw is not None and _entry_looks_mechanics_complete(raw, hero_id):
+            return _apply_definition_seat(copy.deepcopy(raw), hero_id), "cache"
     entry = builder()
     put_cached_champion_entry(cache, hero_id, fingerprint, entry)
-    return entry, "built"
+    return _apply_definition_seat(copy.deepcopy(entry), hero_id), "built"

@@ -8,7 +8,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from ic_gamedata.formation_ai_advice.compact_clipboard import (
+from ic_gamedata.formation_ai_advice.export_clipboard import (
     build_advice_request_clipboard_text,
 )
 from ic_gamedata.formation_ai_advice.export import (
@@ -553,6 +553,54 @@ class MechanicsCompletenessUnitTests(unittest.TestCase):
         gaps = block.get("mechanic_gaps") or []
         self.assertEqual(gaps[0]["completeness"], "missing")
         self.assertEqual(gaps[0]["description_status"], "missing")
+
+    def test_clipboard_collapses_bulk_parameter_missing_gaps(self) -> None:
+        gaps = [
+            {
+                "catalog": "ability",
+                "id": i,
+                "name": f"Buff {i}",
+                "completeness": "parameter_missing",
+                "champion_ids": [1],
+                "limits": "placement_qualitative",
+            }
+            for i in range(100, 130)
+        ]
+        gaps.append(
+            {
+                "catalog": "ability",
+                "id": 999,
+                "name": "Key Buff",
+                "completeness": "parameter_missing",
+                "dependent_option_ids": [1001, 1002],
+                "limits": "specialization_comparison",
+                "note": "Spec-vergelijking beperkt.",
+            }
+        )
+        gaps.append(
+            {
+                "catalog": "ability",
+                "id": 50,
+                "name": "Gone",
+                "completeness": "missing",
+                "limits": "placement_qualitative",
+            }
+        )
+        block = {"mechanics_delta": [], "mechanic_gaps": gaps}
+        compact = compact_mechanics_for_clipboard(block)
+        assert compact is not None
+        detail = compact.get("mechanic_gaps") or []
+        detail_ids = {g["id"] for g in detail}
+        self.assertIn(999, detail_ids)
+        self.assertIn(50, detail_ids)
+        self.assertNotIn(100, detail_ids)
+        bulk = (compact.get("mechanic_gap_ids") or {}).get("parameter_missing") or []
+        self.assertEqual(len(bulk), 30)
+        self.assertNotIn(999, bulk)
+        self.assertLess(
+            len(json.dumps(compact, ensure_ascii=False, separators=(",", ":"))),
+            1200,
+        )
 
     def test_budget_omit_does_not_half_cut_effect(self) -> None:
         full = "X" * 400

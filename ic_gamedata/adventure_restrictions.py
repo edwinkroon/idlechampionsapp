@@ -14,6 +14,7 @@ from ic_gamedata.specialization_data import (
     hero_age_map_from_cached_definitions,
     hero_attack_types_map_from_cached_definitions,
     hero_roles_map_from_champion_config,
+    hero_seat_id_map_from_cached_definitions,
     hero_tags_map_from_cached_definitions,
     hero_tags_map_from_champion_config,
 )
@@ -144,6 +145,31 @@ class HeroRosterMeta:
 # Supported ability-score comparators from API by_stat / restrictions_text.
 _STAT_COMPARATORS = frozenset({">=", ">", "<=", "<"})
 
+# Roster predicates we can evaluate under disallow/only_allow_crusaders.
+_HANDLED_ROSTER_PREDICATE_KEYS = frozenset(
+    {
+        "by_tags",
+        "by_stat",
+        "by_expr",
+        "by_i_levels",
+        "by_seat",
+        "by_attack_types",
+    }
+)
+_KNOWN_ATTACK_DAMAGE_TYPES = frozenset({"melee", "ranged", "magic"})
+# Non-predicate keys that may appear alongside roster rules (UI / graphics).
+_IGNORED_GAME_CHANGE_KEYS = frozenset(
+    {
+        "type",
+        "dragging_graphic_id",
+        "can_swap_blocked",
+        "update_upgrades_ids",
+        "blocked_portrait",
+        "greyscale_blocked",
+        "can_field_crusaders",
+    }
+)
+
 
 def _invert_comparator(operator: str) -> str | None:
     """Inclusive/exclusive-safe negation of a comparison operator."""
@@ -239,10 +265,22 @@ class AdventureRosterFilter:
     has_restriction_semantics_conflict: bool = False
     exempt_hero_ids: set[int] = field(default_factory=set)
     banned_hero_ids: set[int] = field(default_factory=set)
+    # Permanent F-key seats (1–12) banned via disallow_crusaders + by_seat.
+    banned_seat_ids: set[int] = field(default_factory=set)
+    # When set, only these permanent F-seats are allowed (only_allow + by_seat).
+    allowed_seat_ids: set[int] | None = None
+    # Base-attack damage types (melee/ranged/magic) from hero_defines.base_attack_id.
+    banned_attack_types: set[str] = field(default_factory=set)
+    # only_allow + by_attack_types: hero must share ≥1 type with this set.
+    required_attack_types: set[str] | None = None
+    # Compact raw rows for predicates we could not evaluate (exported once).
+    unevaluable_rules: list[dict[str, Any]] = field(default_factory=list)
     active_notes: list[str] = field(default_factory=list)
     has_unknown_rules: bool = False
     # True when a by_stat comparator could not be mapped — must not imply allowed.
     has_unevaluable_stat_rules: bool = False
+    # True when an essential roster predicate key was present but not evaluated.
+    has_unevaluable_roster_rules: bool = False
     uses_api_game_changes: bool = False
     patron_id: int | None = None
     patron_blocked_hero_ids: set[int] = field(default_factory=set)
@@ -270,10 +308,28 @@ class AdventureRosterFilter:
         )
         self.exempt_hero_ids.update(other.exempt_hero_ids)
         self.banned_hero_ids.update(other.banned_hero_ids)
+        self.banned_seat_ids.update(other.banned_seat_ids)
+        if other.allowed_seat_ids is not None:
+            if self.allowed_seat_ids is None:
+                self.allowed_seat_ids = set(other.allowed_seat_ids)
+            else:
+                self.allowed_seat_ids &= other.allowed_seat_ids
+        self.banned_attack_types.update(other.banned_attack_types)
+        if other.required_attack_types is not None:
+            if self.required_attack_types is None:
+                self.required_attack_types = set(other.required_attack_types)
+            else:
+                self.required_attack_types &= other.required_attack_types
+        for rule in other.unevaluable_rules:
+            if rule:
+                self.unevaluable_rules.append(dict(rule))
         self.active_notes.extend(other.active_notes)
         self.has_unknown_rules = self.has_unknown_rules or other.has_unknown_rules
         self.has_unevaluable_stat_rules = (
             self.has_unevaluable_stat_rules or other.has_unevaluable_stat_rules
+        )
+        self.has_unevaluable_roster_rules = (
+            self.has_unevaluable_roster_rules or other.has_unevaluable_roster_rules
         )
         self.uses_api_game_changes = self.uses_api_game_changes or other.uses_api_game_changes
         if other.patron_id is not None:
@@ -301,12 +357,24 @@ class AdventureRosterFilter:
             or self.allow_exprs
             or self.deny_exprs
             or self.banned_hero_ids
+            or self.banned_seat_ids
+            or self.allowed_seat_ids is not None
+            or self.banned_attack_types
+            or self.required_attack_types is not None
             or self.has_restriction_semantics_conflict
             or self.uses_api_game_changes
             or self.ilvl_seat_comparison
             or self.ilvl_allowed_hero_ids is not None
             or self.time_available_rule is not None
+            or self.has_unevaluable_roster_rules
+            or self.unevaluable_rules
         )
+
+    def has_seat_rules(self) -> bool:
+        return bool(self.banned_seat_ids) or self.allowed_seat_ids is not None
+
+    def has_attack_type_rules(self) -> bool:
+        return bool(self.banned_attack_types) or self.required_attack_types is not None
 
 
 def _hero_meta(hero_id: int) -> HeroRosterMeta:
@@ -1251,6 +1319,312 @@ def _filter_from_patron(payload: dict[str, Any], patron_id: int | None) -> Adven
     return filt
 
 
+def _parse_seat_ids(raw_seats: Any) -> list[int]:
+    """Parse permanent F-seat ids (1–12) from a by_seat.seats list."""
+    if not isinstance(raw_seats, list):
+        return []
+    seats: list[int] = []
+    for item in raw_seats:
+        seat = _parse_int(item)
+        if seat is not None and 1 <= seat <= 12:
+            seats.append(seat)
+    return seats
+
+
+def _filter_from_by_seat(
+    by_seat: dict[str, Any],
+    *,
+    disallow: bool,
+    change_type: str,
+) -> AdventureRosterFilter:
+    """Translate API by_seat into banned/allowed permanent F-seat sets."""
+    filt = AdventureRosterFilter()
+    seats = _parse_seat_ids(by_seat.get("seats"))
+    if not seats:
+        filt.has_unknown_rules = True
+        filt.has_unevaluable_roster_rules = True
+        filt.active_notes.append("by_seat zonder geldige seats (1–12)")
+        filt.expr_interpretations.append(
+            {
+                "source": "by_seat",
+                "change_type": change_type,
+                "source_field": "game_changes.by_seat",
+                "action": "unevaluable_empty_seats",
+                "evidence": "by_seat aanwezig maar seats-lijst leeg of ongeldig.",
+            }
+        )
+        return filt
+
+    seat_label = ", ".join(str(s) for s in sorted(set(seats)))
+    if disallow:
+        filt.banned_seat_ids.update(seats)
+        filt.active_notes.append(f"Verboden permanente F-seats: {seat_label}")
+        action = "ban_permanent_seats"
+        evidence = (
+            "disallow_crusaders + by_seat: champions met permanente F-seat in "
+            f"{{{seat_label}}} zijn geblokkeerd."
+        )
+    else:
+        filt.allowed_seat_ids = set(seats)
+        filt.active_notes.append(f"Alleen permanente F-seats: {seat_label}")
+        action = "allow_only_permanent_seats"
+        evidence = (
+            "only_allow_crusaders + by_seat: alleen champions met permanente "
+            f"F-seat in {{{seat_label}}} zijn toegelaten."
+        )
+    filt.expr_interpretations.append(
+        {
+            "source": "by_seat",
+            "change_type": change_type,
+            "source_field": "game_changes.by_seat",
+            "seats": sorted(set(seats)),
+            "action": action,
+            "evidence": evidence,
+        }
+    )
+    return filt
+
+
+def _next_unevaluable_rule_id(filt: AdventureRosterFilter) -> str:
+    return f"urule_{len(filt.unevaluable_rules) + 1}"
+
+
+def _compact_raw_predicate_body(body: Any) -> dict[str, Any] | None:
+    """Keep present API parameters only — never invent missing keys."""
+    if not isinstance(body, dict):
+        return None
+    out: dict[str, Any] = {}
+    for key, value in body.items():
+        if value is None:
+            continue
+        # Drop pure UI chrome; keep rule-defining fields.
+        if str(key) in {"blocked_portrait", "greyscale_blocked", "dragging_graphic_id"}:
+            continue
+        out[str(key)] = value
+    return out or None
+
+
+def _filter_from_by_attack_types(
+    by_attack_types: dict[str, Any],
+    *,
+    disallow: bool,
+    change_type: str,
+) -> AdventureRosterFilter:
+    """Translate API by_attack_types using base-attack damage types.
+
+    Semantics (aligned with restrictions_text + existing HasAttackDamageType):
+    - disallow: hero denied when base attack_types intersect listed types
+    - only_allow: hero allowed when base attack_types intersect listed types
+    Missing/empty types on a hero → unknown at evaluation time.
+    Does not model alternate attacks, transformations, or live attack forms.
+    """
+    filt = AdventureRosterFilter()
+    raw_types = by_attack_types.get("attack_types")
+    types: set[str] = set()
+    if isinstance(raw_types, list):
+        for item in raw_types:
+            t = str(item or "").strip().lower()
+            if t in _KNOWN_ATTACK_DAMAGE_TYPES:
+                types.add(t)
+    if not types:
+        rule_id = _next_unevaluable_rule_id(filt)
+        filt.has_unknown_rules = True
+        filt.has_unevaluable_roster_rules = True
+        filt.active_notes.append("by_attack_types zonder bekende attack_types")
+        raw = _compact_raw_predicate_body(by_attack_types)
+        filt.unevaluable_rules.append(
+            {
+                "id": rule_id,
+                "predicate": "by_attack_types",
+                "change_type": change_type,
+                "source_field": "game_changes.by_attack_types",
+                "raw": raw,
+                "why_local_unknown": (
+                    "by_attack_types aanwezig maar attack_types leeg of "
+                    "buiten {melee,ranged,magic}."
+                ),
+                "champion_data_refs": ["attack_types", "basic_attack_type"],
+            }
+        )
+        filt.expr_interpretations.append(
+            {
+                "source": "by_attack_types",
+                "change_type": change_type,
+                "source_field": "game_changes.by_attack_types",
+                "rule_ref": rule_id,
+                "action": "unevaluable_empty_attack_types",
+                "raw": raw,
+                "evidence": "by_attack_types zonder evalueerbare attack_types.",
+            }
+        )
+        return filt
+
+    label = ", ".join(sorted(types))
+    if disallow:
+        filt.banned_attack_types.update(types)
+        filt.active_notes.append(f"Verboden basis-aanvalstypen: {label}")
+        action = "ban_base_attack_types"
+        evidence = (
+            "disallow_crusaders + by_attack_types: champions waarvan "
+            f"base_attack damage_types {label} raken zijn geblokkeerd "
+            "(basisaanval uit hero_defines; geen live/transform-aanvallen)."
+        )
+    else:
+        filt.required_attack_types = set(types)
+        filt.active_notes.append(f"Vereist basis-aanvalstype (één van): {label}")
+        action = "require_base_attack_types_intersect"
+        evidence = (
+            "only_allow_crusaders + by_attack_types: champions moeten ≥1 "
+            f"base_attack damage_type in {{{label}}} hebben."
+        )
+    filt.expr_interpretations.append(
+        {
+            "source": "by_attack_types",
+            "change_type": change_type,
+            "source_field": "game_changes.by_attack_types",
+            "attack_types": sorted(types),
+            "action": action,
+            "evidence": evidence,
+            "stats_basis": "hero_defines.base_attack_id → attack_defines.damage_types",
+        }
+    )
+    return filt
+
+
+def _mark_unhandled_roster_predicates(
+    filt: AdventureRosterFilter,
+    change: dict[str, Any],
+    *,
+    change_type: str,
+) -> None:
+    """Flag essential roster predicates we do not evaluate yet (keep raw params)."""
+    unhandled: list[str] = []
+    for key in change:
+        key_s = str(key)
+        if key_s in _HANDLED_ROSTER_PREDICATE_KEYS or key_s in _IGNORED_GAME_CHANGE_KEYS:
+            continue
+        if key_s.startswith("by_"):
+            unhandled.append(key_s)
+        elif key_s not in {"hero_ids", "name", "hp", "graphic", "force_slot", "slot_id"}:
+            continue
+    if not unhandled:
+        return
+    filt.has_unknown_rules = True
+    filt.has_unevaluable_roster_rules = True
+    label = ", ".join(sorted(unhandled))
+    note = f"Niet-geëvalueerde restrictiepredicate(s): {label}"
+    if note not in filt.active_notes:
+        filt.active_notes.append(note)
+    for pred in sorted(unhandled):
+        body = change.get(pred)
+        raw = _compact_raw_predicate_body(body) if isinstance(body, dict) else (
+            {"value": body} if body is not None else None
+        )
+        rule_id = _next_unevaluable_rule_id(filt)
+        filt.unevaluable_rules.append(
+            {
+                "id": rule_id,
+                "predicate": pred,
+                "change_type": change_type,
+                "source_field": f"game_changes.{pred}",
+                "raw": raw,
+                "why_local_unknown": (
+                    f"Predicate {pred} is aanwezig in API game_changes maar "
+                    "wordt lokaal nog niet geëvalueerd."
+                ),
+                "champion_data_refs": None,
+            }
+        )
+        filt.expr_interpretations.append(
+            {
+                "source": "unhandled_predicate",
+                "change_type": change_type,
+                "source_field": pred,
+                "rule_ref": rule_id,
+                "action": "mark_unevaluable_roster_rules",
+                "raw": raw,
+                "evidence": (
+                    "Essentiële roster-restrictie aanwezig maar nog niet "
+                    "geïmplementeerd; niet stilzwijgend als allowed behandelen."
+                ),
+            }
+        )
+
+
+def _hero_permanent_seat(hero_id: int) -> int | None:
+    """Permanent F-key seat (1–12) for a champion, or None if unknown."""
+    seat = hero_seat_id_map_from_cached_definitions().get(hero_id)
+    if seat is None:
+        return None
+    seat_i = int(seat)
+    return seat_i if 1 <= seat_i <= 12 else None
+
+
+def _seat_rule_outcome(
+    hero_id: int,
+    roster_filter: AdventureRosterFilter,
+) -> tuple[str, str] | None:
+    """Return (status, reason) when seat rules apply; else None."""
+    if not roster_filter.has_seat_rules():
+        return None
+    seat = _hero_permanent_seat(hero_id)
+    if seat is None:
+        return (
+            "unknown",
+            "Permanente F-seat onbekend; seat-restrictie niet evalueerbaar.",
+        )
+    if seat in roster_filter.banned_seat_ids:
+        return (
+            "denied",
+            f"Permanente F-seat {seat} verboden (by_seat).",
+        )
+    if (
+        roster_filter.allowed_seat_ids is not None
+        and seat not in roster_filter.allowed_seat_ids
+    ):
+        allowed = ", ".join(str(s) for s in sorted(roster_filter.allowed_seat_ids))
+        return (
+            "denied",
+            f"Permanente F-seat {seat} niet in toegestane seats ({allowed}).",
+        )
+    return None
+
+
+def _attack_type_rule_outcome(
+    hero_id: int,
+    roster_filter: AdventureRosterFilter,
+    *,
+    meta: HeroRosterMeta | None = None,
+) -> tuple[str, str] | None:
+    """Return (status, reason) when base-attack type rules apply; else None."""
+    if not roster_filter.has_attack_type_rules():
+        return None
+    hero_meta = meta or _hero_meta(hero_id)
+    types = frozenset(hero_meta.attack_types or ())
+    if not types:
+        return (
+            "unknown",
+            "Basis-aanvalstype onbekend; by_attack_types niet evalueerbaar.",
+        )
+    hit_banned = sorted(roster_filter.banned_attack_types & types)
+    if hit_banned:
+        return (
+            "denied",
+            "Basis-aanvalstype geblokkeerd (by_attack_types): "
+            + ", ".join(hit_banned)
+            + ".",
+        )
+    if roster_filter.required_attack_types is not None:
+        if not (roster_filter.required_attack_types & types):
+            need = ", ".join(sorted(roster_filter.required_attack_types))
+            have = ", ".join(sorted(types))
+            return (
+                "denied",
+                f"Basis-aanvalstype {have} voldoet niet aan vereiste ({need}).",
+            )
+    return None
+
+
 def _filter_from_game_change(
     change: dict[str, Any],
     *,
@@ -1277,12 +1651,14 @@ def _filter_from_game_change(
         return filt
 
     filt.uses_api_game_changes = True
+    handled_predicate = False
 
     by_tags = change.get("by_tags")
     if isinstance(by_tags, dict):
         tags_value = by_tags.get("tags")
         if isinstance(tags_value, str) and tags_value.strip():
             filt.merge(_filter_from_by_tags(tags_value, disallow=disallow))
+            handled_predicate = True
 
     by_stat = change.get("by_stat")
     if isinstance(by_stat, dict):
@@ -1294,6 +1670,7 @@ def _filter_from_game_change(
                     stats_list, disallow=disallow, pass_any=pass_any
                 )
             )
+            handled_predicate = True
 
     by_expr = change.get("by_expr")
     if isinstance(by_expr, dict):
@@ -1306,6 +1683,7 @@ def _filter_from_game_change(
                     text_hard_gates=text_hard_gates if allow else None,
                 )
             )
+            handled_predicate = True
 
     by_i_levels = change.get("by_i_levels")
     if isinstance(by_i_levels, dict):
@@ -1334,10 +1712,48 @@ def _filter_from_game_change(
                     ),
                 }
             )
+            handled_predicate = True
         else:
             filt.has_unknown_rules = True
+            filt.has_unevaluable_roster_rules = True
             filt.active_notes.append(
                 f"Onbekende by_i_levels comparison: {comparison!r}"
+            )
+
+    by_seat = change.get("by_seat")
+    if isinstance(by_seat, dict):
+        filt.merge(
+            _filter_from_by_seat(
+                by_seat,
+                disallow=disallow,
+                change_type=change_type,
+            )
+        )
+        handled_predicate = True
+
+    by_attack_types = change.get("by_attack_types")
+    if isinstance(by_attack_types, dict):
+        filt.merge(
+            _filter_from_by_attack_types(
+                by_attack_types,
+                disallow=disallow,
+                change_type=change_type,
+            )
+        )
+        handled_predicate = True
+
+    _mark_unhandled_roster_predicates(filt, change, change_type=change_type)
+
+    # disallow/only_allow with no recognized predicate must not imply open roster.
+    if not handled_predicate and not filt.has_unevaluable_roster_rules:
+        has_any_by = any(
+            str(k).startswith("by_") for k in change if str(k) != "type"
+        )
+        if has_any_by or len(change.keys()) <= 1:
+            filt.has_unknown_rules = True
+            filt.has_unevaluable_roster_rules = True
+            filt.active_notes.append(
+                f"{change_type}: geen evalueerbare roster-predicate"
             )
     return filt
 
@@ -1421,6 +1837,26 @@ def _parse_restrictions_text(text: str) -> AdventureRosterFilter:
             )
             continue
 
+        # "Champions from the first two bench seats cannot be used."
+        if match := re.search(r"first (\w+) bench seats?", lower):
+            word = match.group(1).strip()
+            count = _parse_int(word) if word.isdigit() else {
+                "one": 1,
+                "two": 2,
+                "three": 3,
+                "four": 4,
+                "five": 5,
+                "six": 6,
+            }.get(word)
+            if count is not None and 1 <= count <= 12:
+                banned = set(range(1, count + 1))
+                filt.banned_seat_ids.update(banned)
+                filt.active_notes.append(
+                    "Verboden permanente F-seats: "
+                    + ", ".join(str(s) for s in sorted(banned))
+                )
+                continue
+
         if re.search(r"positional formation abilities", lower):
             filt.has_unknown_rules = True
             filt.active_notes.append("Champions with positional abilities only")
@@ -1445,25 +1881,26 @@ def _adventure_define(payload: dict[str, Any], adventure_id: int | None) -> dict
 
 
 def reserved_formation_seats(payload: dict[str, Any], adventure_id: int | None) -> frozenset[int]:
-    """Seat numbers occupied by adventure NPCs (e.g. slot_escort treants)."""
-    adv = _adventure_define(payload, adventure_id)
-    if adv is None:
-        return frozenset()
+    """Technical position_ids occupied by adventure NPCs / forced key champions.
 
-    reserved: set[int] = set()
-    for change in adv.get("game_changes") or []:
-        if not isinstance(change, dict):
-            continue
-        if str(change.get("type") or "").strip().lower() != "slot_escort":
-            continue
-        slot_ids = change.get("slot_ids")
-        if not isinstance(slot_ids, list):
-            continue
-        for slot_raw in slot_ids:
-            slot = _parse_int(slot_raw)
-            if slot is not None:
-                reserved.add(slot)
-    return frozenset(reserved)
+    Sources (0-based formation-graph indices → technical position_ids):
+
+    - ``slot_escort`` via
+      :func:`ic_gamedata.formation_position_resolve.resolve_slot_escort_seats`
+    - ``key_champion`` with ``force_slot`` via
+      :func:`ic_gamedata.formation_ai_advice.key_champion.resolve_key_champion_seat_meta`
+
+    Unresolved indices are omitted (never treated as raw seat numbers).
+    """
+    from ic_gamedata.formation_ai_advice.key_champion import (
+        resolve_key_champion_seat_meta,
+    )
+    from ic_gamedata.formation_position_resolve import resolve_slot_escort_seats
+
+    escort = resolve_slot_escort_seats(payload, adventure_id).position_ids
+    key_ids, _meta, _warnings = resolve_key_champion_seat_meta(payload, adventure_id)
+    return frozenset(set(escort) | set(key_ids))
+
 
 
 def _layout_formation_seat_count(payload: dict[str, Any]) -> int | None:
@@ -1498,8 +1935,17 @@ def player_formation_capacity(payload: dict[str, Any], adventure_id: int | None)
     layout_seats = _layout_formation_seat_count(payload)
     if layout_seats is None:
         return None
-    reserved = reserved_formation_seats(payload, adventure_id)
-    return max(layout_seats - len(reserved), 1)
+    from ic_gamedata.formation_position_resolve import resolve_slot_escort_seats
+
+    resolution = resolve_slot_escort_seats(payload, adventure_id)
+    if resolution.mapping_reliable:
+        reserved_count = len(resolution.position_ids)
+    else:
+        # Unresolved indices must not silently inflate capacity.
+        reserved_count = len(set(resolution.raw_indices)) or len(
+            resolution.position_ids
+        )
+    return max(layout_seats - reserved_count, 1)
 
 
 def player_formation_filled_count(payload: dict[str, Any]) -> int | None:
@@ -1608,6 +2054,23 @@ def _note_from_game_change(change: dict[str, Any]) -> str | None:
                 return "Alleen laagste gemiddelde ilevel per F-seat (API by_i_levels)"
             if comparison in {"most", "highest", "max"}:
                 return "Alleen hoogste gemiddelde ilevel per F-seat (API by_i_levels)"
+        by_seat = change.get("by_seat")
+        if isinstance(by_seat, dict):
+            seats = _parse_seat_ids(by_seat.get("seats"))
+            if seats:
+                label = ", ".join(str(s) for s in sorted(set(seats)))
+                if change_type == "disallow_crusaders":
+                    return f"Verboden permanente F-seats: {label}"
+                return f"Alleen permanente F-seats: {label}"
+        by_attack_types = change.get("by_attack_types")
+        if isinstance(by_attack_types, dict):
+            raw = by_attack_types.get("attack_types")
+            if isinstance(raw, list) and raw:
+                label = ", ".join(str(t) for t in raw if str(t).strip())
+                if label:
+                    if change_type == "disallow_crusaders":
+                        return f"Verboden basis-aanvalstypen: {label}"
+                    return f"Vereist basis-aanvalstype (één van): {label}"
     return None
 
 
@@ -1666,12 +2129,20 @@ def build_adventure_roster_filter(
             if text_filt.has_roster_rules() or text_filt.active_notes:
                 filt.merge(text_filt)
         else:
-            # Still pick up text-only rules like ilevel when API lacked them.
+            # Still pick up text-only rules like ilevel / seat bans when API
+            # lacked those predicates (API game_changes may cover other rules).
             if text_filt.ilvl_seat_comparison and not filt.ilvl_seat_comparison:
                 filt.ilvl_seat_comparison = text_filt.ilvl_seat_comparison
                 for note in text_filt.active_notes:
                     if note not in filt.active_notes:
                         filt.active_notes.append(note)
+            if text_filt.banned_seat_ids and not filt.banned_seat_ids:
+                filt.banned_seat_ids.update(text_filt.banned_seat_ids)
+                for note in text_filt.active_notes:
+                    if note not in filt.active_notes and "f-seat" in note.casefold():
+                        filt.active_notes.append(note)
+            if text_filt.allowed_seat_ids is not None and filt.allowed_seat_ids is None:
+                filt.allowed_seat_ids = set(text_filt.allowed_seat_ids)
 
     if filt.ilvl_seat_comparison and filt.ilvl_allowed_hero_ids is None:
         resolved = _resolve_ilvl_allowed_hero_ids(
@@ -1732,7 +2203,33 @@ def build_adventure_roster_filter(
             if note not in filt.active_notes:
                 filt.active_notes.append(note)
 
+    _finalize_unevaluable_rule_ids(filt)
     return filt
+
+
+def _finalize_unevaluable_rule_ids(filt: AdventureRosterFilter) -> None:
+    """Assign stable unique ids and rewrite rule_ref pointers once per build."""
+    if not filt.unevaluable_rules:
+        return
+    id_map: dict[str, str] = {}
+    renumbered: list[dict[str, Any]] = []
+    for index, rule in enumerate(filt.unevaluable_rules, start=1):
+        if not isinstance(rule, dict):
+            continue
+        new_id = f"urule_{index}"
+        old_id = rule.get("id")
+        copied = dict(rule)
+        copied["id"] = new_id
+        if isinstance(old_id, str) and old_id:
+            id_map[old_id] = new_id
+        renumbered.append(copied)
+    filt.unevaluable_rules = renumbered
+    for interp in filt.expr_interpretations:
+        if not isinstance(interp, dict):
+            continue
+        ref = interp.get("rule_ref")
+        if isinstance(ref, str) and ref in id_map:
+            interp["rule_ref"] = id_map[ref]
 
 
 def _split_top_level(expr: str, operator: str) -> list[str]:
@@ -1935,11 +2432,14 @@ def is_hero_allowed(
     *,
     formation_hero_ids: frozenset[int] | None = None,
 ) -> bool:
-    """Return True when the champion may be used on this adventure."""
-    if roster_filter is None:
-        return True
+    """Return True when the champion may be used on this adventure.
 
-    if formation_hero_ids and hero_id in formation_hero_ids:
+    ``formation_hero_ids`` is accepted for call-site compatibility but is
+    **not** an eligibility override: presence in the live formation is an
+    observation, not proof that the champion may be (re)placed.
+    """
+    del formation_hero_ids  # presence ≠ permission
+    if roster_filter is None:
         return True
 
     if hero_id in roster_filter.banned_hero_ids:
@@ -1951,6 +2451,11 @@ def is_hero_allowed(
     if hero_id in roster_filter.exempt_hero_ids:
         return True
 
+    seat_outcome = _seat_rule_outcome(hero_id, roster_filter)
+    if seat_outcome is not None and seat_outcome[0] != "allowed":
+        # denied or unknown seat rule → not allowed for suggestions.
+        return False
+
     if (
         roster_filter.ilvl_allowed_hero_ids is not None
         and hero_id not in roster_filter.ilvl_allowed_hero_ids
@@ -1958,6 +2463,10 @@ def is_hero_allowed(
         return False
 
     meta = _hero_meta(hero_id)
+
+    attack_outcome = _attack_type_rule_outcome(hero_id, roster_filter, meta=meta)
+    if attack_outcome is not None and attack_outcome[0] != "allowed":
+        return False
 
     if roster_filter.banned_tags & meta.all_tags:
         return False
@@ -1990,8 +2499,10 @@ def is_hero_allowed(
             return False
         return False
 
-    # Unevaluable stat comparator with no other hard rule: fail closed for suggestions.
+    # Unevaluable essential rules with no other hard rule: fail closed.
     if roster_filter.has_unevaluable_stat_rules:
+        return False
+    if roster_filter.has_unevaluable_roster_rules:
         return False
 
     return True
@@ -2155,11 +2666,18 @@ def structured_stat_gates(roster_filter: AdventureRosterFilter | None) -> list[d
 def evaluate_heroes_against_filter(
     hero_ids: list[int] | tuple[int, ...],
     roster_filter: AdventureRosterFilter | None,
+    *,
+    formation_hero_ids: frozenset[int] | None = None,
 ) -> list[dict[str, Any]]:
-    """Per-hero restriction outcome without formation-trust bypass.
+    """Per-hero restriction outcome.
+
+    ``formation_hero_ids`` is accepted for call-site compatibility but does
+    **not** force ``allowed``: live presence is observation only. Eligibility
+    always comes from the roster filter (and known explicit exemptions).
 
     Returns status: allowed | denied | unknown.
     """
+    del formation_hero_ids  # presence ≠ permission
     results: list[dict[str, Any]] = []
     if roster_filter is None:
         for hid in hero_ids:
@@ -2175,7 +2693,6 @@ def evaluate_heroes_against_filter(
 
     for hid in hero_ids:
         meta = _hero_meta(hid)
-        # Do not pass formation_hero_ids — seated ≠ proven eligible.
         if hid in roster_filter.banned_hero_ids or hid in roster_filter.patron_blocked_hero_ids:
             results.append(
                 {
@@ -2193,6 +2710,34 @@ def evaluate_heroes_against_filter(
                     "status": "allowed",
                     "reason": "Uitzondering (hero_id) in restrictieregel.",
                     "ability_scores": meta.stats or None,
+                }
+            )
+            continue
+
+        seat_outcome = _seat_rule_outcome(hid, roster_filter)
+        if seat_outcome is not None:
+            status, reason = seat_outcome
+            results.append(
+                {
+                    "champion_id": hid,
+                    "status": status,
+                    "reason": reason,
+                    "ability_scores": meta.stats or None,
+                    "permanent_seat": _hero_permanent_seat(hid),
+                }
+            )
+            continue
+
+        attack_outcome = _attack_type_rule_outcome(hid, roster_filter, meta=meta)
+        if attack_outcome is not None:
+            status, reason = attack_outcome
+            results.append(
+                {
+                    "champion_id": hid,
+                    "status": status,
+                    "reason": reason,
+                    "ability_scores": meta.stats or None,
+                    "attack_types": sorted(meta.attack_types) or None,
                 }
             )
             continue
@@ -2357,6 +2902,18 @@ def evaluate_heroes_against_filter(
                     "status": "unknown",
                     "reason": (
                         "Stat-restrictie niet evalueerbaar (onbekende comparator); "
+                        "niet stilzwijgend als toegestaan behandeld."
+                    ),
+                    "ability_scores": meta.stats or None,
+                }
+            )
+        elif roster_filter.has_unevaluable_roster_rules:
+            results.append(
+                {
+                    "champion_id": hid,
+                    "status": "unknown",
+                    "reason": (
+                        "Essentiële roster-restrictie niet evalueerbaar; "
                         "niet stilzwijgend als toegestaan behandeld."
                     ),
                     "ability_scores": meta.stats or None,

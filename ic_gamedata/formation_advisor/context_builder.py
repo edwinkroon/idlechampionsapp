@@ -50,6 +50,8 @@ def build_formation_layout_context(
 
     # Only champions on the live board. ``hero_in_seats`` can still list seat
     # holders who are benched / not placed — never promote those into active.
+    # The ``formation`` argument remains the caller-selected party (UI must pass
+    # the live board via resolve_live_formation).
     seat_by_hero: dict[int, int] = {}
     formation_ids = {hero.hero_id for hero in formation}
     for hero in formation:

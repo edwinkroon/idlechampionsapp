@@ -8,11 +8,15 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from ic_gamedata.formation_ai_advice.compact_clipboard import (
+from ic_gamedata.formation_ai_advice.export_clipboard import (
     build_advice_request_clipboard_text,
     evaluate_clipboard_budget,
 )
-from ic_gamedata.formation_ai_advice.export_budget import DEFAULT_CHAR_BUDGET, count_chars
+from ic_gamedata.formation_ai_advice.export_budget import (
+    DEFAULT_CHAR_BUDGET,
+    count_chars,
+    count_utf8_bytes,
+)
 from ic_gamedata.formation_ai_advice.export_validation import (
     mark_request_unvalidated,
     validate_advice_request_export,
@@ -97,8 +101,8 @@ class AdviceRequestBudgetFixTests(unittest.TestCase):
         self._cache_patch.stop()
         self._tmpdir.cleanup()
 
-    def test_conflict_diagnostic_request_within_15k(self) -> None:
-        """Denied full party + diagnostic labels must still fit the budget."""
+    def test_conflict_diagnostic_request_within_16k(self) -> None:
+        """Large party under DEX adventure still fits budget (incl. denials)."""
         owned = [
             int(h["hero_id"])
             for h in self.payload["details"]["heroes"]
@@ -145,11 +149,12 @@ class AdviceRequestBudgetFixTests(unittest.TestCase):
                 labeled = mark_request_unvalidated(req, validation)
                 text = build_advice_request_clipboard_text(labeled, mode="project")
                 chars = count_chars(text)
+                utf8 = count_utf8_bytes(text)
                 self.assertLessEqual(
-                    chars,
+                    utf8,
                     DEFAULT_CHAR_BUDGET,
                     msg=(
-                        f"swap={include_swap} chars={chars} "
+                        f"swap={include_swap} utf8={utf8} chars={chars} "
                         f"budget={DEFAULT_CHAR_BUDGET}"
                     ),
                 )
@@ -162,7 +167,7 @@ class AdviceRequestBudgetFixTests(unittest.TestCase):
                 ]
                 self.assertLessEqual(len(denied_rows), 1)
 
-    def test_selected_only_request_within_15k_after_fix(self) -> None:
+    def test_selected_only_request_within_16k_after_fix(self) -> None:
         scores = {
             2: {"dex": 14},
             3: {"dex": 13},
@@ -211,27 +216,30 @@ class AdviceRequestBudgetFixTests(unittest.TestCase):
 
         text = build_advice_request_clipboard_text(req, mode="project")
         chars = count_chars(text)
+        utf8 = count_utf8_bytes(text)
         print(
             "FIXED_REQUEST_SIZE",
             json.dumps(
                 {
                     "chars": chars,
+                    "utf8_bytes": utf8,
                     "budget": DEFAULT_CHAR_BUDGET,
-                    "within_15k": chars <= DEFAULT_CHAR_BUDGET,
+                    "within_16k": utf8 <= DEFAULT_CHAR_BUDGET,
                     "before_case_chars": 22661,
                 }
             ),
         )
-        self.assertLessEqual(chars, DEFAULT_CHAR_BUDGET)
+        self.assertLessEqual(utf8, DEFAULT_CHAR_BUDGET)
         info = evaluate_clipboard_budget(text, max_chars=DEFAULT_CHAR_BUDGET)
         self.assertTrue(info["within_budget"])
 
-        # Exact boundary / one-over still not truncated.
-        exact = evaluate_clipboard_budget(text, max_chars=chars)
+        # Exact boundary / one-over still not truncated (UTF-8 byte gate).
+        exact = evaluate_clipboard_budget(text, max_chars=utf8)
         self.assertTrue(exact["within_budget"])
-        over = evaluate_clipboard_budget(text, max_chars=chars - 1)
+        over = evaluate_clipboard_budget(text, max_chars=utf8 - 1)
         self.assertFalse(over["within_budget"])
         self.assertEqual(count_chars(text), chars)
+        self.assertEqual(count_utf8_bytes(text), utf8)
 
         validation = validate_advice_request_export(
             payload=self.payload,
@@ -243,8 +251,8 @@ class AdviceRequestBudgetFixTests(unittest.TestCase):
         self.assertTrue(validation.structural_ok)
         self.assertTrue(validation.party_restriction_ok)
 
-    def test_conflict_export_not_advice_ready(self) -> None:
-        # Party below the live 909 DEX floor → denied → not advice_ready.
+    def test_seated_party_not_auto_allowed_when_static_dex_denies(self) -> None:
+        """Presence is observation only — low DEX seated champs stay denied."""
         defines = self.payload["defines"]
         for adv in defines["adventure_defines"]:
             if adv.get("id") == 909:
@@ -259,7 +267,7 @@ class AdviceRequestBudgetFixTests(unittest.TestCase):
                         },
                     }
                 ]
-        scores = {2: {"dex": 10}, 3: {"dex": 11}, 4: {"dex": 9}}
+        scores = {2: {"dex": 10}, 3: {"dex": 11}, 4: {"dex": 9}, 1: {"dex": 8}}
         snap = build_base_snapshot(self.payload, formation=self.formation)
         with patch(
             "ic_gamedata.adventure_restrictions.hero_ability_scores_map_from_cached_definitions",
@@ -275,22 +283,49 @@ class AdviceRequestBudgetFixTests(unittest.TestCase):
         structured = (req.get("goal") or {}).get("structured_restrictions") or {}
         self.assertIn("GetStat(`dex`) < 12", structured.get("deny_exprs") or [])
         self.assertNotIn("GetStat(`dex`) < 12", structured.get("allow_exprs") or [])
+        party_ids = {int(m["id"]) for m in (req.get("party") or []) if m.get("id")}
         for member in req.get("party") or []:
-            self.assertEqual(member.get("eligibility"), "denied")
+            self.assertNotEqual(
+                member.get("eligibility"),
+                "allowed",
+                msg=f"seated {member.get('id')} must not be auto-allowed",
+            )
+        elig = req.get("roster_eligibility") or {}
+        denied_ids = {
+            int(row["id"])
+            for row in (elig.get("denied") or [])
+            if isinstance(row, dict) and isinstance(row.get("id"), int)
+        }
+        for group in elig.get("denied_groups") or []:
+            if isinstance(group, dict):
+                denied_ids.update(
+                    int(i) for i in (group.get("ids") or []) if isinstance(i, int)
+                )
+        self.assertTrue(party_ids & denied_ids)
+        self.assertFalse(set(elig.get("allowed_ids") or []) & denied_ids)
+        conflicts = {
+            int(c["champion_id"]): c
+            for c in (elig.get("presence_conflicts") or [])
+            if isinstance(c, dict) and isinstance(c.get("champion_id"), int)
+        }
+        for hid in party_ids:
+            self.assertIn(hid, conflicts)
+            self.assertEqual(conflicts[hid].get("status"), "unresolved")
+            self.assertIs(conflicts[hid].get("replacement_locked"), False)
+        dims = (req.get("readiness") or {}).get("dimensions") or {}
+        self.assertEqual(dims.get("party_legality"), "conflict")
         validation = validate_advice_request_export(
             payload=self.payload,
             request=req,
             snapshot_id=snap["meta"]["snapshot_id"],
             exported_snapshot_id=snap["meta"]["snapshot_id"],
         )
-        self.assertFalse(validation.advice_ready)
-        labeled = mark_request_unvalidated(req, validation)
-        self.assertEqual(
-            labeled["meta"]["validation"]["label"],
-            "diagnostisch_geldigheid_onbevestigd",
+        self.assertFalse(validation.party_restriction_ok, validation.summary_nl())
+        self.assertFalse(validation.advice_ready, validation.summary_nl())
+        self.assertTrue(validation.structural_ok, validation.summary_nl())
+        self.assertTrue(
+            any(i.code == "party_denied_by_restrictions" for i in validation.errors)
         )
-        self.assertFalse(labeled["meta"]["validation"]["ok"])
-        self.assertTrue(labeled["meta"]["validation"]["validation_ran"])
 
     def test_not_unlocked_spec_without_id_is_not_structural_error(self) -> None:
         snap = build_base_snapshot(self.payload, formation=self.formation)

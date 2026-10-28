@@ -10,6 +10,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 from ic_gamedata.formation_ai_advice.owned_roster_cache import (
+    _entry_looks_mechanics_complete,
     entries_for_save,
     get_cached_champion_entry,
     load_owned_roster_cache,
@@ -99,35 +100,143 @@ class OwnedRosterCacheTests(unittest.TestCase):
 
         def builder():
             builds["n"] += 1
-            return {"champion_id": 7, "name": "Built"}
+            return {"champion_id": 7, "name": "Built", "seat": 7}
 
-        first, src1 = resolve_champion_entry(
-            cache=cache,
-            hero_id=7,
-            fingerprint="fp",
-            builder=builder,
-        )
-        second, src2 = resolve_champion_entry(
-            cache=cache,
-            hero_id=7,
-            fingerprint="fp",
-            builder=builder,
-        )
-        self.assertEqual(src1, "built")
-        self.assertEqual(src2, "cache")
+        # Avoid live hero_defines seat checks for this synthetic hero id.
+        with patch(
+            "ic_gamedata.formation_ai_advice.owned_roster_cache._definition_seat_for_hero",
+            return_value=7,
+        ), patch(
+            "ic_gamedata.formation_ai_advice.owned_roster_cache._entry_looks_mechanics_complete",
+            return_value=True,
+        ):
+            first, src1 = resolve_champion_entry(
+                cache=cache,
+                hero_id=7,
+                fingerprint="fp",
+                builder=builder,
+            )
+            second, src2 = resolve_champion_entry(
+                cache=cache,
+                hero_id=7,
+                fingerprint="fp",
+                builder=builder,
+            )
+            self.assertEqual(src1, "built")
+            self.assertEqual(src2, "cache")
+            self.assertEqual(builds["n"], 1)
+            self.assertEqual(first["name"], "Built")
+            self.assertEqual(second["name"], "Built")
+
+            _, src3 = resolve_champion_entry(
+                cache=cache,
+                hero_id=7,
+                fingerprint="fp",
+                builder=builder,
+                force_refresh=True,
+            )
+            self.assertEqual(src3, "built")
+            self.assertEqual(builds["n"], 2)
+
+    def test_put_sanitizes_seat_from_definitions(self) -> None:
+        cache: dict = {"entries": {}}
+        with patch(
+            "ic_gamedata.formation_ai_advice.owned_roster_cache._definition_seat_for_hero",
+            return_value=8,
+        ):
+            put_cached_champion_entry(
+                cache,
+                149,
+                "fp-rav",
+                {"champion_id": 149, "name": "Ravengard", "seat": 1},
+            )
+            stored = cache["entries"]["149"]["entry"]
+            self.assertEqual(stored["seat"], 8)
+            hit = get_cached_champion_entry(cache, 149, "fp-rav")
+            assert hit is not None
+            self.assertEqual(hit["seat"], 8)
+
+    def test_poisoned_seat_forces_rebuild(self) -> None:
+        """Stale seat=1 for Ravengard must not be trusted — rebuild from builder."""
+        cache: dict = {
+            "entries": {
+                "149": {
+                    "fingerprint": "fp-poison",
+                    "entry": {
+                        "champion_id": 149,
+                        "name": "Ravengard",
+                        "seat": 1,
+                        # Look mechanics-complete so only the seat guard rejects.
+                        "abilities": [
+                            {"name": "Aura", "effect": "Buff allies."},
+                        ],
+                    },
+                }
+            }
+        }
+        builds = {"n": 0}
+
+        def builder():
+            builds["n"] += 1
+            return {
+                "champion_id": 149,
+                "name": "Ravengard",
+                "seat": 8,
+                "abilities": [{"name": "Aura", "effect": "Buff allies."}],
+            }
+
+        with patch(
+            "ic_gamedata.formation_ai_advice.owned_roster_cache._definition_seat_for_hero",
+            return_value=8,
+        ):
+            self.assertFalse(
+                _entry_looks_mechanics_complete(
+                    cache["entries"]["149"]["entry"], 149
+                )
+            )
+            entry, source = resolve_champion_entry(
+                cache=cache,
+                hero_id=149,
+                fingerprint="fp-poison",
+                builder=builder,
+            )
+        self.assertEqual(source, "built")
         self.assertEqual(builds["n"], 1)
-        self.assertEqual(first["name"], "Built")
-        self.assertEqual(second["name"], "Built")
+        self.assertEqual(entry["seat"], 8)
+        self.assertEqual(cache["entries"]["149"]["entry"]["seat"], 8)
 
-        _, src3 = resolve_champion_entry(
-            cache=cache,
-            hero_id=7,
-            fingerprint="fp",
-            builder=builder,
-            force_refresh=True,
+    def test_deekin_ravengard_party_seats_not_duplicate(self) -> None:
+        """Party seats come from defines — Ravengard must not collide with Deekin."""
+        from ic_gamedata.formation_ai_advice.export import _permanent_seat
+        from ic_gamedata.formation_ai_advice.export_validation import (
+            ValidationIssue,
         )
-        self.assertEqual(src3, "built")
-        self.assertEqual(builds["n"], 2)
+
+        deekin_seat = _permanent_seat(28)
+        ravengard_seat = _permanent_seat(149)
+        self.assertEqual(deekin_seat, 1)
+        self.assertEqual(ravengard_seat, 8)
+
+        # Mirror build_advice_request party.seat assignment.
+        party = [
+            {"id": 28, "name": "Deekin", "seat": deekin_seat, "position": 1},
+            {"id": 149, "name": "Ravengard", "seat": ravengard_seat, "position": 2},
+        ]
+        seats: dict[int, list[int]] = {}
+        for row in party:
+            hid = row["id"]
+            seat = row["seat"]
+            if isinstance(hid, int) and isinstance(seat, int):
+                seats.setdefault(seat, []).append(hid)
+        dup_issues = [
+            ValidationIssue(
+                "duplicate_permanent_seat",
+                f"Meer dan één champion op permanente seat {seat}: {hids}.",
+            )
+            for seat, hids in seats.items()
+            if len(hids) > 1
+        ]
+        self.assertEqual(dup_issues, [])
 
 
 class SwapExportUsesRosterCacheTests(unittest.TestCase):

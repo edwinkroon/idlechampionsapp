@@ -6,7 +6,7 @@ import time
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from PySide6.QtCore import Qt, QTimer, Signal
+from PySide6.QtCore import Qt, QThreadPool, QTimer, Signal
 from PySide6.QtWidgets import (
     QFrame,
     QGridLayout,
@@ -65,6 +65,9 @@ class DashboardTab(QWidget):
         self._state.state_changed.connect(self._schedule_label_refresh)
         self._state.payload_changed.connect(self.payload_updated.emit)
         self._init_state()
+        self._install_detect_inflight = False
+        self._install_detect_signals = None
+        self._post_detect_feedback: str | None = None
         self._poll_timer = QTimer(self)
         self._poll_timer.setInterval(1000)
         self._poll_timer.timeout.connect(self._poll_once)
@@ -219,7 +222,7 @@ class DashboardTab(QWidget):
         self._status_pills: dict[str, dict[str, QWidget]] = {}
         for key, tooltip in (
             ("api", "Status of CNE API / webRequestLog credentials"),
-            ("memory", "Live memory read from the game process"),
+            ("memory", "Optionele live memory-read (Settings → Memory UI hint)"),
             ("session", "Dashboard session and last successful update"),
         ):
             frame, dot, text = self._make_status_pill(tooltip)
@@ -467,64 +470,131 @@ class DashboardTab(QWidget):
         self._state.load_tracker()
 
     def refresh_install(self) -> None:
-        try:
-            from ic_gamedata.paths import InstallSource, find_game_install
-        except ImportError as exc:
-            self._sources_tab.install_lbl.setText(f"ic_gamedata missing: {exc}")
-            self._sources_tab.log_lbl.setText("—")
+        """Find install + credentials on a worker; apply results on the UI thread."""
+        if self._install_detect_inflight:
             return
-        info = find_game_install()
+        self._install_detect_inflight = True
+        self._sources_tab.set_feedback("Searching for game install…")
+        self._set_dash_status("Searching for game install…")
+
+        from ic_ui.workers.install_detect import InstallDetectRunnable
+
+        worker = InstallDetectRunnable(signals_parent=self)
+        self._install_detect_signals = worker.signals
+        worker.signals.done.connect(self._on_install_detect_done)
+        worker.signals.error.connect(self._on_install_detect_error)
+        QThreadPool.globalInstance().start(worker)
+
+    def _on_install_detect_error(self, message: str) -> None:
+        self._install_detect_inflight = False
+        self._install_detect_signals = None
+        self._post_detect_feedback = None
+        self._sources_tab.install_lbl.setText("Detect failed")
+        self._sources_tab.log_lbl.setText("—")
+        self._set_dash_status(f"Install detect failed: {message}")
+        self._sources_tab.set_feedback(f"Install detect failed: {message}", ok=False)
+
+    def _on_install_detect_done(self, result: object) -> None:
+        self._install_detect_inflight = False
+        self._install_detect_signals = None
+        from ic_ui.workers.install_detect import InstallDetectResult
+
+        if not isinstance(result, InstallDetectResult):
+            self._on_install_detect_error("Unexpected detect result.")
+            return
+        if result.error and result.info is None:
+            self._post_detect_feedback = None
+            self._sources_tab.install_lbl.setText(f"ic_gamedata missing: {result.error}")
+            self._sources_tab.log_lbl.setText("—")
+            self._set_dash_status(result.error)
+            self._sources_tab.set_feedback(result.error, ok=False)
+            return
+
+        info = result.info
         self._dash_install = info
         if info is None:
+            self._post_detect_feedback = None
             self._sources_tab.install_lbl.setText("Not found (Epic/Steam/manual path)")
             self._sources_tab.log_lbl.setText("—")
-            self._set_dash_status("No installation found. Start the game or use a manual path.")
+            self._set_dash_status(
+                "No installation found. Start the game or use a manual path."
+            )
             self._sources_tab.set_feedback(
                 "No installation found — enter a manual path or start the game.",
                 ok=False,
             )
             self._dash_tailer = None
             return
-        source_labels = {
-            InstallSource.EPIC: "Epic Games",
-            InstallSource.STEAM: "Steam",
-            InstallSource.MANUAL: "Manual",
-            InstallSource.RUNNING: "Running process",
-            InstallSource.UNKNOWN: "Unknown",
-        }
-        self._sources_tab.install_lbl.setText(f"{source_labels.get(info.source, info.source.value)} — {info.install_dir}")
+
+        try:
+            from ic_gamedata.paths import InstallSource
+        except ImportError:
+            InstallSource = None  # type: ignore[misc, assignment]
+
+        if InstallSource is not None:
+            source_labels = {
+                InstallSource.EPIC: "Epic Games",
+                InstallSource.STEAM: "Steam",
+                InstallSource.MANUAL: "Manual",
+                InstallSource.RUNNING: "Running process",
+                InstallSource.UNKNOWN: "Unknown",
+            }
+            source_txt = source_labels.get(info.source, info.source.value)
+        else:
+            source_txt = str(getattr(info.source, "value", info.source))
+        self._sources_tab.install_lbl.setText(f"{source_txt} — {info.install_dir}")
         self._sources_tab.manual_path.setText(str(info.install_dir))
+
+        pending_feedback = self._post_detect_feedback
+        self._post_detect_feedback = None
+
         if info.web_request_log is None:
             self._sources_tab.log_lbl.setText("webRequestLog.txt not present yet")
             self._dash_tailer = None
             self._dash_credentials = None
+            self._set_dash_status("Install found, but webRequestLog.txt is missing.")
+            if pending_feedback:
+                self._sources_tab.set_feedback(pending_feedback)
             return
+
         self._sources_tab.log_lbl.setText(str(info.web_request_log))
         try:
-            from ic_gamedata.credentials import extract_credentials_from_log
             from ic_gamedata.log_tailer import WebRequestLogTailer
         except ImportError:
-            from ic_gamedata import WebRequestLogTailer, extract_credentials_from_log
+            from ic_gamedata import WebRequestLogTailer
+
         self._dash_tailer = WebRequestLogTailer(info.web_request_log)
-        self._dash_tailer.bootstrap()
-        self._dash_credentials = extract_credentials_from_log(info.web_request_log)
+        self._dash_tailer.adopt_bootstrap(
+            result.bootstrap_snap,
+            byte_offset=result.log_byte_size,
+        )
+        self._dash_credentials = result.credentials
         if self._data is not None:
             self._data.configure(
                 log_path=Path(info.web_request_log),
                 credentials=self._dash_credentials,
             )
+        if pending_feedback:
+            self._sources_tab.set_feedback(pending_feedback)
+        elif result.error:
+            self._sources_tab.set_feedback(
+                f"Install found, but log read had issues: {result.error}",
+                ok=False,
+            )
         if self._dash_credentials is not None:
             self._set_dash_status(
                 "Ready. API refreshes on game activity (log) or within 30 seconds."
             )
-            self._sources_tab.set_feedback("Installation and credentials found.")
+            if not pending_feedback:
+                self._sources_tab.set_feedback("Installation and credentials found.")
             self.api_poll_requested.emit()
         else:
             self._set_dash_status("Log found but no credentials yet.")
-            self._sources_tab.set_feedback(
-                "Log found, but no credentials yet — play in-game briefly or search again.",
-                ok=False,
-            )
+            if not pending_feedback:
+                self._sources_tab.set_feedback(
+                    "Log found, but no credentials yet — play in-game briefly or search again.",
+                    ok=False,
+                )
 
     def save_manual_path(self) -> None:
         try:
@@ -538,11 +608,12 @@ class DashboardTab(QWidget):
         except OSError as exc:
             self._sources_tab.set_feedback(f"Save failed: {exc}", ok=False)
             return
+        self._post_detect_feedback = (
+            "Manual path saved to config/gamedata.json."
+            if raw
+            else "Manual path cleared; auto-detect is used."
+        )
         self.refresh_install()
-        if raw:
-            self._sources_tab.set_feedback("Manual path saved to config/gamedata.json.")
-        else:
-            self._sources_tab.set_feedback("Manual path cleared; auto-detect is used.")
 
     def _seed_session_from_store(self) -> bool:
         """Use latest GameDataService snap if available; otherwise wait for async poll."""

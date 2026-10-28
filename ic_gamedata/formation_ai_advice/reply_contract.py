@@ -62,10 +62,23 @@ _IMPORTER_SEMANTICS = {
     "conditional_with_placements": (
         "blijft status=proposal; condition->warnings; apply mag als verder geldig"
     ),
+    "npc_escort_slots": (
+        "geen_party_champions_geen_swaps; plaatsing op placeability=blocked weigeren; "
+        "placeability=unknown geen automatische nieuwe plaatsing"
+    ),
+    "available_position_ids": (
+        "alleen_bevestigd_lege_plaatsbare_plekken; "
+        "niet_afleiden_uit_len_valid_minus_party"
+    ),
 }
 
 
 def snapshot_expected_filename(snapshot_id: str) -> str:
+    """Legacy id-derived name (``{snapshot_id}.json``).
+
+    Not the real ``basicdata_*.json`` export basename. Prefer registry
+    ``expected_filename`` / ``last_exported_filename`` for advice refs.
+    """
     sid = str(snapshot_id or "").strip() or "?"
     return f"{sid.replace('/', '_')}.json"
 
@@ -137,34 +150,15 @@ def _build_structure_example(
     }
 
 
-def build_answer_contract(
-    request_id: str,
-    *,
-    party: list[dict[str, Any]] | None = None,
-    valid_position_ids: list[int] | None = None,
-    snapshot_id: str | None = None,
-) -> dict[str, Any]:
-    """Self-contained importer contract for every ADVICE_REQUEST.
-
-    Preferred chat shape is compact ``placements``/``specializations``; the
-    importer normalizes that onto full ``assignments`` before required-key checks.
-    """
-    rid = str(request_id or "").strip() or "PLAK_REQUEST_ID"
+def build_static_answer_contract() -> dict[str, Any]:
+    """Importer contract body for BASE_SNAPSHOT (no per-request ids/examples)."""
     props = FORMATION_ADVICE_JSON_SCHEMA["properties"]
     assign_item = props["assignments"]["items"]["properties"]
     spec_item = assign_item["specialization_choices"]["items"]["properties"]
-    example = _build_structure_example(
-        request_id=rid,
-        party=party,
-        valid_position_ids=valid_position_ids,
-    )
-
     return {
         "schema_version": SCHEMA_VERSION,
         "schema_name": "formation_advice",
         "preferred_shape": "compact",
-        "request_id_exact": rid,
-        "snapshot_id_echo": snapshot_id,
         # --- compact (what chat should produce) ---
         "compact": {
             "required_top_level": list(_COMPACT_CHAT_FIELDS),
@@ -219,12 +213,85 @@ def build_answer_contract(
         },
         "semantics": dict(_IMPORTER_SEMANTICS),
         "display_vs_import": {
-            "table_columns": ["Plek", "Champion"],
+            "table_columns": ["Plek", "Champion", "Specialisatie(s)"],
             "table_sort": ["display_column", "display_slot"],
             "table_uses": "display_position (kolom-plek)",
+            "champion_cell": "Naam (seat N) — permanente F-seat uit veld seat",
+            "champion_cell_example": "Hitch (seat 3)",
+            "specialization_cell": (
+                "exacte leesbare optienamen uit BASE_SNAPSHOT "
+                "mechanics/specialisatiecatalogus; resolve via champion_id, "
+                "group_id, option_id/ref"
+            ),
+            "specialization_status_labels": {
+                "new_advice": "Naam (advies)",
+                "same_as_current": "Naam (actief)",
+                "keep_current": "Naam (behouden)",
+                "none": "Nog te kiezen — geen nieuw advies",
+                "advised_locked_with_level": "Naam (advies vanaf lvl X)",
+                "advised_locked_no_level": "Naam (advies na ontgrendeling)",
+                "unresolvable_name": "Onbekend (+ statuslabel)",
+            },
+            "specialization_multi_group": (
+                "groepsvolgorde behouden; Keuze 1: …; Keuze 2: …"
+            ),
+            "current_selection_source": (
+                "ADVICE_REQUEST (overschrijft snapshotselectie/"
+                "ontgrendelstatus)"
+            ),
+            "table_json_parity": (
+                "ieder nieuw specialisatieadvies in tabel én JSON; "
+                "behouden actuele keuze niet als nieuw in JSON"
+            ),
             "json_uses": "technical position_id only",
-            "permanent_seat": "not a formation position_id",
+            "permanent_seat": "not a formation position_id; show after name in table only",
+            "placements_exclude": (
+                "geen specialisatienamen of display_position in "
+                "technische placements"
+            ),
         },
+    }
+
+
+def build_answer_contract_ref(
+    request_id: str,
+    *,
+    snapshot_id: str | None = None,
+) -> dict[str, Any]:
+    """Thin ADVICE_REQUEST pointer — full contract lives on BASE_SNAPSHOT."""
+    rid = str(request_id or "").strip() or "PLAK_REQUEST_ID"
+    return {
+        "ref": "BASE_SNAPSHOT.answer_contract",
+        "schema_version": SCHEMA_VERSION,
+        "request_id_exact": rid,
+        "snapshot_id_echo": snapshot_id,
+    }
+
+
+def build_answer_contract(
+    request_id: str,
+    *,
+    party: list[dict[str, Any]] | None = None,
+    valid_position_ids: list[int] | None = None,
+    snapshot_id: str | None = None,
+) -> dict[str, Any]:
+    """Full importer contract (tests / snapshot body).
+
+    Preferred chat shape is compact ``placements``/``specializations``; the
+    importer normalizes that onto full ``assignments`` before required-key checks.
+    ADVICE_REQUEST clipboard uses ``build_answer_contract_ref`` instead.
+    """
+    rid = str(request_id or "").strip() or "PLAK_REQUEST_ID"
+    example = _build_structure_example(
+        request_id=rid,
+        party=party,
+        valid_position_ids=valid_position_ids,
+    )
+    body = build_static_answer_contract()
+    return {
+        **body,
+        "request_id_exact": rid,
+        "snapshot_id_echo": snapshot_id,
         "structure_example": {
             "not_advice": True,
             "note": (
@@ -253,17 +320,23 @@ def build_advice_reply_contract(
 
 
 def reply_format_pointer_nl() -> str:
-    """Short clipboard pointer — full rules live in ``answer_contract`` JSON."""
+    """Short clipboard pointer — full rules live in BASE_SNAPSHOT.answer_contract."""
+    from ic_gamedata.formation_ai_advice.labels import ADVICE_TABLE_HEADER_EXAMPLE
+
     return (
         "Antwoordvorm (verplicht):\n"
-        "1. Leesbare tabel met kolommen ‘Plek’ en ‘Champion’, gesorteerd op "
-        "display_column daarna display_slot (formaat kolom-plek, bijv. 1-1).\n"
-        "2. Eventuele korte uitleg en specialisatieadviezen.\n"
+        "1. Leesbare tabel met kolommen ‘Plek’, ‘Champion’ en "
+        "‘Specialisatie(s)’, gesorteerd op display_column daarna "
+        "display_slot (formaat kolom-plek, bijv. 1-1). Champion-cel: "
+        "Naam (seat N) met permanente F-seat uit veld `seat` "
+        "(bijv. Hitch (seat 3)). Specialisatie(s): zie "
+        "BASE_SNAPSHOT.answer_contract.display_vs_import.\n"
+        "2. Eventuele korte uitleg onder de tabel.\n"
         "3. Precies één JSON-object in één afgesloten Markdown-codeblok "
-        "(taal json) volgens answer_contract in deze ADVICE_REQUEST "
+        "(taal json) volgens BASE_SNAPSHOT.answer_contract "
         "(technische position_id’s; nooit display_position als id; "
-        "permanente seat is geen formatiepositie).\n"
+        "permanente seat is geen formatiepositie; request_id = "
+        "ADVICE_REQUEST.answer_contract.request_id_exact).\n"
         "\n"
-        "| Plek | Champion |\n"
-        "| --- | --- |"
+        f"{ADVICE_TABLE_HEADER_EXAMPLE}"
     )

@@ -22,6 +22,7 @@ Dit is geen takenlijst voor “alles fixen”; het scheidt wat **opgelost** is v
 | Equipment-effecten | Staan als `equipment_status: unknown`. Geen multipliers uit gemiddelde itemlevels — maar de AI ziet ook geen echte gear-buffs. |
 | Actuele totale buff na gear/feats/stacks | Parameters zijn vaak `definition_base` of `computed_unknown`, niet “huidige in-game eindwaarde”. |
 | Escorts / blocked als hop | `escorts_count_as_adjacent: unknown`; hops lopen in de export **niet** door blocked. Of elk ability dat zo speelt, is niet vastgesteld. |
+| NPC/escort-identiteit | `slot_states` markeert `slot_escort`-seats als `occupancy=escort` / `placeability=blocked`, maar API levert geen NPC-id/naam op die seats — `blocker.id`/`name` blijven weg. Andere blokkadetypes dan `slot_escort` zijn niet gescand. Zonder adventure-define: lege seats → `placeability=unknown` (niet “vrij”). |
 | Voorste kolom = aangevallen slots | `front_column_is_attacked_slots: unknown`. Lage `column_index` = front in onze topologie; dat die ook de aangevallen plekken zijn, is niet bewezen. |
 | Affiliaties | `affiliations_status: unknown` mag **niet** als “Unaffiliated” gelezen worden. Force-allow-by-tag kan daardoor op `unknown` blijven. |
 | Spec-keuze niet uitgelezen | `selection_status: unknown` als `specialization_choices` ontbreekt in de payload — AI mag dan geen A→B alsof A bekend was. |

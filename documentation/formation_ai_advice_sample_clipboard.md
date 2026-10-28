@@ -47,20 +47,20 @@ Omgaan met onzekerheid:
 - Claim geen bewezen optimum zonder voldoende bewijs.
 - Bij restrictieconflict of onbekende toelating: geef uitsluitend een voorwaardelijk voorstel en claim geen geldig speelbare party.
 
-Antwoord uitsluitend met deze Markdown-tabel, niets ervoor of erna:
+Antwoordvorm: leesbare formatietabel + korte uitleg + precies één import-JSON.
 
-| Positie (ID + kolom/rij) | Champion | Seat | Specialisaties | Reden / onzekerheid |
-| --- | --- | --- | --- | --- |
+| Plek | Champion | Specialisatie(s) |
+| --- | --- | --- |
+| 1-1 | Championnaam (seat N) | Specialisatienaam |
+| 2-1 | Championnaam (seat N) | Keuze 1: Naam; Keuze 2: Naam |
 
-Sorteer achterste kolom naar voorste kolom, binnen de kolom boven naar beneden.
-Gebruik de aangeleverde positie-ID's en labels.
-Vermeld onzekerheden kort bij de betreffende champion.
+Sorteer op display_column daarna display_slot (kolom-plek, bijv. 1-1).
+Champion-cel: Naam (seat N) met permanente F-seat.
+Specialisatie(s): exacte catalogusnamen; statuslabels (advies)/(actief)/(behouden)/
+‘Nog te kiezen — geen nieuw advies’/(advies vanaf lvl X)|(advies na ontgrendeling).
+ADVICE_REQUEST is leidend voor actuele selectie. Extra toelichting kort onder de tabel.
 Gebruik A → B alleen als de actuele keuze A daadwerkelijk bekend is.
-Toon wijzigingen van bekende specialisaties vet.
-Maak onderscheid tussen behouden, nieuw kiezen en huidige keuze onbekend.
-
-Als een andere opstelling nodig is om stacks of een fase op te bouwen, vermeld de noodzakelijke tijdelijke plaatsing kort in de relevante rij.
-De tabel beschrijft de aanbevolen hoofdopstelling.
+De tabel beschrijft de aanbevolen hoofdopstelling; JSON gebruikt technische position_id’s.
 
 ## Gegevens
 ```json

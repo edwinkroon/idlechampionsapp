@@ -19,6 +19,9 @@ PATRON_NAMES: dict[int, str] = {
 }
 
 _ALLOWED_WITHOUT_FEAT = frozenset({"available", "always", "timed"})
+# Partner/ability unlocks (Inseparable, etc.) need formation context we do not
+# invent here — leave as unknown (None) rather than hard-deny or hard-allow.
+_UNKNOWN_WITHOUT_CONTEXT = frozenset({"ability", "ability_feat", "sometimes"})
 
 
 def _config_path_candidates() -> list[Path]:
@@ -171,6 +174,8 @@ def is_hero_allowed_on_patron(
         if _has_patron_unlock_feat(hero_id, patron_id, payload):
             return True
         return False
+    if availability in _UNKNOWN_WITHOUT_CONTEXT:
+        return None
     return None
 
 
@@ -183,4 +188,10 @@ def patron_restriction_note(hero_id: int, patron_id: int, payload: dict[str, Any
         if payload and _has_patron_unlock_feat(hero_id, patron_id, payload):
             return None
         return f"Patron feat required for {patron_name}"
+    if availability == "ability":
+        return f"Requires partner ability for {patron_name}"
+    if availability == "ability_feat":
+        return f"Requires partner ability + feat for {patron_name}"
+    if availability == "sometimes":
+        return f"Conditional availability for {patron_name}"
     return None

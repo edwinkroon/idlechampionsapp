@@ -1,4 +1,4 @@
-"""Measure compact advice export size and regenerate sample clipboard."""
+"""Measure advice export size and regenerate sample clipboard."""
 
 from __future__ import annotations
 
@@ -14,9 +14,9 @@ from tests.test_formation_ai_advice import FormationAiAdviceTests
 
 ROOT = Path(__file__).resolve().parents[1]
 OUT_MD = ROOT / "documentation" / "formation_ai_advice_sample_clipboard.md"
-OUT_PROOF = ROOT / "documentation" / "formation_ai_advice_compact_proof.json"
+OUT_PROOF = ROOT / "documentation" / "formation_ai_advice_export_proof.json"
 
-# Baseline measured immediately before this compact rewrite (schema 1.6 advice).
+# Baseline measured immediately before the export-mode rewrite (schema 1.6 advice).
 BASELINE_FIXTURE = {
     "label": "tests._export() 3-champion Beast Mode fixture",
     "advice_chars_before": 24682,

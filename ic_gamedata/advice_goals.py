@@ -418,6 +418,8 @@ def build_goal_parameters(
             missing.append("end_condition")
         params["current_area"] = live.get("current_area")
     elif goal_id == "gem_farm":
+        # play_mode / auto_reset stay unknown unless the user set them —
+        # a found Modron reset_area alone must not invent yes/foreground.
         play = _unknown_token(
             user.get("play_mode"),
             allowed=frozenset({"foreground", "background", "offline", "unknown"}),
@@ -428,7 +430,8 @@ def build_goal_parameters(
         )
         reset_area = _parse_int(user.get("reset_area"))
         if reset_area is None:
-            # Prefer modron goal when auto_reset is yes/unknown and value exists.
+            # Only when the chosen goal is already gem_farm: observe Modron
+            # reset as a parameter fill — never as proof of the goal itself.
             modron = live.get("modron_area_goal")
             if isinstance(modron, int) and modron > 0:
                 reset_area = modron
@@ -595,6 +598,20 @@ def build_goal_export_object(
         explicit_locked_ids=explicit_locked_ids,
         name_by_id=name_by_id,
     )
+    # Observed Modron settings are never a goal choice — keep them separate
+    # so a reset_area sighting cannot silently become gem_farm. Omit the block
+    # entirely when nothing was observed (saves clipboard budget).
+    live = extract_live_goal_context(payload)
+    modron_area = live.get("modron_area_goal")
+    observed_modron: dict[str, Any] | None = None
+    if isinstance(modron_area, int) and modron_area > 0:
+        observed_modron = {
+            "reset_area": modron_area,
+            "reset_area_source": "modron_data",
+            "auto_reset": "unknown",
+            "play_mode": "unknown",
+            "note": "Modron-waarneming; geen bewijs van adviesdoel.",
+        }
     goal: dict[str, Any] = {
         "id": definition.id,
         "label": definition.label,
@@ -602,6 +619,9 @@ def build_goal_export_object(
         "primary_metric": definition.primary_metric,
         "priorities": list(definition.priorities),
         "priority_source": f"app_default_for_{definition.id}",
+        # Caller always passes an explicit catalog goal id — never inferred
+        # from Modron reset_area alone.
+        "goal_source": "user",
         "parameters": parameters,
         "missing_context": missing or None,
         "app_context": app_context,
@@ -614,6 +634,8 @@ def build_goal_export_object(
         if isinstance(fixed_main_dps_id, int)
         else None,
     }
+    if observed_modron is not None:
+        goal["observed_modron"] = observed_modron
     if restriction_fields:
         for key, value in restriction_fields.items():
             if key in goal and key not in (

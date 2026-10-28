@@ -144,9 +144,13 @@ class SeatAdvisorTests(unittest.TestCase):
         assert seat_report is not None
         bruenor = seat_report.seats[0]
         formation_ids = frozenset({1})
-        self.assertTrue(is_hero_allowed(1, roster_filter, formation_hero_ids=formation_ids))
+        # Presence does not override patron/adventure blocks.
+        self.assertFalse(
+            is_hero_allowed(1, roster_filter, formation_hero_ids=formation_ids)
+        )
         self.assertFalse(is_hero_allowed(1, roster_filter))
-        self.assertNotEqual(bruenor.relevance_reason, "Not allowed on adventure/patron")
+        # Without presence-override, seated blocked heroes get replace priority.
+        self.assertEqual(bruenor.relevance_reason, "Not allowed — replace")
 
 
     def test_formation_visual_positions_do_not_overlap(self) -> None:

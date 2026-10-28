@@ -292,6 +292,88 @@ class GameDataService(QObject):
         self._pending_auto_refresh = auto_refresh
         self._start_fetch(reason=reason)
 
+    def refresh_snapshot_once(
+        self,
+        *,
+        on_success,
+        on_error,
+        reason: str = "export_refresh",
+        force_consumers: frozenset[str] | set[str] | None = None,
+        timeout_ms: int = 20000,
+    ) -> None:
+        """Request one poll and invoke a one-shot success/error callback.
+
+        Waits for a snapshot whose ``generation`` is newer than the generation
+        at request time (so an already in-flight poll is not treated as fresh).
+        Does **not** fall back to a stale snapshot on failure — callers must
+        surface the error instead of copying old party data as current.
+        """
+        from PySide6.QtCore import QTimer
+
+        done = {"finished": False}
+        start_generation = int(self._generation)
+
+        def _cleanup() -> None:
+            try:
+                self.snapshot_updated.disconnect(_on_snap)
+            except (TypeError, RuntimeError):
+                pass
+            try:
+                self.fetch_failed.disconnect(_on_fail)
+            except (TypeError, RuntimeError):
+                pass
+            timer.stop()
+
+        def _finish_ok(envelope: SnapshotEnvelope) -> None:
+            if done["finished"]:
+                return
+            if envelope.payload is None:
+                _finish_err(envelope.err or "Verversen mislukt (geen payload).")
+                return
+            done["finished"] = True
+            _cleanup()
+            on_success(envelope)
+
+        def _finish_err(message: str) -> None:
+            if done["finished"]:
+                return
+            done["finished"] = True
+            _cleanup()
+            on_error(str(message or "Verversen mislukt."))
+
+        def _on_snap(envelope: object) -> None:
+            if not isinstance(envelope, SnapshotEnvelope):
+                return
+            if int(envelope.generation) <= start_generation:
+                return
+            if envelope.payload is None:
+                _finish_err(envelope.err or "Verversen mislukt (geen payload).")
+                return
+            _finish_ok(envelope)
+
+        def _on_fail(message: str) -> None:
+            # Only fail once our requested generation has started/failed;
+            # ignore failures belonging to a still-older in-flight poll.
+            if int(self._generation) <= start_generation and self._inflight:
+                return
+            _finish_err(message)
+
+        def _on_timeout() -> None:
+            _finish_err("Verversen time-out — geen actuele party ontvangen.")
+
+        timer = QTimer(self)
+        timer.setSingleShot(True)
+        timer.setInterval(max(1000, int(timeout_ms)))
+        timer.timeout.connect(_on_timeout)
+        self.snapshot_updated.connect(_on_snap)
+        self.fetch_failed.connect(_on_fail)
+        timer.start()
+        self.request_poll(
+            reason=reason,
+            force_consumers=force_consumers or frozenset({"advice"}),
+            auto_refresh=False,
+        )
+
     def _on_timer(self) -> None:
         self.request_poll(reason="timer", auto_refresh=True)
 
@@ -434,10 +516,19 @@ class GameDataService(QObject):
         self._pending_auto_refresh = True
 
         payload_dict = payload if isinstance(payload, dict) else None
-        quality = assess_payload_quality(payload_dict)
+        quality = result.get("quality")
+        if quality is None:
+            quality = assess_payload_quality(payload_dict)
         api_detail = str(result.get("api_detail") or "")
-        if quality.warnings:
+        if quality is not None and getattr(quality, "warnings", None):
             api_detail = (api_detail + " · " if api_detail else "") + quality.warnings[0]
+
+        advice_fp = result.get("advice_fp")
+        party_id = result.get("party_id")
+        if payload_dict is not None and advice_fp is None:
+            advice_fp = advice_fingerprint(payload_dict)
+        if payload_dict is not None and party_id is None:
+            party_id = party_id_from_payload(payload_dict)
 
         envelope = SnapshotEnvelope(
             version=self._version,
@@ -449,11 +540,11 @@ class GameDataService(QObject):
             api_detail=api_detail or "API ok",
             credentials=self._credentials,
             fetched_at=now,
-            advice_fp=advice_fingerprint(payload_dict),
-            party_id=party_id_from_payload(payload_dict),
+            advice_fp=advice_fp,
+            party_id=party_id,
             force_consumers=force,
             auto_refresh=auto,
-            degraded=bool(quality.warnings) or bool(api_err),
+            degraded=bool(getattr(quality, "warnings", None)) or bool(api_err),
             last_success_at=self._last_success_at,
             quality=quality,
         )

@@ -5,7 +5,7 @@ from __future__ import annotations
 import time
 from typing import TYPE_CHECKING, Any
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import QTimer
 from PySide6.QtWidgets import (
     QFrame,
     QHBoxLayout,
@@ -29,14 +29,38 @@ from ic_ui.widgets.advisor_widgets import (
     advisor_card,
     advisor_card_layout,
     advisor_lbl,
-    advisor_status_dot,
     clear_advisor_layout,
     refresh_advisor_chrome,
+)
+from ic_ui.widgets.busy_indicator import StatusBusyRow
+from ic_ui.widgets.specialization_advice_ui import (
+    add_spec_dot_line,
+    render_pending_specializations,
+    spec_label_kind,
+    spec_summary_lines,
 )
 from ic_ui.workers.shared_advice import SharedAdviceResult, shared_advice_hub
 
 if TYPE_CHECKING:
     from ic_core.game_data_service import GameDataService, SnapshotEnvelope
+
+
+def _specs_render_key(report: Any, pending_items: Any) -> tuple[Any, ...] | None:
+    if report is None:
+        return None
+    pending = tuple(
+        (
+            getattr(item, "hero_id", None),
+            getattr(item, "desired_option_index", None),
+        )
+        for item in (pending_items or ())
+    )
+    return (
+        getattr(report, "goal", None),
+        getattr(report, "context", None),
+        getattr(report, "adventure_name", None),
+        pending,
+    )
 
 
 class SpecializationsTab(QWidget):
@@ -65,6 +89,10 @@ class SpecializationsTab(QWidget):
         self._has_results = False
         self._last_report = None
         self._last_pending_items = None
+        self._options_timer = QTimer(self)
+        self._options_timer.setSingleShot(True)
+        self._options_timer.setInterval(80)
+        self._options_timer.timeout.connect(self._apply_options_reanalyze)
         self._build_ui()
         on_theme_changed(self._on_theme_changed)
 
@@ -112,12 +140,18 @@ class SpecializationsTab(QWidget):
             and self._has_results
             and not self._analysing
         )
+        party_changed = (
+            self._last_party_id is not None
+            and envelope.party_id is not None
+            and envelope.party_id != self._last_party_id
+        )
         if not should_refresh_advice(
             force=force,
             first=first,
             changed=changed,
             empty_retry=empty_retry,
             degraded=envelope.degraded,
+            party_changed=party_changed,
         ):
             if envelope.degraded and envelope.err and self._has_results:
                 base = self._status.text().split(" · ")[0] if self._status.text() else "Specializations"
@@ -186,9 +220,11 @@ class SpecializationsTab(QWidget):
         context = self._controls.context()
         self._pending_auto_refresh = auto_refresh
         self._running_advice_fp = advice_fp
-        self._analysing = True
+        self._set_analysing(True)
         if not auto_refresh:
             self._status.setText("Analyzing specializations…")
+        else:
+            self._status.setText("Updating specializations…")
         shared_advice_hub().submit(
             goal=goal,
             context=context,
@@ -216,11 +252,11 @@ class SpecializationsTab(QWidget):
         ctrl_row.addWidget(self._btn_copy)
         root.addLayout(ctrl_row)
 
-        self._status = QLabel(
+        self._status = StatusBusyRow()
+        self._status.setText(
             "Data refreshes on game activity (webRequestLog) or within 30 seconds. "
             "Use Refresh (top right / F5) for a full update."
         )
-        self._status.setWordWrap(True)
         self._status.setStyleSheet(f"color: {ui_theme.TEXT_BODY};")
         root.addWidget(self._status)
 
@@ -244,7 +280,25 @@ class SpecializationsTab(QWidget):
             return
         self._last_goal = self._controls.goal()
         self._last_context = self._controls.context()
-        self.request_refresh(auto_refresh=False)
+        # Defer so the combo popup can close; re-analyze cache only (no poll).
+        self._options_timer.start()
+
+    def _apply_options_reanalyze(self) -> None:
+        if self._last_payload is None:
+            return
+        fp = None
+        try:
+            from ic_gamedata.advice_fingerprint import advice_fingerprint
+
+            fp = advice_fingerprint(self._last_payload)
+        except Exception:
+            fp = None
+        self.start_analysis(
+            self._last_payload,
+            None,
+            auto_refresh=True,
+            advice_fp=fp,
+        )
 
     def _schedule_pending_analysis(self) -> None:
         pending = self._pending_analysis
@@ -283,28 +337,42 @@ class SpecializationsTab(QWidget):
         self._running_advice_fp = None
         self._last_goal = report.goal
         self._last_context = report.context
-        self._analysing = False
+        self._set_analysing(False)
         status = f"Specialization advice — {report.adventure_name}"
         if err:
             status = f"{status} ({err})"
         status = f"{status} · refreshed {time.strftime('%H:%M:%S')}"
         self._status.setText(status)
-        reset_scroll = not auto_refresh or not self._has_results
+        prev_key = _specs_render_key(self._last_report, self._last_pending_items)
+        new_key = _specs_render_key(report, pending_items)
         self._last_report = report
         self._last_pending_items = pending_items
-        self._render_report(report, pending_items, reset_scroll=reset_scroll)
+        skip_render = (
+            auto_refresh
+            and self._has_results
+            and prev_key is not None
+            and prev_key == new_key
+        )
+        if not skip_render:
+            reset_scroll = not auto_refresh or not self._has_results
+            self._render_report(report, pending_items, reset_scroll=reset_scroll)
         self._schedule_pending_analysis()
 
     def _on_error(self, msg: str) -> None:
         auto_refresh = self._pending_auto_refresh
         # Do not lock the fingerprint on failure — allow the next poll to retry.
         self._running_advice_fp = None
-        self._analysing = False
+        self._set_analysing(False)
         if auto_refresh and self._has_results:
             self._status.setText(f"Refresh failed: {msg} (keeping last result)")
         else:
             self._status.setText(f"Error: {msg}")
         self._schedule_pending_analysis()
+
+    def _set_analysing(self, busy: bool) -> None:
+        self._analysing = busy
+        self._status.set_busy(busy)
+        self.setToolTip("Analyzing specializations…" if busy else "")
 
     def _clear(self) -> None:
         clear_advisor_layout(self._layout)
@@ -330,27 +398,6 @@ class SpecializationsTab(QWidget):
         )
         self._layout.addWidget(lbl)
 
-    @staticmethod
-    def _dot_color(kind: str) -> str:
-        return {
-            "warn": ui_theme.WARN,
-            "spec_match": ui_theme.SUCCESS,
-            "spec_pending": ui_theme.TEXT_BODY,
-            "spec_mismatch": ui_theme.FEAT_MISSING,
-            "muted": ui_theme.TEXT_MUTED,
-        }.get(kind, ui_theme.TEXT_MUTED)
-
-    def _add_dot_line(self, layout: QVBoxLayout, text: str, *, kind: str) -> None:
-        row = QHBoxLayout()
-        row.setContentsMargins(0, 0, 0, 0)
-        row.setSpacing(8)
-        row.addWidget(
-            advisor_status_dot(self._dot_color(kind)),
-            alignment=Qt.AlignmentFlag.AlignVCenter,
-        )
-        row.addWidget(advisor_lbl(text, kind=kind), stretch=1)
-        layout.addLayout(row)
-
     def _render_review_needed(self, hero_ids: set[int]) -> None:
         """Show review warnings only when formation heroes still have review_needed."""
         if not hero_ids:
@@ -373,56 +420,8 @@ class SpecializationsTab(QWidget):
         )
         for model in review_models:
             reason = model.review_reasons[0] if model.review_reasons else "internal uncertainty"
-            self._add_dot_line(lyt, f"{model.name}: {reason}", kind="warn")
+            add_spec_dot_line(lyt, f"{model.name}: {reason}", kind="warn")
         self._layout.addWidget(card)
-
-    @staticmethod
-    def _label_kind(status: str | None) -> str:
-        return {
-            "match": "spec_match",
-            "matches": "spec_match",
-            "pending": "spec_pending",
-            "open_tier": "spec_pending",
-            "mismatch": "spec_mismatch",
-        }.get(status or "", "spec_pending")
-
-    def _summary_lines(
-        self,
-        seats,
-        *,
-        statuses: set[str] | None = None,
-    ) -> list[tuple[str, str]]:
-        try:
-            from ic_gamedata.party_advisor_specializations import spec_summary_line
-        except ImportError:
-            spec_summary_line = None
-
-        lines: list[tuple[str, str]] = []
-        for seat in sorted(seats, key=lambda item: item.seat):
-            if not seat.best_spec:
-                continue
-            status = getattr(seat, "spec_status", None) or "pending"
-            if statuses is not None and status not in statuses:
-                continue
-            if spec_summary_line is not None:
-                text = spec_summary_line(
-                    seat.hero_name,
-                    recommended=seat.best_spec,
-                    current_labels=seat.current_specs,
-                    status=status,
-                    is_bud=seat.is_bud,
-                )
-            else:
-                name = seat.hero_name
-                if seat.is_bud:
-                    name += " (BUD)"
-                current = ", ".join(seat.current_specs) if seat.current_specs else None
-                if status == "mismatch" and current:
-                    text = f"{name}: {current} → {seat.best_spec}"
-                else:
-                    text = f"{name}: {seat.best_spec}"
-            lines.append((text, self._label_kind(status)))
-        return lines
 
     def _insight_cards(self, insights, *, statuses: set[str]) -> None:
         seen_heroes: set[int] = set()
@@ -440,84 +439,11 @@ class SpecializationsTab(QWidget):
             detail = insight.detail
             if insight.rule_source_type == "heuristic":
                 detail = f"{detail} (generic placeholder rule)"
-            lyt.addWidget(advisor_lbl(detail, kind=self._label_kind(insight.status)))
+            lyt.addWidget(advisor_lbl(detail, kind=spec_label_kind(insight.status)))
             meta_str = f"{insight.status} · {insight.rule_source_type}"
             if insight.confidence:
                 meta_str += f" · confidence {insight.confidence}/5"
             lyt.addWidget(advisor_lbl(meta_str, kind="muted"))
-            self._layout.addWidget(card)
-
-    def _render_pending(self, pending_items) -> None:
-        if not pending_items:
-            card = advisor_card(compact=True)
-            lyt = advisor_card_layout(card, compact=True)
-            lyt.addWidget(
-                advisor_lbl(
-                    "No open specialization choices for the active party.",
-                    kind="muted",
-                )
-            )
-            self._layout.addWidget(card)
-            return
-
-        try:
-            from ic_gamedata.specialization_advice_text import (
-                human_specialization_reason,
-            )
-            from ic_gamedata.specializations import _active_adventure_context
-        except ImportError:
-            human_specialization_reason = None
-            _active_adventure_context = None
-
-        context = _active_adventure_context(self._last_payload or {}) if _active_adventure_context else {}
-        for item in pending_items:
-            highlight = item.desired_option_index is not None
-            card = advisor_card(highlight=highlight)
-            lyt = advisor_card_layout(card)
-            seat_str = f"slot {item.seat}" if item.seat is not None else "unknown seat"
-            lyt.addWidget(advisor_lbl(f"{item.hero_name} · {seat_str}", kind="subtitle"))
-            options = " / ".join(option.name for option in item.options)
-            if item.desired_option_index is not None:
-                chosen = item.options[item.desired_option_index].name
-                lyt.addWidget(advisor_lbl(f"Advice: {chosen}", kind="spec_pending"))
-            elif item.reason == "insufficient data":
-                lyt.addWidget(
-                    advisor_lbl("Advice: unknown — not enough data", kind="spec_pending")
-                )
-            else:
-                lyt.addWidget(advisor_lbl("Advice: no fixed choice yet", kind="spec_pending"))
-            try:
-                from ic_gamedata.specialization_advisor_model import (
-                    advisor_model_for_hero,
-                    advisor_model_line_kind,
-                    format_advisor_model_lines,
-                )
-
-                model = advisor_model_for_hero(item.hero_id)
-            except ImportError:
-                model = None
-            if model is not None:
-                for line in format_advisor_model_lines(model):
-                    lyt.addWidget(advisor_lbl(line, kind=advisor_model_line_kind(model, line)))
-            if human_specialization_reason is not None:
-                lyt.addWidget(
-                    advisor_lbl(
-                        f"Why: {human_specialization_reason(item, context)}",
-                        kind="body",
-                    )
-                )
-            elif item.rationale:
-                lyt.addWidget(advisor_lbl(f"Why: {item.rationale}", kind="body"))
-            lyt.addWidget(advisor_lbl(f"Open options: {options}", kind="muted"))
-            meta_parts: list[str] = []
-            if item.data_source_version:
-                meta_parts.append(f"dataset {item.data_source_version}")
-            if item.rule_source_type:
-                meta_parts.append(item.rule_source_type)
-            if item.confidence:
-                meta_parts.append(f"confidence {item.confidence}/5")
-            if meta_parts:
-                lyt.addWidget(advisor_lbl(" · ".join(meta_parts), kind="muted"))
             self._layout.addWidget(card)
 
     def _render_report(self, report, pending_items, *, reset_scroll: bool = True) -> None:
@@ -570,7 +496,11 @@ class SpecializationsTab(QWidget):
 
         # 1) In-game dialogs still open
         self._section("Open choices")
-        self._render_pending(formation_pending)
+        render_pending_specializations(
+            self._layout,
+            formation_pending,
+            payload=self._last_payload,
+        )
 
         insights = tuple(
             ins
@@ -604,25 +534,25 @@ class SpecializationsTab(QWidget):
         seat_action_seats = [
             s for s in formation_seats if s.hero_id not in insight_action_ids
         ]
-        mismatch_lines = self._summary_lines(seat_action_seats, statuses={"mismatch"})
-        pending_lines = self._summary_lines(seat_action_seats, statuses={"pending"})
+        mismatch_lines = spec_summary_lines(seat_action_seats, statuses={"mismatch"})
+        pending_lines = spec_summary_lines(seat_action_seats, statuses={"pending"})
         if mismatch_lines or pending_lines:
             if not actionable_insights:
                 self._section("Action needed")
             card = advisor_card(compact=True)
             lyt = advisor_card_layout(card, compact=True)
             for line, kind in mismatch_lines + pending_lines:
-                self._add_dot_line(lyt, line, kind=kind)
+                add_spec_dot_line(lyt, line, kind=kind)
             self._layout.addWidget(card)
 
         # 3) Compact list for specs that already match
-        ok_lines = self._summary_lines(formation_seats, statuses={"match"})
+        ok_lines = spec_summary_lines(formation_seats, statuses={"match"})
         if ok_lines:
             self._section("All good")
             card = advisor_card(compact=True)
             lyt = advisor_card_layout(card, compact=True)
             for line, kind in ok_lines:
-                self._add_dot_line(lyt, line, kind=kind)
+                add_spec_dot_line(lyt, line, kind=kind)
             self._layout.addWidget(card)
 
         # 4) Formation champs with no recommendation / no status yet
@@ -643,7 +573,7 @@ class SpecializationsTab(QWidget):
             card = advisor_card(compact=True)
             lyt = advisor_card_layout(card, compact=True)
             for line, kind in no_advice_lines:
-                self._add_dot_line(lyt, line, kind=kind)
+                add_spec_dot_line(lyt, line, kind=kind)
             self._layout.addWidget(card)
 
         # 5) Formation synergy for in-party champions only (no bench cards)

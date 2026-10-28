@@ -18,6 +18,7 @@ from ic_gamedata.formation_ai_advice.swap_export import (
     _seat_conflict_for_candidate,
     build_swap_export_payload,
 )
+from ic_gamedata.party_advisor_formation import resolve_live_formation
 from ic_gamedata.party_advisor_models import FormationHero
 
 
@@ -61,6 +62,19 @@ class FormationAiAdviceSwapTests(unittest.TestCase):
             _hero(3, "Nayeli", 1, roles=("tank", "support")),
             _hero(2, "Celeste", 2, roles=("healer", "support")),
             _hero(4, "Jarlaxle", 3, roles=("dps", "gold")),
+        )
+
+    def test_resolve_live_formation_prefers_payload_over_stale_fallback(self) -> None:
+        live = resolve_live_formation(self.payload)
+        if not live:
+            self.skipTest("fixture has no live formation board")
+        stale = (_hero(99999, "STALE", 1),)
+        resolved = resolve_live_formation(self.payload, fallback=stale)
+        self.assertTrue(resolved)
+        self.assertNotIn(99999, {h.hero_id for h in resolved})
+        self.assertEqual(
+            {h.hero_id for h in resolved},
+            {h.hero_id for h in live},
         )
 
     def _standard_export(self):
@@ -130,6 +144,8 @@ class FormationAiAdviceSwapTests(unittest.TestCase):
     def test_no_hidden_ranking_or_manual_required(self) -> None:
         export = self._swap_export()
         self.assertEqual(export["meta"]["scope"], SWAP_SCOPE)
+        self.assertEqual(export["constraints"]["max_swaps_per_proposal"], 3)
+        self.assertEqual(export["swap"]["max_swaps_per_proposal"], 3)
         self.assertEqual(
             export["swap"]["candidate_selection"], "automatic_owned_external"
         )
@@ -249,7 +265,7 @@ class FormationAiAdviceSwapTests(unittest.TestCase):
         self.assertNotIn("Handmatig geselecteerde kandidaten", md)
         self.assertNotIn("selecteer minimaal", md.casefold())
         self.assertIn("Wissel aanbevolen", md)
-        self.assertIn("| Voorstel | Eruit (seat) | Erin (seat) |", md)
+        self.assertIn("| Voorstel | Eruit (Plek) | Erin (Plek) |", md)
         self.assertIn(SWAP_SCOPE, md)
         # Real user goal from export, not hardcoded damage-only task.
         self.assertIn("Doel: Push.", md)

@@ -9,12 +9,17 @@ from __future__ import annotations
 
 import json
 import shutil
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
 from ic_gamedata.formation_ai_advice.export_budget import count_chars, count_utf8_bytes
 from ic_gamedata.formation_ai_advice.snapshot_export import minify_json
-from ic_gamedata.paths import ADVICE_SNAPSHOT_REGISTRY_PATH, ADVICE_SNAPSHOTS_DIR
+from ic_gamedata.paths import (
+    ADVICE_SNAPSHOT_REGISTRY_PATH,
+    ADVICE_SNAPSHOTS_DIR,
+    BASISGEGEVENS_DIR,
+)
 
 REGISTRY_SCHEMA = 2
 _MAX_HISTORY = 20
@@ -26,6 +31,9 @@ def _empty_registry() -> dict[str, Any]:
         # Last explicitly exported (saved/downloaded) snapshot — advice refs use this.
         "last_exported_snapshot_id": None,
         "last_exported_path": None,
+        # Basename of the real export file (e.g. basicdata_DDMMYYYY_HHMMSS.json).
+        # Search aid only — identity remains snapshot_id + hashes.
+        "last_exported_filename": None,
         "last_exported_at": None,
         "last_exported_char_count": None,
         "last_exported_utf8_bytes": None,
@@ -46,6 +54,26 @@ def _empty_registry() -> dict[str, Any]:
         "user_declared_shared_at": None,
         "history": [],
     }
+
+
+def exported_basename_from_registry(registry: dict[str, Any] | None = None) -> str | None:
+    """Real export filename for snapshot_ref, or ``None`` when unknown (legacy).
+
+    Never invents ``{snapshot_id}.json`` — that is not the on-disk name for
+    ``basicdata_*.json`` exports.
+    """
+    reg = registry if isinstance(registry, dict) else load_snapshot_registry()
+    explicit = reg.get("last_exported_filename")
+    if isinstance(explicit, str) and explicit.strip():
+        return Path(explicit.strip()).name
+    for key in ("last_exported_path", "last_saved_path"):
+        raw = reg.get(key)
+        if not raw:
+            continue
+        name = Path(str(raw)).name
+        if name:
+            return name
+    return None
 
 
 def load_snapshot_registry() -> dict[str, Any]:
@@ -77,6 +105,11 @@ def load_snapshot_registry() -> dict[str, Any]:
         out["last_exported_coverage"] = out.get("last_coverage")
         out["last_exported_mechanics_hash"] = out.get("last_mechanics_hash")
         out["last_exported_account_state_hash"] = out.get("last_account_state_hash")
+    # Backfill basename from path when an older registry omitted the field.
+    if not out.get("last_exported_filename"):
+        derived = exported_basename_from_registry(out)
+        if derived:
+            out["last_exported_filename"] = derived
     return out
 
 
@@ -95,8 +128,11 @@ def get_exported_snapshot_meta(registry: dict[str, Any] | None = None) -> dict[s
     sid = reg.get("last_exported_snapshot_id") or reg.get("last_snapshot_id")
     if not sid:
         return None
+    # ``None`` when unknown (legacy) — callers must not invent ``{id}.json``.
+    expected_filename = exported_basename_from_registry(reg)
     return {
         "snapshot_id": sid,
+        "expected_filename": expected_filename,
         "mechanics_hash": reg.get("last_exported_mechanics_hash")
         or reg.get("last_mechanics_hash"),
         "account_state_hash": reg.get("last_exported_account_state_hash")
@@ -104,7 +140,7 @@ def get_exported_snapshot_meta(registry: dict[str, Any] | None = None) -> dict[s
         "created_at": reg.get("last_exported_at") or reg.get("last_created_at"),
         "account_state_hash_covers": (
             "owned champion ids + snapshot loadout selections/feats/"
-            "equipment status fields"
+            "equipment status fields + item_levels (avg/by_slot)"
         ),
     }
 
@@ -152,9 +188,11 @@ def record_saved_snapshot(
         else None
     )
     text = markdown_text or minify_json(snapshot)
+    saved = Path(saved_path)
     entry = {
         "snapshot_id": meta.get("snapshot_id"),
-        "saved_path": str(saved_path),
+        "saved_path": str(saved),
+        "exported_filename": saved.name,
         "created_at": meta.get("created_at"),
         "mechanics_hash": meta.get("mechanics_hash"),
         "account_state_hash": meta.get("account_state_hash"),
@@ -170,6 +208,7 @@ def record_saved_snapshot(
     # Exported fields (authoritative for advice refs).
     registry["last_exported_snapshot_id"] = entry["snapshot_id"]
     registry["last_exported_path"] = entry["saved_path"]
+    registry["last_exported_filename"] = entry["exported_filename"]
     registry["last_exported_at"] = entry["created_at"]
     registry["last_exported_char_count"] = entry["char_count"]
     registry["last_exported_utf8_bytes"] = entry["utf8_bytes"]
@@ -232,6 +271,60 @@ def save_snapshot_to_path(snapshot: dict[str, Any], dest: Path) -> Path:
     return dest
 
 
+def clear_basisgegevens_dir(directory: Path | None = None) -> None:
+    """Remove all files and subdirectories under the basisgegevens folder."""
+    target = Path(directory) if directory is not None else BASISGEGEVENS_DIR
+    if not target.exists():
+        return
+    if not target.is_dir():
+        raise NotADirectoryError(f"basisgegevens pad is geen map: {target}")
+    for child in target.iterdir():
+        if child.is_dir() and not child.is_symlink():
+            shutil.rmtree(child)
+        else:
+            child.unlink(missing_ok=True)
+
+
+def _basicdata_filename(when: datetime | None = None) -> str:
+    """Filename like ``basicdata_21102026_094815.json`` (DDMMYYYY_HHMMSS, local time)."""
+    stamp = when or datetime.now()
+    return f"basicdata_{stamp.strftime('%d%m%Y_%H%M%S')}.json"
+
+
+def save_base_snapshot_to_basisgegevens(
+    snapshot: dict[str, Any],
+    *,
+    directory: Path | None = None,
+    when: datetime | None = None,
+) -> Path:
+    """Clear ``basisgegevens``, write the new snapshot there, update registry.
+
+    Always replaces prior contents of the folder so only the current export remains.
+    File name: ``basicdata_DDMMYYYY_HHMMSS.json``.
+    """
+    target_dir = Path(directory) if directory is not None else BASISGEGEVENS_DIR
+    target_dir.mkdir(parents=True, exist_ok=True)
+    clear_basisgegevens_dir(target_dir)
+    dest = target_dir / _basicdata_filename(when)
+    return save_snapshot_to_path(snapshot, dest)
+
+
+def _fallback_snapshot_path(snap_id: str) -> Path | None:
+    """Prefer basisgegevens, then the local advice_snapshots mirror."""
+    if BASISGEGEVENS_DIR.is_dir():
+        # Folder holds at most one current export (basicdata_*.json).
+        basics = sorted(BASISGEGEVENS_DIR.glob("basicdata_*.json"))
+        if len(basics) == 1 and basics[0].is_file():
+            return basics[0]
+        named = BASISGEGEVENS_DIR / f"{snap_id}.json"
+        if named.is_file():
+            return named
+    mirror = ADVICE_SNAPSHOTS_DIR / f"{snap_id}.json"
+    if mirror.is_file():
+        return mirror
+    return None
+
+
 def load_snapshot_from_registry_path() -> dict[str, Any] | None:
     """Load the last exported snapshot JSON if the path still exists."""
     registry = load_snapshot_registry()
@@ -241,9 +334,9 @@ def load_snapshot_from_registry_path() -> dict[str, Any] | None:
             "last_snapshot_id"
         )
         if snap_id:
-            mirror = ADVICE_SNAPSHOTS_DIR / f"{snap_id}.json"
-            if mirror.is_file():
-                raw_path = str(mirror)
+            found = _fallback_snapshot_path(str(snap_id))
+            if found is not None:
+                raw_path = str(found)
     if not raw_path:
         return None
     path = Path(str(raw_path))
@@ -252,9 +345,9 @@ def load_snapshot_from_registry_path() -> dict[str, Any] | None:
             "last_snapshot_id"
         )
         if mirror_id:
-            mirror = ADVICE_SNAPSHOTS_DIR / f"{mirror_id}.json"
-            if mirror.is_file():
-                path = mirror
+            found = _fallback_snapshot_path(str(mirror_id))
+            if found is not None:
+                path = found
             else:
                 return None
         else:
